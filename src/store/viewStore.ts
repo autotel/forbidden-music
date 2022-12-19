@@ -55,6 +55,12 @@ export const useViewStore = defineStore("view", {
         octaveToPx(octave: number): number {
             return octave * this.viewHeightPx / this.viewHeightOctaves;
         },
+        pxToOctaveOffset(px: number): number {
+            return this.pxToOctave(px) - this.octaveOffset;
+        },
+        octaveToPxOffset(octaveOffset: number): number {
+            return this.octaveToPx(octaveOffset + this.octaveOffset);
+        },
         octaveToFrequency(octave: number): number {
             return this.centerFrequency * Math.pow(2, octave - this.octaveOffset);
         },

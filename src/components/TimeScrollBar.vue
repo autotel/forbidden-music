@@ -27,6 +27,7 @@ onMounted(()=>{
     let dragStartX = 0;
     // let dragStartOffset = 0;
     let dragStartBounds = 0;
+
     $hScrollBar.addEventListener('mousedown', (e) => {
         isDragging = true;
         dragStartX = e.clientX;
@@ -34,6 +35,22 @@ onMounted(()=>{
         dragStartBounds = view.timeToBounds(view.timeOffset) * 20000;
     });
 
+    let draggingView = false;
+    let viewDragStartX = 0;
+    let viewDragStartTime = 0;
+    let viewDragStartY = 0;
+    let viewDragStartOctave = 0;
+
+    window.addEventListener('mousedown' , (e) => {
+        if(e.button === 1) {
+            e.stopPropagation();
+            draggingView = true;
+            viewDragStartX = e.clientX;
+            viewDragStartTime = view.timeOffset;
+            viewDragStartY = e.clientY;
+            viewDragStartOctave = view.octaveOffset;
+        }
+    });
 
     window.addEventListener('mousemove', (e) => {
         e.preventDefault();
@@ -48,10 +65,24 @@ onMounted(()=>{
             if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
                 view.timeOffset = view.scrollBound - view.viewWidthTime;
             }
+        }else if(draggingView){
+            const deltaX = e.clientX - viewDragStartX;
+            const deltaY = e.clientY - viewDragStartY;
+            // oddness commented elsewhere
+            view.timeOffset = viewDragStartTime - view.timeToPx(deltaX);
+            view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
+            // prevent timeOffset from going out of bounds
+            if (view.timeOffset < 0) {
+                view.timeOffset = 0;
+            }
+            if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+                view.timeOffset = view.scrollBound - view.viewWidthTime;
+            }
         }
     }, { passive: false });
     window.addEventListener('mouseup', (e) => {
         isDragging = false;
+        draggingView = false;
     });
     
 });

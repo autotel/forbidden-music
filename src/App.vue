@@ -42,9 +42,9 @@ onMounted(() => {
 
 });
 
-
 const getScopednotes = () => {
   const clampToZero = (n: number) => n < 0 ? 0 : n;
+  //TODO: also filter by octave component
   return score.notes.filter(note => {
     return note.start < view.timeOffset + view.viewWidthTime &&
       note.start + note.duration > view.timeOffset;
@@ -56,7 +56,7 @@ const getScopednotes = () => {
       return {
         x: clampToZero(view.pxToTimeWithOffset(note.start)),
         w: view.pxToTime(note.duration + cutWidth),
-        y: view.octaveToPx(note.octave),
+        y: view.octaveToPxOffset(note.octave),
         cut: isCut,
         note: note,
       }
