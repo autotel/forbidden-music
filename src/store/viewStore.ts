@@ -16,11 +16,20 @@ export const useViewStore = defineStore("view", {
     getters: {
     },
     actions: {
-        pxToTime(px: number): number {
-            return px * this.viewWidthPx / this.viewWidthTime;
+        setTimeOffset(timeOffset: number) {
+            this.timeOffset = timeOffset;
+        },
+        timeToPxWithOffset(time: number): number {
+            return time * this.viewWidthTime / this.viewWidthPx + this.timeOffset;
+        },
+        pxToTimeWithOffset(px: number): number {
+            return (px - this.timeOffset) * this.viewWidthPx / this.viewWidthTime;
         },
         timeToPx(time: number): number {
             return time * this.viewWidthTime / this.viewWidthPx;
+        },
+        pxToTime(px: number): number {
+            return px * this.viewWidthPx / this.viewWidthTime;
         },
         pxToOctave(px: number): number {
             return px * this.viewHeightOctaves / this.viewHeightPx;
@@ -37,7 +46,7 @@ export const useViewStore = defineStore("view", {
         updateSize(width: number, height: number) {
             this.viewWidthPx = width;
             this.viewHeightPx = height;
-        }
+        },
     },
 
 });

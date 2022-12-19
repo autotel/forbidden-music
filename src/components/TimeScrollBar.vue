@@ -13,35 +13,32 @@ onMounted(()=>{
     
     if (!$hScrollBar) throw new Error("hScrollBar not found");
 
-    // make scroll bar draggable horizontally
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartTimeOffset = 0;
-
+    
     // adjust time ofset with mouse middle wheel
     window.addEventListener('wheel', (e) => {
-        view.timeOffset = view.timeOffset - view.pxToTime(e.deltaX);
+        // view.timeOffset = view.timeOffset - view.pxToTime(e.deltaX);
+        view.setTimeOffset(view.timeOffset - view.pxToTime(e.deltaX));
     });
-
+    // make hScrollBar draggable horizontally
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartOffset = 0;
     $hScrollBar.addEventListener('mousedown', (e) => {
-        e.preventDefault();
         isDragging = true;
         dragStartX = e.clientX;
-        dragStartTimeOffset = view.timeOffset;
-        $hScrollBar.style.cursor = 'grabbing';
+        dragStartOffset = view.timeOffset;
     });
-
     window.addEventListener('mousemove', (e) => {
         if (isDragging) {
-            const dx = dragStartX - e.clientX ;
-            view.timeOffset = dragStartTimeOffset - view.pxToTime(dx);
+            const delta = e.clientX - dragStartX;
+            view.timeOffset = dragStartOffset + view.pxToTime(delta);
+            // view.setTimeOffset(dragStartOffset + view.pxToTime(delta));
         }
     });
-
     window.addEventListener('mouseup', (e) => {
-        $hScrollBar.style.cursor = '';
         isDragging = false;
     });
+    
 });
 
 </script>
@@ -51,7 +48,7 @@ onMounted(()=>{
         class="scroll" 
         ref="hScrollBar"
         :style="{
-            width: view.timeToPx(32) + 'px',
+            width: '200px',
             left: view.timeToPx(view.timeOffset) + 'px'
         }"
     
