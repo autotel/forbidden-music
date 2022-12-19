@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Store } from 'pinia';
 import { onMounted, ref } from 'vue'
+import { useViewStore } from '../store/viewStore';
 import { View } from '../View';
 
-const props = defineProps<{ view: View }>();
-
+const view = useViewStore();
 
 const hScrollBar = ref<HTMLDivElement>();
 
@@ -12,8 +13,6 @@ onMounted(()=>{
     
     if (!$hScrollBar) throw new Error("hScrollBar not found");
 
-    const view = props.view;
-
     // make scroll bar draggable horizontally
     let isDragging = false;
     let dragStartX = 0;
@@ -21,7 +20,7 @@ onMounted(()=>{
 
     // adjust time ofset with mouse middle wheel
     window.addEventListener('wheel', (e) => {
-        view.timeOffset -= view.pxToTime(e.deltaX);
+        view.timeOffset = view.timeOffset - view.pxToTime(e.deltaX);
     });
 
     $hScrollBar.addEventListener('mousedown', (e) => {
@@ -36,7 +35,6 @@ onMounted(()=>{
         if (isDragging) {
             const dx = dragStartX - e.clientX ;
             view.timeOffset = dragStartTimeOffset - view.pxToTime(dx);
-            console.log(view.timeOffset);
         }
     });
 

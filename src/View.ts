@@ -1,8 +1,9 @@
-
+// deprecate
 export class View {
   octaveOffset: number = 4.75;
   timeOffset: number = 0;
   centerFrequency: number = 440;
+  
   constructor(
     public viewWidthPx: number,
     public viewHeightPx: number,
@@ -32,4 +33,5 @@ export class View {
   frequencyToOctave(frequency: number): number {
     return Math.log2(frequency / this.centerFrequency) + this.octaveOffset;
   }
+  
 }
