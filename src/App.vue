@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { useViewStore } from './store/viewStore';
+import { useScoreStore } from './store/scoreStore';
 import { onMounted, ref } from 'vue';
 
 import TimeScrollBar from "./components/TimeScrollBar.vue"
 import { storeToRefs } from 'pinia';
-class TimedEvent {
-  constructor(public start: number, public duration: number) { }
-}
-
-class Note extends TimedEvent {
-  constructor(start: number, duration: number, public octave: number) {
-    super(start, duration);
-  }
-}
+import { Note } from './dataTypes/Note';
+import NoteElement from './components/NoteElement.vue';
 
 const timedEventsViewport = ref<SVGSVGElement>();
-const notes = ref<Note[]>([]);
+// const notesStore = useScoreStore();
+// const notes = storeToRefs(notesStore);
+const score = useScoreStore();
 // const store = useViewStore();
 // const view = storeToRefs(store);
 const view = useViewStore();
@@ -37,30 +33,19 @@ onMounted(() => {
 
   // create a bunch of test notes
   for (let i = 0; i < 30; i++) {
-    notes.value.push(new Note(
-      Math.random() * 800,
-      Math.random() * 700,
-      Math.random() * 2
-    ));
+    score.notes.push({
+      start: Math.random() * 1200,
+      duration: Math.random() * 700,
+      octave: Math.random() * 2
+    });
   }
-  // setInterval(() => {
-  //   // pick a random note and randomize it's start
-  //   const note = notes.value[Math.floor(Math.random() * notes.value.length)];
-  //   note.start = Math.random() * 800;
-  //   note.start = Math.random() * 100;
 
-  // }, 200);
-
-  //log timeoffset at intervals
-  setInterval(() => {
-    console.log(view.timeOffset);
-  }, 1000);
 });
 
 
 const getScopednotes = () => {
   const clampToZero = (n: number) => n < 0 ? 0 : n;
-  return notes.value.filter(note => {
+  return score.notes.filter(note => {
     return note.start < view.timeOffset + view.viewWidthTime &&
       note.start + note.duration > view.timeOffset;
   })
@@ -69,11 +54,11 @@ const getScopednotes = () => {
       const cutWidth = isCut ? note.start - view.timeOffset : 0;
 
       return {
-        ...note,
         x: clampToZero(view.pxToTimeWithOffset(note.start)),
         w: view.pxToTime(note.duration + cutWidth),
         y: view.octaveToPx(note.octave),
         cut: isCut,
+        note: note,
       }
     });
 }
@@ -82,14 +67,7 @@ const getScopednotes = () => {
 <template>
   <svg ref="timedEventsViewport" style="border:solid 1px red; ">
     <!-- draw a rectangle representing each note -->
-    <rect v-for="note in getScopednotes()" :x="note.x" :y="note.y" :width="note.w" :height="10" />
+    <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
   </svg>
   <TimeScrollBar />
 </template>
-
-<style scoped>
-rect {
-  fill: #888a;
-  stroke: #999;
-}
-</style>

@@ -2,7 +2,7 @@
 import { Store } from 'pinia';
 import { onMounted, ref } from 'vue'
 import { useViewStore } from '../store/viewStore';
-import { View } from '../View';
+
 
 const view = useViewStore();
 
@@ -64,6 +64,7 @@ onMounted(()=>{
         ref="hScrollBar"
         :style="{
             width: -view.timeToPx(-32) + 'px',
+            // width: view.timeToBounds(view.viewWidthTime) * 100 + '%',
             left: view.timeToBounds(view.timeOffset) * 100 + '%'
         }"
     
