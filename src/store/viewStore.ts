@@ -12,6 +12,10 @@ export const useViewStore = defineStore("view", {
         viewHeightPx: 1080,
         viewWidthTime: 1024,
         viewHeightOctaves: 4,
+        // size of the composition, to use as reference to scroll bounds
+        scrollBound: 2048,
+        // TODO: integrate this, so that view always zooms to center or mouse pos.
+        _offsetPx: 1920 / 2,
     }),
     getters: {
     },
@@ -19,11 +23,25 @@ export const useViewStore = defineStore("view", {
         setTimeOffset(timeOffset: number) {
             this.timeOffset = timeOffset;
         },
+        setTimeOffsetBounds(timeOffsetBounded: number) {
+            this.timeOffset = this.boundsToTime(timeOffsetBounded);
+        },
+        pxToBounds(px: number): number {
+            return px / this.viewWidthPx;
+        },
         timeToPxWithOffset(time: number): number {
-            return time * this.viewWidthTime / this.viewWidthPx + this.timeOffset;
+            return this.timeToPx(time) + this.timeOffset;
+            // return (time * this.viewWidthTime / this.viewWidthPx + this.timeOffset) ;
         },
         pxToTimeWithOffset(px: number): number {
-            return (px - this.timeOffset) * this.viewWidthPx / this.viewWidthTime;
+            return this.pxToTime(px - this.timeOffset);
+            // return (px - this.timeOffset) * this.viewWidthPx / this.viewWidthTime;
+        },
+        timeToBounds(time: number): number {
+            return time / this.scrollBound;
+        },
+        boundsToTime(bounds: number): number {
+            return bounds * this.scrollBound;
         },
         timeToPx(time: number): number {
             return time * this.viewWidthTime / this.viewWidthPx;
@@ -46,6 +64,7 @@ export const useViewStore = defineStore("view", {
         updateSize(width: number, height: number) {
             this.viewWidthPx = width;
             this.viewHeightPx = height;
+            this._offsetPx = width / 2;
         },
     },
 

@@ -16,25 +16,40 @@ onMounted(()=>{
     
     // adjust time ofset with mouse middle wheel
     window.addEventListener('wheel', (e) => {
-        // view.timeOffset = view.timeOffset - view.pxToTime(e.deltaX);
-        view.setTimeOffset(view.timeOffset - view.pxToTime(e.deltaX));
+        view.viewWidthTime **= 1 + e.deltaY / 1000;
+        // prevent viewWidthTime from going out of bounds
+        if (view.viewWidthTime < 0.1) {
+            view.viewWidthTime = 0.1;
+        }
     });
     // make hScrollBar draggable horizontally
     let isDragging = false;
     let dragStartX = 0;
-    let dragStartOffset = 0;
+    // let dragStartOffset = 0;
+    let dragStartBounds = 0;
     $hScrollBar.addEventListener('mousedown', (e) => {
         isDragging = true;
         dragStartX = e.clientX;
-        dragStartOffset = view.timeOffset;
+        // dragStartOffset = view.timeOffset;
+        dragStartBounds = view.timeToBounds(view.timeOffset) * 20000;
     });
+
+
     window.addEventListener('mousemove', (e) => {
+        e.preventDefault();
         if (isDragging) {
             const delta = e.clientX - dragStartX;
-            view.timeOffset = dragStartOffset + view.pxToTime(delta);
-            // view.setTimeOffset(dragStartOffset + view.pxToTime(delta));
+            // view.timeOffset = dragStartOffset + view.pxToTime(delta);
+            view.setTimeOffsetBounds(dragStartBounds / 20000 + view.pxToBounds(delta));
+            // prevent timeOffset from going out of bounds
+            if (view.timeOffset < 0) {
+                view.timeOffset = 0;
+            }
+            if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+                view.timeOffset = view.scrollBound - view.viewWidthTime;
+            }
         }
-    });
+    }, { passive: false });
     window.addEventListener('mouseup', (e) => {
         isDragging = false;
     });
@@ -48,8 +63,8 @@ onMounted(()=>{
         class="scroll" 
         ref="hScrollBar"
         :style="{
-            width: '200px',
-            left: view.timeToPx(view.timeOffset) + 'px'
+            width: -view.timeToPx(-32) + 'px',
+            left: view.timeToBounds(view.timeOffset) * 100 + '%'
         }"
     
     > &nbsp; </div>

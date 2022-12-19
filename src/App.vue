@@ -65,13 +65,15 @@ const getScopednotes = () => {
       note.start + note.duration > view.timeOffset;
   })
     .map(note => {
-      const cutWidth = note.start < view.timeOffset ? note.start - view.timeOffset : 0;
+      const isCut = note.start < view.timeOffset;
+      const cutWidth = isCut ? note.start - view.timeOffset : 0;
 
       return {
         ...note,
         x: clampToZero(view.pxToTimeWithOffset(note.start)),
         w: view.pxToTime(note.duration + cutWidth),
         y: view.octaveToPx(note.octave),
+        cut: isCut,
       }
     });
 }
