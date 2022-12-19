@@ -27,9 +27,10 @@ onMounted(() => {
         const startNoteStart = note.start;
         $noteElement.style.cursor = 'grabbing';
         const mouseMove = (e: MouseEvent) => {
-            // why is the movement range still tied to the zoom level?
-            // note.start = startNoteStart + view.pxToTime(e.clientX - startX);
-            const timeDelta = view.pxToTime(e.clientX - startX);
+            // this is a very wicked use of the function.
+            // honestly I don't understand why it works using
+            // the inverse function. It has something to do with zooming
+            const timeDelta = view.timeToPx(e.clientX - startX);
             note.start = startNoteStart + timeDelta;
         };
         const mouseUp = (e: MouseEvent) => {
