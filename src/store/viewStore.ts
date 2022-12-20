@@ -11,11 +11,12 @@ export const useViewStore = defineStore("view", {
         viewWidthPx: 1920,
         viewHeightPx: 1080,
         viewWidthTime: 1024,
-        viewHeightOctaves: 4,
+        viewHeightOctaves: 16,
         // size of the composition, to use as reference to scroll bounds
         scrollBound: 2048,
         // TODO: integrate this, so that view always zooms to center or mouse pos.
-        _offsetPx: 1920 / 2,
+        _offsetPxX: 1920 / 2,
+        _offsetPxY: 1080,
     }),
     getters: {
     },
@@ -50,16 +51,16 @@ export const useViewStore = defineStore("view", {
             return px * this.viewWidthPx / this.viewWidthTime;
         },
         pxToOctave(px: number): number {
-            return px * this.viewHeightOctaves / this.viewHeightPx;
+            return px * - this.viewHeightOctaves / this.viewHeightPx;
         },
         octaveToPx(octave: number): number {
-            return octave * this.viewHeightPx / this.viewHeightOctaves;
+            return octave * this.viewHeightPx / - this.viewHeightOctaves;
         },
         pxToOctaveOffset(px: number): number {
-            return this.pxToOctave(px) - this.octaveOffset;
+            return this.pxToOctave(px - this._offsetPxY) - this.octaveOffset;
         },
         octaveToPxOffset(octaveOffset: number): number {
-            return this.octaveToPx(octaveOffset + this.octaveOffset);
+            return this.octaveToPx(octaveOffset + this.octaveOffset) + this._offsetPxY;
         },
         octaveToFrequency(octave: number): number {
             return this.centerFrequency * Math.pow(2, octave - this.octaveOffset);
@@ -70,7 +71,7 @@ export const useViewStore = defineStore("view", {
         updateSize(width: number, height: number) {
             this.viewWidthPx = width;
             this.viewHeightPx = height;
-            this._offsetPx = width / 2;
+            this._offsetPxX = width / 2;
         },
     },
 

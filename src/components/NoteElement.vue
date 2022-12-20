@@ -106,8 +106,9 @@ onMounted(() => {
 </script>
 
 <template>
-    <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" :height="10" />
-    <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" :width="5" :height="10" />
+    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10" >{{noteRect.note.octave}}</text>
+    <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
+    <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
 </template>
 
 <style scoped>
@@ -122,4 +123,5 @@ onMounted(() => {
     stroke: #999;
     cursor: ew-resize;
 }
+
 </style>
