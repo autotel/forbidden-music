@@ -3,12 +3,14 @@ import { useViewStore } from './store/viewStore';
 import { useScoreStore } from './store/scoreStore';
 import { onMounted, Ref, ref } from 'vue';
 
+import { usePlaybackStore } from './store/playbackStore';
 import TimeScrollBar from "./components/TimeScrollBar.vue"
 import { storeToRefs } from 'pinia';
 import { Note } from './dataTypes/Note';
 import NoteElement from './components/NoteElement.vue';
 import ToolSelector from './components/ToolSelector.vue';
 import Button from "./components/Button.vue";
+import Transport from './components/Transport.vue';
 const timedEventsViewport = ref<SVGSVGElement>();
 // const notesStore = useScoreStore();
 // const notes = storeToRefs(notesStore);
@@ -16,7 +18,7 @@ const score = useScoreStore();
 // const store = useViewStore();
 // const view = storeToRefs(store);
 const view = useViewStore();
-
+const playback = usePlaybackStore();
 
 let noteBeingCreated: Ref<Note | false> = ref(false);
 
@@ -155,7 +157,18 @@ const getScopednotes = () => {
 </script>
 
 <template>
+
   <svg id="viewport" ref="timedEventsViewport">
+
+    <!--
+      weirdness still present:
+      intuitively I would assume that to get from time
+      to position, the function would be
+      timeToPxWithOffset, but it's not
+  -->
+    <line :x1=view.pxToTimeWithOffset(playback.currentScoreTime) y1="0"
+      :x2=view.pxToTimeWithOffset(playback.currentScoreTime) y2="100%" stroke="red" stroke-width="1" />
+
     <!-- draw a rectangle representing each note -->
     <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
     <NoteElement v-if="noteBeingCreated" :noteRect="noteRect(noteBeingCreated)" />
@@ -164,6 +177,9 @@ const getScopednotes = () => {
   <div style="position: fixed;">
     <Button :onClick="clear" danger>clear</Button>
     <ToolSelector />
+  </div>
+  <div style="position: fixed; bottom: 0;">
+    <Transport />
   </div>
 </template>
 
