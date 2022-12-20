@@ -40,7 +40,7 @@ onMounted(()=>{
         e.preventDefault();
         if (isDragging) {
             const delta = e.clientX - dragStartX;
-            // view.timeOffset = dragStartOffset + view.pxToTime(delta);
+            // view.timeOffset = dragStartOffset + view.timeToPx(delta);
             view.setTimeOffsetBounds(dragStartBounds / 20000 + view.pxToBounds(delta));
             // prevent timeOffset from going out of bounds
             if (view.timeOffset < 0) {
@@ -64,7 +64,7 @@ onMounted(()=>{
         class="scroll" 
         ref="hScrollBar"
         :style="{
-            width: -view.timeToPx(-32) + 'px',
+            width: -view.pxToTime(-32) + 'px',
             // width: view.timeToBounds(view.viewWidthTime) * 100 + '%',
             left: view.timeToBounds(view.timeOffset) * 100 + '%'
         }"

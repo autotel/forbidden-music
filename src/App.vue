@@ -43,6 +43,7 @@ onMounted(() => {
   let viewDragStartY = 0;
   let viewDragStartOctave = 0;
 
+  let newNoteDragX = 0;
 
   // when user drags on the viewport, add a note an extend it's duration
   $viewPort.addEventListener('mousedown', (e) => {
@@ -55,6 +56,7 @@ onMounted(() => {
       viewDragStartY = e.clientY;
       viewDragStartOctave = view.octaveOffset;
     } else {
+      newNoteDragX = e.offsetX;
       noteBeingCreated.value = {
         // TODO: it seems that these converter functions are the wrong side around or something
         start: view.timeToPxWithOffset(e.offsetX),
@@ -66,13 +68,14 @@ onMounted(() => {
 
   window.addEventListener('mousemove', (e) => {
     if (noteBeingCreated.value) {
-      noteBeingCreated.value.duration = clampToZero(view.timeToPx(e.offsetX) - noteBeingCreated.value.start);
+      const deltaX = e.clientX - newNoteDragX;
+      noteBeingCreated.value.duration = clampToZero(view.pxToTime(deltaX));
     } else if (draggingView) {
       // pan view, if dragging middle wheel
       const deltaX = e.clientX - viewDragStartX;
       const deltaY = e.clientY - viewDragStartY;
       // oddness commented elsewhere
-      view.timeOffset = viewDragStartTime - view.timeToPx(deltaX);
+      view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
       view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
       // prevent timeOffset from going out of bounds
       if (view.timeOffset < 0) {
@@ -129,10 +132,10 @@ const clear = () => {
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 const noteRect = (note: Note) => {
   const isCut = note.start < view.timeOffset;
-  const cutWidth = isCut ? note.start - view.timeOffset : 0;
+  const cutTimeWidth = isCut ? note.start - view.timeOffset : 0;
   return {
     x: clampToZero(view.pxToTimeWithOffset(note.start)),
-    w: view.pxToTime(note.duration + cutWidth),
+    w: view.timeToPx(note.duration + cutTimeWidth),
     y: view.octaveToPxOffset(note.octave),
     cut: isCut,
     note: note,

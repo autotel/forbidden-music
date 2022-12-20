@@ -3,11 +3,11 @@ import { describe, it, expect } from 'vitest'
 describe('View', () => {
     it('converts px to time', () => {
         const view = new View(100, 100, 10, 10);
-        expect(view.pxToTime(50)).toBe(5);
+        expect(view.timeToPx(50)).toBe(5);
     });
     it('converts time to px', () => {
         const view = new View(100, 100, 10, 10);
-        expect(view.timeToPx(5)).toBe(50);
+        expect(view.pxToTime(5)).toBe(50);
     });
     it('converts px to octave', () => {
         const view = new View(100, 100, 10, 10);
@@ -28,7 +28,7 @@ describe('View', () => {
     it('converts px to time with time offset', ()=> {
         const view = new View(100, 100, 10, 10);
         view.timeOffset = 5;
-        expect(view.pxToTime(50)).toBe(10);
+        expect(view.timeToPx(50)).toBe(10);
     });
     it('converts px to frequency with octave offset',()=>{
         const view = new View(100, 100, 10, 10);

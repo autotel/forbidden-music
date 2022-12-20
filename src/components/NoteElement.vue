@@ -38,7 +38,7 @@ onMounted(() => {
             e.stopPropagation();
 
             // same wickedness
-            const timeDelta = view.timeToPx(e.clientX - startX);
+            const timeDelta = view.pxToTime(e.clientX - startX);
             note.duration = startNoteDuration + timeDelta;
         };
         const mouseUp = (e: MouseEvent) => {
@@ -64,7 +64,7 @@ onMounted(() => {
             // this is a very wicked use of the function.
             // honestly I don't understand why it works using
             // the inverse function. It has something to do with zooming
-            const timeDelta = view.timeToPx(e.clientX - startX);
+            const timeDelta = view.pxToTime(e.clientX - startX);
             note.start = startNoteStart + timeDelta;
         };
         const mouseUp = (e: MouseEvent) => {

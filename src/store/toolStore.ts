@@ -9,6 +9,7 @@ export const useToolStore = defineStore("tool", {
             toneGrid: false,
             timeGrid: false,
             toneFractions: false,
+            toneRulers: false,
             // ... etc
         },
     }),

@@ -15,10 +15,10 @@ export class View {
     this.viewWidthPx = width;
     this.viewHeightPx = height;
   }
-  pxToTime(px: number): number {
+  timeToPx(px: number): number {
     return px * this.viewWidthPx / this.viewWidthTime;
   }
-  timeToPx(time: number): number {
+  pxToTime(time: number): number {
     return time * this.viewWidthTime / this.viewWidthPx;
   }
   pxToOctave(px: number): number {
