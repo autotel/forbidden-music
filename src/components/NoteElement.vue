@@ -33,6 +33,7 @@ onMounted(() => {
         const startX = e.clientX;
         const startNoteDuration = note.duration;
         $rightEdge.style.cursor = 'ew-resize';
+        
         const mouseMove = (e: MouseEvent) => {
             e.stopPropagation();
 

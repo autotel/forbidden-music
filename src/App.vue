@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useViewStore } from './store/viewStore';
 import { useScoreStore } from './store/scoreStore';
-import { onMounted, ref } from 'vue';
+import { onMounted, Ref, ref } from 'vue';
 
 import TimeScrollBar from "./components/TimeScrollBar.vue"
 import { storeToRefs } from 'pinia';
@@ -16,6 +16,10 @@ const score = useScoreStore();
 // const store = useViewStore();
 // const view = storeToRefs(store);
 const view = useViewStore();
+
+
+let noteBeingCreated: Ref<Note | false> = ref(false);
+
 onMounted(() => {
   //make the timedEventsViewport always fill the window
   const $viewPort = timedEventsViewport.value;
@@ -39,6 +43,7 @@ onMounted(() => {
   let viewDragStartY = 0;
   let viewDragStartOctave = 0;
 
+
   // when user drags on the viewport, add a note an extend it's duration
   $viewPort.addEventListener('mousedown', (e) => {
 
@@ -50,19 +55,20 @@ onMounted(() => {
       viewDragStartY = e.clientY;
       viewDragStartOctave = view.octaveOffset;
     } else {
-      const note = {
+      noteBeingCreated.value = {
         // TODO: it seems that these converter functions are the wrong side around or something
         start: view.timeToPxWithOffset(e.offsetX),
         duration: 1,
         octave: view.pxToOctaveOffset(e.offsetY),
       } as Note;
-      score.notes.push(note);
     }
   });
 
   window.addEventListener('mousemove', (e) => {
-    // pan view, if dragging middle wheel
-    if (draggingView) {
+    if (noteBeingCreated.value) {
+      noteBeingCreated.value.duration = clampToZero(view.timeToPx(e.offsetX) - noteBeingCreated.value.start);
+    } else if (draggingView) {
+      // pan view, if dragging middle wheel
       const deltaX = e.clientX - viewDragStartX;
       const deltaY = e.clientY - viewDragStartY;
       // oddness commented elsewhere
@@ -81,6 +87,11 @@ onMounted(() => {
   window.addEventListener('mouseup', (e) => {
     // stop panning view, if it were
     draggingView = false;
+
+    if (noteBeingCreated.value !== false && e.button !== 1) {
+      score.notes.push(noteBeingCreated.value);
+      noteBeingCreated.value = false;
+    }
   });
 
   // export score
@@ -114,24 +125,28 @@ onMounted(() => {
 const clear = () => {
   score.notes = [];
 }
+
+const clampToZero = (n: number) => n < 0 ? 0 : n;
+const noteRect = (note: Note) => {
+  const isCut = note.start < view.timeOffset;
+  const cutWidth = isCut ? note.start - view.timeOffset : 0;
+  return {
+    x: clampToZero(view.pxToTimeWithOffset(note.start)),
+    w: view.pxToTime(note.duration + cutWidth),
+    y: view.octaveToPxOffset(note.octave),
+    cut: isCut,
+    note: note,
+  }
+}
 const getScopednotes = () => {
-  const clampToZero = (n: number) => n < 0 ? 0 : n;
   //TODO: also filter by octave component
   return score.notes.filter(note => {
     return note.start < view.timeOffset + view.viewWidthTime &&
       note.start + note.duration > view.timeOffset;
   })
     .map(note => {
-      const isCut = note.start < view.timeOffset;
-      const cutWidth = isCut ? note.start - view.timeOffset : 0;
 
-      return {
-        x: clampToZero(view.pxToTimeWithOffset(note.start)),
-        w: view.pxToTime(note.duration + cutWidth),
-        y: view.octaveToPxOffset(note.octave),
-        cut: isCut,
-        note: note,
-      }
+      return noteRect(note);
     });
 }
 </script>
@@ -140,6 +155,7 @@ const getScopednotes = () => {
   <svg id="viewport" ref="timedEventsViewport">
     <!-- draw a rectangle representing each note -->
     <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
+    <NoteElement v-if="noteBeingCreated" :noteRect="noteRect(noteBeingCreated)" />
   </svg>
   <TimeScrollBar />
   <div style="position: fixed;">

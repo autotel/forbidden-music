@@ -5,6 +5,12 @@ import { Tool } from '../dataTypes/Tool.js';
 export const useToolStore = defineStore("tool", {
     state: () => ({
         current: Tool.Edit,
+        snaps: {
+            toneGrid: false,
+            timeGrid: false,
+            toneFractions: false,
+            // ... etc
+        },
     }),
     getters: {
         // this madness... I swear it's not my fault
