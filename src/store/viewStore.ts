@@ -11,7 +11,7 @@ export const useViewStore = defineStore("view", {
         viewWidthPx: 1920,
         viewHeightPx: 1080,
         viewWidthTime: 12,
-        viewHeightOctaves: 16,
+        viewHeightOctaves: 4,
         // size of the composition, to use as reference to scroll bounds
         scrollBound: 2048,
         // TODO: integrate this, so that view always zooms to center or mouse pos.

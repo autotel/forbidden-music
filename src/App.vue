@@ -22,7 +22,14 @@ const playback = usePlaybackStore();
 
 let noteBeingCreated: Ref<Note | false> = ref(false);
 
+const acInit = () => {
+  playback.startAudioContext();
+  window.removeEventListener('click', acInit);
+};
+window.addEventListener('click', acInit);
+
 onMounted(() => {
+
   //make the timedEventsViewport always fill the window
   const $viewPort = timedEventsViewport.value;
   if (!$viewPort) throw new Error("timedEventsViewport not found");
@@ -165,9 +172,11 @@ const getScopednotes = () => {
       intuitively I would assume that to get from time
       to position, the function would be
       timeToPxWithOffset, but it's not
+
+      TODO: prevent needing to calculate twice x position 
   -->
-    <line :x1=view.pxToTimeWithOffset(playback.currentScoreTime) y1="0"
-      :x2=view.pxToTimeWithOffset(playback.currentScoreTime) y2="100%" stroke="red" stroke-width="1" />
+    <line :x1=view.pxToTimeWithOffset(playback.previousScoreTime) y1="0"
+      :x2=view.pxToTimeWithOffset(playback.previousScoreTime) y2="100%" stroke="red" stroke-width="1" />
 
     <!-- draw a rectangle representing each note -->
     <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
