@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, Ref } from 'vue';
+import { Note } from '../dataTypes/Note.js';
 import { View } from '../View.js';
-
+import { useScoreStore } from './scoreStore.js';
 export const useViewStore = defineStore("view", {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
     state: () => ({
@@ -17,8 +18,19 @@ export const useViewStore = defineStore("view", {
         // TODO: integrate this, so that view always zooms to center or mouse pos.
         _offsetPxX: 1920 / 2,
         _offsetPxY: 1080,
+
+        score: useScoreStore(),
     }),
     getters: {
+        // TODO: Will it recalc every call? if so, we need to cache the result
+        visibleNotes(): Array<Note> {
+            const score = this.score;
+            //TODO: also filter by octave component
+            return score.notes.filter(note => {
+                return note.start < this.timeOffset + this.viewWidthTime &&
+                    note.start + note.duration > this.timeOffset;
+            });
+        }
     },
     actions: {
         setTimeOffset(timeOffset: number) {

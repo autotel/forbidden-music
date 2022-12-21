@@ -59,7 +59,6 @@ export const usePlaybackStore = defineStore("playback", {
             const playNotes = this._getEventsBetween(this.previousScoreTime, this.currentScoreTime);
             playNotes.forEach((note) => {
                 const frequency = 50 * 2 ** (note.octave - 2);
-                console.log("playing note", note.octave, frequency);
                 this.synth.playNoteEvent(note.start - this.previousScoreTime , note.duration, frequency);
             });
 

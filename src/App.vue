@@ -150,18 +150,11 @@ const noteRect = (note: Note) => {
   }
 }
 const getScopednotes = () => {
-  //TODO: also filter by octave component
-  return score.notes.filter(note => {
-    return note.start < view.timeOffset + view.viewWidthTime &&
-      note.start + note.duration > view.timeOffset;
-  })
-    .map(note => {
-
-      return noteRect(note);
-    });
+  return view.visibleNotes.map(note => {
+    return noteRect(note);
+  });
 }
 </script>
-
 <template>
 
   <svg id="viewport" ref="timedEventsViewport">
@@ -174,8 +167,8 @@ const getScopednotes = () => {
 
       TODO: prevent needing to calculate twice x position 
   -->
-    <line :x1=playback.playbarPxPosition y1="0"
-      :x2=playback.playbarPxPosition y2="100%" stroke="red" stroke-width="1" />
+    <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
+      stroke-width="1" />
 
     <!-- draw a rectangle representing each note -->
     <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
