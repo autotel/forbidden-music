@@ -9,10 +9,9 @@ class Voice {
         this.audioContext = audioContext;
         this.inUse = false;
         this.gainNode = audioContext.createGain();
-        this.oscillator = audioContext.createOscillator();
-        this.oscillator.type = "sawtooth";
-        this.oscillator.connect(this.gainNode);
+        this.oscillator = this.resetOscillator();
         this.gainNode.connect(destination);
+
     }
 
     triggerAttack(frequency: number, velocity: number) {
@@ -20,19 +19,28 @@ class Voice {
     }
 
     scheduleAttack(frequency: number, velocity: number, when: number) {
+        this.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
         this.inUse = true;
         this.oscillator.frequency.value = frequency;
         this.gainNode.gain.value = velocity;
-        this.oscillator.start(when); 
+    }
+    
+    resetOscillator() {
+        this.oscillator?.stop();
+        this.oscillator = this.audioContext.createOscillator();
+        this.oscillator.type = "sawtooth";
+        this.oscillator.connect(this.gainNode);
+        this.oscillator.start();
+        // just to make ts happy
+        return this.oscillator;
     }
 
     scheduleRelease(when: number) {
         // TODO: this is not accurate
         this.gainNode.gain.exponentialRampToValueAtTime(0.001, when);
-        this.oscillator.stop(when);
         setTimeout(() => {
             this.inUse = false;
-        }, when * 1000);
+        },(when - this.audioContext.currentTime) / 1000);
     }
 }
 export class SawtoothSynth {
@@ -59,7 +67,6 @@ export class SawtoothSynth {
                 let newVoice = new Voice(audioContext, voicesMaster);
 
                 voices.push(newVoice);
-                console.log("voices count: " + voices.length);
                 return newVoice;
             }
 
@@ -67,7 +74,6 @@ export class SawtoothSynth {
             this.playNoteEvent = (startTimeSecondsFromNow, duration, frequency) => {
                 // frequency = 440;
                 const startSeconds = audioContext.currentTime + startTimeSecondsFromNow;
-                console.log("start in ", startTimeSecondsFromNow);
                 const voice = findVoice();
                 voice.scheduleAttack(frequency, 1, startSeconds);
                 voice.scheduleRelease(startSeconds + duration);

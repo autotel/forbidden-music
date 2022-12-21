@@ -23,6 +23,8 @@ export const usePlaybackStore = defineStore("playback", {
         score: useScoreStore(),
         view: useViewStore(),
 
+        playbarPxPosition: 0,
+
         __awaitingAudioContext: [] as ((audioContext: AudioContext) => void)[],
     }),
     getters: {
@@ -60,13 +62,19 @@ export const usePlaybackStore = defineStore("playback", {
                 console.log("playing note", note.octave, frequency);
                 this.synth.playNoteEvent(note.start - this.previousScoreTime , note.duration, frequency);
             });
+
             this.previousScoreTime = this.currentScoreTime;
+            const foresightScoreTime = this.foresight * this.tempo;
+
+            // TODO: mapping direction weirdness :/ 
+            // why 4*? I don't know. Maybe it's because bluetooth headphones I'm using
+            this.playbarPxPosition = this.view.pxToTimeWithOffset(this.previousScoreTime - 4 * foresightScoreTime);
         },
         play() {
             this.playing = true;
             if (this.currentTimeout) throw new Error("timeout already exists");
             this.previousClockTime = new Date().getTime();
-            this.currentTimeout = setTimeout(this._clockAction, this.foresight / 2000);
+            this.currentTimeout = setTimeout(this._clockAction, 1);
         },
         stop() {
             clearTimeout(this.currentTimeout);
@@ -74,6 +82,7 @@ export const usePlaybackStore = defineStore("playback", {
             this.playing = false;
             this.currentScoreTime = 0;
             this.lastPlayedFrameTime = 0;
+            this.playbarPxPosition = 0;
         },
         pause() {
             clearTimeout(this.currentTimeout);

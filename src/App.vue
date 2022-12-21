@@ -35,7 +35,6 @@ onMounted(() => {
   if (!$viewPort) throw new Error("timedEventsViewport not found");
 
   const resize = () => {
-    console.log("resize")
     $viewPort.style.width = window.innerWidth - 2 + "px";
     $viewPort.style.height = window.innerHeight - 2 + "px";
 
@@ -175,8 +174,8 @@ const getScopednotes = () => {
 
       TODO: prevent needing to calculate twice x position 
   -->
-    <line :x1=view.pxToTimeWithOffset(playback.previousScoreTime) y1="0"
-      :x2=view.pxToTimeWithOffset(playback.previousScoreTime) y2="100%" stroke="red" stroke-width="1" />
+    <line :x1=playback.playbarPxPosition y1="0"
+      :x2=playback.playbarPxPosition y2="100%" stroke="red" stroke-width="1" />
 
     <!-- draw a rectangle representing each note -->
     <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
