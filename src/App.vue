@@ -9,6 +9,7 @@ import { storeToRefs } from 'pinia';
 import { Note } from './dataTypes/Note';
 import NoteElement from './components/NoteElement.vue';
 import ToolSelector from './components/ToolSelector.vue';
+import SnapSelector from './components/SnapSelector.vue';
 import Button from "./components/Button.vue";
 import Transport from './components/Transport.vue';
 const timedEventsViewport = ref<SVGSVGElement>();
@@ -180,6 +181,7 @@ const getScopednotes = () => {
     <ToolSelector />
   </div>
   <div style="position: fixed; bottom: 0;">
+    <SnapSelector /> 
     <Transport />
   </div>
 </template>

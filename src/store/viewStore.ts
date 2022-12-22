@@ -74,12 +74,6 @@ export const useViewStore = defineStore("view", {
         octaveToPxOffset(octaveOffset: number): number {
             return this.octaveToPx(octaveOffset + this.octaveOffset) + this._offsetPxY;
         },
-        octaveToFrequency(octave: number): number {
-            return this.centerFrequency * Math.pow(2, octave - this.octaveOffset);
-        },
-        frequencyToOctave(frequency: number): number {
-            return Math.log2(frequency / this.centerFrequency) + this.octaveOffset;
-        },
         updateSize(width: number, height: number) {
             this.viewWidthPx = width;
             this.viewHeightPx = height;

@@ -5,6 +5,7 @@ import { Note } from '../dataTypes/Note';
 import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 import Fraction from 'fraction.js';
+import ToolSelector from './ToolSelector.vue';
 // get the view store
 const view = useViewStore();
 const tool = useToolStore();
@@ -28,22 +29,30 @@ const props = defineProps<{
 
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
-
-const recalcRelations = () => {
-
-    const note = props.noteRect.note;
-    const relations = view.visibleNotes
-        .filter(n => n !== note)
+/**
+ * gets a list of fractional relations to each other note visible in view
+ */
+const getRelationsList = (withOctave:number) => {
+    return view.visibleNotes
+        .filter(n => n.octave !== withOctave)
         .map(n => {
-            const distancePx =  view.octaveToPx(n.octave - note.octave);
-            if (note.octave === 0) {
+            const distancePx = view.octaveToPx(n.octave - withOctave);
+            if (withOctave === 0) {
                 return { value: 0, text: "!", xPosition: 0, distancePx }
             }
-            const value = n.octave / note.octave;
-            const text = note.octave == 0 ? `!` : `${new Fraction(value).toFraction(true)}`;
-            const xPosition = view.timeToPx(n.start);
+            const value = n.octave / withOctave;
+            const text = withOctave == 0 ? `!` : `${new Fraction(value).simplify(tool.simplify).toFraction(true)}`;
+            const xPosition = view.timeToPx(n.start + n.duration / 2) - view.timeToPx(view.timeOffset);
             return { value, text, xPosition, distancePx };
         }) as Array<{ value: number, text: string, xPosition: number, distancePx: number }>;
+}
+/**
+ * refreshes the relations list
+ */
+const recalcRelations = () => {
+    
+    const note = props.noteRect.note;
+    const relations = getRelationsList(note.octave);
     toneRelations.value = relations;
 }
 
@@ -94,7 +103,6 @@ onMounted(() => {
             const timeDelta = view.pxToTime(e.clientX - startX);
             note.start = startNoteStart + timeDelta;
 
-            recalcRelations();
         };
         const mouseUp = (e: MouseEvent) => {
             e.stopPropagation();
@@ -114,10 +122,58 @@ onMounted(() => {
 
         const startY = e.clientY;
         const startNoteOctave = note.octave;
+
+        const relationalSnaps = [] as number[];
+
+        Object.keys(tool.snaps).forEach(snapName => {
+            console.log("snap", snapName, tool.snaps[snapName]);
+            if (tool.snaps[snapName] === false) return false;
+            const numberValue = snapName.match(/(\d+)/)?.[0];
+            if (numberValue === undefined) return false;
+            return relationalSnaps.push(parseInt(numberValue));
+        });
+
+        // console.log("relational snaps", relationalSnaps);
+
         $noteBody.style.cursor = 'grabbing';
         const mouseMoveV = (e: MouseEvent) => {
             const octaveDelta = view.pxToOctave(e.clientY - startY);
-            note.octave = startNoteOctave + octaveDelta;
+
+            let targetOctave = startNoteOctave + octaveDelta;
+
+            let closestSnapValue = null as number | null;
+            let closestSnapDistance = null as number | null;
+            let snappedResult = null as number | null;
+
+            if (!toneRelations.value) throw new Error("toneRelations not initialized");
+            const newRelations = getRelationsList(targetOctave);
+            // among the fractional relations to other notes
+            newRelations.forEach(({ value }) => {
+                // if the snap is enabled
+                if (tool.snaps.fraction) {
+                    const fractionSnap = tool.getClosestFraction(-value);
+                    // distance to what would be the target position
+                    const snapDistance = Math.abs(fractionSnap - targetOctave);
+                    if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
+                        closestSnapDistance = snapDistance;
+                        closestSnapValue = fractionSnap;
+                        snappedResult = targetOctave + fractionSnap;
+                    }
+                }
+            });
+
+
+            if (snappedResult === null) {
+                note.octave = targetOctave;
+                console.log("any val");
+            } else {
+                note.octave = snappedResult;
+                console.log("snap val");
+            }
+
+            recalcRelations();
+            console.log(closestSnapValue);
+            
         };
         const mouseUpV = (e: MouseEvent) => {
             $noteBody.style.cursor = 'grab';
@@ -144,7 +200,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ noteRect.note.octave }}</text>
+    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ noteRect.note.duration }}</text>
     <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
     <template v-for="relation in toneRelations">

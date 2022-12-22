@@ -9,16 +9,17 @@ export const usePlaybackStore = defineStore("playback", {
     state: () => ({
         playing: false,
         // time units per second?
-        tempo: 4,
+        tempo: 10,
+        /** in musical time */
         currentScoreTime: 0,
+        /** in musical time */
         previousScoreTime: 0,
         currentTimeout: null as null | any,
-        previousClockTime: 0, // seconds
-        lastPlayedFrameTime: 0, // seconds
+        /** in seconds */
+        previousClockTime: 0,
 
         audioContext: null as null | AudioContext,
         synth: new SawtoothSynth(),
-        foresight: 0.1, // seconds
 
         score: useScoreStore(),
         view: useViewStore(),
@@ -41,7 +42,7 @@ export const usePlaybackStore = defineStore("playback", {
             console.log("created audio context");
         },
         getAudioContextThen(callback: (audioContext: AudioContext) => void) {
-            if (this.audioContext) return this.audioContext;
+            if (this.audioContext) callback(this.audioContext);
             this.__awaitingAudioContext.push(callback);
         },
         _getEventsBetween(frameStartTime: number, frameEndTime: number) {
@@ -51,37 +52,48 @@ export const usePlaybackStore = defineStore("playback", {
             return events;
         },
         _clockAction() {
-            const now = new Date().getTime();
+            if (!this.audioContext) throw new Error("audio context not created");
+            const now = this.audioContext.currentTime;
             const deltaTime = now - this.previousClockTime;
             this.previousClockTime = now;
-            this.currentScoreTime += deltaTime * this.tempo / 1000;
-            this.currentTimeout = setTimeout(this._clockAction, 10);
+            this.currentScoreTime += deltaTime * this.tempo;
             const playNotes = this._getEventsBetween(this.previousScoreTime, this.currentScoreTime);
             playNotes.forEach((note) => {
+                // TODO: move this conversion function somewhere else
                 const frequency = 50 * 2 ** (note.octave - 2);
-                this.synth.playNoteEvent(note.start - this.previousScoreTime , note.duration, frequency);
+
+                this.synth.playNoteEvent(
+                    note.start - this.previousScoreTime,
+                    note.duration / this.tempo,
+                    frequency
+                );
             });
 
+            if(this.currentTimeout) clearTimeout(this.currentTimeout);
+            this.currentTimeout = setTimeout(this._clockAction, 0);
+    
             this.previousScoreTime = this.currentScoreTime;
-            const foresightScoreTime = this.foresight * this.tempo;
 
             // TODO: mapping direction weirdness :/ 
-            // why 4*? I don't know. Maybe it's because bluetooth headphones I'm using
-            this.playbarPxPosition = this.view.pxToTimeWithOffset(this.previousScoreTime - 4 * foresightScoreTime);
+            this.playbarPxPosition = this.view.pxToTimeWithOffset(this.currentScoreTime);
         },
         play() {
-            this.playing = true;
-            if (this.currentTimeout) throw new Error("timeout already exists");
-            this.previousClockTime = new Date().getTime();
-            this.currentTimeout = setTimeout(this._clockAction, 1);
+            this.getAudioContextThen(() => {
+                this.playing = true;
+                if (this.currentTimeout) throw new Error("timeout already exists");
+                if (!this.audioContext) throw new Error("audio context not created");
+                this.previousClockTime = this.audioContext.currentTime;
+                this.currentTimeout = setTimeout(this._clockAction, 0);
+            });
         },
         stop() {
             clearTimeout(this.currentTimeout);
             this.currentTimeout = null;
             this.playing = false;
             this.currentScoreTime = 0;
-            this.lastPlayedFrameTime = 0;
+            this.previousScoreTime = 0;
             this.playbarPxPosition = 0;
+            this.previousClockTime = 0;
         },
         pause() {
             clearTimeout(this.currentTimeout);
