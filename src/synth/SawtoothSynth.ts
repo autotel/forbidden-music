@@ -71,7 +71,7 @@ export class SawtoothSynth {
         this.setAudioContext = (audioContext) => {
 
             const voicesMaster = audioContext.createGain();
-            voicesMaster.gain.value = 1/12;
+            voicesMaster.gain.value = 1/4;
             voicesMaster.connect(audioContext.destination);
             const voices = [] as Array<Voice>;
 
