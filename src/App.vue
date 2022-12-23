@@ -6,7 +6,7 @@ import { onMounted, Ref, ref } from 'vue';
 import { usePlaybackStore } from './store/playbackStore';
 import TimeScrollBar from "./components/TimeScrollBar.vue"
 import { storeToRefs } from 'pinia';
-import { Note } from './dataTypes/Note';
+import { makeNote, Note } from './dataTypes/Note';
 import NoteElement from './components/NoteElement.vue';
 import ToolSelector from './components/ToolSelector.vue';
 import SnapSelector from './components/SnapSelector.vue';
@@ -66,12 +66,11 @@ onMounted(() => {
       viewDragStartOctave = view.octaveOffset;
     } else {
       newNoteDragX = e.offsetX;
-      noteBeingCreated.value = {
-        // TODO: it seems that these converter functions are the wrong side around or something
+      noteBeingCreated.value = makeNote({
         start: view.timeToPxWithOffset(e.offsetX),
         duration: 1,
         octave: view.pxToOctaveOffset(e.offsetY),
-      } as Note;
+      });
     }
   });
 
@@ -181,7 +180,7 @@ const getScopednotes = () => {
     <ToolSelector />
   </div>
   <div style="position: fixed; bottom: 0;">
-    <SnapSelector /> 
+    <SnapSelector />
     <Transport />
   </div>
 </template>
@@ -193,7 +192,9 @@ svg#viewport {
   left: 0;
   cursor: crosshair;
 }
-text, t {
+
+text,
+t {
   user-select: none;
 }
 </style>

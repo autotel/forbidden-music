@@ -145,24 +145,7 @@ onMounted(() => {
             let closestSnapDistance = null as number | null;
             let snappedResult = null as number | null;
 
-            if (!toneRelations.value) throw new Error("toneRelations not initialized");
-            const newRelations = getRelationsList(targetOctave);
-            // among the fractional relations to other notes
-            newRelations.forEach(({ value }) => {
-                // if the snap is enabled
-                if (tool.snaps.fraction) {
-                    const fractionSnap = tool.getClosestFraction(-value);
-                    // distance to what would be the target position
-                    const snapDistance = Math.abs(fractionSnap - targetOctave);
-                    if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
-                        closestSnapDistance = snapDistance;
-                        closestSnapValue = fractionSnap;
-                        snappedResult = targetOctave + fractionSnap;
-                    }
-                }
-            });
-
-
+            
             if (snappedResult === null) {
                 note.octave = targetOctave;
                 console.log("any val");
@@ -200,7 +183,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ noteRect.note.duration }}</text>
+    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{noteRect.note.octave}} Octs.</text>
+    <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ noteRect.note.frequency }} Hz.</text>
     <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
     <template v-for="relation in toneRelations">
