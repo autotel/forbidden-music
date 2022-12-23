@@ -193,4 +193,7 @@ svg#viewport {
   left: 0;
   cursor: crosshair;
 }
+text, t {
+  user-select: none;
+}
 </style>

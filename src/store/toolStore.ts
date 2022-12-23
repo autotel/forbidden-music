@@ -7,7 +7,8 @@ export const useToolStore = defineStore("tool", {
         current: Tool.Edit,
         simplify: 0.01,
         snaps: {
-            fraction: true,
+            fraction: false,
+            equal12: true,
             // toneGrid: false,
             // timeGrid: false,
             // toneFractions: false,

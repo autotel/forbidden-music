@@ -94,6 +94,7 @@ export const usePlaybackStore = defineStore("playback", {
             this.previousScoreTime = 0;
             this.playbarPxPosition = 0;
             this.previousClockTime = 0;
+            this.synth.stopAllNotes();
         },
         pause() {
             clearTimeout(this.currentTimeout);

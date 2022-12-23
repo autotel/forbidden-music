@@ -29,12 +29,12 @@ class Voice {
 
     scheduleAttack(now: number, frequency: number, velocity: number, when: number) {
         this.resetOscillator();
-        this.gainNode.gain.cancelScheduledValues(now);
+        this.gainNode.gain.cancelScheduledValues(now - 0.01);
         this.inUse = true;
         this.oscillator.frequency.value = frequency;
         this.filterNode.frequency.value = frequency;
-
-        this.gainNode.gain.value = velocity;
+        // this.gainNode.gain.value = velocity;
+        this.gainNode.gain.setValueAtTime(velocity, now);
     }
 
     resetOscillator() {
@@ -52,18 +52,17 @@ class Voice {
 
         console.log("end in", endTimeSeconds - now);
         this.gainNode.gain.setValueAtTime(0, endTimeSeconds);
-        // setTimeout(() => {
-        //     this.gainNode.gain.value = 0;
-        //     this.inUse = false;
-        //     this.oscillator.stop();
-        // }, endTimeSeconds * 1000);
+
+        setTimeout(() => {
+            this.inUse = false;
+        }, endTimeSeconds * 1000 + 40);
     }
 }
 export class SawtoothSynth {
 
     playNoteEvent: (start: number, duration: number, frequency: number) => void;
     setAudioContext: (audioContext: AudioContext) => void;
-
+    stopAllNotes = () => {};
     constructor() {
         this.playNoteEvent = () => {
             console.warn("audio context has not been started");
@@ -87,7 +86,11 @@ export class SawtoothSynth {
                 return newVoice;
             }
 
-
+            this.stopAllNotes = () => {
+                for (let voice of voices) {
+                    voice.scheduleEnd(audioContext.currentTime, 0);
+                }
+            }
             this.playNoteEvent = (startTimeSecondsFromNow, durationSeconds, frequency) => {
                 console.log("play",
                     startTimeSecondsFromNow,
