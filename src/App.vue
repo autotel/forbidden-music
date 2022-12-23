@@ -12,6 +12,8 @@ import ToolSelector from './components/ToolSelector.vue';
 import SnapSelector from './components/SnapSelector.vue';
 import Button from "./components/Button.vue";
 import Transport from './components/Transport.vue';
+import { useToolStore } from './store/toolStore';
+const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 // const notesStore = useScoreStore();
 // const notes = storeToRefs(notesStore);
@@ -66,11 +68,17 @@ onMounted(() => {
       viewDragStartOctave = view.octaveOffset;
     } else {
       newNoteDragX = e.offsetX;
-      noteBeingCreated.value = makeNote({
-        start: view.timeToPxWithOffset(e.offsetX),
-        duration: 1,
-        octave: view.pxToOctaveOffset(e.offsetY),
-      });
+      // TODO: need to add third argumet to allow relational snap when created
+      noteBeingCreated.value = tool.snap(
+        makeNote({
+          start: view.timeToPxWithOffset(e.offsetX),
+          duration: 1,
+          octave: view.pxToOctaveOffset(e.offsetY),
+        }),
+        view.pxToOctaveOffset(e.offsetY)
+      );
+
+
     }
   });
 

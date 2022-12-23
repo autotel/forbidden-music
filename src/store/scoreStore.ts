@@ -18,7 +18,6 @@ export const useScoreStore = defineStore("score", {
                 }
             });
             const last: Note = this.notes.reduce((acc, note) => {
-                note.end = note.start + note.duration;
                 if (!acc.end) throw new Error("acc.end is undefined");
                 if (note.end > acc.end) {
                     return note;

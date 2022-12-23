@@ -32,7 +32,7 @@ const rightEdge = ref<SVGRectElement>();
 /**
  * gets a list of fractional relations to each other note visible in view
  */
-const getRelationsList = (withOctave:number) => {
+const getRelationsList = (withOctave: number) => {
     return view.visibleNotes
         .filter(n => n.octave !== withOctave)
         .map(n => {
@@ -50,7 +50,7 @@ const getRelationsList = (withOctave:number) => {
  * refreshes the relations list
  */
 const recalcRelations = () => {
-    
+
     const note = props.noteRect.note;
     const relations = getRelationsList(note.octave);
     toneRelations.value = relations;
@@ -125,13 +125,13 @@ onMounted(() => {
 
         const relationalSnaps = [] as number[];
 
-        Object.keys(tool.snaps).forEach(snapName => {
-            console.log("snap", snapName, tool.snaps[snapName]);
-            if (tool.snaps[snapName] === false) return false;
-            const numberValue = snapName.match(/(\d+)/)?.[0];
-            if (numberValue === undefined) return false;
-            return relationalSnaps.push(parseInt(numberValue));
-        });
+        // Object.keys(tool.snaps).forEach(snapName => {
+        //     console.log("snap", snapName, tool.snaps[snapName]);
+        //     if (tool.snaps[snapName] === false) return false;
+        //     const numberValue = snapName.match(/(\d+)/)?.[0];
+        //     if (numberValue === undefined) return false;
+        //     return relationalSnaps.push(parseInt(numberValue));
+        // });
 
         // console.log("relational snaps", relationalSnaps);
 
@@ -141,22 +141,16 @@ onMounted(() => {
 
             let targetOctave = startNoteOctave + octaveDelta;
 
-            let closestSnapValue = null as number | null;
-            let closestSnapDistance = null as number | null;
-            let snappedResult = null as number | null;
-
-            
-            if (snappedResult === null) {
-                note.octave = targetOctave;
-                console.log("any val");
-            } else {
-                note.octave = snappedResult;
-                console.log("snap val");
-            }
+            tool.snap(
+                note, 
+                targetOctave, 
+                view.visibleNotes.filter(
+                    n => n.octave !== startNoteOctave
+                )
+            );
 
             recalcRelations();
-            console.log(closestSnapValue);
-            
+
         };
         const mouseUpV = (e: MouseEvent) => {
             $noteBody.style.cursor = 'grab';
@@ -183,7 +177,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{noteRect.note.octave}} Octs.</text>
+    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ noteRect.note.octave }} Octs.</text>
     <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ noteRect.note.frequency }} Hz.</text>
     <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />

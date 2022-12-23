@@ -23,8 +23,10 @@ interface NoteDefb {
     frequency: number
 }
 
-const octaveToFrequency = (octave: number) => 440 * Math.pow(2, octave);
-const frequencyToOctave = (frequency: number) => Math.log2(frequency / 440);
+const frequencyConstant = 11;
+
+const octaveToFrequency = (octave: number) => frequencyConstant * Math.pow(2, octave);
+const frequencyToOctave = (frequency: number) => Math.log2(frequency / frequencyConstant);
 
 export const makeNote = (noteDef: NoteDefa | NoteDefb) => {
     const nn = {

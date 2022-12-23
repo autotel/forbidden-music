@@ -9,6 +9,7 @@ export const useToolStore = defineStore("tool", {
         snaps: {
             fraction: false,
             equal12: true,
+            equal1: true,
             // toneGrid: false,
             // timeGrid: false,
             // toneFractions: false,
@@ -36,9 +37,41 @@ export const useToolStore = defineStore("tool", {
             )),
     },
     actions: {
-        getClosestFraction(value:number) {
+        getClosestFraction(value: number) {
             return new Fraction(value).simplify(this.simplify).valueOf();
         },
+        snap(note: Note, targetOctave: number, otherNotes?: Array<Note>) {
+
+            let closestSnapValue = null as number | null;
+            let closestSnapDistance = null as number | null;
+
+            if (this.snaps.equal12 === true) {
+                const snapValue = Math.round(targetOctave * 12) / 12;
+                const snapDistance = Math.abs(snapValue - targetOctave);
+                if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
+                    closestSnapValue = snapValue;
+                    closestSnapDistance = snapDistance;
+                }
+            } else if (this.snaps.equal1 === true) {
+                // else because equal1 is subset of equal 12
+                const snapValue = Math.round(targetOctave);
+                const snapDistance = Math.abs(snapValue - targetOctave);
+                if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
+                    closestSnapValue = snapValue;
+                    closestSnapDistance = snapDistance;
+                }
+            }
+            if (closestSnapValue === null) {
+                note.octave = targetOctave;
+                console.log("any val");
+            } else {
+                note.octave = closestSnapValue;
+                console.log("snap val");
+            }
+
+            console.log(closestSnapValue);
+            return note;
+        }
     },
 
 });
