@@ -3,6 +3,33 @@ import { frequencyToOctave, makeNote, Note, octaveToFrequency } from '../dataTyp
 import { Tool } from '../dataTypes/Tool.js';
 import Fraction from 'fraction.js';
 
+const fundamental = octaveToFrequency(0);
+console.log("fundamental", fundamental);
+
+/** modifies the provided snapObj! */
+const snapper = (snapObj: {
+    /** the smallest distance to a snap value found thus far */
+    closestSnapDistance: number | null;
+    /** the resulting value corresponding to the closest snap */
+    closestSnapOctave: number | null;
+    /** the calculated snap value, which contends to be the closest */
+    snapValue: number  | null;
+    /** the target value, if no snap were to be applied */
+    targetOctave: number  | null;
+}) => {
+    if (snapObj.snapValue === null ){
+        throw new Error("snapValue is null");
+    }
+    if(snapObj.targetOctave === null) {
+        throw new Error("targetOctave is null");
+    }
+    const snapDistance = Math.abs(snapObj.snapValue - snapObj.targetOctave);
+    if (snapObj.closestSnapDistance === null || snapDistance < snapObj.closestSnapDistance) {
+        snapObj.closestSnapOctave = snapObj.snapValue;
+        snapObj.closestSnapDistance = snapDistance;
+    }
+}
+
 export const useToolStore = defineStore("tool", {
     state: () => ({
         current: Tool.Edit,
@@ -12,7 +39,7 @@ export const useToolStore = defineStore("tool", {
             equal1: false,
             hzEven: false,
             /** A rational number multiplier of the fundamental, linearly*/
-            // hzRatioFundamental:true,
+            hzRatioFundamental: true,
             /** A rational number multiplier of the fundamental, log*/
             // octaveRatioFundamental: false,
             // toneGrid: false,
@@ -48,43 +75,38 @@ export const useToolStore = defineStore("tool", {
         snap(note: Note, targetOctave: number, otherNotes?: Array<Note>) {
             const targetHz = octaveToFrequency(targetOctave);
 
-            let closestSnapOctave = null as number | null;
-            let closestSnapDistance = null as number | null;
+            const snapObj = {
+                closestSnapDistance: null as number | null,
+                snapValue: null as number | null,
+                closestSnapOctave: null as number | null,
+                targetOctave,
+            }
 
             if (this.snaps.hzEven === true) {
-                const snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
-                const snapDistance = Math.abs(snapValue - targetOctave);
-                if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
-                    closestSnapOctave = snapValue;
-                    closestSnapDistance = snapDistance;
-                }
+                snapObj.snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
+                snapper(snapObj);
             }
-
+            if (this.snaps.hzRatioFundamental === true) {
+                snapObj.snapValue = frequencyToOctave(Math.round(targetHz / fundamental) * fundamental);
+                snapper(snapObj);
+            }
             if (this.snaps.equal12 === true) {
-                const snapValue = Math.round(targetOctave * 12) / 12;
-                const snapDistance = Math.abs(snapValue - targetOctave);
-                if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
-                    closestSnapOctave = snapValue;
-                    closestSnapDistance = snapDistance;
-                }
+                snapObj.snapValue = Math.round(targetOctave * 12) / 12;
+                snapper(snapObj);
             } else if (this.snaps.equal1 === true) {
                 // else because equal1 is subset of equal 12
-                const snapValue = Math.round(targetOctave);
-                const snapDistance = Math.abs(snapValue - targetOctave);
-                if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
-                    closestSnapOctave = snapValue;
-                    closestSnapDistance = snapDistance;
-                }
+                snapObj.snapValue = Math.round(targetOctave);
+                snapper(snapObj);
             }
-            if (closestSnapOctave === null) {
+            if (snapObj.closestSnapOctave === null) {
                 note.octave = targetOctave;
                 console.log("any val");
             } else {
-                note.octave = closestSnapOctave;
+                note.octave = snapObj.closestSnapOctave;
                 console.log("snap val");
             }
 
-            console.log(closestSnapOctave);
+            console.log(snapObj.closestSnapOctave);
             return note;
         }
     },
