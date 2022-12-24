@@ -36,10 +36,11 @@ export const useToolStore = defineStore("tool", {
         simplify: 0.01,
         snaps: {
             equal12: false,
-            equal1: false,
+            equal1: true,
             hzEven: false,
+            hzRelationEven: true,
             /** A rational number multiplier of the fundamental, linearly*/
-            hzFundamentalMultiple: true,
+            hzFundamentalMultiple: false,
         }
     }),
     getters: {
@@ -55,6 +56,7 @@ export const useToolStore = defineStore("tool", {
             return new Fraction(value).simplify(this.simplify).valueOf();
         },
         snap(inNote: Note, targetOctave: number, otherNotes?: Array<Note>) {
+            /** outNote */
             const note = inNote.clone();
             const targetHz = octaveToFrequency(targetOctave);
             const relatedNotes = [] as Note [];
@@ -70,6 +72,22 @@ export const useToolStore = defineStore("tool", {
                 snapObj.snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
                 snapper(snapObj);
             }
+
+            if (this.snaps.hzRelationEven === true) {
+                // TODO: works kinda weird
+                if (otherNotes) {
+                    for (const otherNote of otherNotes) {
+                        const otherHz = octaveToFrequency(otherNote.octave);
+                        const closeHzRatio = new Fraction(targetHz).div(otherHz).simplify(this.simplify).valueOf();
+                        const myCandidate = snapObj.snapValue = frequencyToOctave(Math.round(targetHz * closeHzRatio));
+                        snapper(snapObj);
+                        if(snapObj.snapValue === myCandidate) {
+                            relatedNotes.push(otherNote);
+                        }
+                    }
+                }
+            }
+
             if (this.snaps.hzFundamentalMultiple === true) {
                 snapObj.snapValue = frequencyToOctave(Math.round(targetHz / fundamental) * fundamental);
                 snapper(snapObj);

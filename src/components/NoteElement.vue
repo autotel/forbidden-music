@@ -142,7 +142,7 @@ onMounted(() => {
 
             let targetOctave = startNoteOctave + octaveDelta;
             
-            const visibleNotes = getVisibleNotes();
+            const visibleNotes = getVisibleNotes().filter(n=>n!==noteBeingEdited);
             
             const {
                 note,
