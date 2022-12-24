@@ -6,6 +6,7 @@ import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 import Fraction from 'fraction.js';
 import ToolSelector from './ToolSelector.vue';
+import { weirdFloatToString } from '../functions/weirdFloatToString';
 // get the view store
 const view = useViewStore();
 const tool = useToolStore();
@@ -177,8 +178,8 @@ onMounted(() => {
 </script>
 
 <template>
-    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ noteRect.note.octave }} Octs.</text>
-    <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ noteRect.note.frequency }} Hz.</text>
+    <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ weirdFloatToString(noteRect.note.octave) }} Octs.</text>
+    <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ weirdFloatToString(noteRect.note.frequency) }} Hz.</text>
     <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
     <template v-for="relation in toneRelations">

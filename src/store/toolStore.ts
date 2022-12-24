@@ -1,15 +1,20 @@
 import { defineStore } from 'pinia'
-import { Note } from '../dataTypes/Note.js';
+import { frequencyToOctave, makeNote, Note, octaveToFrequency } from '../dataTypes/Note.js';
 import { Tool } from '../dataTypes/Tool.js';
 import Fraction from 'fraction.js';
+
 export const useToolStore = defineStore("tool", {
     state: () => ({
         current: Tool.Edit,
         simplify: 0.01,
         snaps: {
-            fraction: false,
-            equal12: true,
-            equal1: true,
+            equal12: false,
+            equal1: false,
+            hzEven: false,
+            /** A rational number multiplier of the fundamental, linearly*/
+            // hzRatioFundamental:true,
+            /** A rational number multiplier of the fundamental, log*/
+            // octaveRatioFundamental: false,
             // toneGrid: false,
             // timeGrid: false,
             // toneFractions: false,
@@ -41,15 +46,25 @@ export const useToolStore = defineStore("tool", {
             return new Fraction(value).simplify(this.simplify).valueOf();
         },
         snap(note: Note, targetOctave: number, otherNotes?: Array<Note>) {
+            const targetHz = octaveToFrequency(targetOctave);
 
-            let closestSnapValue = null as number | null;
+            let closestSnapOctave = null as number | null;
             let closestSnapDistance = null as number | null;
+
+            if (this.snaps.hzEven === true) {
+                const snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
+                const snapDistance = Math.abs(snapValue - targetOctave);
+                if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
+                    closestSnapOctave = snapValue;
+                    closestSnapDistance = snapDistance;
+                }
+            }
 
             if (this.snaps.equal12 === true) {
                 const snapValue = Math.round(targetOctave * 12) / 12;
                 const snapDistance = Math.abs(snapValue - targetOctave);
                 if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
-                    closestSnapValue = snapValue;
+                    closestSnapOctave = snapValue;
                     closestSnapDistance = snapDistance;
                 }
             } else if (this.snaps.equal1 === true) {
@@ -57,19 +72,19 @@ export const useToolStore = defineStore("tool", {
                 const snapValue = Math.round(targetOctave);
                 const snapDistance = Math.abs(snapValue - targetOctave);
                 if (closestSnapDistance === null || snapDistance < closestSnapDistance) {
-                    closestSnapValue = snapValue;
+                    closestSnapOctave = snapValue;
                     closestSnapDistance = snapDistance;
                 }
             }
-            if (closestSnapValue === null) {
+            if (closestSnapOctave === null) {
                 note.octave = targetOctave;
                 console.log("any val");
             } else {
-                note.octave = closestSnapValue;
+                note.octave = closestSnapOctave;
                 console.log("snap val");
             }
 
-            console.log(closestSnapValue);
+            console.log(closestSnapOctave);
             return note;
         }
     },
