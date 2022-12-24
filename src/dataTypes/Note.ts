@@ -10,6 +10,7 @@ export interface Note {
     frequency: number,
     /** end, which is not guaranteed be up to date */
     end: number,
+    clone: () => Note,
 }
 
 interface NoteDefa {
@@ -34,6 +35,7 @@ export const makeNote = (noteDef: NoteDefa | NoteDefb) => {
         duration: noteDef.duration,
         _octave: null as number | null,
         _frequency: null as number | null,
+        clone() { return makeNote(this) },
         set end(value: number) {
             this.duration = value - this.start;
             if (this.duration < 0) {

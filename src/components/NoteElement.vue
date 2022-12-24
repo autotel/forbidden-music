@@ -33,8 +33,8 @@ const rightEdge = ref<SVGRectElement>();
 /**
  * gets a list of fractional relations to each other note visible in view
  */
-const getRelationsList = (withOctave: number) => {
-    return view.visibleNotes
+const getRelationsList = (withOctave: number, notes: Note[]) => {
+    return notes
         .filter(n => n.octave !== withOctave)
         .map(n => {
             const distancePx = view.octaveToPx(n.octave - withOctave);
@@ -47,13 +47,13 @@ const getRelationsList = (withOctave: number) => {
             return { value, text, xPosition, distancePx };
         }) as Array<{ value: number, text: string, xPosition: number, distancePx: number }>;
 }
+const getVisibleNotes = () => view.visibleNotes;
 /**
  * refreshes the relations list
  */
-const recalcRelations = () => {
-
+const setRelatedNotes = (notes: Note[]) => {
     const note = props.noteRect.note;
-    const relations = getRelationsList(note.octave);
+    const relations = getRelationsList(note.octave, notes);
     toneRelations.value = relations;
 }
 
@@ -66,9 +66,9 @@ onMounted(() => {
     // make the note length resizable by dragging the right edge
     $rightEdge.addEventListener('mousedown', (e) => {
         e.stopPropagation();
-        const note = props.noteRect.note;
+        const noteBeingEdited = props.noteRect.note;
         const startX = e.clientX;
-        const startNoteDuration = note.duration;
+        const startNoteDuration = noteBeingEdited.duration;
         $rightEdge.style.cursor = 'ew-resize';
 
         const mouseMove = (e: MouseEvent) => {
@@ -76,7 +76,7 @@ onMounted(() => {
 
             // same wickedness
             const timeDelta = view.pxToTime(e.clientX - startX);
-            note.duration = startNoteDuration + timeDelta;
+            noteBeingEdited.duration = startNoteDuration + timeDelta;
         };
         const mouseUp = (e: MouseEvent) => {
             e.stopPropagation();
@@ -92,9 +92,9 @@ onMounted(() => {
     $noteBody.addEventListener('mousedown', (e) => {
         // TODO: also resize upon creation
         e.stopPropagation();
-        const note = props.noteRect.note;
+        const noteBeingEdited = props.noteRect.note;
         const startX = e.clientX;
-        const startNoteStart = note.start;
+        const startNoteStart = noteBeingEdited.start;
         $noteBody.style.cursor = 'grabbing';
         const mouseMove = (e: MouseEvent) => {
             e.stopPropagation();
@@ -102,7 +102,7 @@ onMounted(() => {
             // honestly I don't understand why it works using
             // the inverse function. It has something to do with zooming
             const timeDelta = view.pxToTime(e.clientX - startX);
-            note.start = startNoteStart + timeDelta;
+            noteBeingEdited.start = startNoteStart + timeDelta;
 
         };
         const mouseUp = (e: MouseEvent) => {
@@ -122,7 +122,7 @@ onMounted(() => {
         if (e.altKey) return;
 
         const startY = e.clientY;
-        const startNoteOctave = note.octave;
+        const startNoteOctave = noteBeingEdited.octave;
 
         const relationalSnaps = [] as number[];
 
@@ -141,16 +141,21 @@ onMounted(() => {
             const octaveDelta = view.pxToOctave(e.clientY - startY);
 
             let targetOctave = startNoteOctave + octaveDelta;
-
-            tool.snap(
-                note, 
-                targetOctave, 
-                view.visibleNotes.filter(
-                    n => n.octave !== startNoteOctave
-                )
+            
+            const visibleNotes = getVisibleNotes();
+            
+            const {
+                note,
+                relatedNotes
+            } = tool.snap(
+                noteBeingEdited,
+                targetOctave,
+                visibleNotes
             );
-
-            recalcRelations();
+            
+            noteBeingEdited.octave = note.octave;
+            
+            setRelatedNotes(relatedNotes);
 
         };
         const mouseUpV = (e: MouseEvent) => {
@@ -166,7 +171,6 @@ onMounted(() => {
     // when event is hovered, calculate and show the octave relations to every other note
     $noteBody.addEventListener('mouseenter', (e) => {
         e.stopPropagation();
-        recalcRelations();
     });
     $noteBody.addEventListener('mouseleave', (e) => {
         e.stopPropagation();
@@ -179,7 +183,8 @@ onMounted(() => {
 
 <template>
     <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ weirdFloatToString(noteRect.note.octave) }} Octs.</text>
-    <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ weirdFloatToString(noteRect.note.frequency) }} Hz.</text>
+    <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ weirdFloatToString(noteRect.note.frequency) }}
+        Hz.</text>
     <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
     <template v-for="relation in toneRelations">

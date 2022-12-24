@@ -39,25 +39,7 @@ export const useToolStore = defineStore("tool", {
             equal1: false,
             hzEven: false,
             /** A rational number multiplier of the fundamental, linearly*/
-            hzRatioFundamental: true,
-            /** A rational number multiplier of the fundamental, log*/
-            // octaveRatioFundamental: false,
-            // toneGrid: false,
-            // timeGrid: false,
-            // toneFractions: false,
-            // toneRulers: false,
-            // relation2: false,
-            // relation3: false,
-            // relation4: false,
-            // relation5: false,
-            // relation6: false,
-            // relation7: false,
-            // relation8: false,
-            // relation9: false,
-            // relation10: false,
-            // relation11: false,
-            // relation12: false,
-            // ... etc
+            hzFundamentalMultiple: true,
         }
     }),
     getters: {
@@ -72,8 +54,10 @@ export const useToolStore = defineStore("tool", {
         getClosestFraction(value: number) {
             return new Fraction(value).simplify(this.simplify).valueOf();
         },
-        snap(note: Note, targetOctave: number, otherNotes?: Array<Note>) {
+        snap(inNote: Note, targetOctave: number, otherNotes?: Array<Note>) {
+            const note = inNote.clone();
             const targetHz = octaveToFrequency(targetOctave);
+            const relatedNotes = [] as Note [];
 
             const snapObj = {
                 closestSnapDistance: null as number | null,
@@ -86,7 +70,7 @@ export const useToolStore = defineStore("tool", {
                 snapObj.snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
                 snapper(snapObj);
             }
-            if (this.snaps.hzRatioFundamental === true) {
+            if (this.snaps.hzFundamentalMultiple === true) {
                 snapObj.snapValue = frequencyToOctave(Math.round(targetHz / fundamental) * fundamental);
                 snapper(snapObj);
             }
@@ -107,7 +91,10 @@ export const useToolStore = defineStore("tool", {
             }
 
             console.log(snapObj.closestSnapOctave);
-            return note;
+            return {
+                note,
+                relatedNotes
+            }
         }
     },
 

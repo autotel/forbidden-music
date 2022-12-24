@@ -69,7 +69,7 @@ onMounted(() => {
     } else {
       newNoteDragX = e.offsetX;
       // TODO: need to add third argumet to allow relational snap when created
-      noteBeingCreated.value = tool.snap(
+      const { note } = tool.snap(
         makeNote({
           start: view.timeToPxWithOffset(e.offsetX),
           duration: 1,
@@ -77,6 +77,7 @@ onMounted(() => {
         }),
         view.pxToOctaveOffset(e.offsetY)
       );
+      noteBeingCreated.value = note;
 
 
     }
