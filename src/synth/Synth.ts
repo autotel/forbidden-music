@@ -4,7 +4,6 @@ export interface Voice {
 
     gainNode: GainNode;
     oscillator: OscillatorNode;
-    filterNode: BiquadFilterNode;
 
     
     triggerAttack: (now: number, frequency: number, velocity: number) => void;

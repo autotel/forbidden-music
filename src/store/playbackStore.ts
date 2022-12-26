@@ -1,9 +1,13 @@
 import { defineStore } from 'pinia'
 import { Note } from '../dataTypes/Note.js';
 import { Tool } from '../dataTypes/Tool.js';
-import { SawtoothSynth } from '../synth/SawtoothSynth.js';
-import { useScoreStore } from './scoreStore.js';
-import { useViewStore } from './viewStore.js';
+import { SawtoothSynth } from '../synth/SawtoothSynth';
+import { BassicSynth } from '../synth/BassicSynth';
+import { ToneSynth } from '../synth/ToneSynth';
+import { useScoreStore } from './scoreStore';
+import { useViewStore } from './viewStore';
+import { Synth } from '../synth/Synth';
+import * as Tone from 'tone';
 
 export const usePlaybackStore = defineStore("playback", {
     state: () => ({
@@ -19,7 +23,7 @@ export const usePlaybackStore = defineStore("playback", {
         previousClockTime: 0,
 
         audioContext: null as null | AudioContext,
-        synth: new SawtoothSynth(),
+        synth: new ToneSynth() as Synth,
 
         score: useScoreStore(),
         view: useViewStore(),
@@ -34,6 +38,8 @@ export const usePlaybackStore = defineStore("playback", {
     },
     actions: {
         startAudioContext() {
+
+            
             if (this.audioContext) return;
             const ac = this.audioContext = new AudioContext();
             if (!this.audioContext) throw new Error("audio context not created");
@@ -67,9 +73,9 @@ export const usePlaybackStore = defineStore("playback", {
                 );
             });
 
-            if(this.currentTimeout) clearTimeout(this.currentTimeout);
+            if (this.currentTimeout) clearTimeout(this.currentTimeout);
             this.currentTimeout = setTimeout(this._clockAction, 0);
-    
+
             this.previousScoreTime = this.currentScoreTime;
 
             // TODO: mapping direction weirdness :/ 
