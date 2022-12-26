@@ -40,8 +40,7 @@ class CollisionVoice implements Voice {
             this.noise.connect(this.filterNode2);
             this.noise.connect(this.filterNode3);
             this.noise.connect(this.filterNode4);
-            this.noise.connect(this.gainNode);
-            this.noise.connect(destination);
+            // this.noise.connect(this.gainNode);
         });
 
         this.filterNode1.Q.value = 2;
@@ -80,18 +79,18 @@ class CollisionVoice implements Voice {
         // this.filterNode3.frequency.linearRampToValueAtTime(frequency, now + 0.1);
         // this.filterNode4.frequency.linearRampToValueAtTime(frequency, now + 0.1);
 
-        this.filterNode1.frequency.value = frequency * 2;
+        this.filterNode1.frequency.value = frequency * 16;
         this.filterNode2.frequency.value = frequency;
-        this.filterNode3.frequency.value = frequency / 2;
+        this.filterNode3.frequency.value = frequency * 8;
         this.filterNode4.frequency.value = frequency / 8;
 
         // schedule decay
-        this.gainNode.gain.exponentialRampToValueAtTime(velocity * 0.2, now + 0.5);
+        this.gainNode.gain.exponentialRampToValueAtTime(velocity * 0.1, now + 0.5);
 
-        this.filterNode1.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
-        this.filterNode2.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
-        this.filterNode3.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
-        this.filterNode4.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
+        this.filterNode1.Q.exponentialRampToValueAtTime(35, now + 0.01);
+        this.filterNode2.Q.exponentialRampToValueAtTime(35, now + 0.01);
+        this.filterNode3.Q.exponentialRampToValueAtTime(35, now + 0.01);
+        this.filterNode4.Q.exponentialRampToValueAtTime(35, now + 0.01);
 
     }
 

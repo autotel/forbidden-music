@@ -7,18 +7,21 @@ export async function createNoiseWorklet(
   context: BaseAudioContext,
 ) {
   try {
-    console.log("worklet load");
-    return new AudioWorkletNode(context, "noise-generator");
+    let worklet = new AudioWorkletNode(context, "noise-generator");
+    console.log("worklet already loaded");
+    return worklet;
   } catch (err) {
     try {
         await context.audioWorklet.addModule(atanProcessorUrl);
         console.log("worklet load");
-        return new AudioWorkletNode(context, "noise-generator");
+        let worklet = new AudioWorkletNode(context, "noise-generator");
+        return worklet;
     } catch (err) {
         throw new Error("Could not load worklet");
     }
   }
 }
+
 
 
 // const atan = await createWorkletNode(context, "atan-processor", atanProcessorUrl)

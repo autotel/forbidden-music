@@ -10,6 +10,7 @@ import { useViewStore } from './viewStore';
 import { Synth } from '../synth/Synth';
 import * as Tone from 'tone';
 import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
+import { createNoiseWorklet } from '../functions/noiseWorkletFactory.js';
 export const usePlaybackStore = defineStore("playback", {
     state: () => ({
         playing: false,
@@ -24,6 +25,8 @@ export const usePlaybackStore = defineStore("playback", {
         previousClockTime: 0,
 
         audioContext: getAudioContext(),
+
+        // choose the synth
         synth: new CollisionSynth() as Synth,
 
         score: useScoreStore(),
