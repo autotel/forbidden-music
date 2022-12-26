@@ -23,7 +23,7 @@ export const usePlaybackStore = defineStore("playback", {
         previousClockTime: 0,
 
         audioContext: null as null | AudioContext,
-        synth: new ToneSynth() as Synth,
+        synth: new BassicSynth() as Synth,
 
         score: useScoreStore(),
         view: useViewStore(),
