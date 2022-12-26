@@ -1,11 +1,17 @@
+import { getAudioContext } from "../functions/audioContextGetter";
+import { createNoiseWorklet } from "../functions/noiseWorkletFactory";
 import { Voice, Synth } from "./Synth";
 
-class BassicVoice implements Voice {
+const workletPromise = createNoiseWorklet(getAudioContext());
+
+
+class CollisionVoice implements Voice {
     inUse: boolean;
     audioContext: AudioContext;
 
     gainNode: GainNode;
-    oscillator: OscillatorNode;
+    noise?: AudioWorkletNode;
+
     filterNode1: BiquadFilterNode;
     filterNode2: BiquadFilterNode;
     filterNode3: BiquadFilterNode;
@@ -21,20 +27,30 @@ class BassicVoice implements Voice {
         this.filterNode4 = audioContext.createBiquadFilter();
 
         this.gainNode = audioContext.createGain();
-        this.oscillator = this.resetOscillator();
-        this.filterNode1.connect(this.filterNode2);
-        this.filterNode2.connect(this.filterNode3);
-        this.filterNode3.connect(this.filterNode4);
+        this.filterNode1.connect(this.gainNode);
+        this.filterNode2.connect(this.gainNode);
+        this.filterNode3.connect(this.gainNode);
         this.filterNode4.connect(this.gainNode);
         this.gainNode.connect(destination);
 
-        this.filterNode1.Q.value = 0.7;
+        workletPromise.then((noise) => {
+            console.log("noise", noise);
+            this.noise = noise;
+            this.noise.connect(this.filterNode1);
+            this.noise.connect(this.filterNode2);
+            this.noise.connect(this.filterNode3);
+            this.noise.connect(this.filterNode4);
+            this.noise.connect(this.gainNode);
+            this.noise.connect(destination);
+        });
+
+        this.filterNode1.Q.value = 2;
         this.filterNode1.frequency.value = 2000;
-        this.filterNode2.Q.value = 0.3;
+        this.filterNode2.Q.value = 3;
         this.filterNode2.frequency.value = 2000;
-        this.filterNode3.Q.value = 0.7;
+        this.filterNode3.Q.value = 2;
         this.filterNode3.frequency.value = 2000;
-        this.filterNode4.Q.value = 0.8;
+        this.filterNode4.Q.value = 2;
         this.filterNode4.frequency.value = 2000;
 
     }
@@ -45,19 +61,18 @@ class BassicVoice implements Voice {
 
     scheduleAttack(now: number, frequency: number, velocity: number, when: number) {
         // reset stuff
-        this.oscillator = this.resetOscillator();
         this.gainNode.gain.cancelScheduledValues(now - 0.01);
-        this.filterNode1.frequency.cancelScheduledValues(now - 0.01);
-        this.filterNode2.frequency.cancelScheduledValues(now - 0.01);
-        this.filterNode3.frequency.cancelScheduledValues(now - 0.01);
-        this.filterNode4.frequency.cancelScheduledValues(now - 0.01);
-        
+
+        this.filterNode1.Q.cancelScheduledValues(now - 0.01);
+        this.filterNode2.Q.cancelScheduledValues(now - 0.01);
+        this.filterNode3.Q.cancelScheduledValues(now - 0.01);
+        this.filterNode4.Q.cancelScheduledValues(now - 0.01);
+
         // set note start values
         this.inUse = true;
-        this.oscillator.frequency.value = frequency;
         // redundant to ensure no negative values after exponential ramp
         this.gainNode.gain.value = velocity;
-        this.gainNode.gain.setValueAtTime(velocity,now - 0.01);
+        this.gainNode.gain.setValueAtTime(velocity, now - 0.01);
 
         // schedule attack
         // this.filterNode1.frequency.linearRampToValueAtTime(frequency, now + 0.1);
@@ -66,9 +81,9 @@ class BassicVoice implements Voice {
         // this.filterNode4.frequency.linearRampToValueAtTime(frequency, now + 0.1);
 
         this.filterNode1.frequency.value = frequency * 2;
-        this.filterNode2.frequency.value = frequency * 2;
-        this.filterNode3.frequency.value = frequency * 2;
-        this.filterNode4.frequency.value = frequency * 2;
+        this.filterNode2.frequency.value = frequency;
+        this.filterNode3.frequency.value = frequency / 2;
+        this.filterNode4.frequency.value = frequency / 8;
 
         // schedule decay
         this.gainNode.gain.exponentialRampToValueAtTime(velocity * 0.2, now + 0.5);
@@ -78,18 +93,6 @@ class BassicVoice implements Voice {
         this.filterNode3.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
         this.filterNode4.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
 
-    }
-
-    resetOscillator() {
-        this.oscillator?.stop();
-        this.oscillator = this.audioContext.createOscillator();
-        this.oscillator.type = "sawtooth";
-        this.oscillator.connect(this.filterNode1);
-        this.oscillator.start();
-        this.gainNode.gain.value = 0;
-
-        // just to make ts happy
-        return this.oscillator;
     }
 
     scheduleEnd(now: number, endTimeSeconds: number) {
@@ -110,9 +113,9 @@ class BassicVoice implements Voice {
         }, endTimeSeconds * 1000 + 200);
     }
 }
-export class BassicSynth extends Synth {
+
+export class CollisionSynth extends Synth {
     constructor() {
-        super((audioContext, destination) => new BassicVoice(audioContext, destination));
+        super((audioContext, destination) => new CollisionVoice(audioContext, destination));
     }
 }
-export default BassicSynth;

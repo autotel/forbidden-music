@@ -58,53 +58,9 @@ class SawtoothVoice implements Voice {
         }, endTimeSeconds * 1000 + 40);
     }
 }
-export class SawtoothSynth implements Synth {
-
-    playNoteEvent: (start: number, duration: number, frequency: number) => void;
-    setAudioContext: (audioContext: AudioContext) => void;
-    stopAllNotes = () => { };
+export class SawtoothSynth extends Synth {
     constructor() {
-        this.playNoteEvent = () => {
-            console.warn("audio context has not been started");
-        };
-        this.setAudioContext = (audioContext) => {
-
-            const voicesMaster = audioContext.createGain();
-            voicesMaster.gain.value = 1 / 4;
-            voicesMaster.connect(audioContext.destination);
-            const voices = [] as Array<SawtoothVoice>;
-
-            /** @returns {SawtoothVoice} */
-            const findVoice = () => {
-                for (let voice of voices) {
-                    if (!voice.inUse) return voice;
-                }
-
-                let newVoice = new SawtoothVoice(audioContext, voicesMaster);
-
-                voices.push(newVoice);
-                return newVoice;
-            }
-
-            this.stopAllNotes = () => {
-                for (let voice of voices) {
-                    voice.scheduleEnd(audioContext.currentTime, 0);
-                }
-            }
-            this.playNoteEvent = (startTimeSecondsFromNow, durationSeconds, frequency) => {
-                console.log("play",
-                    startTimeSecondsFromNow,
-                    durationSeconds,
-                    frequency
-                );
-                const now = audioContext.currentTime;
-                const startSeconds = audioContext.currentTime + startTimeSecondsFromNow;
-                const endSeconds = startSeconds + durationSeconds;
-                const voice = findVoice();
-                voice.scheduleAttack(now, frequency, 1, startSeconds);
-                voice.scheduleEnd(now, endSeconds);
-            }
-        }
+        super((audioContext, destination) => new SawtoothVoice(audioContext, destination));
     }
 }
 export default SawtoothSynth;

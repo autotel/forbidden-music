@@ -25,11 +25,6 @@ const playback = usePlaybackStore();
 
 let noteBeingCreated: Ref<Note | false> = ref(false);
 
-const acInit = () => {
-  playback.startAudioContext();
-  window.removeEventListener('click', acInit);
-};
-window.addEventListener('click', acInit);
 
 onMounted(() => {
 

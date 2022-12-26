@@ -4,11 +4,12 @@ import { Tool } from '../dataTypes/Tool.js';
 import { SawtoothSynth } from '../synth/SawtoothSynth';
 import { BassicSynth } from '../synth/BassicSynth';
 import { ToneSynth } from '../synth/ToneSynth';
+import { CollisionSynth } from '../synth/CollisionSynth';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
 import { Synth } from '../synth/Synth';
 import * as Tone from 'tone';
-
+import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
 export const usePlaybackStore = defineStore("playback", {
     state: () => ({
         playing: false,
@@ -22,35 +23,20 @@ export const usePlaybackStore = defineStore("playback", {
         /** in seconds */
         previousClockTime: 0,
 
-        audioContext: null as null | AudioContext,
-        synth: new BassicSynth() as Synth,
+        audioContext: getAudioContext(),
+        synth: new CollisionSynth() as Synth,
 
         score: useScoreStore(),
         view: useViewStore(),
 
         playbarPxPosition: 0,
 
-        __awaitingAudioContext: [] as ((audioContext: AudioContext) => void)[],
     }),
     getters: {
         paused: (state) => (!state.playing) && state.currentScoreTime != 0,
         stopped: (state) => (!state.playing) && state.currentScoreTime == 0,
     },
     actions: {
-        startAudioContext() {
-
-            
-            if (this.audioContext) return;
-            const ac = this.audioContext = new AudioContext();
-            if (!this.audioContext) throw new Error("audio context not created");
-            this.synth.setAudioContext(ac);
-            this.__awaitingAudioContext.forEach((callback) => callback(ac));
-            console.log("created audio context");
-        },
-        getAudioContextThen(callback: (audioContext: AudioContext) => void) {
-            if (this.audioContext) callback(this.audioContext);
-            this.__awaitingAudioContext.push(callback);
-        },
         _getEventsBetween(frameStartTime: number, frameEndTime: number) {
             const events = this.score.notes.filter((event) => {
                 return event.start >= frameStartTime && event.start < frameEndTime;
@@ -82,12 +68,12 @@ export const usePlaybackStore = defineStore("playback", {
             this.playbarPxPosition = this.view.pxToTimeWithOffset(this.currentScoreTime);
         },
         play() {
-            this.getAudioContextThen(() => {
+            waitRunningContext().then(() => {
                 this.playing = true;
                 if (this.currentTimeout) throw new Error("timeout already exists");
-                if (!this.audioContext) throw new Error("audio context not created");
                 this.previousClockTime = this.audioContext.currentTime;
                 this.currentTimeout = setTimeout(this._clockAction, 0);
+                this.synth.setAudioContext(this.audioContext);
             });
         },
         stop() {
