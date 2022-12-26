@@ -1,6 +1,6 @@
-import TimeScrollBarVue from "../components/TimeScrollBar.vue";
+import { Voice, Synth } from "./Synth";
 
-class Voice {
+class SawtoothVoice implements Voice {
     inUse: boolean;
     audioContext: AudioContext;
 
@@ -11,7 +11,7 @@ class Voice {
     constructor(audioContext: AudioContext, destination: AudioNode) {
         this.audioContext = audioContext;
         this.inUse = false;
-        
+
         this.filterNode = audioContext.createBiquadFilter();
         this.gainNode = audioContext.createGain();
         this.oscillator = this.resetOscillator();
@@ -58,11 +58,11 @@ class Voice {
         }, endTimeSeconds * 1000 + 40);
     }
 }
-export class SawtoothSynth {
+export class SawtoothSynth implements Synth {
 
     playNoteEvent: (start: number, duration: number, frequency: number) => void;
     setAudioContext: (audioContext: AudioContext) => void;
-    stopAllNotes = () => {};
+    stopAllNotes = () => { };
     constructor() {
         this.playNoteEvent = () => {
             console.warn("audio context has not been started");
@@ -70,17 +70,17 @@ export class SawtoothSynth {
         this.setAudioContext = (audioContext) => {
 
             const voicesMaster = audioContext.createGain();
-            voicesMaster.gain.value = 1/4;
+            voicesMaster.gain.value = 1 / 4;
             voicesMaster.connect(audioContext.destination);
-            const voices = [] as Array<Voice>;
+            const voices = [] as Array<SawtoothVoice>;
 
-            /** @returns {Voice} */
+            /** @returns {SawtoothVoice} */
             const findVoice = () => {
                 for (let voice of voices) {
                     if (!voice.inUse) return voice;
                 }
 
-                let newVoice = new Voice(audioContext, voicesMaster);
+                let newVoice = new SawtoothVoice(audioContext, voicesMaster);
 
                 voices.push(newVoice);
                 return newVoice;
