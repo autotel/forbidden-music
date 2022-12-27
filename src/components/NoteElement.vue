@@ -1,33 +1,29 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Note } from '../dataTypes/Note';
 import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 import Fraction from 'fraction.js';
 import ToolSelector from './ToolSelector.vue';
 import { weirdFloatToString } from '../functions/weirdFloatToString';
-// get the view store
+
 const view = useViewStore();
 const tool = useToolStore();
-// const toneRelations = ref<Array<{
-//     text: string,
-//     withNote: Note,
-//     xPosition: number,
-// }>>();
 const props = defineProps<{
     noteRect: {
         x: number,
         y: number,
         w: number,
         note: Note,
-        // make relations inherent to the note display, so that they sort of remain after a relationship is established
+        
         relations: Array<{
             explanation: string,
             withNote: Note,
             xPosition: number,
         }>,
     }
-}>()
+}>();
+
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 const getVisibleNotes = () => view.visibleNotes;
@@ -77,7 +73,6 @@ const mouseDownListener = (e: MouseEvent) => {
     startY = e.clientY;
 }
 const rightEdgeMouseDownListener = (e: MouseEvent) => {
-    let $rightEdgeBody = getRightEdgeBody();
     e.stopPropagation();
     startX = e.clientX;
     startNoteDuration = noteBeingEdited.duration;
@@ -98,13 +93,11 @@ const mouseMoveListener = (e: MouseEvent) => {
         // prevent pitch change if 'alt' key is pressed
         // TODO: should draw a horizontal line to represent the constraint of movement.
         if (e.altKey) return;
-        const relationalSnaps = [] as number[];
         const octaveDelta = view.pxToOctave(e.clientY - startY);
         let targetOctave = startNoteOctave + octaveDelta;
         const visibleNotes = getVisibleNotes().filter(n => n !== noteBeingEdited);
         const {
-            note,
-            relatedNotes
+            note
         } = tool.snap(
             noteBeingEdited,
             targetOctave,
@@ -130,6 +123,14 @@ onMounted(() => {
     $rightEdge.addEventListener('mousedown', rightEdgeMouseDownListener);
     window.addEventListener('mousemove', mouseMoveListener);
     window.addEventListener('mouseup', mouseUpListener);
+});
+onUnmounted(() => {
+    const $rightEdge = getRightEdgeBody();
+    const $noteBody = getNoteBody();
+    $noteBody.removeEventListener('mousedown', mouseDownListener);
+    $rightEdge.removeEventListener('mousedown', rightEdgeMouseDownListener);
+    window.removeEventListener('mousemove', mouseMoveListener);
+    window.removeEventListener('mouseup', mouseUpListener);
 });
 </script>§
 <template>
