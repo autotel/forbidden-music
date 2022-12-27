@@ -64,7 +64,7 @@ onMounted(()=>{
         class="scroll" 
         ref="hScrollBar"
         :style="{
-            width: -view.pxToTime(-32) + 'px',
+            width: -view.timeToPx(-32) + 'px',
             // width: view.timeToBounds(view.viewWidthTime) * 100 + '%',
             left: view.timeToBounds(view.timeOffset) * 100 + '%'
         }"

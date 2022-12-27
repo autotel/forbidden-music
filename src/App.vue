@@ -14,6 +14,7 @@ import Button from "./components/Button.vue";
 import Transport from './components/Transport.vue';
 import { useToolStore } from './store/toolStore';
 import { Tool } from './dataTypes/Tool';
+import RangeSelection from './components/RangeSelection.vue';
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 // const notesStore = useScoreStore();
@@ -55,6 +56,7 @@ onMounted(() => {
   // when user drags on the viewport, add a note an extend it's duration
   $viewPort.addEventListener('mousedown', (e) => {
     console.log("mouse tool", tool.current);
+    // middle wheel
     if (e.button === 1) {
       e.stopPropagation();
       draggingView = true;
@@ -63,16 +65,17 @@ onMounted(() => {
       viewDragStartY = e.clientY;
       viewDragStartOctave = view.octaveOffset;
     } else {
+      // left button
       if (tool.current !== Tool.Edit) return;
-      newNoteDragX = e.offsetX;
+      newNoteDragX = e.clientX;
       // TODO: need to add third argumet to allow relational snap when created
       const { note } = tool.snap(
         makeNote({
-          start: view.timeToPxWithOffset(e.offsetX),
+          start: view.pxToTimeWithOffset(e.clientX),
           duration: 1,
-          octave: view.pxToOctaveWithOffset(e.offsetY),
+          octave: view.pxToOctaveWithOffset(e.clientY),
         }),
-        view.pxToOctaveWithOffset(e.offsetY)
+        view.pxToOctaveWithOffset(e.clientY)
       );
       noteBeingCreated.value = note;
 
@@ -81,6 +84,13 @@ onMounted(() => {
   });
 
   window.addEventListener('mousemove', (e) => {
+    // console.log("mouse [x,y]", 
+    //   view.pxToTimeWithOffset(e.clientX),
+    //   view.pxToOctaveWithOffset(e.clientY),
+
+    //   view.pxToTime(e.clientX),
+    //   view.pxToOctave(e.clientY),
+    // );
     if (noteBeingCreated.value) {
       const deltaX = e.clientX - newNoteDragX;
       noteBeingCreated.value.duration = clampToZero(view.pxToTime(deltaX));
@@ -104,9 +114,13 @@ onMounted(() => {
   window.addEventListener('mouseup', (e) => {
     // stop panning view, if it were
     draggingView = false;
-
     if (noteBeingCreated.value !== false && e.button !== 1) {
       score.notes.push(noteBeingCreated.value);
+      console.log(JSON.stringify(score.notes));
+      setTimeout(() => {
+        console.log(JSON.stringify(score.notes));
+
+      }, 10);
       noteBeingCreated.value = false;
     }
   });
@@ -148,7 +162,7 @@ const noteRect = (note: Note) => {
   const isCut = note.start < view.timeOffset;
   const cutTimeWidth = isCut ? note.start - view.timeOffset : 0;
   return {
-    x: clampToZero(view.pxToTimeWithOffset(note.start)),
+    x: clampToZero(view.timeToPx(note.start)),
     w: view.timeToPx(note.duration + cutTimeWidth),
     y: view.octaveToPxWithOffset(note.octave),
     cut: isCut,
@@ -179,6 +193,7 @@ const getScopednotes = () => {
     <!-- draw a rectangle representing each note -->
     <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
     <NoteElement v-if="noteBeingCreated" :noteRect="noteRect(noteBeingCreated)" />
+    <RangeSelection />
   </svg>
   <TimeScrollBar />
   <div style="position: fixed;">

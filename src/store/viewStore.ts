@@ -46,14 +46,6 @@ export const useViewStore = defineStore("view", {
         pxToBounds(px: number): number {
             return px / this.viewWidthPx;
         },
-        timeToPxWithOffset(time: number): number {
-            return this.pxToTime(time) + this.timeOffset;
-            // return (time * this.viewWidthTime / this.viewWidthPx + this.timeOffset) ;
-        },
-        pxToTimeWithOffset(px: number): number {
-            return this.timeToPx(px - this.timeOffset);
-            // return (px - this.timeOffset) * this.viewWidthPx / this.viewWidthTime;
-        },
         timeToBounds(time: number): number {
             return time / this.scrollBound;
         },
@@ -65,6 +57,12 @@ export const useViewStore = defineStore("view", {
         },
         timeToPx(px: number): number {
             return px * this.viewWidthPx / this.viewWidthTime;
+        },
+        timeToPxWithOffset(time: number): number {
+            return this.timeToPx(time - this.timeOffset);
+        },
+        pxToTimeWithOffset(px: number): number {
+            return this.pxToTime(px) + this.timeOffset;
         },
         pxToOctave(px: number): number {
             return px * - this.viewHeightOctaves / this.viewHeightPx;

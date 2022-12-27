@@ -15,10 +15,9 @@ const selectRange = ref({
 });
 const tool = useToolStore();
 
-
-
 const mouseDown = (e: MouseEvent) => {
     if (tool.current !== Tool.Select) return;
+    console.log("range selection start");
     const x = e.clientX;
     const y = e.clientY;
     selectRange.value.timeStart = view.pxToTimeWithOffset(x);
@@ -33,6 +32,11 @@ const mouseMove = (e: MouseEvent) => {
         selectRange.value.timeSize = view.pxToTimeWithOffset(x) - selectRange.value.timeStart;
         selectRange.value.octaveSize = view.pxToOctaveWithOffset(y) - selectRange.value.octaveStart;
     }
+    console.log(
+        Object.values(
+            selectRange.value
+        ).map(v=>Math.floor(v))
+    );
 }
 const mouseUp = (e: MouseEvent) => {
     if (tool.current !== Tool.Select) return;
@@ -66,9 +70,13 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <rect v-if="selectRange.active" :x="view.timeToPxWithOffset(selectRange.timeStart)"
-        :y="view.octaveToPxWithOffset(selectRange.octaveStart)" :width="view.timeToPx(selectRange.timeSize)"
-        :height="view.octaveToPx(selectRange.octaveSize)" />
+    <rect 
+        v-if="selectRange.active" 
+        :x="view.timeToPxWithOffset(selectRange.timeStart)"
+        :y="view.octaveToPxWithOffset(selectRange.octaveStart)"
+        :width="view.pxToTime(selectRange.timeSize)"
+        :height="view.octaveToPx(selectRange.octaveSize)"
+    />
 </template>
 <style scoped>
 rect {

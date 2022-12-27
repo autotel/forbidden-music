@@ -36,7 +36,6 @@ class CollisionVoice implements Voice {
         this.gainNode.connect(destination);
 
         workletPromise.then((noise) => {
-            console.log("noise", noise);
             this.noise = noise;
             this.filterNodes.forEach((filter, i) => {
                 this.noise.connect(filter);
@@ -49,8 +48,6 @@ class CollisionVoice implements Voice {
         const qvals = this.filterNodes.map((f, i) => 11 + 2 ** (5 - i));
         const ampvals = this.filterNodes.map((f, i) => 2 ** (1 - i));
 
-        console.log(...qvals);
-        console.log(...ampvals);
         this.filterNodes.map((f, i) => f.Q.value = qvals[i]);
         this.filterAmps.map((f, i) => f.gain.value = ampvals[i]);
 
@@ -91,9 +88,6 @@ class CollisionVoice implements Voice {
 
     scheduleEnd(now: number, endTimeSeconds: number) {
         if (typeof endTimeSeconds !== "number") throw new Error("endTimeSeconds is not a number");
-
-        console.log("end in", endTimeSeconds - now);
-
         this.gainNode.gain.linearRampToValueAtTime(0, endTimeSeconds + 0.3);
 
         // cancel all filter scheduled values
