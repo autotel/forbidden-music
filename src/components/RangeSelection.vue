@@ -45,6 +45,8 @@ const mouseDown = (e: MouseEvent) => {
     const y = e.clientY;
     selectRange.value.timeStart = view.pxToTimeWithOffset(x);
     selectRange.value.octaveStart = view.pxToOctaveWithOffset(y);
+    selectRange.value.timeSize = 0;
+    selectRange.value.octaveSize = 0;
     selectRange.value.active = true;
 }
 const mouseMove = (e: MouseEvent) => {

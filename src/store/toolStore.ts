@@ -39,9 +39,9 @@ export const useToolStore = defineStore("tool", {
         // visually
         snaps: {
             equal12: false,
-            equal1: true,
+            equal1: false,
             hzEven: false,
-            hzRelationEven: true,
+            hzRelationEven: false,
             /** A rational number multiplier of the fundamental, linearly*/
             hzFundamentalMultiple: false,
         }

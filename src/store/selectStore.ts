@@ -27,12 +27,7 @@ export const useSelectStore = defineStore("select", () => {
     const selectedNotes = ref([] as Note[]);
     const score = useScoreStore();
     const refreshNoteSelectionState = () => {
-        console.log("refresh2");
-        score.notes.forEach((note) => {
-            if (isNoteSelected(note)) {
-                note.selected = true;
-            }
-        })
+        score.notes.forEach(n=>n.selected=isNoteSelected(n))
     }
     const selectRange = (range: {
         startTime: number,
@@ -59,7 +54,6 @@ export const useSelectStore = defineStore("select", () => {
     };
     const clearSelection = () => {
         selectedNotes.value = [];
-        refreshNoteSelectionState();
     };
     const isNoteSelected = (note: Note) => {
         return selectedNotes.value.includes(note);
@@ -71,9 +65,11 @@ export const useSelectStore = defineStore("select", () => {
             selectedNotes.value.push(note);
         }
     };
+
     watch(selectedNotes, refreshNoteSelectionState);
     
     return {
+        // selectedNotes:selectedNotes.value,
         selectedNotes,
         selectRange,
         addRange,
