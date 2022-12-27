@@ -116,11 +116,6 @@ onMounted(() => {
     draggingView = false;
     if (noteBeingCreated.value !== false && e.button !== 1) {
       score.notes.push(noteBeingCreated.value);
-      console.log(JSON.stringify(score.notes));
-      setTimeout(() => {
-        console.log(JSON.stringify(score.notes));
-
-      }, 10);
       noteBeingCreated.value = false;
     }
   });

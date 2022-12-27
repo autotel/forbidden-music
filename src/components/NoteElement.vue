@@ -16,7 +16,6 @@ const props = defineProps<{
         y: number,
         w: number,
         note: Note,
-        
     }
 }>();
 
@@ -56,7 +55,7 @@ const getNoteBody = () => {
 
 const mouseDownListener = (e: MouseEvent) => {
     // common
-    if(tool.current !== Tool.Edit) return;
+    if (tool.current !== Tool.Edit) return;
     let $noteBody = getNoteBody();
     e.stopPropagation();
     startNoteOctave = noteBeingEdited.octave;
@@ -70,7 +69,7 @@ const mouseDownListener = (e: MouseEvent) => {
     startY = e.clientY;
 }
 const rightEdgeMouseDownListener = (e: MouseEvent) => {
-    if(tool.current !== Tool.Edit) return;
+    if (tool.current !== Tool.Edit) return;
     e.stopPropagation();
     startX = e.clientX;
     startNoteDuration = noteBeingEdited.duration;
@@ -136,8 +135,10 @@ onUnmounted(() => {
     <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ weirdFloatToString(noteRect.note.frequency) }}
         Hz.</text>
     <text :x="noteRect.x" :y="noteRect.y + 37" font-size="10">{{ weirdFloatToString(noteRect.note.start) }} Ts.</text>
-    <text :x="noteRect.x" :y="noteRect.y + 51" font-size="10">{{ weirdFloatToString(noteRect.note.duration) }} Ts.</text>
-    <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
+    <text :x="noteRect.x" :y="noteRect.y + 51" font-size="10">{{ weirdFloatToString(noteRect.note.duration) }}
+        Ts.</text>
+    <rect class="body" :class="{ selected: noteRect.note.selected }" ref="noteBody" :x="noteRect.x" :y="noteRect.y"
+        :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
 </template>
 <style scoped>
@@ -145,6 +146,9 @@ onUnmounted(() => {
     fill: #888a;
     stroke: #999;
     cursor: move;
+}
+.body.selected{
+    fill: #f88a;
 }
 
 .rightEdge {

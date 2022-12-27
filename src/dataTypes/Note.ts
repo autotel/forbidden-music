@@ -11,6 +11,8 @@ export interface Note {
     /** end, which is not guaranteed be up to date */
     end: number,
     clone: () => Note,
+    // TODO: maybe this should be part of a class that extends note. too lazy to do that now.
+    selected: boolean,
 }
 
 interface NoteDefa {
@@ -29,12 +31,13 @@ const frequencyConstant = 11;
 export const octaveToFrequency = (octave: number) => frequencyConstant * Math.pow(2, octave);
 export const frequencyToOctave = (frequency: number) => Math.log2(frequency / frequencyConstant);
 
-export const makeNote = (noteDef: NoteDefa | NoteDefb) => {
+export const makeNote = <Note>(noteDef: NoteDefa | NoteDefb) => {
     const nn = {
         start: noteDef.start,
         duration: noteDef.duration,
         _octave: null as number | null,
         _frequency: null as number | null,
+        selected: false,
         clone() { return makeNote(this) },
         set end(value: number) {
             this.duration = value - this.start;
