@@ -6,6 +6,7 @@ import { useViewStore } from '../store/viewStore';
 import Fraction from 'fraction.js';
 import ToolSelector from './ToolSelector.vue';
 import { weirdFloatToString } from '../functions/weirdFloatToString';
+import { Tool } from '../dataTypes/Tool';
 
 const view = useViewStore();
 const tool = useToolStore();
@@ -60,6 +61,7 @@ const getNoteBody = () => {
 
 const mouseDownListener = (e: MouseEvent) => {
     // common
+    if(tool.current !== Tool.Edit) return;
     let $noteBody = getNoteBody();
     e.stopPropagation();
     startNoteOctave = noteBeingEdited.octave;

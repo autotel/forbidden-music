@@ -13,6 +13,7 @@ import SnapSelector from './components/SnapSelector.vue';
 import Button from "./components/Button.vue";
 import Transport from './components/Transport.vue';
 import { useToolStore } from './store/toolStore';
+import { Tool } from './dataTypes/Tool';
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 // const notesStore = useScoreStore();
@@ -53,7 +54,7 @@ onMounted(() => {
 
   // when user drags on the viewport, add a note an extend it's duration
   $viewPort.addEventListener('mousedown', (e) => {
-
+    console.log("mouse tool", tool.current);
     if (e.button === 1) {
       e.stopPropagation();
       draggingView = true;
@@ -62,6 +63,7 @@ onMounted(() => {
       viewDragStartY = e.clientY;
       viewDragStartOctave = view.octaveOffset;
     } else {
+      if (tool.current !== Tool.Edit) return;
       newNoteDragX = e.offsetX;
       // TODO: need to add third argumet to allow relational snap when created
       const { note } = tool.snap(

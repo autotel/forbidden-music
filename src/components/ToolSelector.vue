@@ -1,22 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Tool } from '../dataTypes/Tool';
+import { Tool, toolCasesArray } from '../dataTypes/Tool';
 import { useToolStore } from '../store/toolStore';
 
 import Button from './Button.vue';
 
 const tool = useToolStore();
 
+// :onClick="()=>tool.current = Tool[toolCase] as Tool" 
+//     :active="tool.current == Tool[toolCase]"
 </script>
 
 <template>
   <Button 
-    v-for="itool in tool.list" 
-    :onClick="()=>tool.current = itool as Tool" 
-    :active="tool.current === itool"
+    v-for="(value, k) in toolCasesArray()"
+    :onClick="()=>tool.current = value.tool"
+    :active="tool.current == value.tool"
   >
-    {{ itool }}
-  </Button>  
+    {{ value.name }}
+  </Button>
 </template>
 
 <style scoped>
