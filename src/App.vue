@@ -157,7 +157,7 @@ const noteRect = (note: Note) => {
   const isCut = note.start < view.timeOffset;
   const cutTimeWidth = isCut ? note.start - view.timeOffset : 0;
   return {
-    x: clampToZero(view.timeToPx(note.start)),
+    x: clampToZero(view.timeToPxWithOffset(note.start)),
     w: view.timeToPx(note.duration + cutTimeWidth),
     y: view.octaveToPxWithOffset(note.octave),
     cut: isCut,
