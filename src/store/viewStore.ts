@@ -1,86 +1,137 @@
 import { defineStore } from 'pinia'
-import { ref, Ref } from 'vue';
-import { Note } from '../dataTypes/Note.js';
-import { View } from '../View.js';
-import { useScoreStore } from './scoreStore.js';
-export const useViewStore = defineStore("view", {
-    // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
-    state: () => ({
-        octaveOffset: 2,
-        timeOffset: 0,
-        centerFrequency: 440,
-        viewWidthPx: 1920,
-        viewHeightPx: 1080,
-        viewWidthTime: 12,
-        viewHeightOctaves: 4,
-        // size of the composition, to use as reference to scroll bounds
-        scrollBound: 2048,
-        // TODO: integrate this, so that view always zooms to center or mouse pos.
-        _offsetPxX: 1920 / 2,
-        _offsetPxY: 1080,
-        score: useScoreStore(),
-        // TODO: add a enum to select different abstractions of tone.
-        // so, if using 12 tet, the text in the note is going to be semitones
-        // if even hz, it displays hz, if log, it displays octaves
-        // and if rational hz, it would display hz and relationships
-        // etc..
-    }),
-    getters: {
-        // TODO: Will it recalc every call? if so, we need to cache the result
-        visibleNotes(): Array<Note> {
-            const score = this.score;
-            //TODO: also filter by octave component
-            return score.notes.filter(note => {
-                return note.start < this.timeOffset + this.viewWidthTime &&
-                    note.start + note.duration > this.timeOffset;
-            });
-        }
-    },
-    actions: {
-        setTimeOffset(timeOffset: number) {
-            this.timeOffset = timeOffset;
-        },
-        setTimeOffsetBounds(timeOffsetBounded: number) {
-            this.timeOffset = this.boundsToTime(timeOffsetBounded);
-        },
-        pxToBounds(px: number): number {
-            return px / this.viewWidthPx;
-        },
-        timeToBounds(time: number): number {
-            return time / this.scrollBound;
-        },
-        boundsToTime(bounds: number): number {
-            return bounds * this.scrollBound;
-        },
-        pxToTime(time: number): number {
-            return time * this.viewWidthTime / this.viewWidthPx;
-        },
-        timeToPx(px: number): number {
-            return px * this.viewWidthPx / this.viewWidthTime;
-        },
-        timeToPxWithOffset(time: number): number {
-            return this.timeToPx(time - this.timeOffset);
-        },
-        pxToTimeWithOffset(px: number): number {
-            return this.pxToTime(px) + this.timeOffset;
-        },
-        pxToOctave(px: number): number {
-            return px * - this.viewHeightOctaves / this.viewHeightPx;
-        },
-        octaveToPx(octave: number): number {
-            return octave * this.viewHeightPx / - this.viewHeightOctaves;
-        },
-        pxToOctaveWithOffset(px: number): number {
-            return this.pxToOctave(px - this._offsetPxY) - this.octaveOffset;
-        },
-        octaveToPxWithOffset(octaveOffset: number): number {
-            return this.octaveToPx(octaveOffset + this.octaveOffset) + this._offsetPxY;
-        },
-        updateSize(width: number, height: number) {
-            this.viewWidthPx = width;
-            this.viewHeightPx = height;
-            this._offsetPxX = width / 2;
-        },
-    },
+import { computed, ref, Ref, watchEffect } from 'vue';
+import { EditNote } from '../dataTypes/EditNote.js';
 
+export const useViewStore = defineStore("view", () => {
+    // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
+
+    const octaveOffset = ref(2);
+    const timeOffset = ref(0);
+    const centerFrequency = ref(440);
+    const viewWidthPx = ref(1920);
+    const viewHeightPx = ref(1080);
+    const viewWidthTime = ref(12);
+    const viewHeightOctaves = ref(4);
+    /** size of the composition, to use as reference to scroll bounds */
+    const scrollBound = ref(2048);
+    // TODO integrate this, so that view always zooms to center or mouse pos).
+    const _offsetPxX = ref(1920 / 2);
+    const _offsetPxY = ref(1080);
+    const editNotes = ref([] as Array<EditNote>);
+
+    // TODO: add a enum to select different abstractions of tone.
+    // so, if using 12 tet, the text in the note is going to be semitones
+    // if even hz, it displays hz, if log, it displays octaves
+    // and if rational hz, it would display hz and relationships
+    // etc..
+
+    // TODO: Will it recalc every call? if so, we need to cache the result
+    const visibleNotes = computed((): Array<EditNote> => {
+        //TODO: also filter by octave component
+        return editNotes.value.filter(editNote => {
+            const note = editNote.note;
+            return note.start < timeOffset.value + viewWidthTime.value &&
+                note.start + note.duration > timeOffset.value;
+        });
+    });
+    const setTimeOffset = (newTimeOffset: number) => {
+        timeOffset.value = newTimeOffset;
+    };
+    const setTimeOffsetBounds = (timeOffsetBounded: number) => {
+        timeOffset.value = boundsToTime(timeOffsetBounded);
+    };
+    const pxToBounds = (px: number): number => {
+        return px / viewWidthPx.value;
+    };
+    const timeToBounds = (time: number): number => {
+        return time / scrollBound.value;
+    };
+    const boundsToTime = (bounds: number): number => {
+        return bounds * scrollBound.value;
+    };
+    const pxToTime = (time: number): number => {
+        return time * viewWidthTime.value / viewWidthPx.value;
+    };
+    const timeToPx = (px: number): number => {
+        return px * viewWidthPx.value / viewWidthTime.value;
+    };
+    const timeToPxWithOffset = (time: number): number => {
+        return timeToPx(time - timeOffset.value);
+    };
+    const pxToTimeWithOffset = (px: number): number => {
+        return pxToTime(px) + timeOffset.value;
+    };
+    const pxToOctave = (px: number): number => {
+        return px * - viewHeightOctaves.value / viewHeightPx.value;
+    };
+    const octaveToPx = (octave: number): number => {
+        return octave * viewHeightPx.value / - viewHeightOctaves.value;
+    };
+    const pxToOctaveWithOffset = (px: number): number => {
+        return pxToOctave(px - _offsetPxY.value) - octaveOffset.value;
+    };
+    const octaveToPxWithOffset = (octave: number): number => {
+        return octaveToPx(octave + octaveOffset.value) + _offsetPxY.value;
+    };
+    const updateSize = (width: number, height: number) => {
+        viewWidthPx.value = width;
+        viewHeightPx.value = height;
+        _offsetPxX.value = width / 2;
+    };
+    let isDragging = false;
+    return {
+        setTimeOffset,
+        setTimeOffsetBounds,
+        pxToBounds,
+        timeToBounds,
+        boundsToTime,
+        pxToTime,
+        timeToPx,
+        timeToPxWithOffset,
+        pxToTimeWithOffset,
+        pxToOctave,
+        octaveToPx,
+        pxToOctaveWithOffset,
+        octaveToPxWithOffset,
+        updateSize,
+
+        octaveOffset,
+        timeOffset,
+        centerFrequency,
+        viewWidthPx,
+        viewHeightPx,
+        viewWidthTime,
+        viewHeightOctaves,
+        scrollBound,
+        _offsetPxX,
+        _offsetPxY,
+        editNotes,
+        visibleNotes,
+    }
 });
+
+export interface View {
+    setTimeOffset: (newTimeOffset: number) => void;
+    setTimeOffsetBounds: (timeOffsetBounded: number) => void;
+    pxToBounds: (px: number) => number;
+    timeToBounds: (time: number) => number;
+    boundsToTime: (bounds: number) => number;
+    pxToTime: (time: number) => number;
+    timeToPx: (px: number) => number;
+    timeToPxWithOffset: (time: number) => number;
+    pxToTimeWithOffset: (px: number) => number;
+    pxToOctave: (px: number) => number;
+    octaveToPx: (octave: number) => number;
+    pxToOctaveWithOffset: (px: number) => number;
+    octaveToPxWithOffset: (octave: number) => number;
+    updateSize: (width: number, height: number) => void;
+    octaveOffset: number;
+    timeOffset: number;
+    centerFrequency: number;
+    viewWidthPx: number;
+    viewHeightPx: number;
+    viewWidthTime: number;
+    viewHeightOctaves: number;
+    scrollBound: number;
+    visibleNotes: Array<EditNote>;
+}

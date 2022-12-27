@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, Ref } from 'vue';
 import { Note } from '../dataTypes/Note.js';
-import { View } from '../View.js';
 
 export const useScoreStore = defineStore("score", {
     state: () => ({

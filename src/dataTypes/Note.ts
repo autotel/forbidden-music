@@ -11,16 +11,14 @@ export interface Note {
     /** end, which is not guaranteed be up to date */
     end: number,
     clone: () => Note,
-    // TODO: maybe this should be part of a class that extends note. too lazy to do that now.
-    selected: boolean,
 }
 
-interface NoteDefa {
+export interface NoteDefa {
     start: number,
     duration: number,
     octave: number
 }
-interface NoteDefb {
+export interface NoteDefb {
     start: number,
     duration: number,
     frequency: number

@@ -1,216 +1,193 @@
 <script setup lang="ts">
 import { useViewStore } from './store/viewStore';
-import { useScoreStore } from './store/scoreStore';
-import { onMounted, Ref, ref } from 'vue';
-
+import { onMounted, Ref, ref, watchEffect } from 'vue';
 import { usePlaybackStore } from './store/playbackStore';
 import TimeScrollBar from "./components/TimeScrollBar.vue"
-import { storeToRefs } from 'pinia';
-import { makeNote, Note } from './dataTypes/Note';
 import NoteElement from './components/NoteElement.vue';
 import ToolSelector from './components/ToolSelector.vue';
 import SnapSelector from './components/SnapSelector.vue';
 import Button from "./components/Button.vue";
 import Transport from './components/Transport.vue';
 import { useToolStore } from './store/toolStore';
+import { useEditStore } from './store/editStore';
 import { Tool } from './dataTypes/Tool';
 import RangeSelection from './components/RangeSelection.vue';
+import { EditNote } from './dataTypes/EditNote';
+import { Note } from './dataTypes/Note';
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
-// const notesStore = useScoreStore();
-// const notes = storeToRefs(notesStore);
-const score = useScoreStore();
-// const store = useViewStore();
-// const view = storeToRefs(store);
+
 const view = useViewStore();
 const playback = usePlaybackStore();
+const edit = useEditStore();
 
-let noteBeingCreated: Ref<Note | false> = ref(false);
 
 
 onMounted(() => {
 
-  //make the timedEventsViewport always fill the window
-  const $viewPort = timedEventsViewport.value;
-  if (!$viewPort) throw new Error("timedEventsViewport not found");
+    //make the timedEventsViewport always fill the window
+    const $viewPort = timedEventsViewport.value;
+    if (!$viewPort) throw new Error("timedEventsViewport not found");
 
-  const resize = () => {
-    $viewPort.style.width = window.innerWidth - 2 + "px";
-    $viewPort.style.height = window.innerHeight - 2 + "px";
+    const resize = () => {
+        $viewPort.style.width = window.innerWidth - 2 + "px";
+        $viewPort.style.height = window.innerHeight - 2 + "px";
 
-    view.updateSize(window.innerWidth, window.innerHeight);
+        view.updateSize(window.innerWidth, window.innerHeight);
 
-  };
-  window.addEventListener('resize', resize);
-  resize();
-
-  // concerning middle wheel dragging to pan
-  let draggingView = false;
-  let viewDragStartX = 0;
-  let viewDragStartTime = 0;
-  let viewDragStartY = 0;
-  let viewDragStartOctave = 0;
-
-  let newNoteDragX = 0;
-
-  // when user drags on the viewport, add a note an extend it's duration
-  $viewPort.addEventListener('mousedown', (e) => {
-    console.log("mouse tool", tool.current);
-    // middle wheel
-    if (e.button === 1) {
-      e.stopPropagation();
-      draggingView = true;
-      viewDragStartX = e.clientX;
-      viewDragStartTime = view.timeOffset;
-      viewDragStartY = e.clientY;
-      viewDragStartOctave = view.octaveOffset;
-    } else {
-      // left button
-      if (tool.current !== Tool.Edit) return;
-      newNoteDragX = e.clientX;
-      // TODO: need to add third argumet to allow relational snap when created
-      const { note } = tool.snap(
-        makeNote({
-          start: view.pxToTimeWithOffset(e.clientX),
-          duration: 1,
-          octave: view.pxToOctaveWithOffset(e.clientY),
-        }),
-        view.pxToOctaveWithOffset(e.clientY)
-      );
-      noteBeingCreated.value = note;
+    };
+    window.addEventListener('resize', resize);
+    resize();
 
 
+    // concerning middle wheel dragging to pan
+    let draggingView = false;
+    let viewDragStartX = 0;
+    let viewDragStartTime = 0;
+    let viewDragStartY = 0;
+    let viewDragStartOctave = 0;
+
+    console.log(edit, edit.mouseDown);
+    // when user drags on the viewport, add a note an extend it's duration
+    $viewPort.addEventListener('mousedown', (e) => {
+        console.log("mouse tool", tool.current);
+
+
+        // middle wheel
+        if (e.button === 1) {
+            e.stopPropagation();
+            draggingView = true;
+            viewDragStartX = e.clientX;
+            viewDragStartTime = view.timeOffset;
+            viewDragStartY = e.clientY;
+            viewDragStartOctave = view.octaveOffset;
+        } else {
+            // left button
+            if (tool.current !== Tool.Edit) return;
+            edit.mouseDown(e);
+
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (draggingView) {
+            // pan view, if dragging middle wheel
+            const deltaX = e.clientX - viewDragStartX;
+            const deltaY = e.clientY - viewDragStartY;
+            // oddness commented elsewhere
+            view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
+            view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
+            // prevent timeOffset from going out of bounds
+            if (view.timeOffset < 0) {
+                view.timeOffset = 0;
+            }
+            if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+                view.timeOffset = view.scrollBound - view.viewWidthTime;
+            }
+        } else {
+
+            edit.mouseMove(e);
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        edit.mouseUp(e);
+        // stop panning view, if it were
+        draggingView = false;
+    });
+
+    // export score
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey) {
+            const prevTool = tool.current;
+            tool.current = Tool.Select;
+            const dectl = (e: KeyboardEvent) => {
+                if (e.key == "Control") {
+                    tool.current = prevTool;
+                    window.removeEventListener('keyup', dectl);
+                }
+            }
+            window.addEventListener('keyup', dectl);
+        }
+        if (e.ctrlKey && e.key === 's') {
+            const json = JSON.stringify(view.editNotes.map(note => note.note));
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            window.open(url);
+            // save json to cookie
+            document.cookie = "score=" + json;
+            console.log("saved");
+        }
+
+
+    });
+
+
+    // import score from cookie
+    const cookie = document.cookie;
+    const scoreCookie = cookie.split(';').find(c => c.startsWith('score='));
+    if (scoreCookie) {
+        const json = scoreCookie.split('=')[1];
+        view.editNotes = JSON.parse(json).map((note: Note, index: number) => {
+            console.log("import note", index, ":", note);
+            return new EditNote(note as Note, view);
+        });
     }
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    // console.log("mouse [x,y]", 
-    //   view.pxToTimeWithOffset(e.clientX),
-    //   view.pxToOctaveWithOffset(e.clientY),
-
-    //   view.pxToTime(e.clientX),
-    //   view.pxToOctave(e.clientY),
-    // );
-    if (noteBeingCreated.value) {
-      const deltaX = e.clientX - newNoteDragX;
-      noteBeingCreated.value.duration = clampToZero(view.pxToTime(deltaX));
-    } else if (draggingView) {
-      // pan view, if dragging middle wheel
-      const deltaX = e.clientX - viewDragStartX;
-      const deltaY = e.clientY - viewDragStartY;
-      // oddness commented elsewhere
-      view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
-      view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
-      // prevent timeOffset from going out of bounds
-      if (view.timeOffset < 0) {
-        view.timeOffset = 0;
-      }
-      if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
-        view.timeOffset = view.scrollBound - view.viewWidthTime;
-      }
-    }
-  });
-
-  window.addEventListener('mouseup', (e) => {
-    // stop panning view, if it were
-    draggingView = false;
-    if (noteBeingCreated.value !== false && e.button !== 1) {
-      score.notes.push(noteBeingCreated.value);
-      noteBeingCreated.value = false;
-    }
-  });
-
-  // export score
-  window.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 's') {
-
-      const json = JSON.stringify(score.notes);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      window.open(url);
-      // save json to cookie
-      document.cookie = "score=" + json;
-      console.log("saved");
-    } else if (e.ctrlKey && e.key === 'n') {
-      // wont work
-      score.notes = [];
-    }
-  });
-
-
-  // import score from cookie
-  const cookie = document.cookie;
-  const scoreCookie = cookie.split(';').find(c => c.startsWith('score='));
-  if (scoreCookie) {
-    const json = scoreCookie.split('=')[1];
-    score.notes = JSON.parse(json);
-  }
 
 })
 
 const clear = () => {
-  score.notes = [];
+    view.editNotes.splice(0);
 }
 
-const clampToZero = (n: number) => n < 0 ? 0 : n;
-const noteRect = (note: Note) => {
-  const isCut = note.start < view.timeOffset;
-  const cutTimeWidth = isCut ? note.start - view.timeOffset : 0;
-  return {
-    x: clampToZero(view.timeToPxWithOffset(note.start)),
-    w: view.timeToPx(note.duration + cutTimeWidth),
-    y: view.octaveToPxWithOffset(note.octave),
-    cut: isCut,
-    note: note,
-  }
-}
-const getScopednotes = () => {
-  return view.visibleNotes.map(note => {
-    return noteRect(note);
-  });
-}
+// const noteRect = (note: Note) => {
+//     const isCut = note.start < view.timeOffset;
+//     const cutTimeWidth = isCut ? note.start - view.timeOffset : 0;
+//     return {
+//         x: clampToZero(view.timeToPxWithOffset(note.start)),
+//         w: view.timeToPx(note.duration + cutTimeWidth),
+//         y: view.octaveToPxWithOffset(note.octave),
+//         cut: isCut,
+//         note: note,
+//     }
+// }
+// const getScopednotes = () => {
+//     return view.visibleNotes.map(note => {
+//         return new EditNote(note);
+//     });
+// }
 </script>
 <template>
 
-  <svg id="viewport" ref="timedEventsViewport">
+    <svg id="viewport" ref="timedEventsViewport">
 
-    <!--
-      weirdness still present:
-      intuitively I would assume that to get from time
-      to position, the function would be
-      timeToPxWithOffset, but it's not
-
-      TODO: prevent needing to calculate twice x position 
-  -->
-    <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
-      stroke-width="1" />
-
-    <!-- draw a rectangle representing each note -->
-    <NoteElement v-for="noteRect in getScopednotes()" :noteRect="noteRect" />
-    <NoteElement v-if="noteBeingCreated" :noteRect="noteRect(noteBeingCreated)" />
-    <RangeSelection />
-  </svg>
-  <TimeScrollBar />
-  <div style="position: fixed;">
-    <Button :onClick="clear" danger>clear</Button>
-    <ToolSelector />
-  </div>
-  <div style="position: fixed; bottom: 0;">
-    <SnapSelector />
-    <Transport />
-  </div>
+        <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
+            stroke-width="1" />
+        <NoteElement v-for="editNote in view.editNotes" :editNote="editNote" />
+        <NoteElement v-if="edit.noteBeingCreated" :editNote="edit.noteBeingCreated" />
+        <RangeSelection />
+    </svg>
+    <TimeScrollBar />
+    <div style="position: fixed;">
+        <Button :onClick="clear" danger>clear</Button>
+        <ToolSelector />
+    </div>
+    <div style="position: fixed; bottom: 0;">
+        <SnapSelector />
+        <Transport />
+    </div>
 </template>
 
 <style>
 svg#viewport {
-  position: absolute;
-  top: 0;
-  left: 0;
-  cursor: crosshair;
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: crosshair;
 }
 
 text,
 t {
-  user-select: none;
+    user-select: none;
 }
 </style>

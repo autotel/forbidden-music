@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
+import { EditNote } from '../dataTypes/EditNote';
 import { Note } from '../dataTypes/Note';
-import { useScoreStore } from './scoreStore';
+import { useToolStore } from './toolStore';
+import { useViewStore } from './viewStore';
 
 const getNotesInRange = (
-    notes: Note[],
+    notes: EditNote[],
     range: {
         startTime: number,
         endTime: number,
@@ -14,7 +16,7 @@ const getNotesInRange = (
 ) => {
     const timeRange = [range.startTime, range.endTime].sort();
     const octaveRange = [range.startOctave, range.endOctave].sort();
-    return notes.filter((note) => {
+    return notes.filter(({ note }) => {
         const octaveInRange = note.octave >= octaveRange[0] && note.octave <= octaveRange[1];
         const timeInRange = note.start >= timeRange[0] && note.start <= timeRange[1];
         return octaveInRange && timeInRange;
@@ -24,10 +26,11 @@ const getNotesInRange = (
 
 
 export const useSelectStore = defineStore("select", () => {
-    const selectedNotes = ref([] as Note[]);
-    const score = useScoreStore();
+    const view = useViewStore();
+    const selectedNotes = ref([] as EditNote[]);
+    const editNotes = view.editNotes;
     const refreshNoteSelectionState = () => {
-        score.notes.forEach(n=>n.selected=isNoteSelected(n))
+        editNotes.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const selectRange = (range: {
         startTime: number,
@@ -36,7 +39,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         selectedNotes.value = getNotesInRange(
-            score.notes,
+            view.editNotes,
             range
         );
     };
@@ -47,7 +50,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         const newNotes = getNotesInRange(
-            score.notes,
+            view.editNotes,
             range
         );
         selectedNotes.value.push(...newNotes);
@@ -55,27 +58,27 @@ export const useSelectStore = defineStore("select", () => {
     const clearSelection = () => {
         selectedNotes.value = [];
     };
-    const isNoteSelected = (note: Note) => {
+    const isEditNoteSelected = (note: EditNote) => {
         return selectedNotes.value.includes(note);
     };
-    const toggleNoteSelected = (note: Note) => {
-        if (isNoteSelected(note)) {
-            selectedNotes.value = selectedNotes.value.filter((n) => n != note);
+    const toggleEditNoteSelected = (editNote: EditNote) => {
+        if (isEditNoteSelected(editNote)) {
+            selectedNotes.value = selectedNotes.value.filter((n) => n != editNote);
         } else {
-            selectedNotes.value.push(note);
+            selectedNotes.value.push(editNote);
         }
     };
 
     watch(selectedNotes, refreshNoteSelectionState);
-    
+
     return {
         // selectedNotes:selectedNotes.value,
         selectedNotes,
         selectRange,
         addRange,
         clearSelection,
-        isNoteSelected,
-        toggleNoteSelected,
+        isEditNoteSelected,
+        toggleEditNoteSelected,
     };
 
 });

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { frequencyToOctave, makeNote, Note, octaveToFrequency } from '../dataTypes/Note.js';
 import { Tool } from '../dataTypes/Tool.js';
 import Fraction from 'fraction.js';
+import { EditNote } from '../dataTypes/EditNote.js';
 
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
@@ -59,11 +60,11 @@ export const useToolStore = defineStore("tool", {
         getClosestFraction(value: number) {
             return new Fraction(value).simplify(this.simplify).valueOf();
         },
-        snap(inNote: Note, targetOctave: number, otherNotes?: Array<Note>) {
+        snap(inNote: EditNote, targetOctave: number, otherNotes?: Array<EditNote>) {
             /** outNote */
-            const note = inNote.clone();
+            const editNote = inNote.clone();
             const targetHz = octaveToFrequency(targetOctave);
-            const relatedNotes = [] as Note[];
+            const relatedNotes = [] as EditNote[];
 
             const snapObj = {
                 closestSnapDistance: null as number | null,
@@ -88,7 +89,7 @@ export const useToolStore = defineStore("tool", {
             if (this.snaps.hzRelationEven === true) {
                 if (otherNotes) {
                     for (const otherNote of otherNotes) {
-                        const otherHz = otherNote.frequency;
+                        const otherHz = otherNote.note.frequency;
                         const closeHzRatio = new Fraction(targetHz).div(otherHz).simplify(this.simplify).valueOf();
                         // reintegrate rounded proportion back to the other's hz value
                         const myCandidateHz = closeHzRatio * otherHz;
@@ -118,13 +119,13 @@ export const useToolStore = defineStore("tool", {
                 snapper(snapObj);
             }
             if (snapObj.closestSnapOctave === null) {
-                note.octave = targetOctave;
+                editNote.note.octave = targetOctave;
             } else {
-                note.octave = snapObj.closestSnapOctave;
+                editNote.note.octave = snapObj.closestSnapOctave;
             }
 
             return {
-                note,
+                editNote,
                 relatedNotes
             }
         }
