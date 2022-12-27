@@ -34,6 +34,9 @@ export const useToolStore = defineStore("tool", {
     state: () => ({
         current: Tool.Edit,
         simplify: 0.1,
+        // TODO: when there is a snap, show a grid representing
+        // the values to which it would snap, so that the user can target
+        // visually
         snaps: {
             equal12: false,
             equal1: true,
@@ -72,7 +75,11 @@ export const useToolStore = defineStore("tool", {
                 snapObj.snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
                 snapper(snapObj);
             }
-
+            // TODO: keep track of all the notes to which it has a relation
+            // then filter all those notes with whom the relation was not used
+            // and show them in the UI, using a dedicated component
+            // take into account that a relationship might be hz or octave based.
+            // there has to be a text explaining it (e.g. 1/6 hz, or 4/5 octaves)
             /** 
              * target / other = other * 1 / target
              * mycandidate = other

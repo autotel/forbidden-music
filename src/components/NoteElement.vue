@@ -132,7 +132,7 @@ onUnmounted(() => {
     window.removeEventListener('mousemove', mouseMoveListener);
     window.removeEventListener('mouseup', mouseUpListener);
 });
-</script>§
+</script>
 <template>
     <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ weirdFloatToString(noteRect.note.octave) }} Octs.</text>
     <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ weirdFloatToString(noteRect.note.frequency) }}

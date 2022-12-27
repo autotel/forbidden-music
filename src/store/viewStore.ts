@@ -18,8 +18,12 @@ export const useViewStore = defineStore("view", {
         // TODO: integrate this, so that view always zooms to center or mouse pos.
         _offsetPxX: 1920 / 2,
         _offsetPxY: 1080,
-
         score: useScoreStore(),
+        // TODO: add a enum to select different abstractions of tone.
+        // so, if using 12 tet, the text in the note is going to be semitones
+        // if even hz, it displays hz, if log, it displays octaves
+        // and if rational hz, it would display hz and relationships
+        // etc..
     }),
     getters: {
         // TODO: Will it recalc every call? if so, we need to cache the result
