@@ -1,16 +1,9 @@
-import { defineStore } from 'pinia'
-import { Note } from '../dataTypes/Note.js';
-import { Tool } from '../dataTypes/Tool.js';
-import { SawtoothSynth } from '../synth/SawtoothSynth';
-import { BassicSynth } from '../synth/BassicSynth';
-import { ToneSynth } from '../synth/ToneSynth';
+import { defineStore } from 'pinia';
+import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
 import { CollisionSynth } from '../synth/CollisionSynth';
+import { Synth } from '../synth/Synth';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
-import { Synth } from '../synth/Synth';
-import * as Tone from 'tone';
-import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
-import { createNoiseWorklet } from '../functions/noiseWorkletFactory.js';
 export const usePlaybackStore = defineStore("playback", {
     state: () => ({
         playing: false,
@@ -33,6 +26,7 @@ export const usePlaybackStore = defineStore("playback", {
         view: useViewStore(),
 
         playbarPxPosition: 0,
+        playFrameSizeMs: 30,
 
     }),
     getters: {
@@ -63,7 +57,7 @@ export const usePlaybackStore = defineStore("playback", {
             });
 
             if (this.currentTimeout) clearTimeout(this.currentTimeout);
-            this.currentTimeout = setTimeout(this._clockAction, 0);
+            this.currentTimeout = setTimeout(this._clockAction, this.playFrameSizeMs);
 
             this.previousScoreTime = this.currentScoreTime;
 

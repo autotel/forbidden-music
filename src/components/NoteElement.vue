@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { onMounted, ref } from 'vue';
 import { Note } from '../dataTypes/Note';
 import { useToolStore } from '../store/toolStore';
@@ -10,192 +9,136 @@ import { weirdFloatToString } from '../functions/weirdFloatToString';
 // get the view store
 const view = useViewStore();
 const tool = useToolStore();
-
-const toneRelations = ref<Array<{
-    value: number,
-    text: string,
-    xPosition: number,
-    distancePx: number,
-
-}>>();
-
+// const toneRelations = ref<Array<{
+//     text: string,
+//     withNote: Note,
+//     xPosition: number,
+// }>>();
 const props = defineProps<{
     noteRect: {
         x: number,
         y: number,
         w: number,
         note: Note,
+        // make relations inherent to the note display, so that they sort of remain after a relationship is established
+        relations: Array<{
+            explanation: string,
+            withNote: Note,
+            xPosition: number,
+        }>,
     }
 }>()
-
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
-/**
- * gets a list of fractional relations to each other note visible in view
- */
-const getRelationsList = (withOctave: number, notes: Note[]) => {
-    return notes
-        .filter(n => n.octave !== withOctave)
-        .map(n => {
-            const distancePx = view.octaveToPx(n.octave - withOctave);
-            if (withOctave === 0) {
-                return { value: 0, text: "!", xPosition: 0, distancePx }
-            }
-            const value = n.octave / withOctave;
-            const text = withOctave == 0 ? `!` : `${new Fraction(value).simplify(tool.simplify).toFraction(true)}`;
-            const xPosition = view.timeToPx(n.start + n.duration / 2) - view.timeToPx(view.timeOffset);
-            return { value, text, xPosition, distancePx };
-        }) as Array<{ value: number, text: string, xPosition: number, distancePx: number }>;
-}
 const getVisibleNotes = () => view.visibleNotes;
-/**
- * refreshes the relations list
- */
-const setRelatedNotes = (notes: Note[]) => {
-    const note = props.noteRect.note;
-    const relations = getRelationsList(note.octave, notes);
-    toneRelations.value = relations;
+let noteBeingEdited = props.noteRect.note;
+let startX = 0;
+let startY = 0;
+let startNoteStart = 0;
+let startNoteOctave = 0;
+let startNoteDuration = 0;
+
+enum DragMode {
+    None,
+    Move,
+    Resize,
 }
 
-onMounted(() => {
-    const $noteBody = noteBody.value;
-    if (!$noteBody) throw new Error("noteBody not found");
-    const $rightEdge = rightEdge.value;
-    if (!$rightEdge) throw new Error("rightEdge not found");
+let dragMode = DragMode.None;
 
-    // make the note length resizable by dragging the right edge
-    $rightEdge.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        const noteBeingEdited = props.noteRect.note;
-        const startX = e.clientX;
-        const startNoteDuration = noteBeingEdited.duration;
-        $rightEdge.style.cursor = 'ew-resize';
+let __$rightEdgeBody: SVGRectElement;
 
-        const mouseMove = (e: MouseEvent) => {
-            e.stopPropagation();
+const getRightEdgeBody = () => {
+    if (__$rightEdgeBody) return __$rightEdgeBody;
+    if (!rightEdge.value) throw new Error("rightEdgeBody not found");
+    __$rightEdgeBody = rightEdge.value;
+    return __$rightEdgeBody;
+}
+let __$noteBody: SVGRectElement;
+const getNoteBody = () => {
+    if (__$noteBody) return __$noteBody;
+    if (!noteBody.value) throw new Error("noteBody not found");
+    __$noteBody = noteBody.value;
+    return __$noteBody;
+}
 
-            // same wickedness
-            const timeDelta = view.pxToTime(e.clientX - startX);
-            noteBeingEdited.duration = startNoteDuration + timeDelta;
-        };
-        const mouseUp = (e: MouseEvent) => {
-            e.stopPropagation();
-
-            $rightEdge.style.cursor = 'ew-resize';
-            window.removeEventListener('mousemove', mouseMove);
-            window.removeEventListener('mouseup', mouseUp);
-        };
-        window.addEventListener('mousemove', mouseMove);
-        window.addEventListener('mouseup', mouseUp);
-    });
-
-    $noteBody.addEventListener('mousedown', (e) => {
-        // TODO: also resize upon creation
-        e.stopPropagation();
-        const noteBeingEdited = props.noteRect.note;
-        const startX = e.clientX;
-        const startNoteStart = noteBeingEdited.start;
-        $noteBody.style.cursor = 'grabbing';
-        const mouseMove = (e: MouseEvent) => {
-            e.stopPropagation();
-            // this is a very wicked use of the function.
-            // honestly I don't understand why it works using
-            // the inverse function. It has something to do with zooming
-            const timeDelta = view.pxToTime(e.clientX - startX);
-            noteBeingEdited.start = startNoteStart + timeDelta;
-
-        };
-        const mouseUp = (e: MouseEvent) => {
-            e.stopPropagation();
-            $noteBody.style.cursor = 'grab';
-            window.removeEventListener('mousemove', mouseMove);
-            window.removeEventListener('mouseup', mouseUp);
-        };
-        window.addEventListener('mousemove', mouseMove);
-        window.addEventListener('mouseup', mouseUp);
-
-
-        // drag the note up and down to change the octave
-        // separated to keep clarity
-
+const mouseDownListener = (e: MouseEvent) => {
+    // common
+    let $noteBody = getNoteBody();
+    e.stopPropagation();
+    startNoteOctave = noteBeingEdited.octave;
+    noteBeingEdited = props.noteRect.note;
+    startNoteStart = noteBeingEdited.start;
+    $noteBody.style.cursor = 'grabbing';
+    dragMode = DragMode.Move;
+    // horizontal
+    startX = e.clientX;
+    // vertical
+    startY = e.clientY;
+}
+const rightEdgeMouseDownListener = (e: MouseEvent) => {
+    let $rightEdgeBody = getRightEdgeBody();
+    e.stopPropagation();
+    startX = e.clientX;
+    startNoteDuration = noteBeingEdited.duration;
+    dragMode = DragMode.Resize;
+}
+const mouseMoveListener = (e: MouseEvent) => {
+    // horizontal
+    e.stopPropagation();
+    const timeDelta = view.pxToTime(e.clientX - startX);
+    if (dragMode === DragMode.None) {
+        return
+    } else if (dragMode === DragMode.Resize) {
+        noteBeingEdited.duration = startNoteDuration + timeDelta;
+    } else if (dragMode === DragMode.Move) {
+        // horizontal
+        noteBeingEdited.start = startNoteStart + timeDelta;
+        // vertical
         // prevent pitch change if 'alt' key is pressed
+        // TODO: should draw a horizontal line to represent the constraint of movement.
         if (e.altKey) return;
-
-        const startY = e.clientY;
-        const startNoteOctave = noteBeingEdited.octave;
-
         const relationalSnaps = [] as number[];
+        const octaveDelta = view.pxToOctave(e.clientY - startY);
+        let targetOctave = startNoteOctave + octaveDelta;
+        const visibleNotes = getVisibleNotes().filter(n => n !== noteBeingEdited);
+        const {
+            note,
+            relatedNotes
+        } = tool.snap(
+            noteBeingEdited,
+            targetOctave,
+            visibleNotes
+        );
+        noteBeingEdited.octave = note.octave;
+    }
 
-        // Object.keys(tool.snaps).forEach(snapName => {
-        //     console.log("snap", snapName, tool.snaps[snapName]);
-        //     if (tool.snaps[snapName] === false) return false;
-        //     const numberValue = snapName.match(/(\d+)/)?.[0];
-        //     if (numberValue === undefined) return false;
-        //     return relationalSnaps.push(parseInt(numberValue));
-        // });
-
-        // console.log("relational snaps", relationalSnaps);
-
-        $noteBody.style.cursor = 'grabbing';
-        const mouseMoveV = (e: MouseEvent) => {
-            const octaveDelta = view.pxToOctave(e.clientY - startY);
-
-            let targetOctave = startNoteOctave + octaveDelta;
-            
-            const visibleNotes = getVisibleNotes().filter(n=>n!==noteBeingEdited);
-            
-            const {
-                note,
-                relatedNotes
-            } = tool.snap(
-                noteBeingEdited,
-                targetOctave,
-                visibleNotes
-            );
-            
-            noteBeingEdited.octave = note.octave;
-            
-            setRelatedNotes(relatedNotes);
-
-        };
-        const mouseUpV = (e: MouseEvent) => {
-            $noteBody.style.cursor = 'grab';
-            window.removeEventListener('mousemove', mouseMoveV);
-            window.removeEventListener('mouseup', mouseUpV);
-        };
-        window.addEventListener('mousemove', mouseMoveV);
-        window.addEventListener('mouseup', mouseUpV);
-
-    });
-
-    // when event is hovered, calculate and show the octave relations to every other note
-    $noteBody.addEventListener('mouseenter', (e) => {
-        e.stopPropagation();
-    });
-    $noteBody.addEventListener('mouseleave', (e) => {
-        e.stopPropagation();
-        toneRelations.value = [];
-    });
-
+};
+const mouseUpListener = (e: MouseEvent) => {
+    dragMode = DragMode.None;
+    // common
+    let $noteBody = getNoteBody();
+    // horizontal
+    e.stopPropagation();
+    $noteBody.style.cursor = 'grab';
+    //vertical
+}
+onMounted(() => {
+    const $rightEdge = getRightEdgeBody();
+    const $noteBody = getNoteBody();
+    $noteBody.addEventListener('mousedown', mouseDownListener);
+    $rightEdge.addEventListener('mousedown', rightEdgeMouseDownListener);
+    window.addEventListener('mousemove', mouseMoveListener);
+    window.addEventListener('mouseup', mouseUpListener);
 });
-
-</script>
-
+</script>§
 <template>
     <text :x="noteRect.x" :y="noteRect.y + 9" font-size="10">{{ weirdFloatToString(noteRect.note.octave) }} Octs.</text>
     <text :x="noteRect.x" :y="noteRect.y + 23" font-size="10">{{ weirdFloatToString(noteRect.note.frequency) }}
         Hz.</text>
     <rect class="body" ref="noteBody" :x="noteRect.x" :y="noteRect.y" :width="noteRect.w" height="10" />
     <rect class="rightEdge" ref="rightEdge" :x="noteRect.x + noteRect.w - 5" :y="noteRect.y" width="5" :height="10" />
-    <template v-for="relation in toneRelations">
-        <line class="relation" :x1="relation.xPosition" :y1="noteRect.y" :x2="relation.xPosition"
-            :y2="noteRect.y + relation.distancePx" />
-        <text :x="relation.xPosition + 5" :y="5 + noteRect.y + relation.distancePx / 2" font-size="10">
-            {{ relation.text }}
-        </text>
-    </template>
 </template>
-
 <style scoped>
 .body {
     fill: #888a;

@@ -13,14 +13,14 @@ const snapper = (snapObj: {
     /** the resulting value corresponding to the closest snap */
     closestSnapOctave: number | null;
     /** the calculated snap value, which contends to be the closest */
-    snapValue: number  | null;
+    snapValue: number | null;
     /** the target value, if no snap were to be applied */
-    targetOctave: number  | null;
+    targetOctave: number | null;
 }) => {
-    if (snapObj.snapValue === null ){
+    if (snapObj.snapValue === null) {
         throw new Error("snapValue is null");
     }
-    if(snapObj.targetOctave === null) {
+    if (snapObj.targetOctave === null) {
         throw new Error("targetOctave is null");
     }
     const snapDistance = Math.abs(snapObj.snapValue - snapObj.targetOctave);
@@ -33,7 +33,7 @@ const snapper = (snapObj: {
 export const useToolStore = defineStore("tool", {
     state: () => ({
         current: Tool.Edit,
-        simplify: 0.01,
+        simplify: 0.1,
         snaps: {
             equal12: false,
             equal1: true,
@@ -59,7 +59,7 @@ export const useToolStore = defineStore("tool", {
             /** outNote */
             const note = inNote.clone();
             const targetHz = octaveToFrequency(targetOctave);
-            const relatedNotes = [] as Note [];
+            const relatedNotes = [] as Note[];
 
             const snapObj = {
                 closestSnapDistance: null as number | null,
@@ -73,15 +73,24 @@ export const useToolStore = defineStore("tool", {
                 snapper(snapObj);
             }
 
+            /** 
+             * target / other = other * 1 / target
+             * mycandidate = other
+             **/
             if (this.snaps.hzRelationEven === true) {
-                // TODO: works kinda weird
                 if (otherNotes) {
                     for (const otherNote of otherNotes) {
-                        const otherHz = octaveToFrequency(otherNote.octave);
+                        const otherHz = otherNote.frequency;
                         const closeHzRatio = new Fraction(targetHz).div(otherHz).simplify(this.simplify).valueOf();
-                        const myCandidate = snapObj.snapValue = frequencyToOctave(Math.round(targetHz * closeHzRatio));
+                        // reintegrate rounded proportion back to the other's hz value
+                        const myCandidateHz = closeHzRatio * otherHz;
+                        const myCandidateOctave = frequencyToOctave(myCandidateHz);
+                        snapObj.snapValue = myCandidateOctave;
                         snapper(snapObj);
-                        if(snapObj.snapValue === myCandidate) {
+                        if(snapObj.snapValue === myCandidateOctave) {
+                            // TODO: show more than one note related (for example a note halfway between 1 and 2 snaps with both, not only one)
+                            // also the fractions displayed are wrong very often.
+                            relatedNotes.splice(0);
                             relatedNotes.push(otherNote);
                         }
                     }
@@ -102,13 +111,10 @@ export const useToolStore = defineStore("tool", {
             }
             if (snapObj.closestSnapOctave === null) {
                 note.octave = targetOctave;
-                console.log("any val");
             } else {
                 note.octave = snapObj.closestSnapOctave;
-                console.log("snap val");
             }
 
-            console.log(snapObj.closestSnapOctave);
             return {
                 note,
                 relatedNotes

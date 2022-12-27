@@ -68,9 +68,9 @@ onMounted(() => {
         makeNote({
           start: view.timeToPxWithOffset(e.offsetX),
           duration: 1,
-          octave: view.pxToOctaveOffset(e.offsetY),
+          octave: view.pxToOctaveWithOffset(e.offsetY),
         }),
-        view.pxToOctaveOffset(e.offsetY)
+        view.pxToOctaveWithOffset(e.offsetY)
       );
       noteBeingCreated.value = note;
 
@@ -148,7 +148,7 @@ const noteRect = (note: Note) => {
   return {
     x: clampToZero(view.pxToTimeWithOffset(note.start)),
     w: view.timeToPx(note.duration + cutTimeWidth),
-    y: view.octaveToPxOffset(note.octave),
+    y: view.octaveToPxWithOffset(note.octave),
     cut: isCut,
     note: note,
   }
