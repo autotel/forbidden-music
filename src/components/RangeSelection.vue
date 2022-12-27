@@ -74,7 +74,7 @@ onUnmounted(() => {
         v-if="selectRange.active" 
         :x="view.timeToPxWithOffset(selectRange.timeStart)"
         :y="view.octaveToPxWithOffset(selectRange.octaveStart)"
-        :width="view.pxToTime(selectRange.timeSize)"
+        :width="view.timeToPx(selectRange.timeSize)"
         :height="view.octaveToPx(selectRange.octaveSize)"
     />
 </template>
