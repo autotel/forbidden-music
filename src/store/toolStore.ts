@@ -68,6 +68,7 @@ export const useToolStore = defineStore("tool", {
     state: () => ({
         current: Tool.Edit,
         simplify: 0.1,
+        copyOnDrag: false,
         // TODO: when there is a snap, show a grid representing
         // the values to which it would snap, so that the user can target
         // visually

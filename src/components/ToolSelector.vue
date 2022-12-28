@@ -19,6 +19,15 @@ const tool = useToolStore();
   >
     {{ value.name }}
   </Button>
+
+  <Button
+    v-if="tool.current == Tool.Edit"
+    :active="tool.copyOnDrag"
+    :onClick="()=>tool.copyOnDrag = !tool.copyOnDrag"
+  >
+    Copy
+  </Button>
+
 </template>
 
 <style scoped>

@@ -32,6 +32,13 @@ export const useSelectStore = defineStore("select", () => {
         console.log("refreshNoteSelectionState");
         view.editNotes.forEach(n => n.selected = isEditNoteSelected(n))
     }
+    const select = (...editNote: EditNote[]) => {
+        selectedNotes.value = editNote;
+    };
+
+    const add = (... editNote: EditNote []) => {
+        selectedNotes.value = selectedNotes.value.concat(editNote);
+    };
     const selectRange = (range: {
         startTime: number,
         endTime: number,
@@ -55,8 +62,8 @@ export const useSelectStore = defineStore("select", () => {
         );
         selectedNotes.value.push(...newNotes);
     };
-    const clearSelection = () => {
-        console.log("clearSelection");
+    const clear = () => {
+        console.log("clear");
         selectedNotes.value = [];
     };
     const isEditNoteSelected = (note: EditNote) => {
@@ -77,7 +84,8 @@ export const useSelectStore = defineStore("select", () => {
         selectedNotes,
         selectRange,
         addRange,
-        clearSelection,
+        add,select,
+        clear: clear,
         isEditNoteSelected,
         toggleEditNoteSelected,
     };

@@ -58,6 +58,7 @@ export const useEditStore = defineStore("edit", () => {
             x: e.clientX,
             y: e.clientY,
         }
+
         if (noteRightEdgeBeingHovered) {
             noteBeingDraggedRightEdge = noteRightEdgeBeingHovered;
             noteRightEdgeBeingHovered.dragStart(mouse);
@@ -101,37 +102,6 @@ export const useEditStore = defineStore("edit", () => {
                 );
                 editNoteI.note = editNote.note;
 
-//     // horizontal
-//     e.stopPropagation();
-//     const timeDelta = view.pxToTime(e.clientX - startX);
-//     if (dragMode === DragMode.None) {
-//         return
-//     } else if (dragMode === DragMode.Resize) {
-//     } else if (dragMode === DragMode.Move) {
-//         // horizontal
-//         if(select.selectedNotes.length) {
-//             select.selectedNotes.forEach(({note})=>{
-//                 note.start = startNoteStart + timeDelta;
-//             })
-//         } else {
-//             noteBeingEdited.start = startNoteStart + timeDelta;
-//         }
-//         // vertical
-//         // prevent pitch change if 'alt' key is pressed
-//         // TODO: should draw a horizontal line to represent the constraint of movement.
-//         if (e.altKey) return;
-//         const octaveDelta = view.pxToOctave(e.clientY - startY);
-//         let targetOctave = startNoteOctave + octaveDelta;
-//         const visibleNotes = getVisibleNotes().filter(n => n !== noteBeingEdited);
-//         const {
-//             note
-//         } = tool.snap(
-//             noteBeingEdited,
-//             targetOctave,
-//             visibleNotes
-//         );
-//         noteBeingEdited.octave = note.octave;
-//     }
 
             });
 

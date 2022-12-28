@@ -102,8 +102,20 @@ onMounted(() => {
         draggingView = false;
     });
 
+    // TODO: well, this all needs refactor
     // export score
     window.addEventListener('keydown', (e) => {
+        // alt activates tool copyOnDrag mode
+        if (e.altKey) {
+            tool.copyOnDrag = true;
+            const dectl = (e: KeyboardEvent) => {
+                if (e.key == "Alt") {
+                    tool.copyOnDrag = false;
+                    window.removeEventListener('keyup', dectl);
+                }
+            }
+            window.addEventListener('keyup', dectl);
+        }
         if (e.ctrlKey) {
             const prevTool = tool.current;
             tool.current = Tool.Select;
