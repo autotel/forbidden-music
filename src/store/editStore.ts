@@ -7,7 +7,7 @@ import { useViewStore, View } from './viewStore.js';
 import { useToolStore } from './toolStore';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
-const forceRedraw = (el:{udpateFlag:string}) => {
+const forceRedraw = (el: { udpateFlag: string }) => {
     el.udpateFlag = Math.random().toString(36).slice(2);
 }
 
@@ -51,20 +51,22 @@ export const useEditStore = defineStore("edit", () => {
         noteRightEdgeBeingHovered = false;
     }
 
-    const getDraggableNotes = () => [noteBeingDragged, ...selection.selectedNotes].filter(n => n) as EditNote[];
+    let notesBeingDragged = [] as EditNote[];
+    let alreadyDuplicatedForThisDrag = false;
+    
 
     const mouseDown = (e: MouseEvent) => {
         const mouse = {
             x: e.clientX,
             y: e.clientY,
         }
-
         if (noteRightEdgeBeingHovered) {
             noteBeingDraggedRightEdge = noteRightEdgeBeingHovered;
             noteRightEdgeBeingHovered.dragStart(mouse);
         } else if (noteBeingHovered) {
             noteBeingDragged = noteBeingHovered;
-            getDraggableNotes().forEach(editNote => {
+            notesBeingDragged = [noteBeingDragged, ...selection.selectedNotes].filter(n => n) as EditNote[];
+            notesBeingDragged.forEach(editNote => {
                 editNote.dragStart(mouse);
             });
         } else {
@@ -83,17 +85,33 @@ export const useEditStore = defineStore("edit", () => {
         mouseDragStart = mouse;
         isDragging = true;
     }
+
     const mouseMove = (e: MouseEvent) => {
         if (noteBeingCreated.value) {
             const deltaX = e.clientX - newNoteDragX;
             noteBeingCreated.value.note.duration = clampToZero(view.pxToTime(deltaX));
+        } else if (isDragging && noteBeingDragged && tool.copyOnDrag && !alreadyDuplicatedForThisDrag) {
+            alreadyDuplicatedForThisDrag = true;
+            const prevDraggableNotes = notesBeingDragged;
+            const cloned = [] as EditNote[];
+            
+            prevDraggableNotes.forEach(editNote => {
+                const newNote = new EditNote(editNote.note, view);
+                view.editNotes.push(newNote);
+                cloned.push(newNote);
+                newNote.dragStart(mouseDragStart);
+                editNote.dragCancel();
+            });
+            
+            notesBeingDragged = [...cloned];
+            noteBeingDragged = cloned[0];
+
         } else if (isDragging && noteBeingDragged) {
             const mouseDelta = {
                 x: e.clientX - mouseDragStart.x,
                 y: e.clientY - mouseDragStart.y,
             };
-            getDraggableNotes().map(editNoteI => {
-                //TODO: also snap noteBeingCreated, so that new notes are visualized as they turn out.
+            notesBeingDragged.map(editNoteI => {
                 editNoteI.dragMove(mouseDelta);
                 const { editNote } = tool.snap(
                     editNoteI,
@@ -101,10 +119,8 @@ export const useEditStore = defineStore("edit", () => {
                     view.visibleNotes.filter(n => n !== editNoteI)
                 );
                 editNoteI.note = editNote.note;
-
-
+                forceRedraw(editNoteI);
             });
-
         } else if (isDragging && noteBeingDraggedRightEdge) {
             const mouseDelta = {
                 x: e.clientX - mouseDragStart.x,
@@ -115,12 +131,13 @@ export const useEditStore = defineStore("edit", () => {
         }
     }
     const mouseUp = (e: MouseEvent) => {
+        alreadyDuplicatedForThisDrag = false;
         isDragging = false;
         const mouse = {
             x: e.clientX,
             y: e.clientY,
         }
-        getDraggableNotes().forEach(editNote => {
+        notesBeingDragged.forEach(editNote => {
             editNote.dragEnd(mouse);
         });
         if (noteBeingCreated.value !== false && e.button !== 1) {

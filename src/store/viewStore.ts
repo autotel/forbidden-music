@@ -3,9 +3,9 @@ import { computed, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { useScoreStore } from './scoreStore.js';
 
+// TODO: move editNotes to its own library
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
-
     const octaveOffset = ref(2);
     const timeOffset = ref(0);
     const centerFrequency = ref(440);

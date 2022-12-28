@@ -64,5 +64,6 @@ export const makeNote = <Note>(noteDef: NoteDefa | NoteDefb) => {
         }
     }
     nn.frequency = "frequency" in noteDef ? noteDef.frequency : octaveToFrequency(noteDef.octave)
+    // nn.octave = "octave" in noteDef ? noteDef.octave : frequencyToOctave(noteDef.frequency)
     return nn as Note;
 }
