@@ -92,6 +92,7 @@ export const useEditStore = defineStore("edit", () => {
                 y: e.clientY - mouseDragStart.y,
             };
             getDraggableNotes().map(editNoteI => {
+                //TODO: also snap noteBeingCreated, so that new notes are visualized as they turn out.
                 editNoteI.dragMove(mouseDelta);
                 const { editNote } = tool.snap(
                     editNoteI,
@@ -99,6 +100,7 @@ export const useEditStore = defineStore("edit", () => {
                     view.visibleNotes.filter(n => n !== editNoteI)
                 );
                 editNoteI.note = editNote.note;
+
 //     // horizontal
 //     e.stopPropagation();
 //     const timeDelta = view.pxToTime(e.clientX - startX);
@@ -131,7 +133,6 @@ export const useEditStore = defineStore("edit", () => {
 //         noteBeingEdited.octave = note.octave;
 //     }
 
-                forceRedraw(editNoteI);
             });
 
         } else if (isDragging && noteBeingDraggedRightEdge) {
