@@ -7,27 +7,60 @@ import { EditNote } from '../dataTypes/EditNote.js';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
-/** modifies the provided snapObj! */
-const snapper = (snapObj: {
+class SnapTracker<T>{
     /** the smallest distance to a snap value found thus far */
-    closestSnapDistance: number | null;
+    closestSnappedDistance: number | null = null;
     /** the resulting value corresponding to the closest snap */
-    closestSnapOctave: number | null;
-    /** the calculated snap value, which contends to be the closest */
-    snapValue: number | null;
+    closestSnappedValue: number | null = null;
     /** the target value, if no snap were to be applied */
-    targetOctave: number | null;
-}) => {
-    if (snapObj.snapValue === null) {
-        throw new Error("snapValue is null");
+    rawValue: number;
+    /** 
+     * keeps track of relations between relatedSnapObjects and a value, so that 
+     * when a snap succeeds, it can also provide all the other objects that provide
+     * the same snap
+     */
+    snapValueToObjectMap = new Map<number, T[]>();
+
+    /** instert a new snapped value to contend as teh closest snap point */
+    addSnappedValue(snappedValue: number, relatedSnapObject?: T) {
+        if (this.rawValue === null) {
+            throw new Error("rawValue is null");
+        }
+        const snapDistance = Math.abs(snappedValue - this.rawValue);
+        if (this.closestSnappedDistance === null || snapDistance < this.closestSnappedDistance) {
+            this.closestSnappedValue = snappedValue;
+            this.closestSnappedDistance = snapDistance;
+        }
+        if (relatedSnapObject !== undefined) {
+            const existing = this.snapValueToObjectMap.get(snappedValue);
+            if (existing === undefined) {
+                this.snapValueToObjectMap.set(snappedValue, [relatedSnapObject]);
+            } else {
+                existing.push(relatedSnapObject);
+            }
+        }
     }
-    if (snapObj.targetOctave === null) {
-        throw new Error("targetOctave is null");
+
+    getSnapObjectsOfSnappedValue(): T[] {
+        if (this.closestSnappedValue === null) {
+            return [];
+        }
+        const ret = this.snapValueToObjectMap.get(this.closestSnappedValue);
+        if (ret === undefined) {
+            return [];
+        }
+        return ret;
     }
-    const snapDistance = Math.abs(snapObj.snapValue - snapObj.targetOctave);
-    if (snapObj.closestSnapDistance === null || snapDistance < snapObj.closestSnapDistance) {
-        snapObj.closestSnapOctave = snapObj.snapValue;
-        snapObj.closestSnapDistance = snapDistance;
+
+    getResult(): number {
+        if (this.closestSnappedValue === null) {
+            return this.rawValue;
+        }
+        return this.closestSnappedValue;
+    }
+
+    constructor(rawValue: number) {
+        this.rawValue = rawValue;
     }
 }
 
@@ -42,9 +75,14 @@ export const useToolStore = defineStore("tool", {
             equal12: false,
             equal1: false,
             hzEven: false,
-            hzRelationEven: false,
+            hzRelationFraction: false,
             /** A rational number multiplier of the fundamental, linearly*/
             hzFundamentalMultiple: false,
+
+            timeInteger: true,
+            timeQuarter: false,
+            sameStart: true,
+            timeIntegerRelationFraction: false,
         }
     }),
     getters: {
@@ -66,27 +104,48 @@ export const useToolStore = defineStore("tool", {
             const targetHz = octaveToFrequency(targetOctave);
             const relatedNotes = [] as EditNote[];
 
-            const snapObj = {
-                closestSnapDistance: null as number | null,
-                snapValue: null as number | null,
-                closestSnapOctave: null as number | null,
-                targetOctave,
+            const toneSnap = new SnapTracker<EditNote>(targetOctave);
+            const timeSnap = new SnapTracker<EditNote>(editNote.note.start);
+            const durationSnap = new SnapTracker<EditNote>(editNote.note.duration);
+
+            // Time snaps
+            if (this.snaps.timeQuarter === true) {
+                timeSnap.addSnappedValue(Math.round(editNote.note.start * 4) / 4);
+                durationSnap.addSnappedValue(Math.round(editNote.note.duration * 4) / 4);
+            } else if (this.snaps.timeInteger === true) {
+                timeSnap.addSnappedValue(Math.round(editNote.note.start));
+                durationSnap.addSnappedValue(Math.round(editNote.note.duration));
+            }
+            
+            if (this.snaps.sameStart === true) {
+                if (otherNotes) {
+                    for (const otherNote of otherNotes) {
+                        timeSnap.addSnappedValue(otherNote.note.start, otherNote);
+                    }
+                }
             }
 
-            if (this.snaps.hzEven === true) {
-                snapObj.snapValue = frequencyToOctave(Math.round(targetHz / 2) * 2);
-                snapper(snapObj);
+            if(this.snaps.timeIntegerRelationFraction === true) {
+                if (otherNotes) {
+                    for (const otherNote of otherNotes) {
+                        const otherStart = otherNote.note.start;
+                        const closeStartRatio = new Fraction(editNote.note.start).div(otherStart).simplify(this.simplify).valueOf();
+                        // reintegrate rounded proportion back to the other's start value
+                        const myCandidateStart = closeStartRatio * otherStart;
+                        timeSnap.addSnappedValue(myCandidateStart, otherNote);
+                    }
+                }
             }
-            // TODO: keep track of all the notes to which it has a relation
-            // then filter all those notes with whom the relation was not used
-            // and show them in the UI, using a dedicated component
-            // take into account that a relationship might be hz or octave based.
-            // there has to be a text explaining it (e.g. 1/6 hz, or 4/5 octaves)
+
+            // Tone snaps
+            if (this.snaps.hzEven === true) {
+                toneSnap.addSnappedValue(frequencyToOctave(Math.round(targetHz / 2) * 2));
+            };
             /** 
              * target / other = other * 1 / target
              * mycandidate = other
              **/
-            if (this.snaps.hzRelationEven === true) {
+            if (this.snaps.hzRelationFraction === true) {
                 if (otherNotes) {
                     for (const otherNote of otherNotes) {
                         const otherHz = otherNote.note.frequency;
@@ -94,35 +153,24 @@ export const useToolStore = defineStore("tool", {
                         // reintegrate rounded proportion back to the other's hz value
                         const myCandidateHz = closeHzRatio * otherHz;
                         const myCandidateOctave = frequencyToOctave(myCandidateHz);
-                        snapObj.snapValue = myCandidateOctave;
-                        snapper(snapObj);
-                        if(snapObj.snapValue === myCandidateOctave) {
-                            // TODO: show more than one note related (for example a note halfway between 1 and 2 snaps with both, not only one)
-                            // also the fractions displayed are wrong very often.
-                            relatedNotes.splice(0);
-                            relatedNotes.push(otherNote);
-                        }
+                        toneSnap.addSnappedValue(myCandidateOctave, otherNote);
                     }
                 }
             }
 
             if (this.snaps.hzFundamentalMultiple === true) {
-                snapObj.snapValue = frequencyToOctave(Math.round(targetHz / fundamental) * fundamental);
-                snapper(snapObj);
+                toneSnap.addSnappedValue(frequencyToOctave(Math.round(targetHz / fundamental) * fundamental));
             }
             if (this.snaps.equal12 === true) {
-                snapObj.snapValue = Math.round(targetOctave * 12) / 12;
-                snapper(snapObj);
+                toneSnap.addSnappedValue(Math.round(targetOctave * 12) / 12);
             } else if (this.snaps.equal1 === true) {
                 // else because equal1 is subset of equal 12
-                snapObj.snapValue = Math.round(targetOctave);
-                snapper(snapObj);
+                toneSnap.addSnappedValue(Math.round(targetOctave));
             }
-            if (snapObj.closestSnapOctave === null) {
-                editNote.note.octave = targetOctave;
-            } else {
-                editNote.note.octave = snapObj.closestSnapOctave;
-            }
+
+            editNote.note.octave = toneSnap.getResult();
+            editNote.note.start = timeSnap.getResult();
+            editNote.note.duration = durationSnap.getResult();
 
             return {
                 editNote,

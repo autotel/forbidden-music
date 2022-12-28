@@ -10,18 +10,24 @@ import Button from "./components/Button.vue";
 import Transport from './components/Transport.vue';
 import { useToolStore } from './store/toolStore';
 import { useEditStore } from './store/editStore';
+import { useScoreStore } from './store/scoreStore';
 import { Tool } from './dataTypes/Tool';
 import RangeSelection from './components/RangeSelection.vue';
 import { EditNote } from './dataTypes/EditNote';
 import { Note } from './dataTypes/Note';
+import Grid from './components/MusicTimeGrid.vue';
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 
 const view = useViewStore();
 const playback = usePlaybackStore();
 const edit = useEditStore();
+const score = useScoreStore();
 
-
+// when editNotes changes, also change score
+watchEffect(() => {
+    score.notes = view.editNotes.map(note => note.note);
+});
 
 onMounted(() => {
 
@@ -160,7 +166,7 @@ const clear = () => {
 <template>
 
     <svg id="viewport" ref="timedEventsViewport">
-
+        <Grid />
         <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
             stroke-width="1" />
         <NoteElement v-for="editNote in view.editNotes" :editNote="editNote" :key="editNote.udpateFlag" />

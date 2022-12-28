@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
 import { CollisionSynth } from '../synth/CollisionSynth';
+import { BassicSynth } from '../synth/BassicSynth';
+import { SawtoothSynth } from '../synth/SawtoothSynth';
 import { Synth } from '../synth/Synth';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
@@ -20,7 +22,7 @@ export const usePlaybackStore = defineStore("playback", {
         audioContext: getAudioContext(),
 
         // choose the synth
-        synth: new CollisionSynth() as Synth,
+        synth: new BassicSynth() as Synth,
 
         score: useScoreStore(),
         view: useViewStore(),
@@ -47,7 +49,7 @@ export const usePlaybackStore = defineStore("playback", {
             this.previousClockTime = now;
             this.currentScoreTime += deltaTime * this.tempo;
             const playNotes = this._getEventsBetween(this.previousScoreTime, this.currentScoreTime);
-            console.log(playNotes);
+            
             playNotes.forEach((note) => {
                 this.synth.playNoteEvent(
                     note.start - this.previousScoreTime,

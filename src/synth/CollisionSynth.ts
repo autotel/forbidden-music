@@ -58,6 +58,7 @@ class CollisionVoice implements Voice {
     }
 
     scheduleAttack(now: number, frequency: number, velocity: number, when: number) {
+        console.log("collision synth attack");
         // reset stuff
         this.gainNode.gain.cancelScheduledValues(now - 0.01);
 

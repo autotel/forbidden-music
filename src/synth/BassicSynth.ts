@@ -56,8 +56,8 @@ class BassicVoice implements Voice {
         this.inUse = true;
         this.oscillator.frequency.value = frequency;
         // redundant to ensure no negative values after exponential ramp
-        this.gainNode.gain.value = velocity;
-        this.gainNode.gain.setValueAtTime(velocity,now - 0.01);
+        this.gainNode.gain.value = 2 * velocity;
+        // this.gainNode.gain.setValueAtTime(4 * velocity,now - 0.01);
 
         // schedule attack
         // this.filterNode1.frequency.linearRampToValueAtTime(frequency, now + 0.1);
@@ -71,7 +71,7 @@ class BassicVoice implements Voice {
         this.filterNode4.frequency.value = frequency * 2;
 
         // schedule decay
-        this.gainNode.gain.exponentialRampToValueAtTime(velocity * 0.2, now + 0.5);
+        this.gainNode.gain.exponentialRampToValueAtTime(velocity, now + 0.5);
 
         this.filterNode1.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
         this.filterNode2.frequency.exponentialRampToValueAtTime(frequency / 16, now + 0.1);
