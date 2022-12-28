@@ -163,7 +163,7 @@ const clear = () => {
 
         <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
             stroke-width="1" />
-        <NoteElement v-for="editNote in view.editNotes" :editNote="editNote" />
+        <NoteElement v-for="editNote in view.editNotes" :editNote="editNote" :key="editNote.udpateFlag" />
         <NoteElement v-if="edit.noteBeingCreated" :editNote="edit.noteBeingCreated" />
         <RangeSelection />
     </svg>

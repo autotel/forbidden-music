@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
+import { useScoreStore } from './scoreStore.js';
 
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
@@ -18,7 +19,12 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
     const editNotes = ref([] as Array<EditNote>);
+    const score = useScoreStore();
 
+    // watchEffect(() => {
+    //     console.log("editNotes changed", editNotes.value);
+    //     score.notes = editNotes.value.map(e => e.note);
+    // }, { flush: 'post' });
     // TODO: add a enum to select different abstractions of tone.
     // so, if using 12 tet, the text in the note is going to be semitones
     // if even hz, it displays hz, if log, it displays octaves

@@ -47,7 +47,6 @@ export class EditNote {
     dragMove: (dragDelta: { x: number, y: number }) => void;
     dragLengthMove: (mouse: { x: number, y: number }) => void;
     dragEnd: (mouse: { x: number, y: number }) => void;
-
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         this.note = makeNote(noteDef);
         this.view = view;
@@ -62,7 +61,6 @@ export class EditNote {
         }
 
         this.dragMove = (dragDelta: { x: number, y: number }) => {
-            console.log(JSON.stringify(dragDelta));
             this.note.start = dragStartedTime + view.pxToTime(dragDelta.x);
             this.note.octave = dragStartedOctave + view.pxToOctave(dragDelta.y);
         }

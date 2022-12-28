@@ -155,14 +155,23 @@ onUnmounted(() => {
     $rightEdge.removeEventListener('mouseenter', rightEdgeMOuseEnterListener);
     $rightEdge.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
 });
-</script>
-<template>
-    <text :x="editNote.x" :y="editNote.y + 9" font-size="10">{{ weirdFloatToString(editNote.note.octave) }} Octs.</text>
+/**
+ * <text :x="editNote.x" :y="editNote.y + 9" font-size="10">{{ weirdFloatToString(editNote.note.octave) }} Octs.</text>
     <text :x="editNote.x" :y="editNote.y + 23" font-size="10">{{ weirdFloatToString(editNote.note.frequency) }}
         Hz.</text>
     <text :x="editNote.x" :y="editNote.y + 37" font-size="10">{{ weirdFloatToString(editNote.note.start) }} Ts.</text>
     <text :x="editNote.x" :y="editNote.y + 51" font-size="10">{{ weirdFloatToString(editNote.note.duration) }}
         Ts.</text>
+*/
+</script>
+<template>
+    <text 
+        :x="editNote.x" 
+        :y="editNote.y + 9" 
+        font-size="10"
+    >
+        {{ editNote.selected }}, {{ select.isEditNoteSelected(editNote) }}
+    </text>
     <rect 
         class="body" 
         :class="{ 

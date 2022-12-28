@@ -28,9 +28,9 @@ const getNotesInRange = (
 export const useSelectStore = defineStore("select", () => {
     const view = useViewStore();
     const selectedNotes = ref([] as EditNote[]);
-    const editNotes = view.editNotes;
     const refreshNoteSelectionState = () => {
-        editNotes.forEach(n => n.selected = isEditNoteSelected(n))
+        console.log("refreshNoteSelectionState");
+        view.editNotes.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const selectRange = (range: {
         startTime: number,
@@ -56,6 +56,7 @@ export const useSelectStore = defineStore("select", () => {
         selectedNotes.value.push(...newNotes);
     };
     const clearSelection = () => {
+        console.log("clearSelection");
         selectedNotes.value = [];
     };
     const isEditNoteSelected = (note: EditNote) => {

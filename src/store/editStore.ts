@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
-import { computed, ref, Ref, watchEffect } from 'vue';
+import { computed, getCurrentInstance, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { useScoreStore } from './scoreStore.js';
 import { useSelectStore } from './selectStore.js';
-import { useViewStore } from './viewStore.js';
+import { useViewStore, View } from './viewStore.js';
 import { useToolStore } from './toolStore';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
+const forceRedraw = (el:{udpateFlag:string}) => {
+    el.udpateFlag = Math.random().toString(36).slice(2);
+}
 
 // maybe doesn't need to be a store, but something else
 export const useEditStore = defineStore("edit", () => {
@@ -23,11 +26,6 @@ export const useEditStore = defineStore("edit", () => {
     // if even hz, it displays hz, if log, it displays octaves
     // and if rational hz, it would display hz and relationships
     // etc..
-
-    watchEffect(() => {
-        console.log("editNotes changed", view.editNotes);
-        score.notes = view.editNotes.map(e => e.note);
-    });
     const noteBeingCreated: Ref<EditNote | false> = ref(false);
 
     let mouseDragStart = {
@@ -76,7 +74,7 @@ export const useEditStore = defineStore("edit", () => {
                     start: view.pxToTimeWithOffset(e.clientX),
                     duration: 1,
                     octave: view.pxToOctaveWithOffset(e.clientY),
-                }, view),
+                }, view as View),
                 view.pxToOctaveWithOffset(e.clientY)
             );
             noteBeingCreated.value = editNote.clone();
@@ -93,9 +91,47 @@ export const useEditStore = defineStore("edit", () => {
                 x: e.clientX - mouseDragStart.x,
                 y: e.clientY - mouseDragStart.y,
             };
+            getDraggableNotes().map(editNoteI => {
+                editNoteI.dragMove(mouseDelta);
+                const { editNote } = tool.snap(
+                    editNoteI,
+                    editNoteI.note.octave,
+                    view.visibleNotes.filter(n => n !== editNoteI)
+                );
+                editNoteI.note = editNote.note;
+//     // horizontal
+//     e.stopPropagation();
+//     const timeDelta = view.pxToTime(e.clientX - startX);
+//     if (dragMode === DragMode.None) {
+//         return
+//     } else if (dragMode === DragMode.Resize) {
+//     } else if (dragMode === DragMode.Move) {
+//         // horizontal
+//         if(select.selectedNotes.length) {
+//             select.selectedNotes.forEach(({note})=>{
+//                 note.start = startNoteStart + timeDelta;
+//             })
+//         } else {
+//             noteBeingEdited.start = startNoteStart + timeDelta;
+//         }
+//         // vertical
+//         // prevent pitch change if 'alt' key is pressed
+//         // TODO: should draw a horizontal line to represent the constraint of movement.
+//         if (e.altKey) return;
+//         const octaveDelta = view.pxToOctave(e.clientY - startY);
+//         let targetOctave = startNoteOctave + octaveDelta;
+//         const visibleNotes = getVisibleNotes().filter(n => n !== noteBeingEdited);
+//         const {
+//             note
+//         } = tool.snap(
+//             noteBeingEdited,
+//             targetOctave,
+//             visibleNotes
+//         );
+//         noteBeingEdited.octave = note.octave;
+//     }
 
-            getDraggableNotes().forEach(editNote => {
-                editNote.dragMove(mouseDelta);
+                forceRedraw(editNoteI);
             });
 
         } else if (isDragging && noteBeingDraggedRightEdge) {
@@ -104,7 +140,7 @@ export const useEditStore = defineStore("edit", () => {
                 y: e.clientY - mouseDragStart.y,
             };
             noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
-            console.log("duration", noteBeingDraggedRightEdge.note.duration);
+            forceRedraw(noteBeingDraggedRightEdge);
         }
     }
     const mouseUp = (e: MouseEvent) => {

@@ -47,8 +47,8 @@ export const usePlaybackStore = defineStore("playback", {
             this.previousClockTime = now;
             this.currentScoreTime += deltaTime * this.tempo;
             const playNotes = this._getEventsBetween(this.previousScoreTime, this.currentScoreTime);
+            console.log(playNotes);
             playNotes.forEach((note) => {
-
                 this.synth.playNoteEvent(
                     note.start - this.previousScoreTime,
                     note.duration / this.tempo,
@@ -62,7 +62,7 @@ export const usePlaybackStore = defineStore("playback", {
             this.previousScoreTime = this.currentScoreTime;
 
             // TODO: mapping direction weirdness :/ 
-            this.playbarPxPosition = this.view.pxToTimeWithOffset(this.currentScoreTime);
+            this.playbarPxPosition = this.view.timeToPxWithOffset(this.currentScoreTime);
         },
         play() {
             waitRunningContext().then(() => {
