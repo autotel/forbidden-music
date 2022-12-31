@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { Note } from '../dataTypes/Note';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useToolStore } from '../store/toolStore';
-import { useViewStore } from '../store/viewStore';
 import { useEditStore } from '../store/editStore';
-import Fraction from 'fraction.js';
-import ToolSelector from './ToolSelector.vue';
-import { weirdFloatToString } from '../functions/weirdFloatToString';
 import { Tool } from '../dataTypes/Tool';
 import { useSelectStore } from '../store/selectStore';
 import { EditNote } from '../dataTypes/EditNote';
 
-const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
     editNote: EditNote
@@ -21,19 +15,17 @@ const select = useSelectStore();
 const edit = useEditStore();
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
-const getVisibleNotes = () => view.visibleNotes;
-let noteBeingEdited = props.editNote;
-let startX = 0;
-let startY = 0;
-let startNoteStart = 0;
-let startNoteOctave = 0;
-let startNoteDuration = 0;
 
 enum DragMode {
     None,
     Move,
     Resize,
 }
+
+const myPos = reactive({
+    x: 0,
+    y: 0,
+});
 
 let dragMode = DragMode.None;
 
@@ -53,72 +45,6 @@ const getNoteBody = () => {
     return __$noteBody;
 }
 
-// const mouseDownListener = (e: MouseEvent) => {
-//     // common
-//     if (tool.current !== Tool.Edit) return;
-//     let $noteBody = getNoteBody();
-//     e.stopPropagation();
-//     startNoteOctave = noteBeingEdited.note.octave;
-//     noteBeingEdited = props.editNote.note;
-//     startNoteStart = noteBeingEdited.start;
-//     $noteBody.style.cursor = 'grabbing';
-//     dragMode = DragMode.Move;
-//     // horizontal
-//     startX = e.clientX;
-//     // vertical
-//     startY = e.clientY;
-// }
-// const rightEdgeMouseDownListener = (e: MouseEvent) => {
-//     if (tool.current !== Tool.Edit) return;
-//     e.stopPropagation();
-//     startX = e.clientX;
-//     startNoteDuration = noteBeingEdited.duration;
-//     dragMode = DragMode.Resize;
-// }
-// const mouseMoveListener = (e: MouseEvent) => {
-//     // horizontal
-//     e.stopPropagation();
-//     const timeDelta = view.pxToTime(e.clientX - startX);
-//     if (dragMode === DragMode.None) {
-//         return
-//     } else if (dragMode === DragMode.Resize) {
-//     } else if (dragMode === DragMode.Move) {
-//         // horizontal
-//         if(select.selectedNotes.length) {
-//             select.selectedNotes.forEach(({note})=>{
-//                 note.start = startNoteStart + timeDelta;
-//             })
-//         } else {
-//             noteBeingEdited.start = startNoteStart + timeDelta;
-//         }
-//         // vertical
-//         // prevent pitch change if 'alt' key is pressed
-//         // TODO: should draw a horizontal line to represent the constraint of movement.
-//         if (e.altKey) return;
-//         const octaveDelta = view.pxToOctave(e.clientY - startY);
-//         let targetOctave = startNoteOctave + octaveDelta;
-//         const visibleNotes = getVisibleNotes().filter(n => n !== noteBeingEdited);
-//         const {
-//             note
-//         } = tool.snap(
-//             noteBeingEdited,
-//             targetOctave,
-//             visibleNotes
-//         );
-//         noteBeingEdited.octave = note.octave;
-//     }
-
-// };
-// const mouseUpListener = (e: MouseEvent) => {
-//     dragMode = DragMode.None;
-//     // common
-//     let $noteBody = getNoteBody();
-//     // horizontal
-//     e.stopPropagation();
-//     $noteBody.style.cursor = 'grab';
-//     //vertical
-// }
-
 const bodyMouseEnterListener = (e: MouseEvent) => {
     edit.noteMouseEnter(props.editNote);
 }
@@ -134,10 +60,6 @@ const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
 onMounted(() => {
     const $rightEdge = getRightEdgeBody();
     const $noteBody = getNoteBody();
-    // $noteBody.addEventListener('mousedown', mouseDownListener);
-    // $rightEdge.addEventListener('mousedown', rightEdgeMouseDownListener);
-    // window.addEventListener('mousemove', mouseMoveListener);
-    // window.addEventListener('mouseup', mouseUpListener);
     $noteBody.addEventListener('mouseenter', bodyMouseEnterListener);
     $noteBody.addEventListener('mouseleave', bodyMouseLeaveListener);
     $rightEdge.addEventListener('mouseenter', rightEdgeMOuseEnterListener);
@@ -146,23 +68,11 @@ onMounted(() => {
 onUnmounted(() => {
     const $rightEdge = getRightEdgeBody();
     const $noteBody = getNoteBody();
-    // $noteBody.removeEventListener('mousedown', mouseDownListener);
-    // $rightEdge.removeEventListener('mousedown', rightEdgeMouseDownListener);
-    // window.removeEventListener('mousemove', mouseMoveListener);
-    // window.removeEventListener('mouseup', mouseUpListener);
     $noteBody.removeEventListener('mouseenter', bodyMouseEnterListener);
     $noteBody.removeEventListener('mouseleave', bodyMouseLeaveListener);
     $rightEdge.removeEventListener('mouseenter', rightEdgeMOuseEnterListener);
     $rightEdge.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
 });
-/**
- * <text :x="editNote.x" :y="editNote.y + 9" font-size="10">{{ weirdFloatToString(editNote.note.octave) }} Octs.</text>
-    <text :x="editNote.x" :y="editNote.y + 23" font-size="10">{{ weirdFloatToString(editNote.note.frequency) }}
-        Hz.</text>
-    <text :x="editNote.x" :y="editNote.y + 37" font-size="10">{{ weirdFloatToString(editNote.note.start) }} Ts.</text>
-    <text :x="editNote.x" :y="editNote.y + 51" font-size="10">{{ weirdFloatToString(editNote.note.duration) }}
-        Ts.</text>
-*/
 </script>
 <template>
     <text 
@@ -170,7 +80,7 @@ onUnmounted(() => {
         :y="editNote.y + 9" 
         font-size="10"
     >
-        {{ editNote.selected }}, {{ select.isEditNoteSelected(editNote) }}
+        {{ editNote.udpateFlag }}
     </text>
     <rect 
         class="body" 
@@ -188,6 +98,7 @@ onUnmounted(() => {
         }" 
         ref="rightEdge" 
         :...=editNote.rightEdge
+        :data-key="editNote.udpateFlag"
     />
 </template>
 <style scoped>
@@ -203,7 +114,7 @@ onUnmounted(() => {
     fill: #888a;
 }
 .body.selected.body.editable{
-    fill: #f88f;
+    fill: rgba(255, 36, 36, 0.205);
 }
 .rightEdge.editable {
     fill: #f88a;

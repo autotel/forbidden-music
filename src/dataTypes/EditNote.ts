@@ -7,7 +7,7 @@ import { makeNote, Note, NoteDefa, NoteDefb } from "./Note"
 export class EditNote {
     note: Note;
     selected: boolean = false;
-    udpateFlag: string = "";
+    udpateFlag: string;
     /** make a clone of editnote. only note properties are cloned*/
     clone() {
         return new EditNote(this.note, this.view);
@@ -55,6 +55,7 @@ export class EditNote {
         let dragStartedTime = 0;
         let dragStartedOctave = 0;
         let dragStartedDuration = 0;
+        this.udpateFlag = Math.random().toString(36).slice(2);
 
         this.dragStart = () => {
             dragStartedOctave = this.note.octave;
@@ -65,10 +66,12 @@ export class EditNote {
         this.dragMove = (dragDelta: { x: number, y: number }) => {
             this.note.start = dragStartedTime + view.pxToTime(dragDelta.x);
             this.note.octave = dragStartedOctave + view.pxToOctave(dragDelta.y);
+            this.udpateFlag = Math.random().toString(36).slice(2);
         }
 
         this.dragLengthMove = (dragDelta: { x: number, y: number }) => {
             this.note.duration = Math.max(dragStartedDuration + view.pxToTime(dragDelta.x), 0);
+            this.udpateFlag = Math.random().toString(36).slice(2);
         }
 
         this.dragCancel = () => {

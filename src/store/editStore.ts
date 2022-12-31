@@ -65,7 +65,10 @@ export const useEditStore = defineStore("edit", () => {
             noteRightEdgeBeingHovered.dragStart(mouse);
         } else if (noteBeingHovered) {
             noteBeingDragged = noteBeingHovered;
-            notesBeingDragged = [noteBeingDragged, ...selection.selectedNotes].filter(n => n) as EditNote[];
+            if(!selection.selectedNotes.includes(noteBeingDragged)) {
+                selection.select(noteBeingDragged);
+            }
+            notesBeingDragged = selection.selectedNotes;
             notesBeingDragged.forEach(editNote => {
                 editNote.dragStart(mouse);
             });
@@ -102,7 +105,7 @@ export const useEditStore = defineStore("edit", () => {
                 newNote.dragStart(mouseDragStart);
                 editNote.dragCancel();
             });
-            
+            selection.select(...cloned);
             notesBeingDragged = [...cloned];
             noteBeingDragged = cloned[0];
 
@@ -119,7 +122,7 @@ export const useEditStore = defineStore("edit", () => {
                     view.visibleNotes.filter(n => n !== editNoteI)
                 );
                 editNoteI.note = editNote.note;
-                forceRedraw(editNoteI);
+                // forceRedraw(editNoteI);
             });
         } else if (isDragging && noteBeingDraggedRightEdge) {
             const mouseDelta = {
@@ -127,7 +130,7 @@ export const useEditStore = defineStore("edit", () => {
                 y: e.clientY - mouseDragStart.y,
             };
             noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
-            forceRedraw(noteBeingDraggedRightEdge);
+            // forceRedraw(noteBeingDraggedRightEdge);
         }
     }
     const mouseUp = (e: MouseEvent) => {

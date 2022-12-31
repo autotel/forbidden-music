@@ -38,6 +38,7 @@ export const useSelectStore = defineStore("select", () => {
 
     const add = (... editNote: EditNote []) => {
         selectedNotes.value = selectedNotes.value.concat(editNote);
+        selectedNotes.value = [...new Set(selectedNotes.value)];
     };
     const selectRange = (range: {
         startTime: number,

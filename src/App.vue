@@ -16,6 +16,7 @@ import RangeSelection from './components/RangeSelection.vue';
 import { EditNote } from './dataTypes/EditNote';
 import { Note } from './dataTypes/Note';
 import Grid from './components/MusicTimeGrid.vue';
+
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 
@@ -181,7 +182,7 @@ const clear = () => {
         <Grid />
         <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
             stroke-width="1" />
-        <NoteElement v-for="editNote in view.editNotes" :editNote="editNote" :key="editNote.udpateFlag" />
+        <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
         <NoteElement v-if="edit.noteBeingCreated" :editNote="edit.noteBeingCreated" />
         <RangeSelection />
     </svg>

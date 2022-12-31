@@ -87,13 +87,6 @@ export const useToolStore = defineStore("tool", {
         }
     }),
     getters: {
-        // this madness... I swear it's not my fault
-        // list: () => Object
-        //     .values(Tool)
-        //     .splice(0, Math.ceil(
-        //         Object.keys(Tool).length / 2
-        //     )),
-        // list: () => [ ... Array(Tool) ]
     },
     actions: {
         getClosestFraction(value: number) {
