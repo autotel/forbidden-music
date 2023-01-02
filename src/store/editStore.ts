@@ -5,6 +5,9 @@ import { useScoreStore } from './scoreStore.js';
 import { useSelectStore } from './selectStore.js';
 import { useViewStore, View } from './viewStore.js';
 import { useToolStore } from './toolStore';
+import { useSnapStore } from './snapStore.js';
+import { useEditNotesStore } from './editNotesStore.js';
+import { i } from 'vitest/dist/index-c3f83a58.js';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 const forceRedraw = (el: { udpateFlag: string }) => {
@@ -18,6 +21,8 @@ export const useEditStore = defineStore("edit", () => {
     const score = useScoreStore();
     const view = useViewStore();
     const tool = useToolStore();
+    const editNotes = useEditNotesStore();
+    const snap = useSnapStore();
 
     let newNoteDragX = 0;
 
@@ -65,6 +70,7 @@ export const useEditStore = defineStore("edit", () => {
         if (noteRightEdgeBeingHovered) {
             noteBeingDraggedRightEdge = noteRightEdgeBeingHovered;
             noteRightEdgeBeingHovered.dragStart(mouse);
+            snap.setFocusedNote(noteRightEdgeBeingHovered);
         } else if (noteBeingHovered) {
             noteBeingDragged = noteBeingHovered;
             if(!selection.selectedNotes.includes(noteBeingDragged)) {
@@ -74,10 +80,12 @@ export const useEditStore = defineStore("edit", () => {
             notesBeingDragged.forEach(editNote => {
                 editNote.dragStart(mouse);
             });
+
+            snap.setFocusedNote(noteBeingDragged);
         } else {
             newNoteDragX = e.clientX;
             // TODO: need to add third argumet to allow relational snap when created
-            const { editNote } = tool.snap(
+            const { editNote } = snap.snap(
                 new EditNote({
                     start: view.pxToTimeWithOffset(e.clientX),
                     duration: 1,
@@ -86,6 +94,8 @@ export const useEditStore = defineStore("edit", () => {
                 view.pxToOctaveWithOffset(e.clientY)
             );
             noteBeingCreated.value = editNote.clone();
+
+            snap.setFocusedNote(noteBeingCreated.value);
         }
         mouseDragStart = mouse;
         isDragging = true;
@@ -93,16 +103,18 @@ export const useEditStore = defineStore("edit", () => {
 
     const mouseMove = (e: MouseEvent) => {
         if (noteBeingCreated.value) {
+            snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
             noteBeingCreated.value.note.duration = clampToZero(view.pxToTime(deltaX));
         } else if (isDragging && noteBeingDragged && tool.copyOnDrag && !alreadyDuplicatedForThisDrag) {
+            snap.resetSnapExplanation();
             alreadyDuplicatedForThisDrag = true;
             const prevDraggableNotes = notesBeingDragged;
             const cloned = [] as EditNote[];
             
             prevDraggableNotes.forEach(editNote => {
                 const newNote = new EditNote(editNote.note, view);
-                view.editNotes.push(newNote);
+                editNotes.list.push(newNote);
                 cloned.push(newNote);
                 newNote.dragStart(mouseDragStart);
                 editNote.dragCancel();
@@ -112,27 +124,28 @@ export const useEditStore = defineStore("edit", () => {
             noteBeingDragged = cloned[0];
 
         } else if (isDragging && noteBeingDragged) {
+            snap.resetSnapExplanation();
             const mouseDelta = {
                 x: e.clientX - mouseDragStart.x,
                 y: e.clientY - mouseDragStart.y,
             };
             notesBeingDragged.map(editNoteI => {
                 editNoteI.dragMove(mouseDelta);
-                const { editNote } = tool.snap(
+                const { editNote } = snap.snap(
                     editNoteI,
                     editNoteI.note.octave,
                     view.visibleNotes.filter(n => n !== editNoteI)
                 );
                 editNoteI.note = editNote.note;
-                // forceRedraw(editNoteI);
             });
         } else if (isDragging && noteBeingDraggedRightEdge) {
+            snap.resetSnapExplanation();
             const mouseDelta = {
                 x: e.clientX - mouseDragStart.x,
                 y: e.clientY - mouseDragStart.y,
             };
             noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
-            const { editNote } = tool.snap(
+            const { editNote } = snap.snap(
                 noteBeingDraggedRightEdge,
                 noteBeingDraggedRightEdge.note.octave,
                 view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge)
@@ -151,7 +164,7 @@ export const useEditStore = defineStore("edit", () => {
             editNote.dragEnd(mouse);
         });
         if (noteBeingCreated.value !== false && e.button !== 1) {
-            view.editNotes.push(noteBeingCreated.value);
+            editNotes.list.push(noteBeingCreated.value);
             noteBeingCreated.value = false;
         }
         noteBeingDragged = false;

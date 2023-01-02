@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { useScoreStore } from './scoreStore.js';
+import { useEditNotesStore } from './editNotesStore.js';
 
 // TODO: move editNotes to its own library
 export const useViewStore = defineStore("view", () => {
@@ -18,28 +19,18 @@ export const useViewStore = defineStore("view", () => {
     // TODO integrate this, so that view always zooms to center or mouse pos).
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
-    const editNotes = ref([] as Array<EditNote>);
+    const editNotes = useEditNotesStore();
     const score = useScoreStore();
 
-    // watchEffect(() => {
-    //     console.log("editNotes changed", editNotes.value);
-    //     score.notes = editNotes.value.map(e => e.note);
-    // }, { flush: 'post' });
-    // TODO: add a enum to select different abstractions of tone.
-    // so, if using 12 tet, the text in the note is going to be semitones
-    // if even hz, it displays hz, if log, it displays octaves
-    // and if rational hz, it would display hz and relationships
-    // etc..
-
-    // TODO: Will it recalc every call? if so, we need to cache the result
     const visibleNotes = computed((): Array<EditNote> => {
         //TODO: also filter by octave component
-        return editNotes.value.filter(editNote => {
+        return editNotes.list.filter(editNote => {
             const note = editNote.note;
             return note.start < timeOffset.value + viewWidthTime.value &&
                 note.start + note.duration > timeOffset.value;
         });
     });
+
     const setTimeOffset = (newTimeOffset: number) => {
         timeOffset.value = newTimeOffset;
     };
@@ -85,6 +76,7 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxX.value = width / 2;
     };
     let isDragging = false;
+
     return {
         setTimeOffset,
         setTimeOffsetBounds,
@@ -111,26 +103,11 @@ export const useViewStore = defineStore("view", () => {
         scrollBound,
         _offsetPxX,
         _offsetPxY,
-        editNotes,
         visibleNotes,
-    }
+    };
 });
 
 export interface View {
-    setTimeOffset: (newTimeOffset: number) => void;
-    setTimeOffsetBounds: (timeOffsetBounded: number) => void;
-    pxToBounds: (px: number) => number;
-    timeToBounds: (time: number) => number;
-    boundsToTime: (bounds: number) => number;
-    pxToTime: (time: number) => number;
-    timeToPx: (px: number) => number;
-    timeToPxWithOffset: (time: number) => number;
-    pxToTimeWithOffset: (px: number) => number;
-    pxToOctave: (px: number) => number;
-    octaveToPx: (octave: number) => number;
-    pxToOctaveWithOffset: (px: number) => number;
-    octaveToPxWithOffset: (octave: number) => number;
-    updateSize: (width: number, height: number) => void;
     octaveOffset: number;
     timeOffset: number;
     centerFrequency: number;
@@ -139,5 +116,15 @@ export interface View {
     viewWidthTime: number;
     viewHeightOctaves: number;
     scrollBound: number;
-    visibleNotes: Array<EditNote>;
+    pxToBounds(px: number): number;
+    timeToBounds(time: number): number;
+    boundsToTime(bounds: number): number;
+    pxToTime(px: number): number;
+    timeToPx(time: number): number;
+    timeToPxWithOffset(time: number): number;
+    pxToTimeWithOffset(px: number): number;
+    pxToOctave(px: number): number;
+    octaveToPx(octave: number): number;
+    pxToOctaveWithOffset(px: number): number;
+    octaveToPxWithOffset(octave: number): number;
 }

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
 import { Note } from '../dataTypes/Note';
+import { useEditNotesStore } from './editNotesStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
 
@@ -28,9 +29,10 @@ const getNotesInRange = (
 export const useSelectStore = defineStore("select", () => {
     const view = useViewStore();
     const selectedNotes = ref([] as EditNote[]);
+    const editNotes = useEditNotesStore();
     const refreshNoteSelectionState = () => {
         console.log("refreshNoteSelectionState");
-        view.editNotes.forEach(n => n.selected = isEditNoteSelected(n))
+        editNotes.list.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const select = (...editNote: EditNote[]) => {
         selectedNotes.value = editNote;
@@ -47,7 +49,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         selectedNotes.value = getNotesInRange(
-            view.editNotes,
+            editNotes.list,
             range
         );
     };
@@ -58,7 +60,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         const newNotes = getNotesInRange(
-            view.editNotes,
+            editNotes.list,
             range
         );
         selectedNotes.value.push(...newNotes);

@@ -16,6 +16,8 @@ import RangeSelection from './components/RangeSelection.vue';
 import { EditNote } from './dataTypes/EditNote';
 import { Note } from './dataTypes/Note';
 import Grid from './components/MusicTimeGrid.vue';
+import { useEditNotesStore } from './store/editNotesStore';
+import ToneRelation from './components/ToneRelation.vue';
 
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
@@ -24,11 +26,7 @@ const view = useViewStore();
 const playback = usePlaybackStore();
 const edit = useEditStore();
 const score = useScoreStore();
-
-// when editNotes changes, also change score
-watchEffect(() => {
-    score.notes = view.editNotes.map(note => note.note);
-});
+const editNotes = useEditNotesStore();
 
 onMounted(() => {
 
@@ -137,7 +135,7 @@ onMounted(() => {
             window.addEventListener('keyup', dectl);
         }
         if (e.ctrlKey && e.key === 's') {
-            const json = JSON.stringify(view.editNotes.map(note => note.note));
+            const json = JSON.stringify(editNotes.list.map(note => note.note));
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             window.open(url);
@@ -155,7 +153,7 @@ onMounted(() => {
     const scoreCookie = cookie.split(';').find(c => c.startsWith('score='));
     if (scoreCookie) {
         const json = scoreCookie.split('=')[1];
-        view.editNotes = JSON.parse(json).map((note: Note, index: number) => {
+        editNotes.list = JSON.parse(json).map((note: Note, index: number) => {
             console.log("import note", index, ":", note);
             return new EditNote(note as Note, view);
         });
@@ -164,7 +162,7 @@ onMounted(() => {
 })
 
 const clear = () => {
-    view.editNotes.splice(0);
+    editNotes.clear();
 }
 
 // const noteRect = (note: Note) => {
@@ -187,10 +185,17 @@ const clear = () => {
 <template>
 
     <svg id="viewport" ref="timedEventsViewport">
-        <Grid />
+        <g id="grid">
+            <Grid />
+        </g>
+        <g id="tone-relations">
+            <ToneRelation/>
+        </g>
         <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
             stroke-width="1" />
-        <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
+        <g id="edit-notes">
+            <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
+        </g>
         <NoteElement v-if="edit.noteBeingCreated" :editNote="edit.noteBeingCreated" />
         <RangeSelection />
     </svg>
