@@ -9,6 +9,9 @@ export const useToolStore = defineStore("tool", {
         current: Tool.Edit,
         simplify: 0.1,
         copyOnDrag: false,
+
+        constrainTime: false,
+        constrainOctave: false,
     }),
     getters: {
     },

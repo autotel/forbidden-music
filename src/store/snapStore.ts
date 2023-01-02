@@ -87,6 +87,7 @@ export const useSnapStore = defineStore("snap", {
             timeQuarter: false,
             sameStart: true,
             timeIntegerRelationFraction: false,
+
         },
         focusedNote: null as EditNote | null,
         timeSnapExplanation: [] as SnapExplanation[],
@@ -113,6 +114,7 @@ export const useSnapStore = defineStore("snap", {
             const durationSnap = new SnapTracker(editNote.note.duration);
 
             // Time snaps
+
             if (this.snaps.timeQuarter === true) {
                 const relatedNumber = Math.round(editNote.note.start * 4);
                 timeSnap.addSnappedValue(relatedNumber / 4, {

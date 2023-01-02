@@ -102,6 +102,16 @@ export const useEditStore = defineStore("edit", () => {
     }
 
     const mouseMove = (e: MouseEvent) => {
+        const mouseDelta = {
+            x: e.clientX - mouseDragStart.x,
+            y: e.clientY - mouseDragStart.y,
+        };
+        if (tool.constrainTime) {
+            mouseDelta.y = 0;
+        }
+        if (tool.constrainOctave) {
+            mouseDelta.x = 0;
+        }
         if (noteBeingCreated.value) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
@@ -125,10 +135,6 @@ export const useEditStore = defineStore("edit", () => {
 
         } else if (isDragging && noteBeingDragged) {
             snap.resetSnapExplanation();
-            const mouseDelta = {
-                x: e.clientX - mouseDragStart.x,
-                y: e.clientY - mouseDragStart.y,
-            };
             noteBeingDragged.dragMove(mouseDelta);
             const { editNote } = snap.snap(
                 noteBeingDragged,
@@ -147,10 +153,6 @@ export const useEditStore = defineStore("edit", () => {
             });
         } else if (isDragging && noteBeingDraggedRightEdge) {
             snap.resetSnapExplanation();
-            const mouseDelta = {
-                x: e.clientX - mouseDragStart.x,
-                y: e.clientY - mouseDragStart.y,
-            };
             noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
             const { editNote } = snap.snap(
                 noteBeingDraggedRightEdge,
