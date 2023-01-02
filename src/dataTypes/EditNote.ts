@@ -3,6 +3,7 @@
 import { View } from "../store/viewStore";
 import { makeNote, Note, NoteDefa, NoteDefb } from "./Note"
 
+const makeRandomString = () => Math.random().toString(36).slice(2);
 
 export class EditNote {
     note: Note;
@@ -44,40 +45,50 @@ export class EditNote {
     }
 
     dragStart: (mouse: { x: number, y: number }) => void;
+    
     dragMove: (dragDelta: { x: number, y: number }) => void;
+    dragMoveOctaves: (octaveDelta:number) => void;
+    dragMoveTimeStart: (dragDelta: number ) => void;
+
     dragLengthMove: (mouse: { x: number, y: number }) => void;
     dragEnd: (mouse: { x: number, y: number }) => void;
     dragCancel: () => void;
+    dragStartedTime = 0;
+    dragStartedOctave = 0;
+    dragStartedDuration = 0;
     
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         this.note = makeNote(noteDef);
         this.view = view;
-        let dragStartedTime = 0;
-        let dragStartedOctave = 0;
-        let dragStartedDuration = 0;
-        this.udpateFlag = Math.random().toString(36).slice(2);
+        this.udpateFlag = makeRandomString();
 
         this.dragStart = () => {
-            dragStartedOctave = this.note.octave;
-            dragStartedTime = this.note.start;
-            dragStartedDuration = this.note.duration;
+            this.dragStartedOctave = this.note.octave;
+            this.dragStartedTime = this.note.start;
+            this.dragStartedDuration = this.note.duration;
         }
-
         this.dragMove = (dragDelta: { x: number, y: number }) => {
-            this.note.start = dragStartedTime + view.pxToTime(dragDelta.x);
-            this.note.octave = dragStartedOctave + view.pxToOctave(dragDelta.y);
-            this.udpateFlag = Math.random().toString(36).slice(2);
+            this.note.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
+            this.note.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
+            this.udpateFlag = makeRandomString();
         }
-
+        this.dragMoveOctaves = (octaveDelta:number) => {
+            this.note.octave = this.dragStartedOctave + octaveDelta;
+            this.udpateFlag = makeRandomString();
+        }
+        this.dragMoveTimeStart = (timeDelta:number) => {
+            this.note.start = this.dragStartedTime + timeDelta;
+            this.udpateFlag = makeRandomString();
+        }
         this.dragLengthMove = (dragDelta: { x: number, y: number }) => {
-            this.note.duration = Math.max(dragStartedDuration + view.pxToTime(dragDelta.x), 0);
-            this.udpateFlag = Math.random().toString(36).slice(2);
+            this.note.duration = Math.max(this.dragStartedDuration + view.pxToTime(dragDelta.x), 0);
+            this.udpateFlag = makeRandomString();
         }
 
         this.dragCancel = () => {
-            this.note.start = dragStartedTime;
-            this.note.octave = dragStartedOctave;
-            this.note.duration = dragStartedDuration;
+            this.note.start = this.dragStartedTime;
+            this.note.octave = this.dragStartedOctave;
+            this.note.duration = this.dragStartedDuration;
         }
 
         this.dragEnd = () => {

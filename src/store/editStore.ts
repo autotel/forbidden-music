@@ -60,7 +60,7 @@ export const useEditStore = defineStore("edit", () => {
 
     let notesBeingDragged = [] as EditNote[];
     let alreadyDuplicatedForThisDrag = false;
-    
+
 
     const mouseDown = (e: MouseEvent) => {
         const mouse = {
@@ -73,7 +73,7 @@ export const useEditStore = defineStore("edit", () => {
             snap.setFocusedNote(noteRightEdgeBeingHovered);
         } else if (noteBeingHovered) {
             noteBeingDragged = noteBeingHovered;
-            if(!selection.selectedNotes.includes(noteBeingDragged)) {
+            if (!selection.selectedNotes.includes(noteBeingDragged)) {
                 selection.select(noteBeingDragged);
             }
             notesBeingDragged = selection.selectedNotes;
@@ -111,7 +111,7 @@ export const useEditStore = defineStore("edit", () => {
             alreadyDuplicatedForThisDrag = true;
             const prevDraggableNotes = notesBeingDragged;
             const cloned = [] as EditNote[];
-            
+
             prevDraggableNotes.forEach(editNote => {
                 const newNote = new EditNote(editNote.note, view);
                 editNotes.list.push(newNote);
@@ -129,14 +129,21 @@ export const useEditStore = defineStore("edit", () => {
                 x: e.clientX - mouseDragStart.x,
                 y: e.clientY - mouseDragStart.y,
             };
+            noteBeingDragged.dragMove(mouseDelta);
+            const { editNote } = snap.snap(
+                noteBeingDragged,
+                noteBeingDragged.note.octave,
+                view.visibleNotes.filter(n => n !== noteBeingDragged)
+            );
+            
+            const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.dragStartedOctave;
+            const timeDragAfterSnap = editNote.note.start - noteBeingDragged.dragStartedTime;
+
+            noteBeingDragged.note = editNote.note;
             notesBeingDragged.map(editNoteI => {
-                editNoteI.dragMove(mouseDelta);
-                const { editNote } = snap.snap(
-                    editNoteI,
-                    editNoteI.note.octave,
-                    view.visibleNotes.filter(n => n !== editNoteI)
-                );
-                editNoteI.note = editNote.note;
+                if (editNoteI === noteBeingDragged) return;
+                editNoteI.dragMoveOctaves(octaveDragDeltaAfterSnap);
+                editNoteI.dragMoveTimeStart(timeDragAfterSnap);
             });
         } else if (isDragging && noteBeingDraggedRightEdge) {
             snap.resetSnapExplanation();
