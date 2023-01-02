@@ -76,6 +76,8 @@ export const useToolStore = defineStore("tool", {
             equal12: false,
             equal1: false,
             hzEven: false,
+            hzMult88: false,
+            hzMult44: false,
             hzRelationFraction: false,
             /** A rational number multiplier of the fundamental, linearly*/
             hzFundamentalMultiple: false,
@@ -134,6 +136,12 @@ export const useToolStore = defineStore("tool", {
             // Tone snaps
             if (this.snaps.hzEven === true) {
                 toneSnap.addSnappedValue(frequencyToOctave(Math.round(targetHz / 2) * 2));
+            };
+            if (this.snaps.hzMult88 === true) {
+                toneSnap.addSnappedValue(frequencyToOctave(Math.round(targetHz / 88) * 88));
+            };
+            if (this.snaps.hzMult44 === true) {
+                toneSnap.addSnappedValue(frequencyToOctave(Math.round(targetHz / 44) * 44));
             };
             /** 
              * target / other = other * 1 / target

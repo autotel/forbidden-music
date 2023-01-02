@@ -39,12 +39,14 @@ export const useEditStore = defineStore("edit", () => {
     let noteBeingDraggedRightEdge: EditNote | false = false;
 
     const noteMouseEnter = (editNote: EditNote) => {
+        noteRightEdgeBeingHovered = false;
         noteBeingHovered = editNote;
     }
     const noteRightEdgeMouseEnter = (editNote: EditNote) => {
         noteRightEdgeBeingHovered = editNote;
     }
     const noteMouseLeave = () => {
+        noteRightEdgeBeingHovered = false;
         noteBeingHovered = false;
     }
     const noteRightEdgeMouseLeave = () => {
@@ -130,7 +132,12 @@ export const useEditStore = defineStore("edit", () => {
                 y: e.clientY - mouseDragStart.y,
             };
             noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
-            // forceRedraw(noteBeingDraggedRightEdge);
+            const { editNote } = tool.snap(
+                noteBeingDraggedRightEdge,
+                noteBeingDraggedRightEdge.note.octave,
+                view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge)
+            );
+            noteBeingDraggedRightEdge.note = editNote.note;
         }
     }
     const mouseUp = (e: MouseEvent) => {

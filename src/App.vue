@@ -117,6 +117,14 @@ onMounted(() => {
             }
             window.addEventListener('keyup', dectl);
         }
+        // space plays/stops
+        if (e.key === ' ') {
+            if (playback.playing) {
+                playback.stop();
+            } else {
+                playback.play();
+            }
+        }
         if (e.ctrlKey) {
             const prevTool = tool.current;
             tool.current = Tool.Select;
