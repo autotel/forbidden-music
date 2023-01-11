@@ -3,7 +3,8 @@ import { useLocalStorage } from '@vueuse/core';
 import { computed, onMounted, ref, watch } from 'vue';
 import Button from "./components/Button.vue";
 import FmSynthEdit from './components/FmSynthEdit.vue';
-import Grid from './components/MusicTimeGrid.vue';
+import TimeGrid from './components/MusicTimeGrid.vue';
+import ToneGrid from './components/ToneGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import RangeSelection from './components/RangeSelection.vue';
 import SnapSelector from './components/SnapSelector.vue';
@@ -180,7 +181,8 @@ const clear = () => {
 
     <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
         <g id="grid">
-            <Grid />
+            <TimeGrid />
+            <ToneGrid />
         </g>
         <g id="tone-relations">
             <ToneRelation />
