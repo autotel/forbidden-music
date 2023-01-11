@@ -31,7 +31,7 @@ export const useEditStore = defineStore("edit", () => {
     // if even hz, it displays hz, if log, it displays octaves
     // and if rational hz, it would display hz and relationships
     // etc..
-    const noteBeingCreated: Ref<EditNote | false> = ref(false);
+    const notesBeingCreated: Ref<Array<EditNote>> = ref([]);
 
     let mouseDragStart = {
         x: 0,
@@ -93,9 +93,9 @@ export const useEditStore = defineStore("edit", () => {
                 }, view as View),
                 view.pxToOctaveWithOffset(e.clientY)
             );
-            noteBeingCreated.value = editNote.clone();
+            notesBeingCreated.value = [editNote.clone()];
 
-            snap.setFocusedNote(noteBeingCreated.value);
+            snap.setFocusedNote(notesBeingCreated.value[0]);
         }
         mouseDragStart = mouse;
         isDragging = true;
@@ -112,10 +112,10 @@ export const useEditStore = defineStore("edit", () => {
         if (tool.constrainOctave) {
             mouseDelta.x = 0;
         }
-        if (noteBeingCreated.value) {
+        if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
-            noteBeingCreated.value.note.duration = clampToZero(view.pxToTime(deltaX));
+            notesBeingCreated.value[0].note.duration = clampToZero(view.pxToTime(deltaX));
         } else if (isDragging && noteBeingDragged && tool.copyOnDrag && !alreadyDuplicatedForThisDrag) {
             snap.resetSnapExplanation();
             alreadyDuplicatedForThisDrag = true;
@@ -141,7 +141,7 @@ export const useEditStore = defineStore("edit", () => {
                 noteBeingDragged.note.octave,
                 view.visibleNotes.filter(n => n !== noteBeingDragged)
             );
-            
+
             const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.dragStartedOctave;
             const timeDragAfterSnap = editNote.note.start - noteBeingDragged.dragStartedTime;
 
@@ -172,9 +172,9 @@ export const useEditStore = defineStore("edit", () => {
         notesBeingDragged.forEach(editNote => {
             editNote.dragEnd(mouse);
         });
-        if (noteBeingCreated.value !== false && e.button !== 1) {
-            editNotes.list.push(noteBeingCreated.value);
-            noteBeingCreated.value = false;
+        if (notesBeingCreated.value.length && e.button !== 1) {
+            editNotes.list.push(...notesBeingCreated.value);
+            notesBeingCreated.value = [];
         }
         noteBeingDragged = false;
         noteBeingDraggedRightEdge = false;
@@ -189,6 +189,6 @@ export const useEditStore = defineStore("edit", () => {
         noteRightEdgeMouseEnter,
         noteMouseLeave,
         noteRightEdgeMouseLeave,
-        noteBeingCreated,
+        notesBeingCreated: notesBeingCreated,
     }
 });

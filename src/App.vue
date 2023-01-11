@@ -18,6 +18,8 @@ import { Note } from './dataTypes/Note';
 import Grid from './components/MusicTimeGrid.vue';
 import { useEditNotesStore } from './store/editNotesStore';
 import ToneRelation from './components/ToneRelation.vue';
+import { useLocalStorage } from '@vueuse/core';
+import { useSelectStore } from './store/selectStore';
 
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
@@ -27,6 +29,13 @@ const playback = usePlaybackStore();
 const edit = useEditStore();
 const score = useScoreStore();
 const editNotes = useEditNotesStore();
+const select = useSelectStore();
+
+// persist state in localStorage
+const storage = useLocalStorage(
+    'forbidden-music',
+    editNotes.list,
+)
 
 onMounted(() => {
 
@@ -104,6 +113,11 @@ onMounted(() => {
     // TODO: well, this all needs refactor
     // export score
     window.addEventListener('keydown', (e) => {
+        // delete selected notes
+        if (e.key === 'Delete') {
+            editNotes.list = editNotes.list.filter(note => !note.selected);
+            select.clear();
+        }
         // alt activates tool copyOnDrag mode
         if (e.altKey) {
             tool.copyOnDrag = true;
@@ -165,22 +179,6 @@ const clear = () => {
     editNotes.clear();
 }
 
-// const noteRect = (note: Note) => {
-//     const isCut = note.start < view.timeOffset;
-//     const cutTimeWidth = isCut ? note.start - view.timeOffset : 0;
-//     return {
-//         x: clampToZero(view.timeToPxWithOffset(note.start)),
-//         w: view.timeToPx(note.duration + cutTimeWidth),
-//         y: view.octaveToPxWithOffset(note.octave),
-//         cut: isCut,
-//         note: note,
-//     }
-// }
-// const getScopednotes = () => {
-//     return view.visibleNotes.map(note => {
-//         return new EditNote(note);
-//     });
-// }
 </script>
 <template>
 
@@ -196,7 +194,9 @@ const clear = () => {
         <g id="edit-notes">
             <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
         </g>
-        <NoteElement v-if="edit.noteBeingCreated" :editNote="edit.noteBeingCreated" />
+        <g id="notes-being-created">
+            <NoteElement v-for="editNote in edit.notesBeingCreated" :editNote="editNote" />
+        </g>
         <RangeSelection />
     </svg>
     <TimeScrollBar />
@@ -216,6 +216,10 @@ svg#viewport {
     top: 0;
     left: 0;
     cursor: crosshair;
+}
+
+g#notes-being-created rect.body {
+    fill: transparent;
 }
 
 text,

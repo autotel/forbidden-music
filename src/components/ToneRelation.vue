@@ -18,18 +18,6 @@ const getOctaveOfSnapExplanation = (relation: SnapExplanation) => {
     }
 }
 
-const logRelations = () => {
-    console.log(snap.toneSnapExplanation.map(relation => relation.text));
-}
-
-onMounted(() => {
-    watchEffect(() => {
-        logRelations();
-    });
-});
-onUnmounted(() => {
-
-});
 
 </script>
 <template>

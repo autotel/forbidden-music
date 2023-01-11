@@ -238,8 +238,6 @@ export const useSnapStore = defineStore("snap", {
             this.toneSnapExplanation.push(...toneSnap.getSnapObjectsOfSnappedValue());
             this.timeSnapExplanation.push(...timeSnap.getSnapObjectsOfSnappedValue());
 
-            console.log("toneSnapExplanation", this.toneSnapExplanation.map((x) => x.text));
-
             return {
                 editNote,
             }

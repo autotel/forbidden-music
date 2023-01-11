@@ -2,26 +2,38 @@
 import { ref, watchEffect } from 'vue'
 import { Tool, toolCasesArray } from '../dataTypes/Tool';
 import { useToolStore } from '../store/toolStore';
-
+import { useEditNotesStore } from '../store/editNotesStore';
 import Button from './Button.vue';
+import { useRefHistory } from '@vueuse/core';
 
 const tool = useToolStore();
-
+const editNotes = useEditNotesStore();
 const toggleOctaveConstrain = () => {
   tool.constrainOctave = !tool.constrainOctave;
-  if(tool.constrainTime) {
+  if (tool.constrainTime) {
     tool.constrainTime = false;
   }
 }
 const toggleTimeConstrain = () => {
   tool.constrainTime = !tool.constrainTime;
-  if(tool.constrainOctave) {
+  if (tool.constrainOctave) {
     tool.constrainOctave = false;
   }
 }
+
+
+const { history, undo, redo } = useRefHistory(editNotes.list);
+
 </script>
 
 <template>
+  <Button v-if="undo" :onClick="undo" >
+    ↶
+  </Button>
+  <!-- <Button :onClick="editNotes.redo" :disabled="editNotes.redoIsPossible">
+    ↷
+  </Button> -->
+
   <Button v-for="(value, k) in toolCasesArray()" :onClick="() => tool.current = value.tool"
     :active="tool.current == value.tool">
     {{ value.name }}
