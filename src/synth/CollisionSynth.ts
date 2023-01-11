@@ -53,11 +53,11 @@ class CollisionVoice implements Voice {
 
     }
 
-    triggerAttack(now: number, frequency: number, velocity: number) {
-        this.scheduleAttack(now, frequency, velocity, now);
+    triggerAttack(frequency: number, velocity: number, now: number = this.audioContext.currentTime) {
+        this.scheduleAttack(frequency, velocity, now);
     }
 
-    scheduleAttack(now: number, frequency: number, velocity: number, when: number) {
+    scheduleAttack(frequency: number, velocity: number, when?: number, now: number = this.audioContext.currentTime) {
         console.log("collision synth attack");
         // reset stuff
         this.gainNode.gain.cancelScheduledValues(now - 0.01);
@@ -87,7 +87,7 @@ class CollisionVoice implements Voice {
 
     }
 
-    scheduleEnd(now: number, endTimeSeconds: number) {
+    scheduleEnd(endTimeSeconds: number,now: number = this.audioContext.currentTime) {
         if (typeof endTimeSeconds !== "number") throw new Error("endTimeSeconds is not a number");
         this.gainNode.gain.linearRampToValueAtTime(0, endTimeSeconds + 0.3);
 

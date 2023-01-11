@@ -39,11 +39,11 @@ class BassicVoice implements Voice {
 
     }
 
-    triggerAttack(now: number, frequency: number, velocity: number) {
-        this.scheduleAttack(now, frequency, velocity, now);
+    triggerAttack(frequency: number, velocity: number, now: number = this.audioContext.currentTime) {
+        this.scheduleAttack(frequency, velocity, now);
     }
 
-    scheduleAttack(now: number, frequency: number, velocity: number, when: number) {
+    scheduleAttack(frequency: number, velocity: number, when?: number,now: number = this.audioContext.currentTime) {
         // reset stuff
         this.oscillator = this.resetOscillator();
         this.gainNode.gain.cancelScheduledValues(now - 0.01);
@@ -51,7 +51,7 @@ class BassicVoice implements Voice {
         this.filterNode2.frequency.cancelScheduledValues(now - 0.01);
         this.filterNode3.frequency.cancelScheduledValues(now - 0.01);
         this.filterNode4.frequency.cancelScheduledValues(now - 0.01);
-        
+
         // set note start values
         this.inUse = true;
         this.oscillator.frequency.value = frequency;

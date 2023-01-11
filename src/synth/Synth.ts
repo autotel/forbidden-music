@@ -3,10 +3,10 @@ export interface Voice {
     audioContext: AudioContext;
     gainNode: GainNode;
 
-    triggerAttack: (now: number, frequency: number, velocity: number) => void;
-    scheduleAttack: (now: number, frequency: number, velocity: number, when: number) => void;
+    triggerAttack: (frequency: number, velocity: number, now?: number) => void;
+    scheduleAttack: (frequency: number, velocity: number, when?: number, now?: number) => void;
     resetOscillator?: () => OscillatorNode;
-    scheduleEnd: (now: number, endTimeSeconds: number) => void;
+    scheduleEnd: (endTimeSeconds: number, now?: number) => void;
     // constructor must be
     // constructor(audioContext: AudioContext, destination: AudioNode)
     // but could not find a way to type using interface
@@ -31,7 +31,7 @@ export class Synth implements Synth {
     setAudioContext: (audioContext: AudioContext) => void;
     stopAllNotes = () => { };
 
-    constructor(voiceFactory:(a:AudioContext,b:AudioNode)=>Voice) {
+    constructor(voiceFactory: (a: AudioContext, b: AudioNode) => Voice) {
         this.playNoteEvent = () => {
             console.warn("audio context has not been started");
         };
@@ -42,7 +42,7 @@ export class Synth implements Synth {
             voicesMaster.connect(audioContext.destination);
             const voices = [] as Array<Voice>;
 
-            const findVoice = ():Voice => {
+            const findVoice = (): Voice => {
                 for (let voice of voices) {
                     if (!voice.inUse) return voice;
                 }

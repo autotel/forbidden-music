@@ -78,7 +78,7 @@ onUnmounted(() => {
         :y="editNote.y + 9" 
         font-size="10"
     >
-        {{ editNote.udpateFlag }}
+        {{ editNote.note.octave.toFixed(3) }} ({{ editNote.note.frequency.toFixed(3) }})
     </text>
     <rect 
         class="body" 

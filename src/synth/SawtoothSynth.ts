@@ -23,11 +23,11 @@ class SawtoothVoice implements Voice {
         this.filterNode.frequency.value = 2000;
     }
 
-    triggerAttack(now: number, frequency: number, velocity: number) {
-        this.scheduleAttack(now, frequency, velocity, now);
+    triggerAttack(frequency: number, velocity: number, now: number = this.audioContext.currentTime) {
+        this.scheduleAttack(frequency, velocity, now);
     }
 
-    scheduleAttack(now: number, frequency: number, velocity: number, when: number) {
+    scheduleAttack(frequency: number, velocity: number, when?: number, now: number = this.audioContext.currentTime) {
         this.resetOscillator();
         this.gainNode.gain.cancelScheduledValues(now - 0.01);
         this.inUse = true;
@@ -47,7 +47,7 @@ class SawtoothVoice implements Voice {
         return this.oscillator;
     }
 
-    scheduleEnd(now: number, endTimeSeconds: number) {
+    scheduleEnd(endTimeSeconds: number, now: number = this.audioContext.currentTime) {
         if (typeof endTimeSeconds !== "number") throw new Error("endTimeSeconds is not a number");
 
         console.log("end in", endTimeSeconds - now);

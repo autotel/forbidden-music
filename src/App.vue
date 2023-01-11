@@ -2,6 +2,7 @@
 import { useLocalStorage } from '@vueuse/core';
 import { computed, onMounted, ref, watch } from 'vue';
 import Button from "./components/Button.vue";
+import FmSynthEdit from './components/FmSynthEdit.vue';
 import Grid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import RangeSelection from './components/RangeSelection.vue';
@@ -202,6 +203,9 @@ const clear = () => {
     <div style="position: fixed; bottom: 0;">
         <SnapSelector />
         <Transport />
+    </div>
+    <div style="position: fixed; right: 0; top: 0">
+        <FmSynthEdit/>
     </div>
 </template>
 

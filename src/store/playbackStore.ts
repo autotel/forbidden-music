@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
 import { CollisionSynth } from '../synth/CollisionSynth';
 import { BassicSynth } from '../synth/BassicSynth';
+import { FmSynth } from '../synth/FmSynth';
 import { SawtoothSynth } from '../synth/SawtoothSynth';
 import { Synth } from '../synth/Synth';
 import { useScoreStore } from './scoreStore';
@@ -22,7 +23,7 @@ export const usePlaybackStore = defineStore("playback", {
         audioContext: getAudioContext(),
 
         // choose the synth
-        synth: new BassicSynth() as Synth,
+        synth: new FmSynth() as Synth,
 
         score: useScoreStore(),
         view: useViewStore(),
