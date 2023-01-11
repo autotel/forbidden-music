@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import Button from "./components/Button.vue";
 import Grid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
@@ -177,12 +177,12 @@ const clear = () => {
 </script>
 <template>
 
-    <svg id="viewport" ref="timedEventsViewport">
+    <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
         <g id="grid">
             <Grid />
         </g>
         <g id="tone-relations">
-            <ToneRelation/>
+            <ToneRelation />
         </g>
         <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
             stroke-width="1" />
@@ -206,11 +206,31 @@ const clear = () => {
 </template>
 
 <style>
+svg#viewport.cursor-note-length {
+    cursor: col-resize;
+    cursor: ew-resize;
+}
+
+svg#viewport.cursor-draw {
+    cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
+}
+
+svg#viewport.cursor-move {
+    cursor: move;
+}
+
+svg#viewport.cursor-grab {
+    cursor: grab;
+}
+
+svg#viewport.cursor-grabbing {
+    cursor: grabbing;
+}
+
 svg#viewport {
     position: absolute;
     top: 0;
     left: 0;
-    cursor: crosshair;
 }
 
 g#notes-being-created rect.body {

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, Ref } from 'vue';
+import { computed, ref, Ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { Tool } from '../dataTypes/Tool.js';
 import { useEditNotesStore } from './editNotesStore.js';
@@ -23,11 +23,11 @@ export const useToolStore = defineStore("edit", () => {
     const snap = useSnapStore();
 
     // TODO: probably not all these need to be refs
-    const current =ref(Tool.Edit);
+    const current = ref(Tool.Edit);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
 
-    const constrainTime = ref(false);   
+    const constrainTime = ref(false);
     const constrainOctave = ref(false);
 
     let newNoteDragX = 0;
@@ -44,24 +44,33 @@ export const useToolStore = defineStore("edit", () => {
         y: 0,
     };
     let isDragging = false;
-    let noteBeingHovered: EditNote | false = false;
-    let noteRightEdgeBeingHovered: EditNote | false = false;
-    let noteBeingDragged: EditNote | false = false;
-    let noteBeingDraggedRightEdge: EditNote | false = false;
+    let noteBeingHovered = ref<EditNote | false>(false);
+    let noteRightEdgeBeingHovered = ref<EditNote | false>(false);
+    let noteBeingDragged = ref<EditNote | false>(false);
+    let noteBeingDraggedRightEdge = ref<EditNote | false>(false);
+
+
+    const cursor = computed(() => {
+        if (noteRightEdgeBeingHovered.value) return 'cursor-note-length';
+        if (noteBeingDraggedRightEdge.value) return 'cursor-note-length';
+        if (noteBeingDragged.value) return 'cursor-grabbing';
+        if (noteBeingHovered.value) return 'cursor-grab';
+        if (current.value === Tool.Edit) return 'cursor-draw';
+    });
 
     const noteMouseEnter = (editNote: EditNote) => {
-        noteRightEdgeBeingHovered = false;
-        noteBeingHovered = editNote;
+        noteRightEdgeBeingHovered.value = false;
+        noteBeingHovered.value = editNote;
     }
     const noteRightEdgeMouseEnter = (editNote: EditNote) => {
-        noteRightEdgeBeingHovered = editNote;
+        noteRightEdgeBeingHovered.value = editNote;
     }
     const noteMouseLeave = () => {
-        noteRightEdgeBeingHovered = false;
-        noteBeingHovered = false;
+        noteRightEdgeBeingHovered.value = false;
+        noteBeingHovered.value = false;
     }
     const noteRightEdgeMouseLeave = () => {
-        noteRightEdgeBeingHovered = false;
+        noteRightEdgeBeingHovered.value = false;
     }
 
     let notesBeingDragged = [] as EditNote[];
@@ -73,21 +82,21 @@ export const useToolStore = defineStore("edit", () => {
             x: e.clientX,
             y: e.clientY,
         }
-        if (noteRightEdgeBeingHovered) {
-            noteBeingDraggedRightEdge = noteRightEdgeBeingHovered;
-            noteRightEdgeBeingHovered.dragStart(mouse);
-            snap.setFocusedNote(noteRightEdgeBeingHovered);
-        } else if (noteBeingHovered) {
-            noteBeingDragged = noteBeingHovered;
-            if (!selection.selectedNotes.includes(noteBeingDragged)) {
-                selection.select(noteBeingDragged);
+        if (noteRightEdgeBeingHovered.value) {
+            noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
+            noteRightEdgeBeingHovered.value.dragStart(mouse);
+            snap.setFocusedNote(noteRightEdgeBeingHovered.value);
+        } else if (noteBeingHovered.value) {
+            noteBeingDragged.value = noteBeingHovered.value;
+            if (!selection.selectedNotes.includes(noteBeingDragged.value)) {
+                selection.select(noteBeingDragged.value);
             }
             notesBeingDragged = selection.selectedNotes;
             notesBeingDragged.forEach(editNote => {
                 editNote.dragStart(mouse);
             });
 
-            snap.setFocusedNote(noteBeingDragged);
+            snap.setFocusedNote(noteBeingDragged.value);
         } else {
             newNoteDragX = e.clientX;
             // TODO: need to add third argumet to allow relational snap when created
@@ -137,35 +146,35 @@ export const useToolStore = defineStore("edit", () => {
             });
             selection.select(...cloned);
             notesBeingDragged = [...cloned];
-            noteBeingDragged = cloned[0];
+            noteBeingDragged.value = cloned[0];
 
-        } else if (isDragging && noteBeingDragged) {
+        } else if (isDragging && noteBeingDragged.value) {
             snap.resetSnapExplanation();
-            noteBeingDragged.dragMove(mouseDelta);
+            noteBeingDragged.value.dragMove(mouseDelta);
             const { editNote } = snap.snap(
-                noteBeingDragged,
-                noteBeingDragged.note.octave,
-                view.visibleNotes.filter(n => n !== noteBeingDragged)
+                noteBeingDragged.value,
+                noteBeingDragged.value.note.octave,
+                view.visibleNotes.filter(n => n !== noteBeingDragged.value)
             );
 
-            const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.dragStartedOctave;
-            const timeDragAfterSnap = editNote.note.start - noteBeingDragged.dragStartedTime;
+            const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.value.dragStartedOctave;
+            const timeDragAfterSnap = editNote.note.start - noteBeingDragged.value.dragStartedTime;
 
-            noteBeingDragged.note = editNote.note;
+            noteBeingDragged.value.note = editNote.note;
             notesBeingDragged.map(editNoteI => {
-                if (editNoteI === noteBeingDragged) return;
+                if (editNoteI === noteBeingDragged.value) return;
                 editNoteI.dragMoveOctaves(octaveDragDeltaAfterSnap);
                 editNoteI.dragMoveTimeStart(timeDragAfterSnap);
             });
-        } else if (isDragging && noteBeingDraggedRightEdge) {
+        } else if (isDragging && noteBeingDraggedRightEdge.value) {
             snap.resetSnapExplanation();
-            noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
+            noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
             const { editNote } = snap.snap(
-                noteBeingDraggedRightEdge,
-                noteBeingDraggedRightEdge.note.octave,
-                view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge)
+                noteBeingDraggedRightEdge.value,
+                noteBeingDraggedRightEdge.value.note.octave,
+                view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value)
             );
-            noteBeingDraggedRightEdge.note = editNote.note;
+            noteBeingDraggedRightEdge.value.note = editNote.note;
         }
     }
     const mouseUp = (e: MouseEvent) => {
@@ -182,8 +191,8 @@ export const useToolStore = defineStore("edit", () => {
             editNotes.list.push(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
-        noteBeingDragged = false;
-        noteBeingDraggedRightEdge = false;
+        noteBeingDragged.value = false;
+        noteBeingDraggedRightEdge.value = false;
     }
 
 
@@ -195,6 +204,8 @@ export const useToolStore = defineStore("edit", () => {
         noteRightEdgeMouseEnter,
         noteMouseLeave,
         noteRightEdgeMouseLeave,
+
+        cursor,
 
         current,
         simplify,

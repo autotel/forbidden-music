@@ -102,7 +102,6 @@ onUnmounted(() => {
 <style scoped>
 .body {
     stroke: #999;
-    cursor: move;
     fill:#0001;
 }
 .body.selected{
@@ -117,7 +116,6 @@ onUnmounted(() => {
 .rightEdge.editable {
     fill: #f88a;
     stroke: #999;
-    cursor: ew-resize;
 }
 
 .relation {
