@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { useToolStore } from '../store/toolStore';
-import { useEditStore } from '../store/editStore';
+import { EditNote } from '../dataTypes/EditNote';
 import { Tool } from '../dataTypes/Tool';
 import { useSelectStore } from '../store/selectStore';
-import { EditNote } from '../dataTypes/EditNote';
+import { useToolStore } from '../store/toolStore';
 
 const tool = useToolStore();
 const props = defineProps<{
@@ -12,7 +11,6 @@ const props = defineProps<{
 }>();
 // TODO: perhaps the dragging and moving procedures should be on a store, not on this component
 const select = useSelectStore();
-const edit = useEditStore();
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 
@@ -46,16 +44,16 @@ const getNoteBody = () => {
 }
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    edit.noteMouseEnter(props.editNote);
+    tool.noteMouseEnter(props.editNote);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
-    edit.noteMouseLeave();
+    tool.noteMouseLeave();
 }
 const rightEdgeMOuseEnterListener = (e: MouseEvent) => {
-    edit.noteRightEdgeMouseEnter(props.editNote);
+    tool.noteRightEdgeMouseEnter(props.editNote);
 }
 const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
-    edit.noteRightEdgeMouseLeave();
+    tool.noteRightEdgeMouseLeave();
 }
 onMounted(() => {
     const $rightEdge = getRightEdgeBody();

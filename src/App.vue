@@ -1,32 +1,30 @@
 <script setup lang="ts">
-import { useViewStore } from './store/viewStore';
-import { onMounted, Ref, ref, watchEffect } from 'vue';
-import { usePlaybackStore } from './store/playbackStore';
-import TimeScrollBar from "./components/TimeScrollBar.vue"
-import NoteElement from './components/NoteElement.vue';
-import ToolSelector from './components/ToolSelector.vue';
-import SnapSelector from './components/SnapSelector.vue';
+import { useLocalStorage } from '@vueuse/core';
+import { onMounted, ref } from 'vue';
 import Button from "./components/Button.vue";
-import Transport from './components/Transport.vue';
-import { useToolStore } from './store/toolStore';
-import { useEditStore } from './store/editStore';
-import { useScoreStore } from './store/scoreStore';
-import { Tool } from './dataTypes/Tool';
+import Grid from './components/MusicTimeGrid.vue';
+import NoteElement from './components/NoteElement.vue';
 import RangeSelection from './components/RangeSelection.vue';
+import SnapSelector from './components/SnapSelector.vue';
+import TimeScrollBar from "./components/TimeScrollBar.vue";
+import ToneRelation from './components/ToneRelation.vue';
+import ToolSelector from './components/ToolSelector.vue';
+import Transport from './components/Transport.vue';
 import { EditNote } from './dataTypes/EditNote';
 import { Note } from './dataTypes/Note';
-import Grid from './components/MusicTimeGrid.vue';
+import { Tool } from './dataTypes/Tool';
 import { useEditNotesStore } from './store/editNotesStore';
-import ToneRelation from './components/ToneRelation.vue';
-import { useLocalStorage } from '@vueuse/core';
+import { usePlaybackStore } from './store/playbackStore';
+import { useScoreStore } from './store/scoreStore';
 import { useSelectStore } from './store/selectStore';
+import { useToolStore } from './store/toolStore';
+import { useViewStore } from './store/viewStore';
 
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 
 const view = useViewStore();
 const playback = usePlaybackStore();
-const edit = useEditStore();
 const score = useScoreStore();
 const editNotes = useEditNotesStore();
 const select = useSelectStore();
@@ -61,12 +59,9 @@ onMounted(() => {
     let viewDragStartY = 0;
     let viewDragStartOctave = 0;
 
-    console.log(edit, edit.mouseDown);
+    console.log(tool, tool.mouseDown);
     // when user drags on the viewport, add a note an extend it's duration
     $viewPort.addEventListener('mousedown', (e) => {
-        console.log("mouse tool", tool.current);
-
-
         // middle wheel
         if (e.button === 1) {
             e.stopPropagation();
@@ -78,7 +73,7 @@ onMounted(() => {
         } else {
             // left button
             if (tool.current !== Tool.Edit) return;
-            edit.mouseDown(e);
+            tool.mouseDown(e);
 
         }
     });
@@ -100,12 +95,12 @@ onMounted(() => {
             }
         } else {
 
-            edit.mouseMove(e);
+            tool.mouseMove(e);
         }
     });
 
     window.addEventListener('mouseup', (e) => {
-        edit.mouseUp(e);
+        tool.mouseUp(e);
         // stop panning view, if it were
         draggingView = false;
     });
@@ -195,7 +190,7 @@ const clear = () => {
             <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
         </g>
         <g id="notes-being-created">
-            <NoteElement v-for="editNote in edit.notesBeingCreated" :editNote="editNote" />
+            <NoteElement v-for="editNote in tool.notesBeingCreated" :editNote="editNote" />
         </g>
         <RangeSelection />
     </svg>

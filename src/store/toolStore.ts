@@ -1,21 +1,207 @@
-import { defineStore } from 'pinia'
-import { frequencyToOctave, makeNote, Note, octaveToFrequency } from '../dataTypes/Note.js';
-import { Tool } from '../dataTypes/Tool.js';
-import Fraction from 'fraction.js';
+import { defineStore } from 'pinia';
+import { ref, Ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
+import { Tool } from '../dataTypes/Tool.js';
+import { useEditNotesStore } from './editNotesStore.js';
+import { useScoreStore } from './scoreStore.js';
+import { useSelectStore } from './selectStore.js';
+import { useSnapStore } from './snapStore.js';
+import { useViewStore, View } from './viewStore.js';
 
-export const useToolStore = defineStore("tool", {
-    state: () => ({
-        current: Tool.Edit,
-        simplify: 0.1,
-        copyOnDrag: false,
+const clampToZero = (n: number) => n < 0 ? 0 : n;
+const forceRedraw = (el: { udpateFlag: string }) => {
+    el.udpateFlag = Math.random().toString(36).slice(2);
+}
 
-        constrainTime: false,
-        constrainOctave: false,
-    }),
-    getters: {
-    },
-    actions: {
-    },
+// maybe doesn't need to be a store, but something else
+export const useToolStore = defineStore("edit", () => {
+    // hmm.. I might be not so good at choosing where stuff goes..
+    const selection = useSelectStore();
+    const score = useScoreStore();
+    const view = useViewStore();
+    const editNotes = useEditNotesStore();
+    const snap = useSnapStore();
 
+    // TODO: probably not all these need to be refs
+    const current =ref(Tool.Edit);
+    const simplify = ref(0.1);
+    const copyOnDrag = ref(false);
+
+    const constrainTime = ref(false);   
+    const constrainOctave = ref(false);
+
+    let newNoteDragX = 0;
+
+    // TODO: add a enum to select different abstractions of tone.
+    // so, if using 12 tet, the text in the note is going to be semitones
+    // if even hz, it displays hz, if log, it displays octaves
+    // and if rational hz, it would display hz and relationships
+    // etc..
+    const notesBeingCreated: Ref<Array<EditNote>> = ref([]);
+
+    let mouseDragStart = {
+        x: 0,
+        y: 0,
+    };
+    let isDragging = false;
+    let noteBeingHovered: EditNote | false = false;
+    let noteRightEdgeBeingHovered: EditNote | false = false;
+    let noteBeingDragged: EditNote | false = false;
+    let noteBeingDraggedRightEdge: EditNote | false = false;
+
+    const noteMouseEnter = (editNote: EditNote) => {
+        noteRightEdgeBeingHovered = false;
+        noteBeingHovered = editNote;
+    }
+    const noteRightEdgeMouseEnter = (editNote: EditNote) => {
+        noteRightEdgeBeingHovered = editNote;
+    }
+    const noteMouseLeave = () => {
+        noteRightEdgeBeingHovered = false;
+        noteBeingHovered = false;
+    }
+    const noteRightEdgeMouseLeave = () => {
+        noteRightEdgeBeingHovered = false;
+    }
+
+    let notesBeingDragged = [] as EditNote[];
+    let alreadyDuplicatedForThisDrag = false;
+
+
+    const mouseDown = (e: MouseEvent) => {
+        const mouse = {
+            x: e.clientX,
+            y: e.clientY,
+        }
+        if (noteRightEdgeBeingHovered) {
+            noteBeingDraggedRightEdge = noteRightEdgeBeingHovered;
+            noteRightEdgeBeingHovered.dragStart(mouse);
+            snap.setFocusedNote(noteRightEdgeBeingHovered);
+        } else if (noteBeingHovered) {
+            noteBeingDragged = noteBeingHovered;
+            if (!selection.selectedNotes.includes(noteBeingDragged)) {
+                selection.select(noteBeingDragged);
+            }
+            notesBeingDragged = selection.selectedNotes;
+            notesBeingDragged.forEach(editNote => {
+                editNote.dragStart(mouse);
+            });
+
+            snap.setFocusedNote(noteBeingDragged);
+        } else {
+            newNoteDragX = e.clientX;
+            // TODO: need to add third argumet to allow relational snap when created
+            const { editNote } = snap.snap(
+                new EditNote({
+                    start: view.pxToTimeWithOffset(e.clientX),
+                    duration: 1,
+                    octave: view.pxToOctaveWithOffset(e.clientY),
+                }, view as View),
+                view.pxToOctaveWithOffset(e.clientY)
+            );
+            notesBeingCreated.value = [editNote.clone()];
+
+            snap.setFocusedNote(notesBeingCreated.value[0]);
+        }
+        mouseDragStart = mouse;
+        isDragging = true;
+    }
+
+    const mouseMove = (e: MouseEvent) => {
+        const mouseDelta = {
+            x: e.clientX - mouseDragStart.x,
+            y: e.clientY - mouseDragStart.y,
+        };
+        if (constrainTime.value) {
+            mouseDelta.y = 0;
+        }
+        if (constrainOctave.value) {
+            mouseDelta.x = 0;
+        }
+        if (notesBeingCreated.value.length === 1) {
+            snap.resetSnapExplanation();
+            const deltaX = e.clientX - newNoteDragX;
+            notesBeingCreated.value[0].note.duration = clampToZero(view.pxToTime(deltaX));
+        } else if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
+            snap.resetSnapExplanation();
+            alreadyDuplicatedForThisDrag = true;
+            const prevDraggableNotes = notesBeingDragged;
+            const cloned = [] as EditNote[];
+
+            prevDraggableNotes.forEach(editNote => {
+                const newNote = new EditNote(editNote.note, view);
+                editNotes.list.push(newNote);
+                cloned.push(newNote);
+                newNote.dragStart(mouseDragStart);
+                editNote.dragCancel();
+            });
+            selection.select(...cloned);
+            notesBeingDragged = [...cloned];
+            noteBeingDragged = cloned[0];
+
+        } else if (isDragging && noteBeingDragged) {
+            snap.resetSnapExplanation();
+            noteBeingDragged.dragMove(mouseDelta);
+            const { editNote } = snap.snap(
+                noteBeingDragged,
+                noteBeingDragged.note.octave,
+                view.visibleNotes.filter(n => n !== noteBeingDragged)
+            );
+
+            const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.dragStartedOctave;
+            const timeDragAfterSnap = editNote.note.start - noteBeingDragged.dragStartedTime;
+
+            noteBeingDragged.note = editNote.note;
+            notesBeingDragged.map(editNoteI => {
+                if (editNoteI === noteBeingDragged) return;
+                editNoteI.dragMoveOctaves(octaveDragDeltaAfterSnap);
+                editNoteI.dragMoveTimeStart(timeDragAfterSnap);
+            });
+        } else if (isDragging && noteBeingDraggedRightEdge) {
+            snap.resetSnapExplanation();
+            noteBeingDraggedRightEdge.dragLengthMove(mouseDelta);
+            const { editNote } = snap.snap(
+                noteBeingDraggedRightEdge,
+                noteBeingDraggedRightEdge.note.octave,
+                view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge)
+            );
+            noteBeingDraggedRightEdge.note = editNote.note;
+        }
+    }
+    const mouseUp = (e: MouseEvent) => {
+        alreadyDuplicatedForThisDrag = false;
+        isDragging = false;
+        const mouse = {
+            x: e.clientX,
+            y: e.clientY,
+        }
+        notesBeingDragged.forEach(editNote => {
+            editNote.dragEnd(mouse);
+        });
+        if (notesBeingCreated.value.length && e.button !== 1) {
+            editNotes.list.push(...notesBeingCreated.value);
+            notesBeingCreated.value = [];
+        }
+        noteBeingDragged = false;
+        noteBeingDraggedRightEdge = false;
+    }
+
+
+    return {
+        mouseDown,
+        mouseMove,
+        mouseUp,
+        noteMouseEnter,
+        noteRightEdgeMouseEnter,
+        noteMouseLeave,
+        noteRightEdgeMouseLeave,
+
+        current,
+        simplify,
+        copyOnDrag,
+        constrainTime,
+        constrainOctave,
+
+        notesBeingCreated: notesBeingCreated,
+    }
 });
