@@ -1,14 +1,17 @@
 import { defineStore } from 'pinia';
 import { getAudioContext, waitRunningContext } from '../functions/audioContextGetter';
 import { CollisionSynth } from '../synth/CollisionSynth';
+import { CollisionSynth2 } from '../synth/CollisionSynth2';
 import { BassicSynth } from '../synth/BassicSynth';
 import { FmSynth } from '../synth/FmSynth';
 import { SawtoothSynth } from '../synth/SawtoothSynth';
+import { KarplusSynth } from '../synth/KarplusSynth';
 import { Synth } from '../synth/Synth';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
 import AdsrNode from '../functions/AdsrNode';
-const SynthOfChoice = FmSynth;
+import KarplusNode from '../functions/KarplusNode';
+const SynthOfChoice = KarplusSynth;
 
 export const usePlaybackStore = defineStore("playback", {
     state: () => ({
@@ -73,6 +76,7 @@ export const usePlaybackStore = defineStore("playback", {
         init() {
             this.audioContext = getAudioContext();
             AdsrNode.Initialize(this.audioContext);
+            // KarplusNode.Initialize(this.audioContext);
             this.synth.setAudioContext(this.audioContext);
         },
         play() {
