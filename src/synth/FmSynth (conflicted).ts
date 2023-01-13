@@ -8,20 +8,11 @@ import AdsrNode from "../functions/AdsrNode";
  * step 1: sine wave voice with one envelope. The routing of envelope to amplitude is controllable
 */
 
-
 type AudioNodeLike = {
     connect: (to: AudioNode) => {}
 }
-// PROBLEM: each connectable might have a audioNode that gets replaced
-// meaning that I cannot expect to output, for example, to osc.frequency because
-// that osc will get deleted on next trigger. 
 
-
-interface Connectable {
-    output: AudioNode | AudioParam,
-    input: GainNode,
-}
-interface WrappedOscillator extends Connectable{
+interface WrappedOscillator {
     oscillator: false | OscillatorNode;
     destinationNode: false | AudioNode;
     resetOscillator(): void;
@@ -30,7 +21,7 @@ interface WrappedOscillator extends Connectable{
     frequency: number;
     start(when?: number): void;
     stop(when?: number): void;
-    output: AudioNode | AudioParam;
+    output: AudioNode;
 };
 // Oscillator nodes are extremely annoying to use, this wrapper intends to help a bit.
 const makeOscillator = (audioContext: AudioContext) => {
@@ -91,7 +82,7 @@ const makeOscillator = (audioContext: AudioContext) => {
     }
     return val as WrappedOscillator;
 }
-interface WrappedConnector extends Connectable {
+interface WrappedConnector {
     readonly node: GainNode;
     value: number;
     name:string,
@@ -99,9 +90,10 @@ interface WrappedConnector extends Connectable {
     destName:string,
 
 }
-const makeConnector = (audioContext: AudioContext, from: Connectable, to: Connectable) => {
+const makeConnector = (audioContext: AudioContext, from: AudioNode, to: AudioNode | AudioParam) => {
     const gain = audioContext.createGain();
     gain.gain.value = 0;
+    from.connect(gain);
     //@ts-ignore
     gain.connect(to);
     const val = {
@@ -117,15 +109,14 @@ const makeConnector = (audioContext: AudioContext, from: Connectable, to: Connec
         get value() {
             return gain.gain.value
         }
-        set output(to: Connectable) {
     }
     return val as WrappedConnector;
 }
-interface WrappedAdsr extends Connectable  {
+interface WrappedAdsr {
     destinationNode: false | AudioNode;
     trigger(tval?: number, when?: number): void;
     release(when?: number): void;
-    readonly node: AudioWorkletNode;
+    readonly node: any;
     output: AudioNode | AudioParam;
 }
 const makeEnvelope = (audioContext: AudioContext) => {
@@ -270,8 +261,7 @@ class FmVoice implements Voice {
 
     scheduleAttack(frequency: number, velocity: number, when?: number, currentTime = this.audioContext.currentTime) {
         console.log("trigger attack", frequency);
-        // TODO: this should only happen by keythrough
-        this.oscillator.forEach((o)=>o.frequency = frequency);
+        this.oscillator.frequency = frequency;
         this.env.forEach(e => e.trigger(velocity, when));
         this.oscillator.forEach(o => o.start(when));
         this.inUse = true;
@@ -305,25 +295,12 @@ class FmVoice implements Voice {
 
         // connect each env to each osc frequency
         this.env.forEach((env,envIt) => {
-            this.oscillator.forEach((osc,oscIt) => {
+            this.oscillator.forEach((osc) => {
                 const newConnector = makeConnector(audioContext, env.node, osc.node.frequency);
                 newConnector.sourceName = 'env' + envIt;
-                newConnector.destName = 'osc' + oscIt + "Freq";
             });
-        });
-
-        // connect each osc to each other osc frequency
-        this.oscillator.forEach((osc,oscIt) => {
-            this.oscillator.forEach((osc2,oscIt2) => {
-                if (oscIt !== oscIt2) {
-                    const newConnector = makeConnector(audioContext, osc.node, osc2.node.frequency);
-                    newConnector.sourceName = 'osc' + oscIt;
-                    newConnector.destName = 'osc' + oscIt2 + "Freq";
-                }
-            });
-        });
-    }
-};
+        }
+}
 
 export class FmSynth extends Synth {
     constructor() {
