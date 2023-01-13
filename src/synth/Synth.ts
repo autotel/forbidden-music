@@ -36,7 +36,9 @@ export class Synth implements Synth {
             console.warn("audio context has not been started");
         };
         this.setAudioContext = (audioContext) => {
-
+            if(Synth.audioContext) {
+                throw new Error("audio context already set");
+            }
             const voicesMaster = audioContext.createGain();
             voicesMaster.gain.value = 1 / 4;
             voicesMaster.connect(audioContext.destination);
@@ -48,8 +50,8 @@ export class Synth implements Synth {
                 }
 
                 let newVoice = voiceFactory(audioContext, voicesMaster);
-
                 voices.push(newVoice);
+                console.log("max poly", voices.length);
                 return newVoice;
             }
 
@@ -63,9 +65,10 @@ export class Synth implements Synth {
                 const startSeconds = audioContext.currentTime + startTimeSecondsFromNow;
                 const endSeconds = startSeconds + durationSeconds;
                 const voice = findVoice();
-                voice.scheduleAttack(now, frequency, 1, startSeconds);
-                voice.scheduleEnd(now, endSeconds);
+                voice.scheduleAttack(frequency, 1, startSeconds, now);
+                voice.scheduleEnd(endSeconds, now);
             }
         }
     }
+    static audioContext?: AudioContext;
 }

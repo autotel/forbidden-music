@@ -7,7 +7,7 @@ import { useEditNotesStore } from './editNotesStore.js';
 // TODO: move editNotes to its own library
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
-    const octaveOffset = ref(2);
+    const octaveOffset = ref(-2);
     const timeOffset = ref(0);
     const centerFrequency = ref(440);
     const viewWidthPx = ref(1920);

@@ -1,5 +1,5 @@
-import atanProcessorUrl from "./noise.worklet.ts?url";
-console.log(atanProcessorUrl)
+import workletUrl from "./noise.worklet.ts?url";
+console.log("using audio worklet",workletUrl)
 
 
 
@@ -12,7 +12,7 @@ export async function createNoiseWorklet(
     return worklet;
   } catch (err) {
     try {
-        await context.audioWorklet.addModule(atanProcessorUrl);
+        await context.audioWorklet.addModule(workletUrl);
         console.log("worklet load");
         let worklet = new AudioWorkletNode(context, "noise-generator");
         return worklet;
@@ -24,7 +24,7 @@ export async function createNoiseWorklet(
 
 
 
-// const atan = await createWorkletNode(context, "atan-processor", atanProcessorUrl)
+// const atan = await createWorkletNode(context, "atan-processor", workletUrl)
 // fileInput.addEventListener("change", async (e) => {
 //   const files = (e.target as HTMLInputElement).files as FileList;
 //   if (files.length > 0) {

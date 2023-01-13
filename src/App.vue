@@ -21,10 +21,9 @@ import { useScoreStore } from './store/scoreStore';
 import { useSelectStore } from './store/selectStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
-
+const playbackStore = usePlaybackStore();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const score = useScoreStore();
@@ -37,7 +36,10 @@ const storage = useLocalStorage(
     editNotes.list,
 )
 
+playbackStore.init();
+
 onMounted(() => {
+    
 
     //make the timedEventsViewport always fill the window
     const $viewPort = timedEventsViewport.value;
@@ -110,6 +112,10 @@ onMounted(() => {
     // TODO: well, this all needs refactor
     // export score
     window.addEventListener('keydown', (e) => {
+        // pressing s plays 440 hertz in playbackStore synth
+        if (e.key === 's') {
+            playback.synth.playNoteEvent(0, 1, 440);
+        }
         // delete selected notes
         if (e.key === 'Delete') {
             editNotes.list = editNotes.list.filter(note => !note.selected);

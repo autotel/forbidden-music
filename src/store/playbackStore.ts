@@ -7,6 +7,9 @@ import { SawtoothSynth } from '../synth/SawtoothSynth';
 import { Synth } from '../synth/Synth';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
+import AdsrNode from '../functions/AdsrNode';
+const SynthOfChoice = FmSynth;
+
 export const usePlaybackStore = defineStore("playback", {
     state: () => ({
         playing: false,
@@ -23,7 +26,7 @@ export const usePlaybackStore = defineStore("playback", {
         audioContext: getAudioContext(),
 
         // choose the synth
-        synth: new FmSynth() as Synth,
+        synth: new SynthOfChoice(),
 
         score: useScoreStore(),
         view: useViewStore(),
@@ -67,13 +70,17 @@ export const usePlaybackStore = defineStore("playback", {
             // TODO: mapping direction weirdness :/ 
             this.playbarPxPosition = this.view.timeToPxWithOffset(this.currentScoreTime);
         },
+        init() {
+            this.audioContext = getAudioContext();
+            AdsrNode.Initialize(this.audioContext);
+            this.synth.setAudioContext(this.audioContext);
+        },
         play() {
             waitRunningContext().then(() => {
                 this.playing = true;
                 if (this.currentTimeout) throw new Error("timeout already exists");
                 this.previousClockTime = this.audioContext.currentTime;
                 this.currentTimeout = setTimeout(this._clockAction, 0);
-                this.synth.setAudioContext(this.audioContext);
             });
         },
         stop() {
