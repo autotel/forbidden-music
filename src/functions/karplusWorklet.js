@@ -160,7 +160,7 @@ class Karplus2Voice extends Voice {
         this.delayLine1.sidechainEffect = new IIRFilter({ k: 0.1 });
         this.delayLine2.sidechainEffect = new IIRFilter({ k: 0.1 });
         this.delayLine3.sidechainEffect = new IIRFilter({ k: 0.5 });
-        this.delayLine4.sidechainEffect = new IIRFilter({ k: 0.2});
+        this.delayLine4.sidechainEffect = new IIRFilter({ k: 0.2 });
 
     }
 
@@ -185,14 +185,14 @@ class Karplus2Voice extends Voice {
      */
     getBlock(blockSize) {
         const output = new Float32Array(blockSize);
-        if(!this.engaged) return output;
+        if (!this.engaged) return output;
         for (let splN = 0; splN < blockSize; splN++) {
             let sampleNow = (Math.random() - 0.5) * this.envVal;
 
             sampleNow += this.delayLine1.operation(sampleNow);
             sampleNow += this.delayLine2.operation(sampleNow) / 3;
             sampleNow += this.delayLine3.operation(sampleNow) / 4;
-            const dl4 =  this.delayLine4.operation(sampleNow) / 2;
+            const dl4 = this.delayLine4.operation(sampleNow) / 2;
             sampleNow += dl4;
 
             // this.delayLine1.delaySamples += Math.round(sampleNow * 3);

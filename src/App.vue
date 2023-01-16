@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import Button from "./components/Button.vue";
-import FmSynthEdit from './components/FmSynthEdit.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
-import ToneGrid from './components/ToneGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import RangeSelection from './components/RangeSelection.vue';
 import SnapSelector from './components/SnapSelector.vue';
+import SynthEdit from './components/SynthEdit.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
+import ToneGrid from './components/ToneGrid.vue';
 import ToneRelation from './components/ToneRelation.vue';
 import ToolSelector from './components/ToolSelector.vue';
 import Transport from './components/Transport.vue';
@@ -36,10 +36,9 @@ const storage = useLocalStorage(
     editNotes.list,
 )
 
-playbackStore.init();
 
 onMounted(() => {
-    
+
 
     //make the timedEventsViewport always fill the window
     const $viewPort = timedEventsViewport.value;
@@ -212,8 +211,10 @@ const clear = () => {
         <SnapSelector />
         <Transport />
     </div>
-    <div style="position: fixed; right: 0; top: 0">
-        <FmSynthEdit/>
+    <div style="position: fixed; right: 0; top: 30%; width: 300px">
+        <Suspense>
+            <SynthEdit />
+        </Suspense>
     </div>
 </template>
 
