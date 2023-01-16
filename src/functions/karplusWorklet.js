@@ -45,6 +45,20 @@ class DelayLine extends SampleBySampleOperator {
         this.memory.push(ret * this.feedback);
         return ret;
     }
+    operationNoTime = (insample) => {
+        let ret = 0;
+
+        ret += this.memory[0] || 0;
+        ret += insample;
+
+        if (this.sidechainEffect) {
+            ret = this.sidechainEffect.operation(ret);
+        }
+
+        this.memory[0] += ret * this.feedback;
+        return ret;
+
+    }
 }
 
 class IIRFilter extends SampleBySampleOperator {
@@ -123,24 +137,30 @@ class KarplusVoice extends Voice {
 
 class Karplus2Voice extends Voice {
     envVal = 0;
-    noiseDecayInverse = 16 / samplingRate;
+    noiseDecayInverse = 0;
+
+    engaged = false;
 
     delayLine1 = new DelayLine();
     delayLine2 = new DelayLine();
     delayLine3 = new DelayLine();
+    delayLine4 = new DelayLine();
 
     constructor() {
         super();
         // define the characteristics of the synth timbre.
-        const impulseDecay = 1 / 32; //seconds
+        const impulseDecay = 0.1; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
         this.delayLine1.feedback = -0.999;
         this.delayLine2.feedback = -0.98;
-        this.delayLine3.feedback = 0.3;
+        this.delayLine3.feedback = 0.99999;
+        this.delayLine4.feedback = 0.99999;
         // play with the filter types and "k" values. You could also go and edit the filters themselves.
         this.delayLine1.sidechainEffect = new IIRFilter({ k: 0.1 });
-        // this.delayLine3.sidechainEffect = new IIRFilter1();
+        this.delayLine2.sidechainEffect = new IIRFilter({ k: 0.1 });
+        this.delayLine3.sidechainEffect = new IIRFilter({ k: 0.5 });
+        this.delayLine4.sidechainEffect = new IIRFilter({ k: 0.2});
 
     }
 
@@ -149,22 +169,34 @@ class Karplus2Voice extends Voice {
         // const splfq = samplingRate / freq;
         this.delayLine1.delaySamples = samplingRate / freq;
         this.delayLine2.delaySamples = 2 * samplingRate / freq;
-        this.delayLine3.delaySamples = 4 * samplingRate / freq;
+        this.delayLine3.delaySamples = 32 * samplingRate / freq;
+        this.delayLine4.delaySamples = 16 * samplingRate / freq;
         this.isBusy = true;
+        this.engaged = true;
     }
     stop() {
         this.envVal = 0;
         this.isBusy = false;
+        this.engaged = false;
     }
-    /** @param {number} blockSize*/
+    /** 
+     * @param {number} blockSize *
+     * @returns {Float32Array} 
+     */
     getBlock(blockSize) {
         const output = new Float32Array(blockSize);
-
+        if(!this.engaged) return output;
         for (let splN = 0; splN < blockSize; splN++) {
             let sampleNow = (Math.random() - 0.5) * this.envVal;
+
             sampleNow += this.delayLine1.operation(sampleNow);
-            sampleNow += this.delayLine2.operation(sampleNow) / 2;
-            sampleNow += this.delayLine3.operation(sampleNow) / 2;
+            sampleNow += this.delayLine2.operation(sampleNow) / 3;
+            sampleNow += this.delayLine3.operation(sampleNow) / 4;
+            const dl4 =  this.delayLine4.operation(sampleNow) / 2;
+            sampleNow += dl4;
+
+            // this.delayLine1.delaySamples += Math.round(sampleNow * 3);
+
             output[splN] = sampleNow;
             if (this.envVal <= 0) {
                 this.envVal = 0;
