@@ -1,39 +1,23 @@
-<script setup lang="ts">import { onMounted, onUnmounted, ref } from 'vue';
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue';
+import { SynthParam } from '../store/playbackStore';
 
 const props = defineProps({
-    object: {
-        type: Object,
+    param: {
+        type: Object as () => SynthParam,
         required: true,
-    },
-    propName: {
-        type: String,
-        default: 'value',
-    },
-    displayName: {
-        type: String,
-        required: false,
-    },
-    max: {
-        type: Number,
-        required: false,
-        default: 1,
-    },
-    min: {
-        type: Number,
-        required: false,
-        default: -1,
     },
 });
 let mouseDownPos = {
     x: 0, y: 0,
 };
 let currentValueOnDragStart = 0;
-console.log("creating slider for", props.propName);
-const currentValue = ref(props.object[props.propName]);
+console.log("creating slider for", props.param.displayName);
+const currentValue = ref(0);
 const dragging = ref(false);
-const displayName = ref(props.displayName === undefined ? props.propName : props.displayName);
 const valueDraggable = ref();
 const ww = 600;
+const minMaxRange = props.param.max - props.param.min;
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -45,20 +29,20 @@ const mouseDrag = (e: MouseEvent) => {
     };
 
     let deltaY = mouseDownPos.y - mouseMovePos.y;
-    let deltaX = mouseMovePos.x - mouseDownPos.x ;
+    let deltaX = mouseMovePos.x - mouseDownPos.x;
 
-    let valueToAdd = deltaY + deltaX;
+    let valueToAdd = (deltaY + deltaX) * minMaxRange;
 
     let val = currentValueOnDragStart + (valueToAdd / ww);
 
-    if (val > props.max) {
-        val = props.max;
+    if (val > props.param.max) {
+        val = props.param.max;
     }
-    if (val < props.min) {
-        val = props.min;
+    if (val < props.param.min) {
+        val = props.param.min;
     }
     currentValue.value = val;
-    props.object[props.propName] = val;
+    props.param.setter(val);
 }
 const windowMouseMove = (e: MouseEvent) => {
     if (!dragging.value) return;
@@ -80,6 +64,7 @@ const mouseUp = (e: MouseEvent) => {
     dragging.value = false;
 }
 onMounted(() => {
+    currentValue.value = props.param.getter();
     const $valueDraggable = valueDraggable.value;
     if (!$valueDraggable) throw new Error("valueDraggable ref is " + valueDraggable.value);
     $valueDraggable.addEventListener('mousedown', mouseDown);
@@ -96,14 +81,13 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" 
-            style="width:300px">
-        {{ displayName }}
-        <template v-if="props.max !== undefined && props.min !== undefined">
+    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:300px">
+        {{ props.param.displayName }}
+        <template v-if="props.param.max !== undefined && props.param.min !== undefined">
             <div class="prog-container">
                 <div class="prog-bar" :class="{ negative: currentValue < 0 }" :style="{
-                    width: (currentValue > 0 ? (currentValue / props.max) : (currentValue / props.min)) * 100 + '%',
-                    left: (currentValue > 0 ? 0 : (1 - currentValue / props.min)) * 100 + '%',
+                    width: (currentValue > 0 ? (currentValue / props.param.max) : (currentValue / props.param.min)) * 100 + '%',
+                    left: (currentValue > 0 ? 0 : (1 - currentValue / props.param.min)) * 100 + '%',
                 }"></div>
             </div>
         </template>

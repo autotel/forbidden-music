@@ -8,15 +8,13 @@ import { useViewStore } from './viewStore';
 
 const SynthOfChoice = Tone.PluckSynth;
 
-interface SynthParam {
-    valueName: string;
-    valueContainer: any;
-    displayName?: string;
+export interface SynthParam {
+    getter: () => number;
+    setter: (n: number) => void;
+    displayName: string;
     min: number
     max: number
 }
-
-
 
 export const usePlaybackStore = defineStore("playback", () => {
 
@@ -60,6 +58,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         window.removeEventListener("mousedown", startContextListener);
         if (!resolveAudioStart) throw new Error("resolveAudioStart not set");
         resolveAudioStart(false);
+        console.log(synth, synth.get());
     }
 
     window.addEventListener("mousedown", startContextListener);
@@ -132,121 +131,72 @@ export const usePlaybackStore = defineStore("playback", () => {
         const synthParams = synth.get() as MonoSynthOptions;
         return [
             {
-                valueName: "attack",
-                valueContainer: synthParams.envelope,
+                displayName: "attack",
+                getter: () => synthParams.envelope.attack as number,
+                setter: (n: number) => synth?.set({ envelope: { attack: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "decay",
-                valueContainer: synthParams.envelope,
+                displayName: "decay",
+                getter: () => synthParams.envelope.decay as number,
+                setter: (n: number) => synth?.set({ envelope: { decay: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "sustain",
-                valueContainer: synthParams.envelope,
+                displayName: "sustain",
+                getter: () => synthParams.envelope.sustain as number,
+                setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "release",
-                valueContainer: synthParams.envelope,
+                displayName: "release",
+                getter: () => synthParams.envelope.release as number,
+                setter: (n: number) => synth?.set({ envelope: { release: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "attack",
-                displayName:"f.attack",
-                valueContainer: synthParams.filterEnvelope,
+                displayName: "filter attack",
+                getter: () => synthParams.filterEnvelope.attack as number,
+                setter: (n: number) => synth?.set({ filterEnvelope: { attack: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "decay",
-                displayName:"f.decay",
-                valueContainer: synthParams.filterEnvelope,
+                displayName: "filter decay",
+                getter: () => synthParams.filterEnvelope.decay as number,
+                setter: (n: number) => synth?.set({ filterEnvelope: { decay: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "sustain",
-                displayName:"f.sustain",
-                valueContainer: synthParams.filterEnvelope,
+                displayName: "filter sustain",
+                getter: () => synthParams.filterEnvelope.sustain as number,
+                setter: (n: number) => synth?.set({ filterEnvelope: { sustain: n } }),
                 min: 0, max: 1,
             },
             {
-                valueName: "release",
-                displayName:"f.release",
-                valueContainer: synthParams.filterEnvelope,
+                displayName: "filter release",
+                getter: () => synthParams.filterEnvelope.release as number,
+                setter: (n: number) => synth?.set({ filterEnvelope: { release: n } }),
                 min: 0, max: 1,
             },
-            // {
-            //     valueName: "f.baseFrequency",
-            //     valueContainer: synthParams.filterEnvelope,
-            //     min: 0, max: 1000,
-            // },
-            // {
-            //     valueName: "f.exponent",
-            //     valueContainer: synthParams.filterEnvelope,
-            //     min: 0, max: 10,
-            // },
-            // {
-            //     valueName: "f.Q",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 10,
-            // },
-            // {
-            //     valueName: "f.type",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 10,
-            // },
-            // {
-            //     valueName: "f.detune",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 1000,
-            // },
-            // {
-            //     valueName: "f.rolloff",
-            //     valueContainer: synthParams.filter,
-            //     min: -12, max: 0,
-            // },
-            // {
-            //     valueName: "f.hum",
-            //     valueContainer: synthParams.filter,
-            //     min: -100, max: 0,
-            // },
-            // {
-            //     valueName: "f.spread",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 100,
-            // },
-            // {
-            //     valueName: "f.count",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 100,
-            // },
-            // {
-            //     valueName: "f.min",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 100,
-            // },
-            // {
-            //     valueName: "f.max",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 100,
-            // },
-            // {
-            //     valueName: "f.wet",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 1,
-            // },
-            // {
-            //     valueName: "f.dry",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 1,
-            // },
-            // {
-            //     valueName: "f.gain",
-            //     valueContainer: synthParams.filter,
-            //     min: 0, max: 1,
-            // }
+            {
+                displayName: "filter Q",
+                getter: () => synthParams.filter.Q as number,
+                setter: (n: number) => synth?.set({ filter: { Q: n } }),
+                min: 0, max: 20,
+            },
+            {
+                displayName: "filter env baseFrequency",
+                getter: () => synthParams.filterEnvelope.baseFrequency as number,
+                setter: (n: number) => synth?.set({ filter: { frequency: n } }),
+                min: 0, max: 20000,
+            },
+            {
+                displayName: "filter env octaves",
+                getter: () => synthParams.filterEnvelope.octaves as number,
+                setter: (n: number) => synth?.set({ filter: { frequency: n } }),
+                min: 0, max: 5,
+            },
         ];
-
     }
 
 

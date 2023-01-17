@@ -211,11 +211,9 @@ const clear = () => {
         <SnapSelector />
         <Transport />
     </div>
-    <div style="position: fixed; right: 0; top: 30%; width: 300px">
-        <Suspense>
-            <SynthEdit />
-        </Suspense>
-    </div>
+    <Suspense>
+        <SynthEdit />
+    </Suspense>
 </template>
 
 <style>
