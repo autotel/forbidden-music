@@ -7,8 +7,6 @@ import PropSlider from './PropSlider.vue';
 const playback = usePlaybackStore();
 const showing = ref(true);
 const editScore = useEditNotesStore();
-const availableItems = ref(editScore.getItemsList());
-
 </script>
 <template>
     <div id="libraryWindow" :class="{ hide: !showing }" style="">
@@ -17,19 +15,20 @@ const availableItems = ref(editScore.getItemsList());
             {{ showing? '◁': '▷' }}
         </Button>
 
-        <input type="text" v-model="editScore.name" />
-        <template v-for="filename in availableItems">
+        <input type="text" v-model="editScore.name" @keydown="e=>e.stopPropagation()"  />
+        <p v-if="editScore.errorMessage" >{{editScore.errorMessage}}</p>
+        <template v-for="filename in editScore.filenamesList">
             <div style="display:flex">
-                <Button :onClick="() => editScore.loadFromLibraryItem(filename)">
+                <Button :onClick="() => editScore.loadFromLibraryItem(filename)" :active="editScore.name === filename">
                     {{ filename }}
                 </Button>
-                <Button :onClick="() => editScore.deleteItemNamed(filename)">
+                <Button :onClick="() => editScore.deleteItemNamed(filename)" :danger="true">
                     ×
                 </Button>
             </div>
         </template>
         <Button :onClick="() => editScore.saveCurrent()">
-            Save
+            {{ editScore.inSyncWithStorage? 'in sync': 'save' }}
         </Button>
     </div>
 

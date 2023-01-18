@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia'
-import { computed, ref, Ref, watchEffect } from 'vue';
+import { defineStore, storeToRefs } from 'pinia'
+import { computed, nextTick, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { makeNote, Note } from '../dataTypes/Note.js';
 import { useScoreStore } from './scoreStore.js';
 import { useViewStore } from './viewStore.js';
-
+import LZUTF8 from 'lzutf8';
 
 
 interface LibraryItem {
@@ -14,20 +14,35 @@ interface LibraryItem {
     edited: Number;
 }
 
-const saveToLocalStorage = (filename: string, value: LibraryItem) => {
-    localStorage.setItem(filename, JSON.stringify(value));
+const appNameToRemove = "forbidden-music";
+
+const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
+    if (filename === appNameToRemove) throw new Error(`filename cannot be "${appNameToRemove}"`);
+    const value: any = inValue as LibraryItem;
+    value.notes = inValue.notes.map(note => ({
+        frequency: note.frequency,
+        start: note.start,
+        duration: note.duration,
+    }));
+    localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
 const retrieveFromLocalStorage = (filename: string) => {
-    const retrieved = localStorage.getItem(filename);
+    const storageItem = localStorage.getItem(filename);
+    if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
+    const retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
-    return JSON.parse(retrieved) as LibraryItem;
+    retrieved.notes = retrieved.notes.map((note: any) => makeNote(note));
+    return retrieved as LibraryItem;
 }
+
 const listLocalStorageFiles = () => {
-    return Object.keys(localStorage);
+    return Object.keys(localStorage).filter(n => n !== appNameToRemove);
 }
+
 const exists = (filename: string) => {
     return localStorage.getItem(filename) !== null;
 }
+
 const deleteItem = (filename: string) => {
     localStorage.removeItem(filename);
 }
@@ -37,77 +52,117 @@ export const useEditNotesStore = defineStore("list", () => {
     const view = useViewStore();
     const score = useScoreStore();
 
-
+    const filenamesList = ref([] as Array<string>);
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const name = ref("Untitled Score" as string);
-
+    const inSyncWithStorage = ref(false);
+    const errorMessage = ref("");
 
     const saveToNewLibraryItem = () => {
-        // error if exists
-        if (exists(name.value)) {
-            throw new Error("File already exists");
+        try {
+            if (exists(name.value)) {
+                throw new Error("File already exists");
+            }
+            saveToLocalStorage(name.value, {
+                notes: score.notes,
+                name: name.value,
+                created: created.value,
+                edited: Date.now().valueOf(),
+            });
+
+            inSyncWithStorage.value = true;
+        } catch (e) {
+            console.error("could not save", e);
+            errorMessage.value = String(e);
         }
-        saveToLocalStorage(name.value, {
-            notes: score.notes,
-            name: name.value,
-            created: created.value,
-            edited: Date.now().valueOf(),
-        });
+
+        udpateItemsList();
     }
 
     const saveCurrent = () => {
-        saveToLocalStorage(name.value, {
-            notes: score.notes,
-            name: name.value,
-            created: created.value,
-            edited: edited.value,
-        });
+        try {
+            saveToLocalStorage(name.value, {
+                notes: score.notes,
+                name: name.value,
+                created: created.value,
+                edited: edited.value,
+            });
+            inSyncWithStorage.value = true;
+        } catch (e) {
+            console.error("could not save", e);
+            errorMessage.value = String(e);
+        }
+        udpateItemsList();
     }
 
 
-    const getItemsList = () => {
-        return listLocalStorageFiles();
+    const udpateItemsList = () => {
+        filenamesList.value = listLocalStorageFiles();
     }
 
     const loadFromLibraryItem = (filename: string) => {
-        const item = retrieveFromLocalStorage(filename);
-        console.log("opening",item);
-        score.notes = item.notes.map(note => makeNote(note));
-        name.value = item.name;
-        created.value = item.created;
-        edited.value = item.edited;
-    }
+        try {
+            clear();
+            const item = retrieveFromLocalStorage(filename);
+            console.log("opening", item);
+            score.notes = item.notes;
+            name.value = item.name;
+            created.value = item.created;
+            edited.value = item.edited;
+            list.value = item.notes.map(note => new EditNote(note, view));
+            nextTick(() => {
+                inSyncWithStorage.value = true;
+            });
 
+        } catch (e) {
+            console.error("coould not load", e);
+            errorMessage.value = String(e);
+        }
+    }
 
     const deleteItemNamed = (filename: string) => {
         deleteItem(filename);
+        udpateItemsList();
     }
-
 
     const clear = () => {
         list.value = [];
+        inSyncWithStorage.value = false;
     };
 
     // TODO: is a store the right place where to put this??
     // when list changes, also change score
     watchEffect(() => {
+        inSyncWithStorage.value = false;
         score.notes = list.value.map(note => note.note);
     });
+
+    watchEffect(() => {
+        if (errorMessage.value) {
+            setTimeout(() => {
+                errorMessage.value = "";
+            }, 2000);
+        }
+    });
+    
+    udpateItemsList();
 
     return {
         list,
         clear,
 
         saveToNewLibraryItem,
-        getItemsList,
         loadFromLibraryItem,
         saveCurrent,
         deleteItemNamed,
-
+        
+        filenamesList,
+        errorMessage,
         name,
         edited,
         created,
+        inSyncWithStorage,
     }
 
 });

@@ -29,6 +29,8 @@ const frequencyConstant = 11;
 export const octaveToFrequency = (octave: number) => frequencyConstant * Math.pow(2, octave);
 export const frequencyToOctave = (frequency: number) => Math.log2(frequency / frequencyConstant);
 
+
+
 export const makeNote = <Note>(noteDef: NoteDefa | NoteDefb) => {
     const nn = {
         start: noteDef.start,
@@ -61,7 +63,7 @@ export const makeNote = <Note>(noteDef: NoteDefa | NoteDefb) => {
         get frequency() {
             if (this._frequency === null) throw new Error("freqency is null");
             return this._frequency;
-        }
+        },
     }
     nn.frequency = "frequency" in noteDef ? noteDef.frequency : octaveToFrequency(noteDef.octave)
     // nn.octave = "octave" in noteDef ? noteDef.octave : frequencyToOctave(noteDef.frequency)
