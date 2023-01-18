@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Tool, toolCasesArray } from '../dataTypes/Tool';
-import { useToolStore } from '../store/toolStore';
+import { MouseDownActions, useToolStore } from '../store/toolStore';
 import { useEditNotesStore } from '../store/editNotesStore';
 import Button from './Button.vue';
 import { useRefHistory } from '@vueuse/core';
@@ -21,13 +21,36 @@ const toggleTimeConstrain = () => {
   }
 }
 
+const AXT = Object.values(MouseDownActions);
+const whatWouldMouseMoveDo = ref(MouseDownActions.None);
+const whatWouldMouseMoveDoText = ref(AXT[MouseDownActions.None]);
+
+const updateToolWouldDo = () => {
+  whatWouldMouseMoveDo.value = tool.whatWouldMouseDownDo();
+  whatWouldMouseMoveDoText.value = AXT[whatWouldMouseMoveDo.value];
+}
 
 const { history, undo, redo } = useRefHistory(editNotes.list);
+
+onMounted(()=>{
+  window.addEventListener('mousemove', updateToolWouldDo);
+  window.addEventListener('keydown', updateToolWouldDo);
+  window.addEventListener('keyup', updateToolWouldDo);
+  window.addEventListener('mousedown', updateToolWouldDo);
+  window.addEventListener('mouseup', updateToolWouldDo);
+})
+onUnmounted(()=>{
+  window.removeEventListener('mousemove', updateToolWouldDo);
+  window.removeEventListener('keydown', updateToolWouldDo);
+  window.removeEventListener('keyup', updateToolWouldDo);
+  window.removeEventListener('mousedown', updateToolWouldDo);
+  window.removeEventListener('mouseup', updateToolWouldDo);
+})
 
 </script>
 
 <template>
-  <Button v-if="undo" :onClick="undo" >
+  <Button v-if="undo" :onClick="undo">
     ↶
   </Button>
   <!-- <Button :onClick="editNotes.redo" :disabled="editNotes.redoIsPossible">
@@ -47,11 +70,11 @@ const { history, undo, redo } = useRefHistory(editNotes.list);
       ↔
     </Button>
   </div>
-
   <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag"
     :onClick="() => tool.copyOnDrag = !tool.copyOnDrag">
     Copy
   </Button>
+  <p>{{whatWouldMouseMoveDoText}}</p>
 
 </template>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import Button from "./components/Button.vue";
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
@@ -29,6 +29,7 @@ const playback = usePlaybackStore();
 const score = useScoreStore();
 const editNotes = useEditNotesStore();
 const select = useSelectStore();
+const mouseWidget = ref();
 
 // persist state in localStorage
 const storage = useLocalStorage(
@@ -36,21 +37,42 @@ const storage = useLocalStorage(
     editNotes.list,
 )
 
-const AXT = [
-    "None",
-    "AddToSelection",
-    "SetSelection",
-    "RemoveFromSelection",
-    "Create",
-    "Lengthen",
-    "Copy",
-    "Move",
-];
-const whatWouldMouseMoveDo = ref(MouseDownActions.None);
-const whatWouldMouseMoveDoText = ref(AXT[MouseDownActions.None]);
+
+// concerning middle wheel dragging to pan
+let draggingView = false;
+let viewDragStartX = 0;
+let viewDragStartTime = 0;
+let viewDragStartY = 0;
+let viewDragStartOctave = 0;
+
+const mouseMoveListener = (e: MouseEvent) => {
+    if (mouseWidget.value) {
+        mouseWidget.value.style.left = e.clientX + 10 + "px";
+        mouseWidget.value.style.top = e.clientY + 10 + "px";
+    }
+    if (draggingView) {
+        // pan view, if dragging middle wheel
+        const deltaX = e.clientX - viewDragStartX;
+        const deltaY = e.clientY - viewDragStartY;
+        // oddness commented elsewhere
+        view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
+        view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
+        // prevent timeOffset from going out of bounds
+        if (view.timeOffset < 0) {
+            view.timeOffset = 0;
+        }
+        if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+            view.timeOffset = view.scrollBound - view.viewWidthTime;
+        }
+    } else {
+
+        tool.mouseMove(e);
+    }
+
+
+}
 
 onMounted(() => {
-
 
     //make the timedEventsViewport always fill the window
     const $viewPort = timedEventsViewport.value;
@@ -66,13 +88,6 @@ onMounted(() => {
     window.addEventListener('resize', resize);
     resize();
 
-
-    // concerning middle wheel dragging to pan
-    let draggingView = false;
-    let viewDragStartX = 0;
-    let viewDragStartTime = 0;
-    let viewDragStartY = 0;
-    let viewDragStartOctave = 0;
 
     // when user drags on the viewport, add a note an extend it's duration
     $viewPort.addEventListener('mousedown', (e) => {
@@ -90,29 +105,7 @@ onMounted(() => {
         }
     });
 
-    window.addEventListener('mousemove', (e) => {
-        whatWouldMouseMoveDo.value = tool.whatWouldMouseDownDo();
-        whatWouldMouseMoveDoText.value = AXT[whatWouldMouseMoveDo.value];
-
-        if (draggingView) {
-            // pan view, if dragging middle wheel
-            const deltaX = e.clientX - viewDragStartX;
-            const deltaY = e.clientY - viewDragStartY;
-            // oddness commented elsewhere
-            view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
-            view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
-            // prevent timeOffset from going out of bounds
-            if (view.timeOffset < 0) {
-                view.timeOffset = 0;
-            }
-            if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
-                view.timeOffset = view.scrollBound - view.viewWidthTime;
-            }
-        } else {
-
-            tool.mouseMove(e);
-        }
-    });
+    window.addEventListener('mousemove', mouseMoveListener);
 
     window.addEventListener('mouseup', (e) => {
         tool.mouseUp(e);
@@ -189,6 +182,9 @@ onMounted(() => {
 
 })
 
+onUnmounted(() => {
+    window.removeEventListener('mousemove', mouseMoveListener);
+});
 const clear = () => {
     editNotes.clear();
 }
@@ -216,10 +212,13 @@ const clear = () => {
     </svg>
     <TimeScrollBar />
     <div style="position: fixed;">
-        {{ whatWouldMouseMoveDoText }}
         <Button :onClick="clear" danger>clear</Button>
         <ToolSelector />
     </div>
+    <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
+        {{ tool.currentMouseStringHelper }}
+    </div>
+
     <div style="position: fixed; bottom: 0;">
         <SnapSelector />
         <Transport />

@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Tool } from '../dataTypes/Tool';
 import { useSelectStore } from '../store/selectStore'
-import { useToolStore } from '../store/toolStore';
+import { MouseDownActions, useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 const selection = useSelectStore();
 const view = useViewStore();
@@ -39,16 +39,16 @@ const getRangePx = () => {
 const tool = useToolStore();
 
 const mouseDown = (e: MouseEvent) => {
-    if (tool.current !== Tool.Select) return;
-    if (tool.noteBeingHovered) return;
-    selection.clear();
-    const x = e.clientX;
-    const y = e.clientY;
-    selectRange.value.timeStart = view.pxToTimeWithOffset(x);
-    selectRange.value.octaveStart = view.pxToOctaveWithOffset(y);
-    selectRange.value.timeSize = 0;
-    selectRange.value.octaveSize = 0;
-    selectRange.value.active = true;
+    if(tool.whatWouldMouseDownDo() === MouseDownActions.AreaSelect){
+        selection.clear();
+        const x = e.clientX;
+        const y = e.clientY;
+        selectRange.value.timeStart = view.pxToTimeWithOffset(x);
+        selectRange.value.octaveStart = view.pxToOctaveWithOffset(y);
+        selectRange.value.timeSize = 0;
+        selectRange.value.octaveSize = 0;
+        selectRange.value.active = true;
+    }
 }
 const mouseMove = (e: MouseEvent) => {
     if (tool.current !== Tool.Select) return;

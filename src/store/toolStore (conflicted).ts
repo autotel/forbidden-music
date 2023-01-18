@@ -93,31 +93,25 @@ export const useToolStore = defineStore("edit", () => {
 
     const whatWouldMouseDownDo = () => {
         let ret = MouseDownActions.None as MouseDownActions;
-        currentMouseStringHelper.value = "";
         if (noteRightEdgeBeingHovered.value) {
             ret = MouseDownActions.Lengthen;
-            currentMouseStringHelper.value = "⟷";
         } else if (noteBeingHovered.value) {
             ret = MouseDownActions.Move;
             if (!selection.isEditNoteSelected(noteBeingHovered.value)) {
                 if (current.value === Tool.Select) {
                     ret = MouseDownActions.AddToSelection;
-                    currentMouseStringHelper.value = "+";
                 } else {
                     ret = MouseDownActions.SetSelection;
-                    currentMouseStringHelper.value = "=";
                 }
             } else {
                 if (current.value === Tool.Select) {
                     ret = MouseDownActions.RemoveFromSelection;
-                    currentMouseStringHelper.value = "-";
                 }
             }
         } else if (current.value === Tool.Edit) {
             ret = MouseDownActions.Create;
         } else if (current.value === Tool.Select) {
             ret = MouseDownActions.AreaSelect;
-            currentMouseStringHelper.value = "⃞";
         }
         return ret;
     }
@@ -228,7 +222,7 @@ export const useToolStore = defineStore("edit", () => {
             notesBeingDragged = [...cloned];
             noteBeingDragged.value = cloned[0];
 
-        } else if (isDragging && noteBeingDragged.value && selection.isEditNoteSelected(noteBeingDragged.value)) {
+        } else if (isDragging && noteBeingDragged.value) {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);
             const { editNote } = snap.snap(
@@ -287,7 +281,6 @@ export const useToolStore = defineStore("edit", () => {
 
         cursor,
         whatWouldMouseDownDo,
-        currentMouseStringHelper,
 
         current,
         simplify,
@@ -298,4 +291,4 @@ export const useToolStore = defineStore("edit", () => {
         notesBeingCreated: notesBeingCreated,
         noteBeingHovered,
     }
-})
+});
