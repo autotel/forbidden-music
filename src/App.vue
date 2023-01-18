@@ -72,108 +72,106 @@ const mouseMoveListener = (e: MouseEvent) => {
 
 }
 
-onMounted(() => {
+const keyDownListener = (e: KeyboardEvent) => {
+    // delete selected notes
+    if (e.key === 'Delete') {
+        editNotes.list = editNotes.list.filter(note => !note.selected);
+        select.clear();
+    }
+    // alt activates tool copyOnDrag mode
+    if (e.altKey) {
+        tool.copyOnDrag = true;
+        const dectl = (e: KeyboardEvent) => {
+            if (e.key == "Alt") {
+                tool.copyOnDrag = false;
+                window.removeEventListener('keyup', dectl);
+            }
+        }
+        window.addEventListener('keyup', dectl);
+    }
+    // space plays/stops
+    if (e.key === ' ') {
+        if (playback.playing) {
+            playback.stop();
+        } else {
+            playback.play();
+        }
+    }
+    if (e.ctrlKey) {
+        const prevTool = tool.current;
+        tool.current = Tool.Select;
+        const dectl = (e: KeyboardEvent) => {
+            if (e.key == "Control") {
+                tool.current = prevTool;
+                window.removeEventListener('keyup', dectl);
+            }
+        }
+        window.addEventListener('keyup', dectl);
+    }
+    if (e.ctrlKey && e.key === 's') {
+        const json = JSON.stringify(editNotes.list.map(note => note.note));
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        window.open(url);
+        // save json to cookie
+        document.cookie = "score=" + json;
+        console.log("saved");
+    }
 
-    //make the timedEventsViewport always fill the window
+    if (e.key === 'Escape') {
+        select.clear();
+        tool.resetState();
+
+    }
+}
+const mouseUpListener = (e: MouseEvent) => {
+    tool.mouseUp(e);
+    // stop panning view, if it were
+    draggingView = false;
+}
+const mouseDownListener = (e: MouseEvent) => {
+    // middle wheel
+    if (e.button === 1) {
+        e.stopPropagation();
+        draggingView = true;
+        viewDragStartX = e.clientX;
+        viewDragStartTime = view.timeOffset;
+        viewDragStartY = e.clientY;
+        viewDragStartOctave = view.octaveOffset;
+    } else {
+        // left button
+        tool.mouseDown(e);
+    }
+}
+
+const resize = () => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 
-    const resize = () => {
-        $viewPort.style.width = window.innerWidth - 2 + "px";
-        $viewPort.style.height = window.innerHeight - 2 + "px";
+    $viewPort.style.width = window.innerWidth - 2 + "px";
+    $viewPort.style.height = window.innerHeight - 2 + "px";
 
-        view.updateSize(window.innerWidth, window.innerHeight);
+    view.updateSize(window.innerWidth, window.innerHeight);
 
-    };
-    window.addEventListener('resize', resize);
+};
+onMounted(() => {
+
+
+    const $viewPort = timedEventsViewport.value;
+    if (!$viewPort) throw new Error("timedEventsViewport not found");
+
     resize();
-
-
     // when user drags on the viewport, add a note an extend it's duration
-    $viewPort.addEventListener('mousedown', (e) => {
-        // middle wheel
-        if (e.button === 1) {
-            e.stopPropagation();
-            draggingView = true;
-            viewDragStartX = e.clientX;
-            viewDragStartTime = view.timeOffset;
-            viewDragStartY = e.clientY;
-            viewDragStartOctave = view.octaveOffset;
-        } else {
-            // left button
-            tool.mouseDown(e);
-        }
-    });
+    $viewPort.addEventListener('mousedown', mouseDownListener);
 
     window.addEventListener('mousemove', mouseMoveListener);
-
-    window.addEventListener('mouseup', (e) => {
-        tool.mouseUp(e);
-        // stop panning view, if it were
-        draggingView = false;
-    });
+    //make the timedEventsViewport always fill the window
+    window.addEventListener('resize', resize);
+    window.addEventListener('mouseup', mouseUpListener);
 
     // TODO: well, this all needs refactor
     // export score
-    window.addEventListener('keydown', (e) => {
-        // pressing s plays 440 hertz in playbackStore synth
-        if (e.key === 's') {
-            playback.synth.playNoteEvent(0, 1, 440);
-        }
-        // delete selected notes
-        if (e.key === 'Delete') {
-            editNotes.list = editNotes.list.filter(note => !note.selected);
-            select.clear();
-        }
-        // alt activates tool copyOnDrag mode
-        if (e.altKey) {
-            tool.copyOnDrag = true;
-            const dectl = (e: KeyboardEvent) => {
-                if (e.key == "Alt") {
-                    tool.copyOnDrag = false;
-                    window.removeEventListener('keyup', dectl);
-                }
-            }
-            window.addEventListener('keyup', dectl);
-        }
-        // space plays/stops
-        if (e.key === ' ') {
-            if (playback.playing) {
-                playback.stop();
-            } else {
-                playback.play();
-            }
-        }
-        if (e.ctrlKey) {
-            const prevTool = tool.current;
-            tool.current = Tool.Select;
-            const dectl = (e: KeyboardEvent) => {
-                if (e.key == "Control") {
-                    tool.current = prevTool;
-                    window.removeEventListener('keyup', dectl);
-                }
-            }
-            window.addEventListener('keyup', dectl);
-        }
-        if (e.ctrlKey && e.key === 's') {
-            const json = JSON.stringify(editNotes.list.map(note => note.note));
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            window.open(url);
-            // save json to cookie
-            document.cookie = "score=" + json;
-            console.log("saved");
-        }
-        
-        if (e.key === 'Escape') {
-            select.clear();
-            tool.resetState();
-            
-        }
-
-
-
-    });
+    window.addEventListener('keydown', keyDownListener);
 
 
     // import score from cookie
@@ -191,6 +189,14 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('mousemove', mouseMoveListener);
+    window.removeEventListener('resize', resize);
+
+    const $viewPort = timedEventsViewport.value;
+    if (!$viewPort) throw new Error("timedEventsViewport not found");
+    $viewPort.removeEventListener('mousedown', mouseDownListener);
+    window.removeEventListener('mouseup', mouseUpListener);
+    window.removeEventListener('keydown', keyDownListener);
+
 });
 const clear = () => {
     editNotes.clear();
@@ -267,7 +273,8 @@ g#notes-being-created rect.body {
     fill: transparent;
 }
 
-text, t {
+text,
+t {
     user-select: none;
 }
 </style>
