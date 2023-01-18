@@ -74,7 +74,7 @@ onUnmounted(()=>{
     :onClick="() => tool.copyOnDrag = !tool.copyOnDrag">
     Copy
   </Button>
-  <p>{{whatWouldMouseMoveDoText}}</p>
+  <!-- <p>{{whatWouldMouseMoveDoText}}</p> -->
 
 </template>
 

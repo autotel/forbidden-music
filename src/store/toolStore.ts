@@ -57,12 +57,12 @@ export const useToolStore = defineStore("edit", () => {
         x: 0,
         y: 0,
     };
+    // TODO: many of these probably don't need to be ref
     let isDragging = false;
     let noteBeingHovered = ref<EditNote | false>(false);
     let noteRightEdgeBeingHovered = ref<EditNote | false>(false);
     let noteBeingDragged = ref<EditNote | false>(false);
     let noteBeingDraggedRightEdge = ref<EditNote | false>(false);
-
 
     const cursor = computed(() => {
         if (noteRightEdgeBeingHovered.value) return 'cursor-note-length';
@@ -143,6 +143,17 @@ export const useToolStore = defineStore("edit", () => {
         isDragging = true;
     }
 
+    const resetState = () => {
+        noteBeingDragged.value = false;
+        noteBeingDraggedRightEdge.value = false;
+        noteBeingHovered.value = false;
+        noteRightEdgeBeingHovered.value = false;
+        notesBeingDragged = [];
+        isDragging = false;
+        alreadyDuplicatedForThisDrag = false;
+        notesBeingCreated.value = [];
+        snap.resetSnapExplanation();
+    }
 
     const mouseDown = (e: MouseEvent) => {
         const mouseAction = whatWouldMouseDownDo();
@@ -284,6 +295,7 @@ export const useToolStore = defineStore("edit", () => {
         noteRightEdgeMouseEnter,
         noteMouseLeave,
         noteRightEdgeMouseLeave,
+        resetState,
 
         cursor,
         whatWouldMouseDownDo,

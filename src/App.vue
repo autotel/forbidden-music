@@ -164,6 +164,13 @@ onMounted(() => {
             document.cookie = "score=" + json;
             console.log("saved");
         }
+        
+        if (e.key === 'Escape') {
+            select.clear();
+            tool.resetState();
+            
+        }
+
 
 
     });
@@ -260,8 +267,7 @@ g#notes-being-created rect.body {
     fill: transparent;
 }
 
-text,
-t {
+text, t {
     user-select: none;
 }
 </style>
