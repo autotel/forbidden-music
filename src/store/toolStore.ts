@@ -123,13 +123,14 @@ export const useToolStore = defineStore("edit", () => {
     }
 
     const _dragStartAction = (mouse: { x: number, y: number }) => {
-
         noteBeingDragged.value = noteBeingHovered.value;
+        if (!noteBeingDragged.value) throw new Error('no noteBeingDragged');
         notesBeingDragged = selection.get();
         notesBeingDragged.forEach(editNote => {
             editNote.dragStart(mouse);
         });
 
+        snap.setFocusedNote(noteBeingDragged.value);
         mouseDragStart = mouse;
         isDragging = true;
     }
@@ -238,7 +239,7 @@ export const useToolStore = defineStore("edit", () => {
             selection.select(...cloned);
             notesBeingDragged = [...cloned];
             noteBeingDragged.value = cloned[0];
-
+            snap.setFocusedNote(noteBeingDragged.value);
         } else if (isDragging && noteBeingDragged.value && selection.isEditNoteSelected(noteBeingDragged.value)) {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);

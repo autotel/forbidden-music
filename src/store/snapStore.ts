@@ -95,6 +95,7 @@ export const useSnapStore = defineStore("snap", {
     }),
 
     actions: {
+        /** sets a simple focusedNote flag for display purposes */
         setFocusedNote(to: EditNote) {
             this.resetSnapExplanation();
             this.focusedNote = to;
