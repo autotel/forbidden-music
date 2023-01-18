@@ -5,7 +5,7 @@ import Button from "./Button.vue";
 import PropSlider from './PropSlider.vue';
 const playback = usePlaybackStore();
 const params = await playback.getSynthParams();
-const showing = ref(true);
+const showing = ref(false);
 </script>
 <template>
     <div id="synthParamsWindow" :class="{ hide: !showing }" style="">

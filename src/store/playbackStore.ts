@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import * as Tone from "tone";
-import { MonoSynthOptions } from 'tone';
-import { computed, ref } from 'vue';
+import { FMSynthOptions, MetalSynthOptions, MonoSynthOptions } from 'tone';
+import { computed, reactive, ref } from 'vue';
 import { Note } from '../dataTypes/Note';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
@@ -21,7 +21,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     // TODO: many of these need not to be refs nor be exported.
     const playing = ref(false);
     // time units per second?
-    const tempo = ref(10);
+    const bpm = ref(110);
     /** in musical time */
     const currentScoreTime = ref(0);
     /** in musical time */
@@ -32,6 +32,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     let audioContext = Tone.context;
 
+    let reverb = undefined as Tone.Freeverb | undefined;
     let synth = undefined as Tone.PolySynth<any> | undefined;
 
     const score = useScoreStore();
@@ -43,6 +44,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const paused = computed(() => (!playing.value) && currentScoreTime.value != 0);
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
+
     let resolveAudioStart = false as false | ((n: any) => void);
 
     const audioStartPromise = new Promise((resolve) => {
@@ -51,7 +53,49 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const startContextListener = async () => {
         await Tone.start()
-        synth = new Tone.PolySynth(Tone.MonoSynth).toDestination();
+        reverb = new Tone.Freeverb({
+            wet: 0.3,
+            roomSize: 0.7,
+            dampening: 3000
+        }).toDestination();
+        // synth = new Tone.PolySynth(Tone.MetalSynth).connect(reverb);
+        // synth.set({
+        //     resonance: 986,
+        //     octaves: 0.5,
+        //     harmonicity: 64,
+        //     modulationIndex: 32,
+        //     envelope: {
+        //         attack: 0.001,
+        //         decay: 1.4,
+        //         sustain: 0.4,
+        //         release: 0.2
+        //     },
+        // } as MetalSynthOptions);
+        synth = new Tone.PolySynth(Tone.FMSynth).connect(reverb);
+        synth.set({
+            harmonicity: 3.01,
+            modulationIndex: 14,
+            detune: 0,
+            oscillator: {
+                type: "sine"
+            },
+            envelope: {
+                attack: 0.01,
+                decay: 0.01,
+                sustain: 1,
+                release: 0.5
+            },
+            modulation: {
+                type: "square"
+            },
+            modulationEnvelope: {
+                attack: 0.5,
+                decay: 0,
+                sustain: 1,
+                release: 0.5
+            }
+        } as FMSynthOptions);
+
         audioContext = Tone.context;
         synth.toDestination();
         console.log("audio is ready");
@@ -70,10 +114,12 @@ export const usePlaybackStore = defineStore("playback", () => {
         return events;
     };
     const _clockAction = () => {
+        const rate = bpm.value / 60;
+
         if (!audioContext) throw new Error("audio context not created");
         const now = Tone.now();
         const deltaTime = now - previousClockTime.value;
-        currentScoreTime.value += deltaTime * tempo.value;
+        currentScoreTime.value += deltaTime * rate;
         const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value);
 
 
@@ -83,7 +129,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteStartFromNow = note.start - currentScoreTime.value;
             const noteStart = now + noteStartFromNow;
             const relativeNoteStart = noteStart;
-            const noteDuration = note.duration / tempo.value;
+            const noteDuration = note.duration / rate;
             console.log({ relativeNoteStart, noteDuration });
             synth.triggerAttackRelease(note.frequency,
                 noteDuration,
@@ -128,81 +174,228 @@ export const usePlaybackStore = defineStore("playback", () => {
     const getSynthParams = async (): Promise<SynthParam[]> => {
         await audioStartPromise;
         if (!synth) throw new Error("synth not created");
-        const synthParams = synth.get() as MonoSynthOptions;
+        if (!reverb) throw new Error("reverb not created");
+        const synthParams = synth.get() as MetalSynthOptions;
+        const reverbParams = reverb.get() as Tone.FreeverbOptions;
+        const reverbRetParams = [{
+            displayName: "roomSize",
+            getter: () => reverbParams.roomSize as number,
+            setter: (n: number) => reverb?.set({ roomSize: n }),
+            min: 0, max: 1,
+        },
+        {
+            displayName: "dampening",
+            getter: () => reverbParams.dampening as number,
+            setter: (n: number) => reverb?.set({ dampening: n }),
+            min: 0, max: 10000,
+        },
+        {
+            displayName: "wet",
+            getter: () => reverbParams.wet as number,
+            setter: (n: number) => reverb?.set({ wet: n }),
+            min: 0, max: 1,
+        }];
+
+        /* 
+        envelope : {
+            attack : Time	
+            decay : Time	
+            release : Time	
+            sustain : NormalRange	
+        }
+        harmonicity : Positive	from 0 to 64
+        modulation : {
+            frequency : Frequency from 0 to 20000
+            volume: Decibels from -100 to 0
+        }	
+        modulationEnvelope : {
+            attack : Time	
+            decay : Time	
+            release : Time	
+            sustain : NormalRange	
+        }
+        modulationIndex : Positive from 0 to 100
+        oscillator : {
+            frequency : Frequency from 0 to 20000
+            volume: Decibels from -100 to 0
+        }		
+        portamento : Seconds	
+        volume : Decibels	
+        */
         return [
+            ...reverbRetParams,
             {
-                displayName: "attack",
+                displayName: "envelope.attack",
                 getter: () => synthParams.envelope.attack as number,
                 setter: (n: number) => synth?.set({ envelope: { attack: n } }),
                 min: 0, max: 1,
             },
             {
-                displayName: "decay",
+                displayName: "envelope.decay",
                 getter: () => synthParams.envelope.decay as number,
                 setter: (n: number) => synth?.set({ envelope: { decay: n } }),
                 min: 0, max: 1,
             },
             {
-                displayName: "sustain",
+                displayName: "envelope.sustain",
                 getter: () => synthParams.envelope.sustain as number,
                 setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
                 min: 0, max: 1,
             },
             {
-                displayName: "release",
+                displayName: "envelope.release",
                 getter: () => synthParams.envelope.release as number,
                 setter: (n: number) => synth?.set({ envelope: { release: n } }),
                 min: 0, max: 1,
             },
             {
-                displayName: "filter attack",
-                getter: () => synthParams.filterEnvelope.attack as number,
-                setter: (n: number) => synth?.set({ filterEnvelope: { attack: n } }),
-                min: 0, max: 1,
+                displayName: "modulationIndex",
+                getter: () => synthParams.modulationIndex as number,
+                setter: (n: number) => synth?.set({ modulationIndex: n }),
+                min: 0, max: 100,
             },
             {
-                displayName: "filter decay",
-                getter: () => synthParams.filterEnvelope.decay as number,
-                setter: (n: number) => synth?.set({ filterEnvelope: { decay: n } }),
-                min: 0, max: 1,
+                displayName: "harmonicity",
+                getter: () => synthParams.harmonicity as number,
+                setter: (n: number) => synth?.set({ harmonicity: n }),
+                min: 0, max: 22,
             },
             {
-                displayName: "filter sustain",
-                getter: () => synthParams.filterEnvelope.sustain as number,
-                setter: (n: number) => synth?.set({ filterEnvelope: { sustain: n } }),
-                min: 0, max: 1,
-            },
-            {
-                displayName: "filter release",
-                getter: () => synthParams.filterEnvelope.release as number,
-                setter: (n: number) => synth?.set({ filterEnvelope: { release: n } }),
-                min: 0, max: 1,
-            },
-            {
-                displayName: "filter Q",
-                getter: () => synthParams.filter.Q as number,
-                setter: (n: number) => synth?.set({ filter: { Q: n } }),
-                min: 0, max: 20,
-            },
-            {
-                displayName: "filter env baseFrequency",
-                getter: () => synthParams.filterEnvelope.baseFrequency as number,
-                setter: (n: number) => synth?.set({ filter: { frequency: n } }),
-                min: 0, max: 20000,
-            },
-            {
-                displayName: "filter env octaves",
-                getter: () => synthParams.filterEnvelope.octaves as number,
-                setter: (n: number) => synth?.set({ filter: { frequency: n } }),
-                min: 0, max: 5,
+                displayName: "volume",
+                getter: () => synthParams.volume as number,
+                setter: (n: number) => synth?.set({ volume: n }),
+                min: -100, max: 0,
             },
         ];
+
+        // return [
+
+        //     {
+        //         displayName: "resonance",
+        //         getter: () => synthParams.resonance as number,
+        //         setter: (n: number) => synth?.set({ resonance: n }),
+        //         min: 0, max: 8000,
+        //     },
+        //     {
+        //         displayName: "octaves",
+        //         getter: () => synthParams.octaves as number,
+        //         setter: (n: number) => synth?.set({ octaves: n }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "harmonicity",
+        //         getter: () => synthParams.harmonicity as number,
+        //         setter: (n: number) => synth?.set({ harmonicity: n }),
+        //         min: 0, max: 64,
+        //     },
+        //     {
+        //         displayName: "modulationIndex",
+        //         getter: () => synthParams.modulationIndex as number,
+        //         setter: (n: number) => synth?.set({ modulationIndex: n }),
+        //         min: 0, max: 256,
+        //     },
+        //     {
+        //         displayName: "envelope.attack",
+        //         getter: () => synthParams.envelope.attack as number,
+        //         setter: (n: number) => synth?.set({ envelope: { attack: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "envelope.decay",
+        //         getter: () => synthParams.envelope.decay as number,
+        //         setter: (n: number) => synth?.set({ envelope: { decay: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "envelope.sustain",
+        //         getter: () => synthParams.envelope.sustain as number,
+        //         setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "envelope.release",
+        //         getter: () => synthParams.envelope.release as number,
+        //         setter: (n: number) => synth?.set({ envelope: { release: n } }),
+        //         min: 0, max: 1,
+        //     },
+
+        // ];
+        // monosynth
+        // const synthParams = synth.get() as MonoSynthOptions;
+        // return [
+        //     {
+        //         displayName: "attack",
+        //         getter: () => synthParams.envelope.attack as number,
+        //         setter: (n: number) => synth?.set({ envelope: { attack: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "decay",
+        //         getter: () => synthParams.envelope.decay as number,
+        //         setter: (n: number) => synth?.set({ envelope: { decay: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "sustain",
+        //         getter: () => synthParams.envelope.sustain as number,
+        //         setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "release",
+        //         getter: () => synthParams.envelope.release as number,
+        //         setter: (n: number) => synth?.set({ envelope: { release: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "filter attack",
+        //         getter: () => synthParams.filterEnvelope.attack as number,
+        //         setter: (n: number) => synth?.set({ filterEnvelope: { attack: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "filter decay",
+        //         getter: () => synthParams.filterEnvelope.decay as number,
+        //         setter: (n: number) => synth?.set({ filterEnvelope: { decay: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "filter sustain",
+        //         getter: () => synthParams.filterEnvelope.sustain as number,
+        //         setter: (n: number) => synth?.set({ filterEnvelope: { sustain: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "filter release",
+        //         getter: () => synthParams.filterEnvelope.release as number,
+        //         setter: (n: number) => synth?.set({ filterEnvelope: { release: n } }),
+        //         min: 0, max: 1,
+        //     },
+        //     {
+        //         displayName: "filter Q",
+        //         getter: () => synthParams.filter.Q as number,
+        //         setter: (n: number) => synth?.set({ filter: { Q: n } }),
+        //         min: 0, max: 20,
+        //     },
+        //     {
+        //         displayName: "filter env baseFrequency",
+        //         getter: () => synthParams.filterEnvelope.baseFrequency as number,
+        //         setter: (n: number) => synth?.set({ filter: { frequency: n } }),
+        //         min: 0, max: 20000,
+        //     },
+        //     {
+        //         displayName: "filter env octaves",
+        //         getter: () => synthParams.filterEnvelope.octaves as number,
+        //         setter: (n: number) => synth?.set({ filter: { frequency: n } }),
+        //         min: 0, max: 5,
+        //     },
+        // ];
     }
 
 
     return {
         playing,
-        tempo,
+        bpm,
         currentScoreTime,
         previousScoreTime,
         currentTimeout,
