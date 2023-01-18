@@ -57,12 +57,14 @@ export const useToolStore = defineStore("edit", () => {
         x: 0,
         y: 0,
     };
+
     // TODO: many of these probably don't need to be ref
     let isDragging = false;
     let noteBeingHovered = ref<EditNote | false>(false);
     let noteRightEdgeBeingHovered = ref<EditNote | false>(false);
     let noteBeingDragged = ref<EditNote | false>(false);
     let noteBeingDraggedRightEdge = ref<EditNote | false>(false);
+
 
     const cursor = computed(() => {
         if (noteRightEdgeBeingHovered.value) return 'cursor-note-length';
@@ -194,7 +196,10 @@ export const useToolStore = defineStore("edit", () => {
                     }, view as View),
                     view.pxToOctaveWithOffset(e.clientY)
                 );
-                notesBeingCreated.value = [editNote.clone()];
+                const cloned = editNote.clone();
+                notesBeingCreated.value = [cloned];
+                noteBeingDraggedRightEdge.value = cloned;
+                noteRightEdgeBeingHovered.value = cloned;
                 _lengthenDragStartAction(mouse);
                 break;
             case MouseDownActions.None:

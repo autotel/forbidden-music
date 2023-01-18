@@ -2,6 +2,7 @@
 import { useLocalStorage } from '@vueuse/core';
 import { onMounted, onUnmounted, ref } from 'vue';
 import Button from "./components/Button.vue";
+import LibraryManager from './components/LibraryManager.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import RangeSelection from './components/RangeSelection.vue';
@@ -239,6 +240,7 @@ const clear = () => {
     <Suspense>
         <SynthEdit />
     </Suspense>
+    <LibraryManager/>
 </template>
 
 <style>
