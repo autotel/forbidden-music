@@ -224,22 +224,25 @@ export const useToolStore = defineStore("edit", () => {
             );
             notesBeingCreated.value[0].note = editNote.note;
         } else if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
-            snap.resetSnapExplanation();
-            alreadyDuplicatedForThisDrag = true;
-            const prevDraggableNotes = notesBeingDragged;
-            const cloned = [] as EditNote[];
+            // sets a threshold of movement before copying 
+            if (Math.abs(mouseDelta.x) > 30 || Math.abs(mouseDelta.y) > 30) {
+                snap.resetSnapExplanation();
+                alreadyDuplicatedForThisDrag = true;
+                const prevDraggableNotes = notesBeingDragged;
+                const cloned = [] as EditNote[];
 
-            prevDraggableNotes.forEach(editNote => {
-                const newNote = new EditNote(editNote.note, view);
-                editNotes.list.push(newNote);
-                cloned.push(newNote);
-                newNote.dragStart(mouseDragStart);
-                editNote.dragCancel();
-            });
-            selection.select(...cloned);
-            notesBeingDragged = [...cloned];
-            noteBeingDragged.value = cloned[0];
-            snap.setFocusedNote(noteBeingDragged.value);
+                prevDraggableNotes.forEach(editNote => {
+                    const newNote = new EditNote(editNote.note, view);
+                    editNotes.list.push(newNote);
+                    cloned.push(newNote);
+                    newNote.dragStart(mouseDragStart);
+                    editNote.dragCancel();
+                });
+                selection.select(...cloned);
+                notesBeingDragged = [...cloned];
+                noteBeingDragged.value = cloned[0];
+                snap.setFocusedNote(noteBeingDragged.value);
+            }
         } else if (isDragging && noteBeingDragged.value && selection.isEditNoteSelected(noteBeingDragged.value)) {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);
@@ -280,7 +283,7 @@ export const useToolStore = defineStore("edit", () => {
             editNote.dragEnd(mouse);
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
-            editNotes.list.push(...notesBeingCreated.value);
+            editNotes.list.push(...notesBeingCreated.value.filter(n => n.note.duration > 0));
             notesBeingCreated.value = [];
         }
         noteBeingDragged.value = false;
