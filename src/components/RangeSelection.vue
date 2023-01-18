@@ -40,6 +40,7 @@ const tool = useToolStore();
 
 const mouseDown = (e: MouseEvent) => {
     if (tool.current !== Tool.Select) return;
+    if (tool.noteBeingHovered) return;
     selection.clear();
     const x = e.clientX;
     const y = e.clientY;

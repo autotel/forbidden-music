@@ -28,19 +28,43 @@ const getNotesInRange = (
 
 export const useSelectStore = defineStore("select", () => {
     const view = useViewStore();
-    const selectedNotes = ref([] as EditNote[]);
+    const selectedNotes = ref(new Set() as Set<EditNote>);
     const editNotes = useEditNotesStore();
     const refreshNoteSelectionState = () => {
         console.log("refreshNoteSelectionState");
         editNotes.list.forEach(n => n.selected = isEditNoteSelected(n))
     }
-    const select = (...editNote: EditNote[]) => {
-        selectedNotes.value = editNote;
+    const get = () => {
+        return [...selectedNotes.value];
     };
-
-    const add = (... editNote: EditNote []) => {
-        selectedNotes.value = selectedNotes.value.concat(editNote);
-        selectedNotes.value = [...new Set(selectedNotes.value)];
+    const select = (...editNotes: EditNote[]) => {
+        selectedNotes.value.clear();
+        selectedNotes.value = new Set(editNotes);
+        refreshNoteSelectionState();
+    };
+    const toggle = (...editNotes: EditNote[]) => {
+        editNotes.forEach((n) => {
+            if (selectedNotes.value.has(n)) {
+                selectedNotes.value.delete(n);
+            } else {
+                selectedNotes.value.add(n);
+            }
+        });
+        refreshNoteSelectionState();
+    };
+    const remove = (...editNotes: (EditNote)[]) => {
+        editNotes.forEach((n) => {
+            if (!n) return;
+            selectedNotes.value.delete(n);
+        });
+        refreshNoteSelectionState();
+    }
+    const add = (...editNote: (EditNote)[]) => {
+        editNote.forEach((n) => {
+            if (!n) return;
+            selectedNotes.value.add(n);
+        });
+        refreshNoteSelectionState();
     };
     const selectRange = (range: {
         startTime: number,
@@ -48,10 +72,11 @@ export const useSelectStore = defineStore("select", () => {
         startOctave: number,
         endOctave: number
     }) => {
-        selectedNotes.value = getNotesInRange(
+        select(...getNotesInRange(
             editNotes.list,
             range
-        );
+        ));
+        refreshNoteSelectionState();
     };
     const addRange = (range: {
         startTime: number,
@@ -63,34 +88,28 @@ export const useSelectStore = defineStore("select", () => {
             editNotes.list,
             range
         );
-        selectedNotes.value.push(...newNotes);
+        add(...newNotes);
+        refreshNoteSelectionState();
     };
     const clear = () => {
         console.log("clear");
-        selectedNotes.value = [];
+        selectedNotes.value.clear();
+        refreshNoteSelectionState();
     };
     const isEditNoteSelected = (note: EditNote) => {
-        return selectedNotes.value.includes(note);
+        return selectedNotes.value.has(note);
     };
-    const toggleEditNoteSelected = (editNote: EditNote) => {
-        if (isEditNoteSelected(editNote)) {
-            selectedNotes.value = selectedNotes.value.filter((n) => n != editNote);
-        } else {
-            selectedNotes.value.push(editNote);
-        }
-    };
-
     watch(selectedNotes, refreshNoteSelectionState);
 
     return {
         // selectedNotes:selectedNotes.value,
-        selectedNotes,
+        // selectedNotes,
         selectRange,
         addRange,
-        add,select,
-        clear: clear,
+        add, select, toggle, get,
+        clear: clear, remove,
         isEditNoteSelected,
-        toggleEditNoteSelected,
+        // toggleEditNoteSelected,
     };
 
 });

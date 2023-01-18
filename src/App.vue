@@ -19,7 +19,7 @@ import { useEditNotesStore } from './store/editNotesStore';
 import { usePlaybackStore } from './store/playbackStore';
 import { useScoreStore } from './store/scoreStore';
 import { useSelectStore } from './store/selectStore';
-import { useToolStore } from './store/toolStore';
+import { useToolStore, MouseDownActions } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
@@ -36,6 +36,18 @@ const storage = useLocalStorage(
     editNotes.list,
 )
 
+const AXT = [
+    "None",
+    "AddToSelection",
+    "SetSelection",
+    "RemoveFromSelection",
+    "Create",
+    "Lengthen",
+    "Copy",
+    "Move",
+];
+const whatWouldMouseMoveDo = ref(MouseDownActions.None);
+const whatWouldMouseMoveDoText = ref(AXT[MouseDownActions.None]);
 
 onMounted(() => {
 
@@ -62,7 +74,6 @@ onMounted(() => {
     let viewDragStartY = 0;
     let viewDragStartOctave = 0;
 
-    console.log(tool, tool.mouseDown);
     // when user drags on the viewport, add a note an extend it's duration
     $viewPort.addEventListener('mousedown', (e) => {
         // middle wheel
@@ -75,13 +86,14 @@ onMounted(() => {
             viewDragStartOctave = view.octaveOffset;
         } else {
             // left button
-            if (tool.current !== Tool.Edit) return;
             tool.mouseDown(e);
-
         }
     });
 
     window.addEventListener('mousemove', (e) => {
+        whatWouldMouseMoveDo.value = tool.whatWouldMouseDownDo();
+        whatWouldMouseMoveDoText.value = AXT[whatWouldMouseMoveDo.value];
+
         if (draggingView) {
             // pan view, if dragging middle wheel
             const deltaX = e.clientX - viewDragStartX;
@@ -204,6 +216,7 @@ const clear = () => {
     </svg>
     <TimeScrollBar />
     <div style="position: fixed;">
+        {{ whatWouldMouseMoveDoText }}
         <Button :onClick="clear" danger>clear</Button>
         <ToolSelector />
     </div>
