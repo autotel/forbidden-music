@@ -9,7 +9,7 @@ import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
 const tool = useToolStore();
 const snap = useSnapStore();
-
+//{{ isnap.active ? '☑' : '☐' }} 
 </script>
 
 <template>
@@ -24,7 +24,7 @@ const snap = useSnapStore();
       }" 
       :tooltip="isnap.description"
     >
-      {{ isnap.active ? '☑' : '☐' }} {{ isnap.icon }}
+      {{ isnap.icon }}
     </Button>
   </EdgeHidableWidget>
 </template>

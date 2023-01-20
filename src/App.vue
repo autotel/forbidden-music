@@ -32,11 +32,7 @@ const editNotes = useEditNotesStore();
 const select = useSelectStore();
 const mouseWidget = ref();
 
-// persist state in localStorage
-const storage = useLocalStorage(
-    'forbidden-music',
-    editNotes.list,
-)
+
 
 
 // concerning middle wheel dragging to pan
@@ -110,13 +106,16 @@ const keyDownListener = (e: KeyboardEvent) => {
         window.addEventListener('keyup', dectl);
     }
     if (e.ctrlKey && e.key === 's') {
-        const json = JSON.stringify(editNotes.list.map(note => note.note));
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        window.open(url);
-        // save json to cookie
-        document.cookie = "score=" + json;
+        // const json = JSON.stringify(editNotes.list.map(note => note.note));
+        // const blob = new Blob([json], { type: 'application/json' });
+        // const url = URL.createObjectURL(blob);
+        // window.open(url);
+        // // save json to cookie
+        // document.cookie = "score=" + json;
         console.log("saved");
+        editNotes.saveCurrent();
+        e.preventDefault();
+        e.stopPropagation();
     }
 
     if (e.key === 'Escape') {
@@ -160,6 +159,10 @@ onMounted(() => {
 
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
+
+    editNotes.loadFromLibraryItem(
+        editNotes.filenamesList[0]
+    );
 
     resize();
     // when user drags on the viewport, add a note an extend it's duration

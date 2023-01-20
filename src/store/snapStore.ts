@@ -125,19 +125,19 @@ const snaps: { [key: string]: SnapDefinition} = {
         active: false,
     },
     timeInteger: {
-        description: "Only times that are multiple of 1 time unit",
+        description: "Times that are multiple of 1 time unit",
         icon: "1\u0078",
         type: SnapType.Time,
         active: false,
     },
     timeQuarter: {
-        description: "Only times which are multiples of 1/4 of a time unit.",
+        description: "Times which are multiples of 1/4 of a time unit.",
         icon: "1/4\u0078",
         type: SnapType.Time,
         active: true,
     },
     sameStart: {
-        description: "Only allow start positions equal to the start positions of other notes.",
+        description: "Start positions equal to the start positions of other notes.",
         icon: "=",
         type: SnapType.Time,
         active: false,
