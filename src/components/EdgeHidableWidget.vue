@@ -2,19 +2,20 @@
 
 import { ref } from "vue";
 import Button from "./Button.vue";
-defineProps<{
-    pulltip?: string
+const props = defineProps<{
+    pulltip?: string,
+    side?: "top" | "bottom" | "left" | "right",
+    title?: string,
 }>();
-
-const showing = ref(false);
+const hovered = ref(false);
+const keepOn = ref(false);
 </script>
 
 <template>
-    <div 
-        :class="{ hide: !showing }"
-    >
-        <Button :onClick="() => showing = !showing" :tooltip="showing?undefined:pulltip">
-            {{ showing ? '▷' : '◁' }}
+    <div @mouseenter="hovered = true" @mouseleave="hovered = false"
+        :class="{ hide: !keepOn && !hovered }">
+        <Button :onClick="() => keepOn = !keepOn" tooltip="keep open">
+            {{ keepOn? '🔒': '🔓' }}
         </Button>
         <slot>
 
@@ -22,27 +23,31 @@ const showing = ref(false);
     </div>
 </template>
 <style scoped>
-
 div {
     position: fixed;
     right: 0;
     width: 300px;
     transition: right 0.3s;
+    background-color: rgba(255, 255, 255, 0.884);
 }
+
 div.hide Button:hover {
     left: -2em;
 }
+
 div.hide Button {
     left: -1em;
 }
 
-div Button{
+div Button {
     position: absolute;
     left: -2em;
     top: 0;
     height: 100%;
     transition: left 0.3s;
+    width: 2em;
 }
+
 div.hide {
     right: -300px;
 }

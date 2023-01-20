@@ -3,8 +3,8 @@
 export enum Tool {
     Select,
     Edit,
-    Audition,
-    Navigate,
+    // Audition,
+    // Navigate,
 }
 
 interface ToolCase {
@@ -22,13 +22,13 @@ export const toolCasesArray = (): Array<ToolCase> => {
             name: "Edit",
             tool: Tool.Edit,
         },
-        {
-            name: "Audition",
-            tool: Tool.Audition,
-        },
-        {
-            name: "Navigate",
-            tool: Tool.Navigate,
-        },
+        // {
+        //     name: "Audition",
+        //     tool: Tool.Audition,
+        // },
+        // {
+        //     name: "Navigate",
+        //     tool: Tool.Navigate,
+        // },
     ];
 };

@@ -1,10 +1,12 @@
 import { defineStore, storeToRefs } from 'pinia'
-import { computed, nextTick, ref, Ref, watchEffect } from 'vue';
+import { computed, nextTick, ref, Ref, watch, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { makeNote, Note } from '../dataTypes/Note.js';
 import { useScoreStore } from './scoreStore.js';
+import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 import LZUTF8 from 'lzutf8';
+import { useToolStore } from './toolStore.js';
 
 
 interface LibraryItem {
@@ -12,6 +14,7 @@ interface LibraryItem {
     name: string;
     created: Number;
     edited: Number;
+    snaps: Array<[string, boolean]>
 }
 
 const appNameToRemove = "forbidden-music";
@@ -51,24 +54,40 @@ export const useEditNotesStore = defineStore("list", () => {
     const list = ref([] as Array<EditNote>);
     const view = useViewStore();
     const score = useScoreStore();
+    const snaps = useSnapStore();
 
     const filenamesList = ref([] as Array<string>);
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
-    const name = ref("Untitled Score" as string);
+    const name = ref("unnamed (autosave)" as string);
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
 
+    setTimeout(() => {
+        loadFromLibraryItem(name.value);
+        let autosaveCall = () => {
+            if (name.value === "unnamed (autosave)") {
+                saveCurrent();
+            }
+        }
+        setInterval(autosaveCall, 1000);
+    },100);
+
+    const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
+        return [key, snaps.values[key].active];
+    });
     const saveToNewLibraryItem = () => {
         try {
             if (exists(name.value)) {
                 throw new Error("File already exists");
             }
+
             saveToLocalStorage(name.value, {
                 notes: score.notes,
                 name: name.value,
                 created: created.value,
                 edited: Date.now().valueOf(),
+                snaps: getSnapsList(),
             });
 
             inSyncWithStorage.value = true;
@@ -87,6 +106,7 @@ export const useEditNotesStore = defineStore("list", () => {
                 name: name.value,
                 created: created.value,
                 edited: edited.value,
+                snaps: getSnapsList(),
             });
             inSyncWithStorage.value = true;
         } catch (e) {
@@ -111,6 +131,10 @@ export const useEditNotesStore = defineStore("list", () => {
             created.value = item.created;
             edited.value = item.edited;
             list.value = item.notes.map(note => new EditNote(note, view));
+            item.snaps.forEach(([name,activeState])=>{
+                if(!snaps.values[name]) return;
+                snaps.values[name].active = activeState;
+            });
             nextTick(() => {
                 inSyncWithStorage.value = true;
             });
@@ -138,6 +162,9 @@ export const useEditNotesStore = defineStore("list", () => {
         score.notes = list.value.map(note => note.note);
     });
 
+    watch(name, () => inSyncWithStorage.value = false);
+    watch(snaps.values, () => inSyncWithStorage.value = false);
+
     watchEffect(() => {
         if (errorMessage.value) {
             setTimeout(() => {
@@ -145,7 +172,7 @@ export const useEditNotesStore = defineStore("list", () => {
             }, 2000);
         }
     });
-    
+
     udpateItemsList();
 
     return {
@@ -156,7 +183,7 @@ export const useEditNotesStore = defineStore("list", () => {
         loadFromLibraryItem,
         saveCurrent,
         deleteItemNamed,
-        
+
         filenamesList,
         errorMessage,
         name,

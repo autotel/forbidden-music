@@ -5,6 +5,7 @@ import Button from "./components/Button.vue";
 import LibraryManager from './components/LibraryManager.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
+import Pianito from './components/Pianito.vue';
 import RangeSelection from './components/RangeSelection.vue';
 import SnapSelector from './components/SnapSelector.vue';
 import SynthEdit from './components/SynthEdit.vue';
@@ -33,8 +34,6 @@ const select = useSelectStore();
 const mouseWidget = ref();
 
 
-
-
 // concerning middle wheel dragging to pan
 let draggingView = false;
 let viewDragStartX = 0;
@@ -51,7 +50,7 @@ const mouseMoveListener = (e: MouseEvent) => {
         // pan view, if dragging middle wheel
         const deltaX = e.clientX - viewDragStartX;
         const deltaY = e.clientY - viewDragStartY;
-        // oddness commented elsewhere
+        
         view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
         view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
         // prevent timeOffset from going out of bounds
@@ -62,11 +61,8 @@ const mouseMoveListener = (e: MouseEvent) => {
             view.timeOffset = view.scrollBound - view.viewWidthTime;
         }
     } else {
-
         tool.mouseMove(e);
     }
-
-
 }
 
 const keyDownListener = (e: KeyboardEvent) => {
@@ -95,11 +91,11 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
     }
     if (e.ctrlKey) {
-        const prevTool = tool.current;
+        // const prevTool = tool.current;
         tool.current = Tool.Select;
         const dectl = (e: KeyboardEvent) => {
             if (e.key == "Control") {
-                tool.current = prevTool;
+                tool.current = Tool.Edit;
                 window.removeEventListener('keyup', dectl);
             }
         }
@@ -154,15 +150,12 @@ const resize = () => {
     view.updateSize(window.innerWidth, window.innerHeight);
 
 };
+
+
 onMounted(() => {
-
-
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 
-    editNotes.loadFromLibraryItem(
-        editNotes.filenamesList[0]
-    );
 
     resize();
     // when user drags on the viewport, add a note an extend it's duration
@@ -200,11 +193,8 @@ onUnmounted(() => {
     $viewPort.removeEventListener('mousedown', mouseDownListener);
     window.removeEventListener('mouseup', mouseUpListener);
     window.removeEventListener('keydown', keyDownListener);
-
 });
-const clear = () => {
-    editNotes.clear();
-}
+
 
 </script>
 <template>
@@ -217,7 +207,7 @@ const clear = () => {
         <g id="tone-relations">
             <ToneRelation />
         </g>
-        <line :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" stroke="red"
+        <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" 
             stroke-width="1" />
         <g id="edit-notes">
             <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
@@ -228,14 +218,13 @@ const clear = () => {
         <RangeSelection />
     </svg>
     <TimeScrollBar />
-    <div style="position: fixed;">
-        <Button :onClick="clear" danger>clear</Button>
+    <div style="position: fixed; bottom:0; right: 0;">
         <ToolSelector />
     </div>
     <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
         {{ tool.currentMouseStringHelper }}
     </div>
-
+    <Pianito v-if="tool.showReferenceKeyboard"/>
     <div style="position: fixed; bottom: 0;">
         <SnapSelector />
         <Transport />
@@ -250,6 +239,10 @@ const clear = () => {
 svg#viewport.cursor-note-length {
     cursor: col-resize;
     cursor: ew-resize;
+}
+
+svg #playbar{
+    stroke:rgb(95, 0, 0);
 }
 
 svg#viewport.cursor-draw {

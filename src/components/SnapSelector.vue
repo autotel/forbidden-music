@@ -14,6 +14,7 @@ const snap = useSnapStore();
 
 <template>
   <EdgeHidableWidget style="bottom: 2em" pulltip="open snaps">
+    <h2>Snap control</h2>
     <Button 
       v-for="(isnap, snapName) in snap.values" 
       :onClick="() => isnap.active = !isnap.active" 
@@ -34,19 +35,20 @@ Button {
   position: relative;
   /* color: rgb(107, 107, 107); */
   /* font-weight: 600; */
+  /* opacity:0.5; */
 }
-
+/* 
 Button:active {
-  /* background-color: ""; */
-  top: 4px;
-}
+} */
 
 .active {
   /* border-bottom: solid 4px;
   padding-bottom: 0; */
   text-shadow: 0 0 2px white;
+  opacity: 1;
+  /* top: -4px; */
+  border-bottom: solid 4px;
 }
-
 .time {
   background-color: rgb(0, 99, 145);
 }

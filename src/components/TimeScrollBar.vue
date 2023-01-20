@@ -17,6 +17,7 @@ onMounted(()=>{
     // adjust time ofset with mouse middle wheel
     window.addEventListener('wheel', (e) => {
         view.viewWidthTime **= 1 + e.deltaY / 1000;
+        view.viewHeightOctaves **= 1 + e.deltaY / 1000;
         // prevent viewWidthTime from going out of bounds
         if (view.viewWidthTime < 0.1) {
             view.viewWidthTime = 0.1;

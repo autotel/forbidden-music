@@ -4,63 +4,38 @@ import { usePlaybackStore } from "../store/playbackStore";
 import { useEditNotesStore } from "../store/editNotesStore";
 import Button from "./Button.vue";
 import PropSlider from './PropSlider.vue';
-const playback = usePlaybackStore();
-const showing = ref(false);
+import EdgeHidableWidget from "./EdgeHidableWidget.vue";
 const editScore = useEditNotesStore();
+
+const clear = () => {
+    editScore.clear();
+}
 </script>
 <template>
-    <div id="libraryWindow" :class="{ hide: !showing }" style="">
-        <h2>File</h2>
-        <Button :onClick="() => showing = !showing" class="show-hide" tooltip="save and load">
-            {{ showing? '◁': '▷' }}
-        </Button>
+    <EdgeHidableWidget pulltip="save and load" title="file">
+            <h2>File</h2>
+            <input type="text" v-model="editScore.name" @keydown="e=>e.stopPropagation()"  />
+            <p v-if="editScore.errorMessage" >{{editScore.errorMessage}}</p>
+            <template v-for="filename in editScore.filenamesList" :key="filename">
+                <div style="display:block" >
+                    <Button :onClick="() => editScore.loadFromLibraryItem(filename)" :active="editScore.name === filename">
+                        {{ filename }}
+                    </Button>
+                    <Button v-if="filename === editScore.name" :onClick="() => editScore.deleteItemNamed(filename)" :danger="true">
+                        ×
+                    </Button>
+                </div>
+            </template>
+            <Button :onClick="() => editScore.saveCurrent()" v-if="!editScore.inSyncWithStorage">
+                Save
+            </Button>
+            <p style="padding: 0.5em; display:inline-block;" v-else>In sync</p>
 
-        <input type="text" v-model="editScore.name" @keydown="e=>e.stopPropagation()"  />
-        <p v-if="editScore.errorMessage" >{{editScore.errorMessage}}</p>
-        <template v-for="filename in editScore.filenamesList">
-            <div style="display:flex">
-                <Button :onClick="() => editScore.loadFromLibraryItem(filename)" :active="editScore.name === filename">
-                    {{ filename }}
-                </Button>
-                <Button :onClick="() => editScore.deleteItemNamed(filename)" :danger="true">
-                    ×
-                </Button>
-            </div>
-        </template>
-        <Button :onClick="() => editScore.saveCurrent()">
-            {{ editScore.inSyncWithStorage? 'in sync': 'save' }}
-        </Button>
-    </div>
+            <Button :onClick="clear" danger>clear</Button>
+    </EdgeHidableWidget>
 
 </template>
 
     
 <style>
-#libraryWindow {
-    position: fixed;
-    left: 0;
-    top: 30%;
-    width: 300px;
-    transition: left 0.3s;
-}
-
-#libraryWindow.hide .show-hide:hover {
-    right: -2em;
-}
-
-#libraryWindow.hide .show-hide {
-    right: -1em;
-}
-
-#libraryWindow .show-hide {
-    position: absolute;
-    right: -2em;
-    top: 0;
-    height: 100%;
-    transition: right 0.3s;
-}
-
-#libraryWindow.hide {
-    left: -300px;
-}
 </style>

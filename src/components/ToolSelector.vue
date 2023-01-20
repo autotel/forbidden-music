@@ -8,12 +8,14 @@ import { useRefHistory } from '@vueuse/core';
 
 const tool = useToolStore();
 const editNotes = useEditNotesStore();
+
 const toggleOctaveConstrain = () => {
   tool.constrainOctave = !tool.constrainOctave;
   if (tool.constrainTime) {
     tool.constrainTime = false;
   }
 }
+
 const toggleTimeConstrain = () => {
   tool.constrainTime = !tool.constrainTime;
   if (tool.constrainOctave) {
@@ -21,13 +23,13 @@ const toggleTimeConstrain = () => {
   }
 }
 
-const AXT = Object.values(MouseDownActions);
+const mouseDownActionValues = Object.values(MouseDownActions);
 const whatWouldMouseMoveDo = ref(MouseDownActions.None);
-const whatWouldMouseMoveDoText = ref(AXT[MouseDownActions.None]);
+const whatWouldMouseMoveDoText = ref(mouseDownActionValues[MouseDownActions.None]);
 
 const updateToolWouldDo = () => {
   whatWouldMouseMoveDo.value = tool.whatWouldMouseDownDo();
-  whatWouldMouseMoveDoText.value = AXT[whatWouldMouseMoveDo.value];
+  whatWouldMouseMoveDoText.value = mouseDownActionValues[whatWouldMouseMoveDo.value];
 }
 
 const { history, undo, redo } = useRefHistory(editNotes.list);
@@ -50,6 +52,15 @@ onUnmounted(()=>{
 </script>
 
 <template>
+  <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag"
+    :onClick="() => tool.copyOnDrag = !tool.copyOnDrag" tooltip="copy when dragging. [ALT]">
+    Copy
+  </Button>
+
+  <Button :active="tool.showReferenceKeyboard" :onClick="()=>tool.showReferenceKeyboard=!tool.showReferenceKeyboard">
+    keybooard
+  </Button>
+
   <Button v-if="undo" :onClick="undo">
     ↶
   </Button>
@@ -57,9 +68,28 @@ onUnmounted(()=>{
     ↷
   </Button> -->
 
-  <Button v-for="(value, k) in toolCasesArray()" :onClick="() => tool.current = value.tool"
-    :active="tool.current == value.tool">
+  <!-- <Button v-for="(value, k) in toolCasesArray()" 
+    :onClick="(e) => {
+      e.stopPropagation(); 
+      e.stopImmediatePropagation(); 
+      e.preventDefault(); 
+      tool.current = value.tool
+    }"
+    :active="tool.current == value.tool"
+  >
     {{ value.name }}
+  </Button> -->
+  <Button 
+    :onClick="(e) => {
+      e.stopPropagation(); 
+      e.stopImmediatePropagation(); 
+      e.preventDefault(); 
+      tool.current = Tool.Select
+    }"
+    :active="tool.current == Tool.Select"
+    tooltip="Select mode [CTRL]"
+  >
+    Select
   </Button>
   <div class="group">
     <label>Constrain</label>
@@ -70,10 +100,6 @@ onUnmounted(()=>{
       ↔
     </Button>
   </div>
-  <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag"
-    :onClick="() => tool.copyOnDrag = !tool.copyOnDrag">
-    Copy
-  </Button>
   <!-- <p>{{whatWouldMouseMoveDoText}}</p> -->
 
 </template>

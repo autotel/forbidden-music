@@ -39,6 +39,7 @@ export const useToolStore = defineStore("edit", () => {
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
 
+    const showReferenceKeyboard = ref(false)
     const constrainTime = ref(false);
     const constrainOctave = ref(false);
 
@@ -319,7 +320,8 @@ export const useToolStore = defineStore("edit", () => {
         copyOnDrag,
         constrainTime,
         constrainOctave,
-
+        showReferenceKeyboard,
+        
         notesBeingCreated: notesBeingCreated,
         noteBeingHovered,
     }

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import * as Tone from "tone";
 import { FMSynthOptions, MetalSynthOptions, MonoSynthOptions } from 'tone';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watchEffect } from 'vue';
 import { Note } from '../dataTypes/Note';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
@@ -130,12 +130,16 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteStart = now + noteStartFromNow;
             const relativeNoteStart = noteStart;
             const noteDuration = note.duration / rate;
-            console.log({ relativeNoteStart, noteDuration });
-            synth.triggerAttackRelease(note.frequency,
-                noteDuration,
-                relativeNoteStart,
-                0.7
-            );
+            // console.log({ relativeNoteStart, noteDuration });
+            try {
+                synth.triggerAttackRelease(note.frequency,
+                    noteDuration,
+                    relativeNoteStart,
+                    0.7
+                );
+            }catch(e){
+                console.log("note play error",e);
+            }
         });
         previousClockTime.value = now;
 
@@ -144,12 +148,10 @@ export const usePlaybackStore = defineStore("playback", () => {
 
         previousScoreTime.value = currentScoreTime.value;
 
-        // TODO: mapping direction weirdness :/ 
-        playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
     };
     const play = async () => {
+        // console.log("play");
         if (audioContext.state !== 'running') await audioContext.resume();
-
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
         previousClockTime.value = audioContext.currentTime;
@@ -161,7 +163,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = false;
         currentScoreTime.value = 0;
         previousScoreTime.value = 0;
-        playbarPxPosition.value = 0;
         previousClockTime.value = 0;
         synth?.releaseAll();
     }
@@ -196,32 +197,6 @@ export const usePlaybackStore = defineStore("playback", () => {
             min: 0, max: 1,
         }];
 
-        /* 
-        envelope : {
-            attack : Time	
-            decay : Time	
-            release : Time	
-            sustain : NormalRange	
-        }
-        harmonicity : Positive	from 0 to 64
-        modulation : {
-            frequency : Frequency from 0 to 20000
-            volume: Decibels from -100 to 0
-        }	
-        modulationEnvelope : {
-            attack : Time	
-            decay : Time	
-            release : Time	
-            sustain : NormalRange	
-        }
-        modulationIndex : Positive from 0 to 100
-        oscillator : {
-            frequency : Frequency from 0 to 20000
-            volume: Decibels from -100 to 0
-        }		
-        portamento : Seconds	
-        volume : Decibels	
-        */
         return [
             ...reverbRetParams,
             {
@@ -269,132 +244,12 @@ export const usePlaybackStore = defineStore("playback", () => {
                 min: -100, max: 0,
             },
         ];
-
-        // return [
-
-        //     {
-        //         displayName: "resonance",
-        //         getter: () => synthParams.resonance as number,
-        //         setter: (n: number) => synth?.set({ resonance: n }),
-        //         min: 0, max: 8000,
-        //     },
-        //     {
-        //         displayName: "octaves",
-        //         getter: () => synthParams.octaves as number,
-        //         setter: (n: number) => synth?.set({ octaves: n }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "harmonicity",
-        //         getter: () => synthParams.harmonicity as number,
-        //         setter: (n: number) => synth?.set({ harmonicity: n }),
-        //         min: 0, max: 64,
-        //     },
-        //     {
-        //         displayName: "modulationIndex",
-        //         getter: () => synthParams.modulationIndex as number,
-        //         setter: (n: number) => synth?.set({ modulationIndex: n }),
-        //         min: 0, max: 256,
-        //     },
-        //     {
-        //         displayName: "envelope.attack",
-        //         getter: () => synthParams.envelope.attack as number,
-        //         setter: (n: number) => synth?.set({ envelope: { attack: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "envelope.decay",
-        //         getter: () => synthParams.envelope.decay as number,
-        //         setter: (n: number) => synth?.set({ envelope: { decay: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "envelope.sustain",
-        //         getter: () => synthParams.envelope.sustain as number,
-        //         setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "envelope.release",
-        //         getter: () => synthParams.envelope.release as number,
-        //         setter: (n: number) => synth?.set({ envelope: { release: n } }),
-        //         min: 0, max: 1,
-        //     },
-
-        // ];
-        // monosynth
-        // const synthParams = synth.get() as MonoSynthOptions;
-        // return [
-        //     {
-        //         displayName: "attack",
-        //         getter: () => synthParams.envelope.attack as number,
-        //         setter: (n: number) => synth?.set({ envelope: { attack: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "decay",
-        //         getter: () => synthParams.envelope.decay as number,
-        //         setter: (n: number) => synth?.set({ envelope: { decay: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "sustain",
-        //         getter: () => synthParams.envelope.sustain as number,
-        //         setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "release",
-        //         getter: () => synthParams.envelope.release as number,
-        //         setter: (n: number) => synth?.set({ envelope: { release: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "filter attack",
-        //         getter: () => synthParams.filterEnvelope.attack as number,
-        //         setter: (n: number) => synth?.set({ filterEnvelope: { attack: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "filter decay",
-        //         getter: () => synthParams.filterEnvelope.decay as number,
-        //         setter: (n: number) => synth?.set({ filterEnvelope: { decay: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "filter sustain",
-        //         getter: () => synthParams.filterEnvelope.sustain as number,
-        //         setter: (n: number) => synth?.set({ filterEnvelope: { sustain: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "filter release",
-        //         getter: () => synthParams.filterEnvelope.release as number,
-        //         setter: (n: number) => synth?.set({ filterEnvelope: { release: n } }),
-        //         min: 0, max: 1,
-        //     },
-        //     {
-        //         displayName: "filter Q",
-        //         getter: () => synthParams.filter.Q as number,
-        //         setter: (n: number) => synth?.set({ filter: { Q: n } }),
-        //         min: 0, max: 20,
-        //     },
-        //     {
-        //         displayName: "filter env baseFrequency",
-        //         getter: () => synthParams.filterEnvelope.baseFrequency as number,
-        //         setter: (n: number) => synth?.set({ filter: { frequency: n } }),
-        //         min: 0, max: 20000,
-        //     },
-        //     {
-        //         displayName: "filter env octaves",
-        //         getter: () => synthParams.filterEnvelope.octaves as number,
-        //         setter: (n: number) => synth?.set({ filter: { frequency: n } }),
-        //         min: 0, max: 5,
-        //     },
-        // ];
     }
 
+    watchEffect(()=>{
 
+        playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
+    });
     return {
         playing,
         bpm,
