@@ -254,7 +254,11 @@ export const useToolStore = defineStore("edit", () => {
             const { editNote } = snap.snap(
                 noteBeingDragged.value,
                 noteBeingDragged.value.note.octave,
-                view.visibleNotes.filter(n => n !== noteBeingDragged.value)
+                view.visibleNotes.filter(n => {
+                    let ret = n !== noteBeingDragged.value
+                    ret &&= !notesBeingDragged.includes(n);
+                    return ret;
+                })
             );
 
             const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.value.dragStartedOctave;

@@ -81,17 +81,17 @@ export const usePlaybackStore = defineStore("playback", () => {
             },
             envelope: {
                 attack: 0.01,
-                decay: 0.01,
-                sustain: 1,
+                decay: 10,
+                sustain: 0,
                 release: 0.5
             },
             modulation: {
                 type: "square"
             },
             modulationEnvelope: {
-                attack: 0.5,
-                decay: 0,
-                sustain: 1,
+                attack: 0.0,
+                decay: 10,
+                sustain: 0,
                 release: 0.5
             }
         } as FMSynthOptions);
@@ -228,13 +228,13 @@ export const usePlaybackStore = defineStore("playback", () => {
                 displayName: "envelope.attack",
                 getter: () => synthParams.envelope.attack as number,
                 setter: (n: number) => synth?.set({ envelope: { attack: n } }),
-                min: 0, max: 1,
+                min: 0, max: 3,
             },
             {
                 displayName: "envelope.decay",
                 getter: () => synthParams.envelope.decay as number,
                 setter: (n: number) => synth?.set({ envelope: { decay: n } }),
-                min: 0, max: 1,
+                min: 0, max: 10,
             },
             {
                 displayName: "envelope.sustain",
@@ -246,8 +246,10 @@ export const usePlaybackStore = defineStore("playback", () => {
                 displayName: "envelope.release",
                 getter: () => synthParams.envelope.release as number,
                 setter: (n: number) => synth?.set({ envelope: { release: n } }),
-                min: 0, max: 1,
+                min: 0, max: 10,
             },
+            
+            
             {
                 displayName: "modulationIndex",
                 getter: () => synthParams.modulationIndex as number,
