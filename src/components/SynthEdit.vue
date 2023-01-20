@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { usePlaybackStore } from "../store/playbackStore";
-import Button from "./Button.vue";
+import EdgeHidableWidget from "./EdgeHidableWidget.vue";
 import PropSlider from './PropSlider.vue';
 const playback = usePlaybackStore();
 const params = await playback.getSynthParams();
-const showing = ref(false);
 </script>
 <template>
-    <div id="synthParamsWindow" :class="{ hide: !showing }" style="">
+    <EdgeHidableWidget  id="synthParamsWindow" style="top:4rem">
         <h2>synth params</h2>
-        <Button :onClick="() => showing = !showing">
-            {{ showing ? '▷' : '◁' }}
-        </Button>
-
         <Suspense>
             <div>
                 <template v-for="param in params">
@@ -21,33 +15,6 @@ const showing = ref(false);
                 </template>
             </div>
         </Suspense>
-    </div>
+    </EdgeHidableWidget>
 
 </template>
-
-    
-<style>
-#synthParamsWindow {
-    position: fixed;
-    right: 0;
-    top: 30%;
-    width: 300px;
-    transition: right 0.3s;
-}
-#synthParamsWindow.hide Button:hover {
-    left: -2em;
-}
-#synthParamsWindow.hide Button {
-    left: -1em;
-}
-#synthParamsWindow Button{
-    position: absolute;
-    left: -2em;
-    top: 0;
-    height: 100%;
-    transition: left 0.3s;
-}
-#synthParamsWindow.hide {
-    right: -300px;
-}
-</style>

@@ -5,13 +5,13 @@ import { useEditNotesStore } from "../store/editNotesStore";
 import Button from "./Button.vue";
 import PropSlider from './PropSlider.vue';
 const playback = usePlaybackStore();
-const showing = ref(true);
+const showing = ref(false);
 const editScore = useEditNotesStore();
 </script>
 <template>
     <div id="libraryWindow" :class="{ hide: !showing }" style="">
         <h2>File</h2>
-        <Button :onClick="() => showing = !showing" class="show-hide">
+        <Button :onClick="() => showing = !showing" class="show-hide" tooltip="save and load">
             {{ showing? '◁': '▷' }}
         </Button>
 
