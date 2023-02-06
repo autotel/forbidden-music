@@ -1,7 +1,6 @@
 import { getAudioContext } from "../functions/audioContextGetter";
 import { createNoiseWorklet } from "../functions/noiseWorkletFactory";
 import { Voice, Synth } from "./Synth";
-
 const workletPromise = createNoiseWorklet(getAudioContext());
 
 
@@ -10,7 +9,7 @@ class CollisionVoice2 implements Voice {
     audioContext: AudioContext;
 
     gainNode: GainNode;
-    noise: AudioWorkletNode;
+    noise?: AudioWorkletNode;
 
     filterNodes: BiquadFilterNode[];
     filterAmps: GainNode[];
@@ -40,6 +39,7 @@ class CollisionVoice2 implements Voice {
         workletPromise.then((noise) => {
             this.noise = noise;
             this.filterNodes.forEach((filter, i) => {
+                if(!this.noise) return;
                 this.noise.connect(filter);
                 filter.connect(this.filterAmps[i]);
                 this.filterAmps[i].connect(this.gainNode);

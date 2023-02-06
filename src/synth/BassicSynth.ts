@@ -43,7 +43,7 @@ class BassicVoice implements Voice {
         this.scheduleAttack(frequency, velocity, now);
     }
 
-    scheduleAttack(frequency: number, velocity: number, when?: number,now: number = this.audioContext.currentTime) {
+    scheduleAttack(frequency: number, velocity: number, when?: number, now: number = this.audioContext.currentTime) {
         // reset stuff
         this.oscillator = this.resetOscillator();
         this.gainNode.gain.cancelScheduledValues(now - 0.01);
@@ -92,7 +92,7 @@ class BassicVoice implements Voice {
         return this.oscillator;
     }
 
-    scheduleEnd(now: number, endTimeSeconds: number) {
+    scheduleEnd(endTimeSeconds: number, now: number = this.audioContext.currentTime) {
         if (typeof endTimeSeconds !== "number") throw new Error("endTimeSeconds is not a number");
 
         console.log("end in", endTimeSeconds - now);

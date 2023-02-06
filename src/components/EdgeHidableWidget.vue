@@ -31,12 +31,8 @@ div {
     background-color: rgba(255, 255, 255, 0.884);
 }
 
-div.hide Button:hover {
-    left: -2em;
-}
-
 div.hide Button {
-    left: -1em;
+    left: -2em;
 }
 
 div Button {

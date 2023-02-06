@@ -2,6 +2,7 @@
 import { useViewStore } from '../store/viewStore';
 import { onMounted, Ref, ref, watchEffect, computed } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
+import { frequencyToOctave, octaveToFrequency } from '../dataTypes/Note';
 
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;
@@ -27,22 +28,32 @@ const keyHeight = ref(0);
 interface keyRect {
     y: number,
     black: boolean,
+    k: string,
 }
 
 const keys = ref([] as Array<keyRect>);
 
 watchEffect(() => {
+    const topLimit = frequencyToOctave(20000);
+    // let totalOctave = 0;//view.viewHeightOctaves - 0 - view.octaveOffset;
     let index = 0;
     for (let oct = 0; oct < view.viewHeightOctaves; oct++) {
+        // totalOctave = oct - (view.viewHeightOctaves + view.octaveOffset);
+        // if (totalOctave > topLimit) continue;
+
         for (let note = 0; note < 12; note++) {
-            index = oct * 12 + note;
+            console.log(index);
+            // console.log(index);
             keys.value[index] = {
                 y: view.octaveToPxWithOffset(index / 12) % view.viewHeightPx,
                 black: isIBlack[note],
+                k: index + (isIBlack[note] ? "b" : ""),
             };
+            index++;
         }
     }
     keys.value.splice(index);
+    // console.log(view.octaveOffset);
 });
 
 watchEffect(() => {

@@ -5,16 +5,9 @@ import { computed, reactive, ref, watchEffect } from 'vue';
 import { Note } from '../dataTypes/Note';
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
-
-const SynthOfChoice = Tone.PluckSynth;
-
-export interface SynthParam {
-    getter: () => number;
-    setter: (n: number) => void;
-    displayName: string;
-    min: number
-    max: number
-}
+import { SynthInstance, SynthParam } from "../toneSynths/Synthinterface"
+import { ToneFmSynth } from '../toneSynths/FmSynth';
+import { ToneSampler } from '../toneSynths/Sampler';
 
 export const usePlaybackStore = defineStore("playback", () => {
 
@@ -32,8 +25,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     let audioContext = Tone.context;
 
-    let reverb = undefined as Tone.Freeverb | undefined;
-    let synth = undefined as Tone.PolySynth<any> | undefined;
+    let synth = undefined as SynthInstance | undefined;
 
     const score = useScoreStore();
     const view = useViewStore();
@@ -44,65 +36,16 @@ export const usePlaybackStore = defineStore("playback", () => {
     const paused = computed(() => (!playing.value) && currentScoreTime.value != 0);
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
-
-    let resolveAudioStart = false as false | ((n: any) => void);
-
-    const audioStartPromise = new Promise((resolve) => {
-        resolveAudioStart = resolve;
-    });
+    const toneFmSynth = new ToneFmSynth();
+    const sampler = new ToneSampler();
 
     const startContextListener = async () => {
         await Tone.start()
-        reverb = new Tone.Freeverb({
-            wet: 0.3,
-            roomSize: 0.7,
-            dampening: 3000
-        }).toDestination();
-        // synth = new Tone.PolySynth(Tone.MetalSynth).connect(reverb);
-        // synth.set({
-        //     resonance: 986,
-        //     octaves: 0.5,
-        //     harmonicity: 64,
-        //     modulationIndex: 32,
-        //     envelope: {
-        //         attack: 0.001,
-        //         decay: 1.4,
-        //         sustain: 0.4,
-        //         release: 0.2
-        //     },
-        // } as MetalSynthOptions);
-        synth = new Tone.PolySynth(Tone.FMSynth).connect(reverb);
-        synth.set({
-            harmonicity: 3.01,
-            modulationIndex: 14,
-            detune: 0,
-            oscillator: {
-                type: "sine"
-            },
-            envelope: {
-                attack: 0.01,
-                decay: 10,
-                sustain: 0,
-                release: 0.5
-            },
-            modulation: {
-                type: "square"
-            },
-            modulationEnvelope: {
-                attack: 0.0,
-                decay: 10,
-                sustain: 0,
-                release: 0.5
-            }
-        } as FMSynthOptions);
-
-        audioContext = Tone.context;
-        synth.toDestination();
+        const [fmSynth, audioContext] = toneFmSynth.init();
+        const [samplerSynth] = sampler.init(audioContext);
+        synth = samplerSynth;
         console.log("audio is ready");
         window.removeEventListener("mousedown", startContextListener);
-        if (!resolveAudioStart) throw new Error("resolveAudioStart not set");
-        resolveAudioStart(false);
-        console.log(synth, synth.get());
     }
 
     window.addEventListener("mousedown", startContextListener);
@@ -132,13 +75,14 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteDuration = note.duration / rate;
             // console.log({ relativeNoteStart, noteDuration });
             try {
-                synth.triggerAttackRelease(note.frequency,
+                synth.triggerAttackRelease(
+                    note.frequency,
                     noteDuration,
                     relativeNoteStart,
                     0.7
                 );
-            }catch(e){
-                console.log("note play error",e);
+            } catch (e) {
+                console.log("note play error", e);
             }
         });
         previousClockTime.value = now;
@@ -173,80 +117,10 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     const getSynthParams = async (): Promise<SynthParam[]> => {
-        await audioStartPromise;
-        if (!synth) throw new Error("synth not created");
-        if (!reverb) throw new Error("reverb not created");
-        const synthParams = synth.get() as MetalSynthOptions;
-        const reverbParams = reverb.get() as Tone.FreeverbOptions;
-        const reverbRetParams = [{
-            displayName: "roomSize",
-            getter: () => reverbParams.roomSize as number,
-            setter: (n: number) => reverb?.set({ roomSize: n }),
-            min: 0, max: 1,
-        },
-        {
-            displayName: "dampening",
-            getter: () => reverbParams.dampening as number,
-            setter: (n: number) => reverb?.set({ dampening: n }),
-            min: 0, max: 10000,
-        },
-        {
-            displayName: "wet",
-            getter: () => reverbParams.wet as number,
-            setter: (n: number) => reverb?.set({ wet: n }),
-            min: 0, max: 1,
-        }];
-
-        return [
-            ...reverbRetParams,
-            {
-                displayName: "envelope.attack",
-                getter: () => synthParams.envelope.attack as number,
-                setter: (n: number) => synth?.set({ envelope: { attack: n } }),
-                min: 0, max: 3,
-            },
-            {
-                displayName: "envelope.decay",
-                getter: () => synthParams.envelope.decay as number,
-                setter: (n: number) => synth?.set({ envelope: { decay: n } }),
-                min: 0, max: 10,
-            },
-            {
-                displayName: "envelope.sustain",
-                getter: () => synthParams.envelope.sustain as number,
-                setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
-                min: 0, max: 1,
-            },
-            {
-                displayName: "envelope.release",
-                getter: () => synthParams.envelope.release as number,
-                setter: (n: number) => synth?.set({ envelope: { release: n } }),
-                min: 0, max: 10,
-            },
-            
-            
-            {
-                displayName: "modulationIndex",
-                getter: () => synthParams.modulationIndex as number,
-                setter: (n: number) => synth?.set({ modulationIndex: n }),
-                min: 0, max: 100,
-            },
-            {
-                displayName: "harmonicity",
-                getter: () => synthParams.harmonicity as number,
-                setter: (n: number) => synth?.set({ harmonicity: n }),
-                min: 0, max: 22,
-            },
-            {
-                displayName: "volume",
-                getter: () => synthParams.volume as number,
-                setter: (n: number) => synth?.set({ volume: n }),
-                min: -100, max: 0,
-            },
-        ];
+        return await sampler.getParams();
     }
 
-    watchEffect(()=>{
+    watchEffect(() => {
 
         playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
     });

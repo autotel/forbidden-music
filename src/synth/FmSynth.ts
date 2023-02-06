@@ -217,7 +217,7 @@ class FmVoice implements Voice {
         
         if(!envelopeGainConnector || !oscillatorMainConnector) throw new Error("Could not find connectors");
     }
-};
+}
 
 export class FmSynth extends Synth {
     constructor() {
