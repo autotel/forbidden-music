@@ -33,20 +33,17 @@ class SamplerVoice {
 
         if (!sampleSource) return;
         if (!sampleSource.sampleBuffer) throw new Error("sample buffer not loaded");
-        
+
         this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = sampleSource.sampleBuffer;
         this.bufferSource.connect(this.outputNode);
     }
 
     private releaseVoice = () => {
-        console.log("releaseVoice");
         this.inUse = false;
     }
 
     private findSampleSourceClosestToFrequency = (frequency: number) => {
-
-        console.log("findSampleSourceClosestToFrequency", frequency);
         let closestSampleSource = this.sampleSoruces[0];
         let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
         for (let i = 1; i < this.sampleSoruces.length; i++) {
@@ -57,7 +54,6 @@ class SamplerVoice {
                 closestSampleSourceDifference = difference;
             }
         }
-        console.log("closestSampleSource", closestSampleSource);
         return closestSampleSource;
     }
 
@@ -67,23 +63,27 @@ class SamplerVoice {
         relativeNoteStart: number,
         velocity: number
     ) => {
-        console.log("trigger", frequency);
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-        this.inUse = true;
 
+        // allow catch up, but not for already ended notes.
+        if (relativeNoteStart + duration < 0) return;
+        if (relativeNoteStart < 0) {
+            duration += relativeNoteStart;
+            relativeNoteStart = 0;
+        }
+        
+        this.inUse = true;
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
         this.resetBufferSource(sampleSource);
 
         if (!this.bufferSource) throw new Error("bufferSource not created");
-        this.outputNode.gain.value = velocity;
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
-        console.log(this.bufferSource.playbackRate.value );
-        
-        const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
-        this.outputNode.gain.value = velocity;
-        // this.bufferSource.start(absoluteNoteStart, 0, duration);
+
+        this.outputNode.gain.setValueAtTime(0, relativeNoteStart);
+        this.outputNode.gain.linearRampToValueAtTime(velocity, relativeNoteStart + 0.01);
+        this.outputNode.gain.linearRampToValueAtTime(0, relativeNoteStart + duration);
+
         this.bufferSource.start(relativeNoteStart, 0, duration);
-        console.log(`this.bufferSource.start(${absoluteNoteStart}, 0, ${duration});`)
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };
 
@@ -102,13 +102,11 @@ class SampleSource {
     constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition) {
         this.audioContext = audioContext;
         this.sampleInherentFrequency = sampleDefinition.frequency;
-        console.log("fetch", sampleDefinition.path);
         fetch(sampleDefinition.path).then(async (response) => {
             const arrayBuffer = await response.arrayBuffer();
             this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-            console.log(`sample ${sampleDefinition.name} loaded`);
-            
 
+            console.log("loaded", sampleDefinition.name);
         });
     }
 }
@@ -118,7 +116,8 @@ class AutoSampler implements SynthInstance {
     private sampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
     private outputNode: GainNode;
-    constructor(audioContext: AudioContext, sampleDefinitions: SampleFileDefinition[]) {
+    name: string = "unnamed";
+    constructor(audioContext: AudioContext, sampleDefinitions: SampleFileDefinition[], name?: string) {
         this.audioContext = audioContext;
         this.sampleSources = sampleDefinitions.map((sampleDefinition) => {
             return new SampleSource(audioContext, sampleDefinition);
@@ -127,6 +126,7 @@ class AutoSampler implements SynthInstance {
         this.sampleVoices.forEach((sampleVoice) => {
             sampleVoice.outputNode.connect(this.outputNode);
         });
+        if (name) this.name = name;
     }
     triggerAttackRelease = (
         frequency: number,
@@ -168,7 +168,8 @@ class AutoSampler implements SynthInstance {
 }
 
 
-export class ToneSampler implements SynthInterface {
+export class MagicSampler implements SynthInterface {
+    synths: Array<AutoSampler> = [];
     synth: AutoSampler | undefined;
     // reverb: Freeverb | undefined;
     private audioStartPromise;
@@ -176,21 +177,42 @@ export class ToneSampler implements SynthInterface {
         throw new Error("Method not implemented correctly");
     }
 
+    displayAvailableSamples() {
+        console.log("available samples");
+        this.synths.forEach((synth, k) => {
+            console.log(k, synth.name);
+        });
+    }
+
+    setSampler(samplerIndex: number) {
+        this.synth = this.synths[samplerIndex];
+        console.log("set sampler", this.synth.name);
+    }
+
     constructor() {
         this.audioStartPromise = new Promise((resolve) => {
             this.audioStartResolve = resolve;
         });
+        this.displayAvailableSamples();
+        //@ts-ignore
+        window['setSampler'] = (samplerIndex?: number) => {
+            if (samplerIndex === undefined) {
+                this.displayAvailableSamples();
+                return;
+            }
+            this.setSampler(samplerIndex);
+        }
     }
 
     init(audioContext: AudioContext) {
-        this.synth = new AutoSampler(
+        this.synths = sampleDefinitions.map(sd => new AutoSampler(
             audioContext,
-            sampleDefinitions[0].samples
-        );
-
-        this.synth.connect(audioContext.destination);
+            sd.samples,
+            sd.name
+        ));
+        this.synths.forEach(s => s.connect(audioContext.destination));
         this.audioStartResolve(Tone.context.rawContext);
-
+        this.synth = this.synths[0];
         return [this.synth, audioContext] as [SynthInstance, AudioContext];
     }
     async getParams() {

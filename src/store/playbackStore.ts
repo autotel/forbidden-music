@@ -7,7 +7,7 @@ import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
 import { SynthInstance, SynthParam } from "../toneSynths/Synthinterface"
 import { ToneFmSynth } from '../toneSynths/FmSynth';
-import { ToneSampler } from '../toneSynths/Sampler';
+import { MagicSampler } from '../toneSynths/MagicSampler';
 
 export const usePlaybackStore = defineStore("playback", () => {
 
@@ -37,7 +37,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
     const toneFmSynth = new ToneFmSynth();
-    const sampler = new ToneSampler();
+    const sampler = new MagicSampler();
 
     const startContextListener = async () => {
         await Tone.start()
@@ -67,7 +67,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
 
         playNotes.forEach((note: Note) => {
-            if (!synth) throw new Error("synth not created");
+            if (!sampler.synth) throw new Error("synth not created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = note.start - currentScoreTime.value;
             const noteStart = now + noteStartFromNow;
@@ -75,7 +75,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteDuration = note.duration / rate;
             // console.log({ relativeNoteStart, noteDuration });
             try {
-                synth.triggerAttackRelease(
+                sampler.synth.triggerAttackRelease(
                     note.frequency,
                     noteDuration,
                     relativeNoteStart,
