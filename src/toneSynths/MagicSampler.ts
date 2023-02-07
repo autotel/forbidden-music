@@ -234,7 +234,7 @@ export class MagicSampler implements SynthInterface {
         return [{
             type: ParamType.option,
             getter: () => {
-                return this.synths.indexOf(owner.synth);
+                return this.synths.indexOf(owner.synth? owner.synth : owner.synths[0]);
             },
             setter: (value: number) => {
                 this.setSampler(value);
