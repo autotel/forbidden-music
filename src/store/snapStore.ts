@@ -73,7 +73,9 @@ class SnapTracker {
 export enum SnapType {
     Time,
     Tone,
+    ToneRelation,
 }
+
 interface SnapDefinition {
     description: string,
     icon: string,
@@ -81,7 +83,7 @@ interface SnapDefinition {
     active: boolean,
 }
 
-const snaps: { [key: string]: SnapDefinition} = {
+const snaps: { [key: string]: SnapDefinition } = {
     equal12: {
         description: "Equal temperament, 12 tones. Tone is divided equally into 12 tones per octave",
         icon: "12TET",
@@ -115,8 +117,32 @@ const snaps: { [key: string]: SnapDefinition} = {
     hzRelationFraction: {
         description: "The frequency of the note is a simple fraction of the frequency of another note.",
         icon: "HZ a/b",
-        type: SnapType.Tone,
+        type: SnapType.ToneRelation,
         active: true,
+    },
+    hzHalfOrDouble: {
+        description: "The frequency of the note is a half or double the other",
+        icon: "HZ 2x",
+        type: SnapType.ToneRelation,
+        active: false,
+    },
+    hzThird: {
+        description: "The frequency of the note is a third or three times the other",
+        icon: "HZ 3x",
+        type: SnapType.ToneRelation,
+        active: false,
+    },
+    hzFifth: {
+        description: "The frequency of the note is a fifth or five times the other",
+        icon: "HZ 5x",
+        type: SnapType.ToneRelation,
+        active: false,
+    },
+    hzSeventh: {
+        description: "The frequency of the note is a seventh or seven times the other",
+        icon: "HZ 7x",
+        type: SnapType.ToneRelation,
+        active: false,
     },
     hzFundamentalMultiple: {
         description: "frequencies which are multiple of the fundamental frequency.",
@@ -180,9 +206,11 @@ export const useSnapStore = defineStore("snap", {
             const timeSnap = new SnapTracker(editNote.note.start);
             const durationSnap = new SnapTracker(editNote.note.duration);
 
+            const snapValues = this.values as { [key: string]: SnapDefinition };
+
             // Time snaps
 
-            if (this.values.timeQuarter.active === true) {
+            if (snapValues.timeQuarter.active === true) {
                 const relatedNumber = Math.round(editNote.note.start * 4);
                 timeSnap.addSnappedValue(relatedNumber / 4, {
                     text: "Quarter snap",
@@ -193,7 +221,7 @@ export const useSnapStore = defineStore("snap", {
                     text: "Quarter snap",
                     relatedNumber: relatedNumberd,
                 });
-            } else if (this.values.timeInteger.active === true) {
+            } else if (snapValues.timeInteger.active === true) {
                 const relatedStart = Math.round(editNote.note.start);
                 const relatedDuration = Math.round(editNote.note.duration);
                 timeSnap.addSnappedValue(relatedStart, {
@@ -206,7 +234,7 @@ export const useSnapStore = defineStore("snap", {
                 });
             }
 
-            if (this.values.sameStart.active === true) {
+            if (snapValues.sameStart.active === true) {
                 if (otherNotes) {
                     for (const otherNote of otherNotes) {
                         timeSnap.addSnappedValue(otherNote.note.start, {
@@ -217,7 +245,7 @@ export const useSnapStore = defineStore("snap", {
                 }
             }
 
-            if (this.values.timeIntegerRelationFraction.active === true) {
+            if (snapValues.timeIntegerRelationFraction.active === true) {
                 if (otherNotes) {
                     for (const otherNote of otherNotes) {
                         const otherStart = otherNote.note.start;
@@ -234,7 +262,7 @@ export const useSnapStore = defineStore("snap", {
             }
 
             // Tone snaps
-            if (this.values.hzEven.active === true) {
+            if (snapValues.hzEven.active === true) {
                 const relatedNumber = Math.round(targetHz / 2) * 2;
                 toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
                     text: "hzEven",
@@ -243,14 +271,14 @@ export const useSnapStore = defineStore("snap", {
             };
 
 
-            if (this.values.hzMult88.active === true) {
+            if (snapValues.hzMult88.active === true) {
                 const relatedNumber = Math.round(targetHz / 88) * 88;
                 toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
                     text: "hzMult88",
                     relatedNumber,
                 });
             };
-            if (this.values.hzMult44.active === true) {
+            if (snapValues.hzMult44.active === true) {
                 const relatedNumber = Math.round(targetHz / 44) * 44;
                 toneSnap.addSnappedValue(
                     frequencyToOctave(relatedNumber), {
@@ -258,12 +286,33 @@ export const useSnapStore = defineStore("snap", {
                     relatedNumber,
                 });
             };
+
+            if (snapValues.hzFundamentalMultiple.active === true) {
+                const relatedNumber = fundamental;
+                const frequencyValue = Math.round(targetHz / fundamental) * fundamental;
+                toneSnap.addSnappedValue(frequencyToOctave(frequencyValue), {
+                    text: "hzFundamentalMultiple",
+                    relatedNumber,
+                });
+            }
+            if (snapValues.equal12.active === true) {
+                const relatedNumber = Math.round(targetOctave * 12) / 12;
+                toneSnap.addSnappedValue(relatedNumber, {
+                    text: "equal12",
+                    relatedNumber,
+                });
+            } else if (snapValues.equal1.active === true) {
+                // else because equal1 is subset of equal 12
+                toneSnap.addSnappedValue(Math.round(targetOctave));
+            }
+
             /** 
              * target / other = other * 1 / target
              * mycandidate = other
              **/
-            if (this.values.hzRelationFraction.active === true) {
-                if (otherNotes) {
+            // Relational  HZ snaps
+            if (otherNotes) {
+                if (snapValues.hzRelationFraction.active === true) {
                     for (const otherNote of otherNotes) {
                         const otherHz = otherNote.note.frequency;
                         const fraction = new Fraction(targetHz).div(otherHz).simplify(this.simplify);
@@ -276,27 +325,86 @@ export const useSnapStore = defineStore("snap", {
                             relatedNote: otherNote,
                         });
                     }
+                } else {
+                    // It is presumed that fraction includes all these possibilites
+                    if (snapValues.hzHalfOrDouble.active === true) {
+                        for (const otherNote of otherNotes) {
+                            const myCandidateHzDouble = otherNote.note.frequency * 2
+                            const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
+                            const myCandidateHzHalf = otherNote.note.frequency / 2
+                            const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
+                            const myCandidateEqual = otherNote.note.frequency;
+                            const myCandidateEqualOctave = frequencyToOctave(myCandidateEqual);
+
+                            toneSnap.addSnappedValue(myCandidateOctaveDouble, {
+                                text: `double the frequency`,
+                                relatedNote: otherNote,
+                            });
+                            toneSnap.addSnappedValue(myCandidateOctaveHalf, {
+                                text: `half the frequency`,
+                                relatedNote: otherNote,
+                            });
+                            toneSnap.addSnappedValue(myCandidateEqualOctave, {
+                                text: `same tone`,
+                                relatedNote: otherNote,
+                            });
+                        }
+                    }
+                    if (snapValues.hzThird.active === true) {
+                        for (const otherNote of otherNotes) {
+                            const myCandidateHzDouble = otherNote.note.frequency * 3
+                            const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
+                            const myCandidateHzHalf = otherNote.note.frequency / 3
+                            const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
+
+                            toneSnap.addSnappedValue(myCandidateOctaveDouble, {
+                                text: `3x the frequency`,
+                                relatedNote: otherNote,
+                            });
+                            toneSnap.addSnappedValue(myCandidateOctaveHalf, {
+                                text: `1/3 the frequency`,
+                                relatedNote: otherNote,
+                            });
+                        }
+                    }
+                    if (snapValues.hzFifth.active === true) {
+                        for (const otherNote of otherNotes) {
+                            const myCandidateHzDouble = otherNote.note.frequency * 5
+                            const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
+                            const myCandidateHzHalf = otherNote.note.frequency / 5
+                            const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
+
+                            toneSnap.addSnappedValue(myCandidateOctaveDouble, {
+                                text: `5x the frequency`,
+                                relatedNote: otherNote,
+                            });
+                            toneSnap.addSnappedValue(myCandidateOctaveHalf, {
+                                text: `1/5 the frequency`,
+                                relatedNote: otherNote,
+                            });
+                        }
+                    }
+                    if (snapValues.hzSeventh.active === true) {
+                        for (const otherNote of otherNotes) {
+                            const myCandidateHzDouble = otherNote.note.frequency * 7
+                            const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
+                            const myCandidateHzHalf = otherNote.note.frequency / 7
+                            const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
+
+                            toneSnap.addSnappedValue(myCandidateOctaveDouble, {
+                                text: `7x the frequency`,
+                                relatedNote: otherNote,
+                            });
+                            toneSnap.addSnappedValue(myCandidateOctaveHalf, {
+                                text: `1/7 the frequency`,
+                                relatedNote: otherNote,
+                            });
+                        }
+                    }
+
                 }
             }
 
-            if (this.values.hzFundamentalMultiple.active === true) {
-                const relatedNumber = fundamental;
-                const frequencyValue = Math.round(targetHz / fundamental) * fundamental;
-                toneSnap.addSnappedValue(frequencyToOctave(frequencyValue), {
-                    text: "hzFundamentalMultiple",
-                    relatedNumber,
-                });
-            }
-            if (this.values.equal12.active === true) {
-                const relatedNumber = Math.round(targetOctave * 12) / 12;
-                toneSnap.addSnappedValue(relatedNumber, {
-                    text: "equal12",
-                    relatedNumber,
-                });
-            } else if (this.values.equal1.active === true) {
-                // else because equal1 is subset of equal 12
-                toneSnap.addSnappedValue(Math.round(targetOctave));
-            }
 
             editNote.note.octave = toneSnap.getResult();
             editNote.note.start = timeSnap.getResult();

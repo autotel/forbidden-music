@@ -1,7 +1,7 @@
 import * as Tone from "tone";
 import { FMSynth, FMSynthOptions, Freeverb, PolySynth } from 'tone';
 import { AnyAudioContext } from "tone/build/esm/core/context/AudioContext";
-import { SynthInstance, SynthInterface, SynthParam } from "./Synthinterface";
+import { ParamType, SynthInstance, SynthInterface, SynthParam } from "./Synthinterface";
 
 export class ToneFmSynth implements SynthInterface {
     synth: PolySynth | undefined;
@@ -63,19 +63,22 @@ export class ToneFmSynth implements SynthInterface {
 
         const synth = this.synth;
 
-        const reverbRetParams = [{
+        const reverbRetParams:SynthParam[] = [{
+            type: ParamType.number,
             displayName: "roomSize",
             getter: () => reverbParams.roomSize as number,
             setter: (n: number) => this.reverb?.set({ roomSize: n }),
             min: 0, max: 1,
         },
         {
+            type: ParamType.number,
             displayName: "dampening",
             getter: () => reverbParams.dampening as number,
             setter: (n: number) => this.reverb?.set({ dampening: n }),
             min: 0, max: 10000,
         },
         {
+            type: ParamType.number,
             displayName: "wet",
             getter: () => reverbParams.wet as number,
             setter: (n: number) => this.reverb?.set({ wet: n }),
@@ -85,30 +88,35 @@ export class ToneFmSynth implements SynthInterface {
         return [
             ...reverbRetParams,
             {
+                type: ParamType.number,
                 displayName: "envelope.attack",
                 getter: () => synthParams.envelope.attack as number,
                 setter: (n: number) => synth?.set({ envelope: { attack: n } }),
                 min: 0, max: 3,
             },
             {
+                type: ParamType.number,
                 displayName: "envelope.decay",
                 getter: () => synthParams.envelope.decay as number,
                 setter: (n: number) => synth?.set({ envelope: { decay: n } }),
                 min: 0, max: 10,
             },
             {
+                type: ParamType.number,
                 displayName: "envelope.sustain",
                 getter: () => synthParams.envelope.sustain as number,
                 setter: (n: number) => synth?.set({ envelope: { sustain: n } }),
                 min: 0, max: 1,
             },
             {
+                type: ParamType.number,
                 displayName: "envelope.release",
                 getter: () => synthParams.envelope.release as number,
                 setter: (n: number) => synth?.set({ envelope: { release: n } }),
                 min: 0, max: 10,
             },
             {
+                type: ParamType.number,
                 displayName: "modulationIndex",
                 getter: () => synthParams.modulationIndex as number,
                 // @ts-ignore
@@ -116,6 +124,7 @@ export class ToneFmSynth implements SynthInterface {
                 min: 0, max: 100,
             },
             {
+                type: ParamType.number,
                 displayName: "harmonicity",
                 getter: () => synthParams.harmonicity as number,
                 // @ts-ignore
@@ -123,6 +132,7 @@ export class ToneFmSynth implements SynthInterface {
                 min: 0, max: 22,
             },
             {
+                type: ParamType.number,
                 displayName: "volume",
                 getter: () => synthParams.volume as number,
                 setter: (n: number) => synth?.set({ volume: n }),

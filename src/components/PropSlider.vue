@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { SynthParam } from '../store/playbackStore';
+import { SynthParam, NumberSynthParam } from '../toneSynths/Synthinterface';
 
 const props = defineProps({
     param: {
-        type: Object as () => SynthParam,
+        type: Object as () => NumberSynthParam,
         required: true,
     },
 });
@@ -17,7 +17,9 @@ const currentValue = ref(0);
 const dragging = ref(false);
 const valueDraggable = ref();
 const ww = 600;
+
 const minMaxRange = props.param.max - props.param.min;
+
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();

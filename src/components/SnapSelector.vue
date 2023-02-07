@@ -22,6 +22,7 @@ const snap = useSnapStore();
         active: isnap.active,
         time: isnap.type === SnapType.Time,
         tone: isnap.type === SnapType.Tone,
+        toneRelation: isnap.type === SnapType.ToneRelation,
       }" 
       :tooltip="isnap.description"
     >
@@ -56,6 +57,9 @@ Button:active {
 .tone {
   background-color: rgb(187, 153, 0);
 }
+.toneRelation {
+  background-color: rgb(199, 139, 61);
+}
 
 .time.active,
 .time:hover,
@@ -67,5 +71,10 @@ Button:active {
 .tone:hover,
 .tone.active:hover {
   background-color: rgb(255, 230, 116);
+}
+.toneRelation.active,
+.toneRelation:hover,
+.toneRelation.active:hover {
+  background-color: rgb(255, 195, 116);
 }
 </style>
