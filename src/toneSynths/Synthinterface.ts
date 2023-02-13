@@ -1,5 +1,5 @@
 export interface SynthInstance {
-    set: (params: any) => void;
+    name: any;
     triggerAttackRelease: (
         frequency: number,
         duration: number,
@@ -7,7 +7,9 @@ export interface SynthInstance {
         velocity: number
     ) => void;
     releaseAll: () => void;
-
+    getParams: () => SynthParam[]
+    set: (params: any) => void;
+    
 }
 
 export enum ParamType {
@@ -46,9 +48,3 @@ export interface OptionSynthParam {
 }
 
 export type SynthParam = NumberSynthParam | BooleanSynthParam | OptionSynthParam;
-
-export interface SynthInterface {
-    synth: SynthInstance | undefined;
-    init: (audioContext:AudioContext) => [SynthInstance, AudioContext];
-    getParams: () => Promise<SynthParam[]>
-}

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
+    "check": "vue-tsc",
     "build-lazy": "vite build",
     "preview": "vite preview",
     "update-samples": "node scripts/update-samples-list.js"

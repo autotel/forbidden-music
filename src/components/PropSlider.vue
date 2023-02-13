@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import { SynthParam, NumberSynthParam } from '../toneSynths/Synthinterface';
 
 const props = defineProps({
@@ -73,7 +73,7 @@ onMounted(() => {
     window.addEventListener('mouseup', mouseUp);
     window.addEventListener('mousemove', windowMouseMove);
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
     const $valueDraggable = valueDraggable.value;
     if (!$valueDraggable) throw new Error("valueDraggable ref is " + valueDraggable.value);
     $valueDraggable.removeEventListener('mousedown', mouseDown);

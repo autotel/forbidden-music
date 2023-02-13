@@ -1,23 +1,14 @@
 import * as Tone from "tone";
 import { FMSynth, FMSynthOptions, Freeverb, PolySynth } from 'tone';
 import { AnyAudioContext } from "tone/build/esm/core/context/AudioContext";
-import { ParamType, SynthInstance, SynthInterface, SynthParam } from "./Synthinterface";
+import { ParamType, SynthInstance, SynthParam } from "./Synthinterface";
 
-export class ToneFmSynth implements SynthInterface {
+export class ToneFmSynth implements SynthInstance {
     synth: PolySynth | undefined;
     reverb: Freeverb | undefined;
-    private audioStartPromise;
-    private audioStartResolve: (value: AnyAudioContext) => void = () => {
-        throw new Error("Method not implemented correctly");
-    }
+    name = "FmSynth";
+    constructor(audioContext: AudioContext) {
 
-    constructor() {
-        this.audioStartPromise = new Promise((resolve) => {
-            this.audioStartResolve = resolve;
-        });
-    }
-
-    init() {
         this.synth = new Tone.PolySynth<Tone.FMSynth>(Tone.FMSynth)
 
         this.reverb = new Tone.Freeverb({
@@ -51,11 +42,20 @@ export class ToneFmSynth implements SynthInterface {
             volume: -15,
         } as FMSynthOptions);
         this.synth.connect(this.reverb);
-        this.audioStartResolve(Tone.context.rawContext);
-        return [this.synth, Tone.context.rawContext] as [SynthInstance, AudioContext];
     }
-    async getParams() {
-        await this.audioStartPromise;
+
+    triggerAttackRelease = (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => {
+        this.synth?.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+    }
+    releaseAll = () => {
+        this.synth?.releaseAll();
+    }
+
+    set(params: any) {
+
+        this.synth?.set(params);
+    }
+    getParams() {
         if (!this.synth) throw new Error("synth not created");
         if (!this.reverb) throw new Error("reverb not created");
         const synthParams = this.synth.get() as FMSynthOptions;
@@ -63,7 +63,7 @@ export class ToneFmSynth implements SynthInterface {
 
         const synth = this.synth;
 
-        const reverbRetParams:SynthParam[] = [{
+        const reverbRetParams: SynthParam[] = [{
             type: ParamType.number,
             displayName: "roomSize",
             getter: () => reverbParams.roomSize as number,
