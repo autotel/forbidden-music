@@ -12,4 +12,6 @@ class Noise extends AudioWorkletProcessor {
     }
 }
 
+export {};
+
 registerProcessor("noise-generator", Noise);

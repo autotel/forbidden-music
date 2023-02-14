@@ -7,6 +7,7 @@ export class ToneFmSynth implements SynthInstance {
     synth: PolySynth | undefined;
     reverb: Freeverb | undefined;
     name = "FmSynth";
+    ouptutNode: GainNode;
     constructor(audioContext: AudioContext) {
 
         this.synth = new Tone.PolySynth<Tone.FMSynth>(Tone.FMSynth)
@@ -15,7 +16,12 @@ export class ToneFmSynth implements SynthInstance {
             wet: 0.2,
             roomSize: 0.7,
             dampening: 6000
-        }).toDestination();
+        });
+
+        this.ouptutNode = audioContext.createGain();
+        this.reverb.connect(this.ouptutNode);
+        
+        this.ouptutNode.connect(audioContext.destination);
 
         this.synth.set({
             harmonicity: 17,

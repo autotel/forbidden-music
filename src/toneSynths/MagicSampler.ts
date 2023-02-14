@@ -136,6 +136,7 @@ export class MagicSampler implements SynthInstance {
         this.sampleVoices.forEach((sampleVoice) => {
             sampleVoice.outputNode.connect(this.outputNode);
         });
+        this.outputNode.connect(audioContext.destination);
         if (name) this.name = name;
     }
     triggerAttackRelease = (

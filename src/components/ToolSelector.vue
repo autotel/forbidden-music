@@ -7,7 +7,9 @@ import Button from './Button.vue';
 import { useRefHistory } from '@vueuse/core';
 
 const tool = useToolStore();
-const editNotes = useEditNotesStore();
+const {
+  list, history, undo, redo
+} = useEditNotesStore();
 
 const toggleOctaveConstrain = () => {
   tool.constrainOctave = !tool.constrainOctave;
@@ -31,8 +33,6 @@ const updateToolWouldDo = () => {
   whatWouldMouseMoveDo.value = tool.whatWouldMouseDownDo();
   whatWouldMouseMoveDoText.value = mouseDownActionValues[whatWouldMouseMoveDo.value];
 }
-
-const { history, undo, redo } = useRefHistory(editNotes.list);
 
 onMounted(()=>{
   window.addEventListener('mousemove', updateToolWouldDo);
@@ -61,7 +61,7 @@ onUnmounted(()=>{
     keybooard
   </Button>
 
-  <Button v-if="undo" :onClick="undo">
+  <Button v-if="history.length" :onClick="undo">
     ↶
   </Button>
   <!-- <Button :onClick="editNotes.redo" :disabled="editNotes.redoIsPossible">

@@ -7,6 +7,7 @@ import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 import LZUTF8 from 'lzutf8';
 import { useToolStore } from './toolStore.js';
+import { useRefHistory } from '@vueuse/core';
 
 
 interface LibraryItem {
@@ -56,12 +57,18 @@ export const useEditNotesStore = defineStore("list", () => {
     const score = useScoreStore();
     const snaps = useSnapStore();
 
+
+
     const filenamesList = ref([] as Array<string>);
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const name = ref("unnamed (autosave)" as string);
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
+
+
+
+    const { history, undo, redo } = useRefHistory(list);
 
     setTimeout(() => {
         loadFromLibraryItem(name.value);
@@ -71,7 +78,7 @@ export const useEditNotesStore = defineStore("list", () => {
             }
         }
         setInterval(autosaveCall, 1000);
-    },100);
+    }, 100);
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
@@ -131,8 +138,8 @@ export const useEditNotesStore = defineStore("list", () => {
             created.value = item.created;
             edited.value = item.edited;
             list.value = item.notes.map(note => new EditNote(note, view));
-            item.snaps.forEach(([name,activeState])=>{
-                if(!snaps.values[name]) return;
+            item.snaps.forEach(([name, activeState]) => {
+                if (!snaps.values[name]) return;
                 snaps.values[name].active = activeState;
             });
             nextTick(() => {
@@ -183,6 +190,8 @@ export const useEditNotesStore = defineStore("list", () => {
         loadFromLibraryItem,
         saveCurrent,
         deleteItemNamed,
+
+        history, undo, redo,
 
         filenamesList,
         errorMessage,

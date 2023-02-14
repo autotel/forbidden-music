@@ -46,7 +46,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     let sampler1 = null as MagicSampler | null;
     let sampler2 = null as MagicSampler | null;
     let sampler3 = null as MagicSampler | null;
-    let availableSynths = [] as SynthInstance[];
+    let availableSynths = ref([] as SynthInstance[]);
 
     let synth = ref<SynthInstance | undefined>(undefined);
 
@@ -58,8 +58,8 @@ export const usePlaybackStore = defineStore("playback", () => {
         // if (toneAudioContext.state === "suspended") {
         //     await toneAudioContext.resume();
         // }
-        // @ts-ignore
-        let audioContext = toneAudioContext as AudioContext;
+        
+        let audioContext = toneAudioContext.rawContext as AudioContext;
 
         sampler1 = new MagicSampler(
             audioContext,
@@ -77,7 +77,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             sampleDefinitions[2].name
         );
         toneFmSynth = new ToneFmSynth(audioContext);
-        availableSynths = [toneFmSynth, sampler1, sampler2, sampler3];
+        availableSynths.value = [toneFmSynth, sampler1, sampler2, sampler3];
         synth.value = toneFmSynth;
         resolveSynthsReadyPromise(null);
         console.log("audio is ready");
@@ -109,7 +109,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteStart = now + noteStartFromNow;
             const relativeNoteStart = noteStart;
             const noteDuration = note.duration / rate;
-            // console.log({ relativeNoteStart, noteDuration });
+            console.log(synth.value);
             try {
                 synth.value.triggerAttackRelease(
                     note.frequency,
@@ -156,13 +156,14 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const synthParams = computed(() => {
         if (!synth.value) return [];
-        console.log(synth.value, availableSynths)
+        console.log(synth.value, availableSynths.value)
         return [
             {
                 type: ParamType.option,
                 displayName: "Synth",
                 getter: () => {
-                    const ret = synth.value ? availableSynths.indexOf(
+                    console.log("synth getter", synth.value, availableSynths);
+                    const ret = synth.value ? availableSynths.value.indexOf(
                         synth.value
                     ) : 0;
                     if (ret === -1) {
@@ -171,10 +172,11 @@ export const usePlaybackStore = defineStore("playback", () => {
                     }
                     return ret;
                 },
-                setter: (value: number) => {
-                    synth.value = availableSynths[value];
+                setter: (choiceNo: number) => {
+                    console.log("synth setter", choiceNo);
+                    synth.value = availableSynths.value[choiceNo];
                 },
-                options: availableSynths.map((s, index) => ({
+                options: availableSynths.value.map((s, index) => ({
                     value: index,
                     displayName: s.name,
                 })),

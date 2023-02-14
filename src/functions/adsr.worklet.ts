@@ -10,7 +10,7 @@ class Adsr extends AudioWorkletProcessor {
     _phase;
     _value;
 
-    constructor(options: { [key: string]: any }) {
+    constructor(options: AudioWorkletNodeOptions | undefined) {
         super();
         this._lasttrig = 0;
         this._trig = 0;
