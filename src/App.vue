@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core';
-import { onMounted, onUnmounted, provide, ref } from 'vue';
+import { onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import Button from "./components/Button.vue";
 import LibraryManager from './components/LibraryManager.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
@@ -21,8 +21,9 @@ import { useEditNotesStore } from './store/editNotesStore';
 import { usePlaybackStore } from './store/playbackStore';
 import { useScoreStore } from './store/scoreStore';
 import { useSelectStore } from './store/selectStore';
+import { useSnapStore } from './store/snapStore';
 import { useToolStore, MouseDownActions } from './store/toolStore';
-import { useViewStore } from './store/viewStore';
+import { useViewStore, View } from './store/viewStore';
 
 
 
@@ -33,10 +34,12 @@ const view = useViewStore();
 const playback = usePlaybackStore();
 const score = useScoreStore();
 const editNotes = useEditNotesStore();
+const noteWould = ref<EditNote | false>(false);
 const select = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
+const snap = useSnapStore();
 
 provide('modalText', modalText);
 
@@ -72,9 +75,39 @@ const mouseMoveListener = (e: MouseEvent) => {
             view.timeOffset = view.scrollBound - view.viewWidthTime;
         }
     } else {
+        if (tool.whatWouldMouseDownDo() === MouseDownActions.Create) {
+            if (!noteWould.value) noteWould.value = new EditNote({ start: 0, duration: 0, frequency: 0 }, view);
+
+            const octave = view.pxToOctaveWithOffset(e.clientY);
+            snap.resetSnapExplanation();
+            snap.setFocusedNote(noteWould.value)
+            const { editNote } = snap.snap(
+                new EditNote({
+                    start: view.pxToTimeWithOffset(e.clientX),
+                    duration: 1,
+                    octave
+                }, view as View),
+                octave,
+                view.visibleNotes,
+                true
+            );
+
+            noteWould.value = editNote;
+
+
+        } else {
+            noteWould.value = false;
+        }
+
         tool.mouseMove(e);
     }
 }
+
+watch(() => tool.current, () => {
+    if (tool.whatWouldMouseDownDo() !== MouseDownActions.Create) {
+        noteWould.value = false;
+    }
+})
 
 const keyDownListener = (e: KeyboardEvent) => {
     // delete selected notes
@@ -225,6 +258,9 @@ onUnmounted(() => {
         </g>
         <g id="tone-relations">
             <ToneRelation />
+        </g>
+        <g id="note-would-be-created">
+            <NoteElement v-if="noteWould" :editNote="noteWould" interactionDisabled />
         </g>
         <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
             stroke-width="1" />

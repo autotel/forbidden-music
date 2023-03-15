@@ -43,7 +43,7 @@ const getOctaveOfSnapExplanation = (relation: SnapExplanation) => {
         </template>
         <template v-else>
             <text :x="100" :y="100" font-size="10">
-                []{{ relation.text }}{{ snap.focusedNote?true:false }}
+                []{{ relation.text }}{{ snap.focusedNote ? true : false }}
             </text>
         </template>
     </template>

@@ -8,6 +8,7 @@ import { useToolStore } from '../store/toolStore';
 const tool = useToolStore();
 const props = defineProps<{
     editNote: EditNote
+    interactionDisabled?: boolean
 }>();
 // TODO: perhaps the dragging and moving procedures should be on a store, not on this component
 const select = useSelectStore();
@@ -56,6 +57,7 @@ const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
     tool.noteRightEdgeMouseLeave();
 }
 onMounted(() => {
+    if(props.interactionDisabled) return;
     const $rightEdge = getRightEdgeBody();
     const $noteBody = getNoteBody();
     $noteBody.addEventListener('mouseenter', bodyMouseEnterListener);
@@ -64,6 +66,7 @@ onMounted(() => {
     $rightEdge.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
 });
 onUnmounted(() => {
+    if(props.interactionDisabled) return;
     const $rightEdge = getRightEdgeBody();
     const $noteBody = getNoteBody();
     $noteBody.removeEventListener('mouseenter', bodyMouseEnterListener);
@@ -85,14 +88,18 @@ onUnmounted(() => {
         :class="{ 
             selected: editNote.selected,
             editable: tool.current == Tool.Edit,
+            interactionDisabled: interactionDisabled,
         }" 
         :...=editNote.rect
         ref="noteBody" 
     />
-    <rect class="rightEdge" 
+    <rect 
+        v-if="!interactionDisabled"
+        class="rightEdge" 
         :class="{ 
             selected: editNote.selected,
             editable: tool.current == Tool.Edit,
+            interactionDisabled: interactionDisabled,
         }" 
         ref="rightEdge" 
         :...=editNote.rightEdge
@@ -122,5 +129,9 @@ onUnmounted(() => {
     stroke: #999;
     stroke-width: 1;
     stroke-dasharray: 5;
+}
+.body.interactionDisabled {
+    pointer-events: none;
+    fill:none;
 }
 </style>

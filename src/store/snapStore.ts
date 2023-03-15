@@ -197,7 +197,7 @@ export const useSnapStore = defineStore("snap", {
             this.toneSnapExplanation = [];
         },
         /** has side effects to snap explanations */
-        snap(inNote: EditNote, targetOctave: number, otherNotes?: Array<EditNote>) {
+        snap(inNote: EditNote, targetOctave: number, otherNotes?: Array<EditNote>, sideEffects: boolean = true) {
             /** outNote */
             const editNote = inNote.clone();
             const targetHz = octaveToFrequency(targetOctave);
@@ -410,8 +410,10 @@ export const useSnapStore = defineStore("snap", {
             editNote.note.start = timeSnap.getResult();
             editNote.note.duration = durationSnap.getResult();
 
-            this.toneSnapExplanation.push(...toneSnap.getSnapObjectsOfSnappedValue());
-            this.timeSnapExplanation.push(...timeSnap.getSnapObjectsOfSnappedValue());
+            if (sideEffects) {
+                this.toneSnapExplanation.push(...toneSnap.getSnapObjectsOfSnappedValue());
+                this.timeSnapExplanation.push(...timeSnap.getSnapObjectsOfSnappedValue());
+            }
 
             return {
                 editNote,
