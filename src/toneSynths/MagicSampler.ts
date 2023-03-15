@@ -122,11 +122,13 @@ export class MagicSampler implements SynthInstance {
     private sampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
     private outputNode: GainNode;
+    credits: string = "";
     name: string = "unnamed";
     constructor(
         audioContext: AudioContext, 
         sampleDefinitions: SampleFileDefinition[], 
-        name?: string
+        name?: string,
+        credits?: string
     ) {
         this.audioContext = audioContext;
         this.sampleSources = sampleDefinitions.map((sampleDefinition) => {
@@ -137,6 +139,7 @@ export class MagicSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
         });
         this.outputNode.connect(audioContext.destination);
+        if(credits) this.credits = credits;
         if (name) this.name = name;
     }
     triggerAttackRelease = (

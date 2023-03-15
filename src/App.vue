@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, provide, ref } from 'vue';
 import Button from "./components/Button.vue";
 import LibraryManager from './components/LibraryManager.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
@@ -23,6 +23,9 @@ import { useScoreStore } from './store/scoreStore';
 import { useSelectStore } from './store/selectStore';
 import { useToolStore, MouseDownActions } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
+
+
+
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 const playbackStore = usePlaybackStore();
@@ -32,6 +35,14 @@ const score = useScoreStore();
 const editNotes = useEditNotesStore();
 const select = useSelectStore();
 const mouseWidget = ref();
+const modalText = ref("");
+const clickOutsideCatcher = ref();
+
+provide('modalText', modalText);
+
+const modalTextTransform = (text: string) => {
+    return text.replace(/\n/g, '<br>').replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+}
 
 
 // concerning middle wheel dragging to pan
@@ -50,7 +61,7 @@ const mouseMoveListener = (e: MouseEvent) => {
         // pan view, if dragging middle wheel
         const deltaX = e.clientX - viewDragStartX;
         const deltaY = e.clientY - viewDragStartY;
-        
+
         view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
         view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
         // prevent timeOffset from going out of bounds
@@ -156,6 +167,15 @@ onMounted(() => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 
+    if (clickOutsideCatcher.value) {
+        window.addEventListener('wheel', (e) => {
+            if (e.target === clickOutsideCatcher.value) {
+                // not working :/
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            }
+        });
+    }
 
     resize();
     // when user drags on the viewport, add a note an extend it's duration
@@ -198,7 +218,6 @@ onUnmounted(() => {
 
 </script>
 <template>
-
     <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
         <g id="grid">
             <TimeGrid />
@@ -207,7 +226,7 @@ onUnmounted(() => {
         <g id="tone-relations">
             <ToneRelation />
         </g>
-        <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%" 
+        <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
             stroke-width="1" />
         <g id="edit-notes">
             <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
@@ -224,7 +243,7 @@ onUnmounted(() => {
     <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
         {{ tool.currentMouseStringHelper }}
     </div>
-    <Pianito v-if="tool.showReferenceKeyboard"/>
+    <Pianito v-if="tool.showReferenceKeyboard" />
     <div style="position: fixed; bottom: 0;">
         <SnapSelector />
         <Transport />
@@ -232,17 +251,75 @@ onUnmounted(() => {
     <Suspense>
         <SynthEdit />
     </Suspense>
-    <LibraryManager/>
+    <LibraryManager />
+    <template v-if="modalText">
+        <div class="click-outside-catcher" @click="() => modalText = ''" ref="clickOutsideCatcher"></div>
+        <div class="modal-text-display">
+            <pre>{{ (modalText) }}</pre>
+            <Button :on-click="() => modalText = ''">OK</Button>
+        </div>
+    </template>
 </template>
 
 <style>
+.unclickable {
+    pointer-events: none;
+
+}
+
+.click-outside-catcher {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* background-color: rgba(0, 0, 0, 0.5); */
+    z-index: 9;
+
+    filter: blur(1px);
+}
+
+.modal-text-display {
+    position: fixed;
+
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: white;
+    padding: 1em;
+
+    max-height: 90vh;
+    max-width: 90vw;
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+
+    box-shadow: 1em 1em 1em rgba(0, 0, 0, 0.5);
+    z-index: 10;
+
+}
+
+.modal-text-display pre {
+    overflow: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.modal-text-display Button {
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+}
+
 svg#viewport.cursor-note-length {
     cursor: col-resize;
     cursor: ew-resize;
 }
 
-svg #playbar{
-    stroke:rgb(95, 0, 0);
+svg #playbar {
+    stroke: rgb(95, 0, 0);
 }
 
 svg#viewport.cursor-draw {

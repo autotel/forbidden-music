@@ -43,6 +43,9 @@ const mouseDrag = (e: MouseEvent) => {
     if (val < props.param.min) {
         val = props.param.min;
     }
+    if (isNaN(val)) {
+        val = props.param.min;
+    }
     currentValue.value = val;
     props.param.setter(val);
 }
@@ -94,7 +97,7 @@ onBeforeUnmount(() => {
             </div>
         </template>
         <span style="{position: absolute; z-index: 2;}">
-            {{ currentValue.toFixed(2) }}
+            {{ currentValue?.toFixed(2) }}
         </span>
     </div>
 

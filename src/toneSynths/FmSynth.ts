@@ -67,6 +67,8 @@ export class ToneFmSynth implements SynthInstance {
         const synthParams = this.synth.get() as FMSynthOptions;
         const reverbParams = this.reverb.get() as Tone.FreeverbOptions;
 
+        console.log("synthParams", synthParams);
+
         const synth = this.synth;
 
         const reverbRetParams: SynthParam[] = [{

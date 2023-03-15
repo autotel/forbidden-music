@@ -9,6 +9,7 @@ export interface SynthInstance {
     releaseAll: () => void;
     getParams: () => SynthParam[]
     set: (params: any) => void;
+    credits?: string;
     
 }
 

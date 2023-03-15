@@ -23,11 +23,20 @@ const filterMap = (arr, callback) => {
 
 const samplePacksList = filterMap(samplePacks, samplePack => {
     const samples = readdir(path.join(samplesDir, samplePack));
-    const samplesList = filterMap(samples, sample => {
-        if (!sample.match(/[\d\.]+\.mp3$/)) {
+
+    const readmesList = filterMap(samples, sample => {
+        if (!sample.match(/readme\.txt$/)) {
             return false;
         }
-        const fq = parseFloat(path.basename(sample, '.mp3'));
+        const contents = require('fs').readFileSync(path.join(samplesDir, samplePack, sample), 'utf8');
+        return contents;
+    });
+
+    const samplesList = filterMap(samples, sample => {
+        if (!sample.match(/[\d\.]+\.wav$/)) {
+            return false;
+        }
+        const fq = parseFloat(path.basename(sample, '.wav'));
         if (isNaN(fq)) {
             return false
         }
@@ -42,7 +51,8 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
     }
     return {
         name: samplePack,
-        samples: samplesList
+        samples: samplesList,
+        readme: readmesList.join('\n'),
     };
 });
 
