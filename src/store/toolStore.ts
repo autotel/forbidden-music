@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { computed, ref, Ref } from 'vue';
+import { computed, ref, Ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { Tool } from '../dataTypes/Tool.js';
 import { useEditNotesStore } from './editNotesStore.js';
@@ -52,7 +52,9 @@ export const useToolStore = defineStore("edit", () => {
     // if even hz, it displays hz, if log, it displays octaves
     // and if rational hz, it would display hz and relationships
     // etc..
-    const notesBeingCreated: Ref<Array<EditNote>> = ref([]);
+    const notesBeingCreated = ref<Array<EditNote>>([]);
+
+    const noteThatWouldBeCreated = ref<EditNote | false>(false);
 
     let mouseDragStart = {
         x: 0,
@@ -76,10 +78,12 @@ export const useToolStore = defineStore("edit", () => {
     });
 
     const noteMouseEnter = (editNote: EditNote) => {
+        noteThatWouldBeCreated.value = false;
         noteRightEdgeBeingHovered.value = false;
         noteBeingHovered.value = editNote;
     }
     const noteRightEdgeMouseEnter = (editNote: EditNote) => {
+        noteThatWouldBeCreated.value = false;
         noteRightEdgeBeingHovered.value = editNote;
         noteBeingHovered.value = false;
     }
@@ -137,6 +141,7 @@ export const useToolStore = defineStore("edit", () => {
         mouseDragStart = mouse;
         isDragging = true;
     }
+
     const _lengthenDragStartAction = (mouse: { x: number, y: number }) => {
         noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
         if (!noteBeingDraggedRightEdge.value) throw new Error('no noteBeingDraggedRightEdge');
@@ -188,16 +193,9 @@ export const useToolStore = defineStore("edit", () => {
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.Create:
+                if(!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
                 newNoteDragX = e.clientX;
-                const { editNote } = snap.snap(
-                    new EditNote({
-                        start: view.pxToTimeWithOffset(e.clientX),
-                        duration: 1,
-                        octave: view.pxToOctaveWithOffset(e.clientY),
-                    }, view as View),
-                    view.pxToOctaveWithOffset(e.clientY)
-                );
-                const cloned = editNote.clone();
+                const cloned = noteThatWouldBeCreated.value.clone();
                 notesBeingCreated.value = [cloned];
                 noteBeingDraggedRightEdge.value = cloned;
                 noteRightEdgeBeingHovered.value = cloned;
@@ -208,7 +206,39 @@ export const useToolStore = defineStore("edit", () => {
         }
     }
 
+
+    const updateNoteThatWouldBeCreated = (mouse: { x: number, y: number }) => {
+        const { x, y } = mouse;
+        if (whatWouldMouseDownDo() === MouseDownActions.Create) {
+            if (!noteThatWouldBeCreated.value) {
+                noteThatWouldBeCreated.value = new EditNote({
+                    start: 0, duration: 0, frequency: 0
+                }, view);
+            }
+            
+            noteThatWouldBeCreated.value.note.start = view.pxToTimeWithOffset(x);
+            noteThatWouldBeCreated.value.note.duration = 0.25;
+            noteThatWouldBeCreated.value.note.octave = view.pxToOctaveWithOffset(y);
+
+            snap.resetSnapExplanation();
+
+            const { editNote } = snap.snap(
+                noteThatWouldBeCreated.value, 
+                view.pxToOctaveWithOffset(y)
+            );
+
+            noteThatWouldBeCreated.value = editNote;
+            snap.setFocusedNote(noteThatWouldBeCreated.value)
+
+            return;
+        } else {
+            noteThatWouldBeCreated.value = false;
+        }
+
+    }
+
     const mouseMove = (e: MouseEvent) => {
+
         const mouseDelta = {
             x: e.clientX - mouseDragStart.x,
             y: e.clientY - mouseDragStart.y,
@@ -280,8 +310,15 @@ export const useToolStore = defineStore("edit", () => {
                 view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value)
             );
             noteBeingDraggedRightEdge.value.note = editNote.note;
+        } else {
+            updateNoteThatWouldBeCreated({
+                x: e.clientX,
+                y: e.clientY,
+            });
+            
         }
     }
+
     const mouseUp = (e: MouseEvent) => {
         alreadyDuplicatedForThisDrag = false;
         isDragging = false;
@@ -300,6 +337,11 @@ export const useToolStore = defineStore("edit", () => {
         noteBeingDraggedRightEdge.value = false;
     }
 
+    watch(() => current, () => {
+        if (whatWouldMouseDownDo() !== MouseDownActions.Create) {
+            noteThatWouldBeCreated.value = false;
+        }
+    })
 
     return {
         mouseDown,
@@ -313,6 +355,7 @@ export const useToolStore = defineStore("edit", () => {
 
         cursor,
         whatWouldMouseDownDo,
+        noteThatWouldBeCreated,
         currentMouseStringHelper,
 
         current,
@@ -321,7 +364,7 @@ export const useToolStore = defineStore("edit", () => {
         constrainTime,
         constrainOctave,
         showReferenceKeyboard,
-        
+
         notesBeingCreated: notesBeingCreated,
         noteBeingHovered,
     }

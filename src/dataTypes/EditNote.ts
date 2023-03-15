@@ -19,7 +19,7 @@ export class EditNote {
         return this.view.timeToPxWithOffset(this.note.start)
     }
     get y() {
-        return this.view.octaveToPxWithOffset(this.note.octave)
+        return this.view.octaveToPxWithOffset(this.note.octave) - this.height / 2
     }
     get width() {
         return this.view.timeToPx(this.note.duration)

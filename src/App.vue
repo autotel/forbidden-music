@@ -34,7 +34,6 @@ const view = useViewStore();
 const playback = usePlaybackStore();
 const score = useScoreStore();
 const editNotes = useEditNotesStore();
-const noteWould = ref<EditNote | false>(false);
 const select = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
@@ -75,39 +74,11 @@ const mouseMoveListener = (e: MouseEvent) => {
             view.timeOffset = view.scrollBound - view.viewWidthTime;
         }
     } else {
-        if (tool.whatWouldMouseDownDo() === MouseDownActions.Create) {
-            if (!noteWould.value) noteWould.value = new EditNote({ start: 0, duration: 0, frequency: 0 }, view);
-
-            const octave = view.pxToOctaveWithOffset(e.clientY);
-            snap.resetSnapExplanation();
-            snap.setFocusedNote(noteWould.value)
-            const { editNote } = snap.snap(
-                new EditNote({
-                    start: view.pxToTimeWithOffset(e.clientX),
-                    duration: 1,
-                    octave
-                }, view as View),
-                octave,
-                view.visibleNotes,
-                true
-            );
-
-            noteWould.value = editNote;
-
-
-        } else {
-            noteWould.value = false;
-        }
 
         tool.mouseMove(e);
     }
 }
 
-watch(() => tool.current, () => {
-    if (tool.whatWouldMouseDownDo() !== MouseDownActions.Create) {
-        noteWould.value = false;
-    }
-})
 
 const keyDownListener = (e: KeyboardEvent) => {
     // delete selected notes
@@ -260,7 +231,7 @@ onUnmounted(() => {
             <ToneRelation />
         </g>
         <g id="note-would-be-created">
-            <NoteElement v-if="noteWould" :editNote="noteWould" interactionDisabled />
+            <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated" interactionDisabled />
         </g>
         <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
             stroke-width="1" />

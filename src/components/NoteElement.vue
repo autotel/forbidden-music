@@ -132,6 +132,6 @@ onUnmounted(() => {
 }
 .body.interactionDisabled {
     pointer-events: none;
-    fill:none;
+    fill:#ccc4;
 }
 </style>
