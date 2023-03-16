@@ -9,7 +9,7 @@
     "check": "vue-tsc",
     "build-lazy": "vite build",
     "preview": "vite preview",
-    "update-samples": "node scripts/update-samples-list.js"
+    "update-samples": "node scripts/update-samples-list.cjs"
   },
   "dependencies": {
     "vue": "^3.2.45",

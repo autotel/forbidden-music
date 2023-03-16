@@ -3,7 +3,7 @@ const writeFile = require('fs').writeFileSync;
 const path = require('path');
 const scriptDir = "./"
 
-const samplesRelativetoSrc = '/audio';
+const samplesRelativetoSrc = 'audio';
 const samplesDir = path.join(scriptDir, "/public", samplesRelativetoSrc);
 const samplePacks = readdir(samplesDir);
 
