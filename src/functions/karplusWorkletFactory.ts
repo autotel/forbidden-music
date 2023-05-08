@@ -2,9 +2,8 @@ import workletUrl from "./karplusWorklet.js?url";
 console.log("using audio worklet", workletUrl)
 
 export async function createKarplusWorklet(
-  _context: AudioContext,
+  context: AudioContext,
 ) {
-  const context = new AudioContext();
   console.log("createKarplusWorklet");
   try {
     let worklet = new AudioWorkletNode(context, "karplus");

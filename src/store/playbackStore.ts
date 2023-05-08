@@ -35,7 +35,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
     // let toneFmSynth = null as ToneFmSynth | null;
-    // let karplusSynth = null as KarplusSynth | null;
+    let karplusSynth = null as KarplusSynth | null;
     let sampler1 = null as MagicSampler | null;
     let sampler2 = null as MagicSampler | null;
     let sampler3 = null as MagicSampler | null;
@@ -69,8 +69,8 @@ export const usePlaybackStore = defineStore("playback", () => {
             sampleDefinitions[2].readme
         );
         // toneFmSynth = new ToneFmSynth(audioContext);
-        // karplusSynth = new KarplusSynth(audioContext);
-        availableSynths.value = [sampler1, sampler2, sampler3];
+        karplusSynth = new KarplusSynth(audioContext);
+        availableSynths.value = [karplusSynth, sampler1, sampler2, sampler3];
         synth.value = sampler1;
 
         console.log("audio is ready");
