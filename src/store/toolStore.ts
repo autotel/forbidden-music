@@ -209,7 +209,10 @@ export const useToolStore = defineStore("edit", () => {
 
     const updateNoteThatWouldBeCreated = (mouse: { x: number, y: number }) => {
         const { x, y } = mouse;
-        if (whatWouldMouseDownDo() === MouseDownActions.Create) {
+        // if out of view, false
+        if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
+            noteThatWouldBeCreated.value = false;
+        } else if (whatWouldMouseDownDo() === MouseDownActions.Create) {
             if (!noteThatWouldBeCreated.value) {
                 noteThatWouldBeCreated.value = new EditNote({
                     start: 0, duration: 0, frequency: 0

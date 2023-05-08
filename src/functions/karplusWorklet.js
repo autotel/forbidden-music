@@ -106,7 +106,7 @@ class KarplusVoice extends Voice {
     envVal = 0;
     noiseDecayInverse = 16 / samplingRate;
     delayLine = new DelayLine();
-    trig({ freq, amp }) {
+    trig({ freq, amp, dur }) {
         this.envVal = amp;
         this.delayLine.delaySamples = samplingRate / freq;
         this.isBusy = true;
@@ -138,6 +138,7 @@ class KarplusVoice extends Voice {
 class Karplus2Voice extends Voice {
     envVal = 0;
     noiseDecayInverse = 0;
+    splsLeft = 0;
 
     engaged = false;
 
@@ -164,7 +165,7 @@ class Karplus2Voice extends Voice {
 
     }
 
-    trig({ freq, amp }) {
+    trig({ freq, amp, dur }) {
         this.envVal = amp;
         // const splfq = samplingRate / freq;
         this.delayLine1.delaySamples = samplingRate / freq;
@@ -173,11 +174,13 @@ class Karplus2Voice extends Voice {
         this.delayLine4.delaySamples = 16 * samplingRate / freq;
         this.isBusy = true;
         this.engaged = true;
+        this.splsLeft = dur * samplingRate;
     }
     stop() {
         this.envVal = 0;
         this.isBusy = false;
         this.engaged = false;
+        this.splsLeft = 0;
     }
     /** 
      * @param {number} blockSize *
@@ -200,10 +203,13 @@ class Karplus2Voice extends Voice {
             output[splN] = sampleNow;
             if (this.envVal <= 0) {
                 this.envVal = 0;
-                this.isBusy = false;
             } else {
                 this.envVal -= this.noiseDecayInverse;
             }
+        }
+        this.splsLeft -= blockSize;
+        if(this.splsLeft <= 0){
+            this.stop();
         }
         return output;
     }
@@ -221,6 +227,7 @@ class PolyManager {
             this.list.forEach(voice => {
                 if (!voice.isBusy) {
                     found = voice;
+                    console.log('use existing voice', this.list.indexOf(voice));
                 }
             });
             if (!found) {
@@ -231,12 +238,31 @@ class PolyManager {
                 } else {
                     found = new VoiceConstructor();
                     this.list.push(found);
+                    console.log('new voice',this.list.length);
                 }
             }
             return found;
         }
     }
 }
+/**
+    interface KarplusStopVoiceMessage {
+        stop: true;
+        ref: string;
+    }
+
+    interface KarplusStopAllMessage {
+        stopall: true;
+    }
+
+    interface KarplusStartVoiceMessage {
+        freq: number;
+        amp: number;
+        duration?: number;
+        ref: string;
+    }
+
+*/
 
 //@ts-ignore
 registerProcessor('karplus', class extends AudioWorkletProcessor {
@@ -248,7 +274,7 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
         this.totalSamples = 0;
         // @ts-ignore
         this.port.onmessage = ({ data }) => {
-            console.log(data);
+            // console.log(data);
             if (data.stopAll) {
                 Object.keys(this.activeVoices).map((key) => {
                     this.activeVoices[key].stop();
@@ -263,11 +289,13 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
                 }
             } else {
                 const freq = data.freq;
+                const dur = data.duration || 1;
+                const amp = data.amp || 1;
                 const tVoice = this.policarpo.getVoice();
                 if (data.ref) {
                     this.activeVoices[data.ref] = tVoice;
                 }
-                tVoice.trig({ freq, amp: data.amp || 1 });
+                tVoice.trig({ freq, amp, dur });
             }
         };
     }

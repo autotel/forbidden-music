@@ -1,6 +1,24 @@
 import { Synth } from "./Synth";
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
 import { SynthInstance } from "./SynthInterface";
+
+interface KarplusStopVoiceMessage {
+    stop: true;
+    ref: string;
+}
+
+interface KarplusStopAllMessage {
+    stopall: true;
+}
+
+interface KarplusStartVoiceMessage {
+    freq: number;
+    amp: number;
+    duration?: number;
+    ref: string;
+}
+
+
 export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;
     gainNode?: GainNode;
@@ -20,11 +38,9 @@ export class KarplusSynth implements SynthInstance {
         this.gainNode.connect(this.audioContext.destination);
     }
 
-
     stopAllNotes() {
-        if (this.engine) this.engine.port.postMessage({ stopall: true });
+        if (this.engine) this.engine.port.postMessage({ stopall: true } as KarplusStopAllMessage);
     };
-
 
     name = "Karplus";
     triggerAttackRelease = (
@@ -37,7 +53,12 @@ export class KarplusSynth implements SynthInstance {
         if (!this.engine) throw new Error("engine not created");
         const startTime = this.audioContext.currentTime + relativeNoteStart;
 
-        this.engine.port.postMessage({ freq: frequency, amp: 1, ref: frequency.toFixed(4) });
+        this.engine.port.postMessage({ 
+            freq: frequency, 
+            amp: velocity, 
+            duration: duration,
+            ref: frequency.toFixed(4) 
+        } as KarplusStartVoiceMessage);
     };
     releaseAll = () => { };
     getParams = () => [];

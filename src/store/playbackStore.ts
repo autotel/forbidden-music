@@ -71,7 +71,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         // toneFmSynth = new ToneFmSynth(audioContext);
         karplusSynth = new KarplusSynth(audioContext);
         availableSynths.value = [karplusSynth, sampler1, sampler2, sampler3];
-        synth.value = sampler1;
+        synth.value = karplusSynth;
 
         console.log("audio is ready");
         window.removeEventListener("mousedown", startContextListener);

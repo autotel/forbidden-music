@@ -31,7 +31,6 @@ export const useSelectStore = defineStore("select", () => {
     const selectedNotes = ref(new Set() as Set<EditNote>);
     const editNotes = useEditNotesStore();
     const refreshNoteSelectionState = () => {
-        console.log("refreshNoteSelectionState");
         editNotes.list.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const get = () => {
