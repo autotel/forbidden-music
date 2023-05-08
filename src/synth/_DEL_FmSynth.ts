@@ -1,6 +1,5 @@
-import { createAdsrWorklet } from "../functions/adsrWorkletFactory";
-import { Synth, Voice } from "./Synth";
 import AdsrNode from "../functions/AdsrNode";
+import { Synth, Voice } from "../synth/Synth";
 // maybe use https://github.com/g200kg/audioworklet-adsrnode instead
 // transitioning to adsr because the other was a bit bad
 /**

@@ -1,7 +1,4 @@
-import * as Tone from "tone";
-import { FMSynth, FMSynthOptions, Freeverb, PolySynth, Sampler } from 'tone';
-import { AnyAudioContext } from "tone/build/esm/core/context/AudioContext";
-import { SynthInstance, SynthParam, ParamType } from "./Synthinterface";
+import {SynthInstance} from "./SynthInterface";
 
 interface SampleFileDefinition {
     name: string;
@@ -24,7 +21,7 @@ class SamplerVoice {
 
     private cancelScheduledValues() {
         this.outputNode.gain.cancelScheduledValues(0);
-        this.outputNode.gain.value = 0;
+        // this.outputNode.gain.value = 0;
     }
 
     private resetBufferSource(sampleSource?: SampleSource) {
@@ -43,6 +40,8 @@ class SamplerVoice {
         this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = sampleSource.sampleBuffer;
         this.bufferSource.connect(this.outputNode);
+        // this.bufferSource.connect(this.audioContext.destination);
+
     }
 
     private releaseVoice = () => {
@@ -70,7 +69,6 @@ class SamplerVoice {
         velocity: number
     ) => {
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-
         // allow catch up, but not for already ended notes.
         if (relativeNoteStart + duration < 0) return;
         if (relativeNoteStart < 0) {
@@ -84,11 +82,10 @@ class SamplerVoice {
 
         if (!this.bufferSource) throw new Error("bufferSource not created");
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
-
+        
         this.outputNode.gain.setValueAtTime(0, relativeNoteStart);
         this.outputNode.gain.linearRampToValueAtTime(velocity, relativeNoteStart + 0.01);
         this.outputNode.gain.linearRampToValueAtTime(0, relativeNoteStart + duration);
-
         this.bufferSource.start(relativeNoteStart, 0, duration);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };

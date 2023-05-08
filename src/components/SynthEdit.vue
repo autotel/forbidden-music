@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, reactive, Ref, ref, watch } from "vue";
 import { usePlaybackStore } from "../store/playbackStore";
-import { ParamType } from "../toneSynths/Synthinterface";
+import { ParamType } from "../synth/SynthInterface";
 import Button from "./Button.vue";
 import EdgeHidableWidget from "./EdgeHidableWidget.vue";
 import PropOption from "./PropOption.vue";

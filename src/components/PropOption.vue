@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { SynthParam, OptionSynthParam } from '../toneSynths/Synthinterface';
+import { SynthParam, OptionSynthParam } from '../toneSynths/SynthInterface';
 
 const triangleLeft = '◀';
 const triangleRight = '▶';
