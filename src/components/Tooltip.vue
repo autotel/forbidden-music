@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { f, m } from 'vitest/dist/index-c3f83a58';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 const fEl = ref<HTMLDivElement>();
