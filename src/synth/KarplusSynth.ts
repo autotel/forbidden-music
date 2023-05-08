@@ -17,7 +17,13 @@ interface KarplusStartVoiceMessage {
     duration?: number;
     ref: string;
 }
-
+// TODO: 
+interface KarplusParamsChangeMessage {
+    bleed?: number;
+    impulseDecay?: number;
+    impulseAttack?: number;
+    delaysDetune?: number;
+}
 
 export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;

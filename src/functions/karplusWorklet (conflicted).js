@@ -51,9 +51,9 @@ class DelayLine extends SampleBySampleOperator {
         ret += this.memory[0] || 0;
         ret += insample;
 
-        // if (this.sidechainEffect) {
-        //     ret = this.sidechainEffect.operation(ret);
-        // }
+        if (this.sidechainEffect) {
+            ret = this.sidechainEffect.operation(ret);
+        }
 
         this.memory[0] += ret * this.feedback;
         return ret;
@@ -102,8 +102,6 @@ class IIRFilter1 extends SampleBySampleOperator {
     }
 }
 
-
-
 class KarplusVoice extends Voice {
     envVal = 0;
     noiseDecayInverse = 16 / samplingRate;
@@ -136,35 +134,27 @@ class KarplusVoice extends Voice {
 }
 
 
-const clip = (val) => {
-    if (val > 1) return 1;
-    if (val < -1) return -1;
-    return val;
-}
 
 class Karplus2Voice extends Voice {
     envVal = 0;
     noiseDecayInverse = 0;
     splsLeft = 0;
-    bleed = -0.1;
+
     engaged = false;
 
     delayLine1 = new DelayLine();
-    delayLine2 = new DelayLine();
     /** @type {Array<Karplus2Voice>} */
     otherVoices = [];
 
     constructor(voicesPool = []) {
         super();
         // define the characteristics of the synth timbre.
-        const impulseDecay = 0.01; //seconds
+        const impulseDecay = 1; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = -0.99999999;
-        this.delayLine2.feedback = -0.99999999;
+        this.delayLine1.feedback = 1.4;
         // play with the filter types and "k" values. You could also go and edit the filters themselves.
-        this.delayLine1.sidechainEffect = new IIRFilter({ k: 0.001 });
-        this.delayLine2.sidechainEffect = new IIRFilter({ k: 0.001 });
+        this.delayLine1.sidechainEffect = new IIRFilter({ k: 0.8 });
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
     }
@@ -173,7 +163,6 @@ class Karplus2Voice extends Voice {
         this.envVal = amp;
         // const splfq = samplingRate / freq;
         this.delayLine1.delaySamples = samplingRate / freq;
-        this.delayLine2.delaySamples = samplingRate / freq * 1.01;
         this.isBusy = true;
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
@@ -195,15 +184,7 @@ class Karplus2Voice extends Voice {
             let sampleNow = (Math.random() - 0.5) * this.envVal;
 
             sampleNow += this.delayLine1.operation(sampleNow);
-            sampleNow += this.delayLine2.operation(sampleNow);
-            clip(sampleNow);
-            // bleed
-            this.otherVoices.forEach(voice => {
-                if (voice.engaged && voice !== this) {
-                    voice.delayLine1.operationNoTime(sampleNow * this.bleed);
-                    voice.delayLine2.operationNoTime(sampleNow * this.bleed);
-                }
-            });
+
             // this.delayLine1.delaySamples += Math.round(sampleNow * 3);
 
             output[splN] = sampleNow;
