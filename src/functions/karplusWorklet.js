@@ -169,23 +169,22 @@ class IIRBPFRochars extends SampleBySampleOperator {
     }
     operation = (inSample) => {
         const hiPassed = inSample - this.hp.operation(inSample);
-        return hiPassed - this.lp.operation(hiPassed);
-        // return this.hp.operation(inSample) - this.lp.operation(inSample);
+        return this.lp.operation(hiPassed);
     }
 }
 
 
 class KarplusVoice extends Voice {
-    envVal = 0;
+    noiseEnvVal = 0;
     noiseDecayInverse = 16 / samplingRate;
     delayLine = new DelayLine();
     trig({ freq, amp, dur }) {
-        this.envVal = amp;
+        this.noiseEnvVal = amp;
         this.delayLine.delaySamples = samplingRate / freq;
         this.isBusy = true;
     }
     stop() {
-        this.envVal = 0;
+        this.noiseEnvVal = 0;
         this.isBusy = false;
     }
     /** @param {number} blockSize*/
@@ -193,13 +192,13 @@ class KarplusVoice extends Voice {
         const output = new Float32Array(blockSize);
 
         for (let splN = 0; splN < blockSize; splN++) {
-            let sampleNow = (Math.random() - 0.5) * this.envVal;
+            let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
             sampleNow += this.delayLine.operation(sampleNow);
             output[splN] = sampleNow;
-            if (this.envVal < 0) {
-                this.envVal = 0;
+            if (this.noiseEnvVal < 0) {
+                this.noiseEnvVal = 0;
             } else {
-                this.envVal -= this.noiseDecayInverse;
+                this.noiseEnvVal -= this.noiseDecayInverse;
             }
         }
         return output;
@@ -230,9 +229,9 @@ class Karplus2Voice extends Voice {
     delayLine2 = new DelayLine();
     delayLine3 = new DelayLine();
 
-    filter1 = new IIRBPFRochars(1, 50);
-    filter2 = new IIRBPFRochars(1, 50);
-    filter3 = new IIRBPFRochars(1, 50);
+    filter1 = new IIRBPFRochars(1, 1);
+    filter2 = new IIRBPFRochars(1, 1);
+    filter3 = new IIRBPFRochars(1, 1);
 
     /** @type {Array<Karplus2Voice>} */
     otherVoices = [];
@@ -248,7 +247,7 @@ class Karplus2Voice extends Voice {
         // play with the filter types and "k" values. You could also go and edit the filters themselves.
         this.delayLine1.sidechainEffect = this.filter1;
         this.delayLine2.sidechainEffect = this.filter2;
-        this.delayLine2.sidechainEffect = this.filter2;
+        this.delayLine2.sidechainEffect = this.filter3;
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
     }
@@ -263,10 +262,10 @@ class Karplus2Voice extends Voice {
         this.isBusy = true;
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
-
-        this.filter1.setFreqs(freq * 0.1, freq);
-        this.filter2.setFreqs(freq * 0.1, freq / 2);
-        this.filter3.setFreqs(freq * 0.1, freq * 2);
+        // it seems these are doing barely anyhting to the high end
+        this.filter1.setFreqs(freq * 0.1, freq / 64);
+        this.filter2.setFreqs(freq * 0.1, freq / 64);
+        this.filter3.setFreqs(freq * 0.1, freq / 64);
     }
     stop() {
         this.noiseEnvVal = 0;
@@ -294,15 +293,16 @@ class Karplus2Voice extends Voice {
                 if (voice.engaged && voice !== this) {
                     voice.delayLine1.operationNoTime(sampleNow * this.bleed);
                     voice.delayLine2.operationNoTime(sampleNow * this.bleed);
+                    voice.delayLine3.operationNoTime(sampleNow * this.bleed);
                 }
             });
             // this.delayLine1.delaySamples += Math.round(sampleNow * 3);
 
             output[splN] = clip(sampleNow);
             if (this.noiseEnvVal <= 0) {
-                this.envVal = 0;
+                this.noiseEnvVal = 0;
             } else {
-                this.envVal -= this.noiseDecayInverse;
+                this.noiseEnvVal -= this.noiseDecayInverse;
             }
         }
         this.splsLeft -= blockSize;
