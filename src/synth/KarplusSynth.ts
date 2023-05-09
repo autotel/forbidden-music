@@ -44,7 +44,8 @@ export class KarplusSynth implements SynthInstance {
         this.gainNode.connect(this.audioContext.destination);
     }
 
-    stopAllNotes() {
+    releaseAll = () => {
+        console.log("stopping all notes");
         if (this.engine) this.engine.port.postMessage({ stopall: true } as KarplusStopAllMessage);
     };
 
@@ -59,14 +60,13 @@ export class KarplusSynth implements SynthInstance {
         if (!this.engine) throw new Error("engine not created");
         const startTime = this.audioContext.currentTime + relativeNoteStart;
 
-        this.engine.port.postMessage({ 
-            freq: frequency, 
-            amp: velocity, 
+        this.engine.port.postMessage({
+            freq: frequency,
+            amp: velocity,
             duration: duration,
-            ref: frequency.toFixed(4) 
+            ref: frequency.toFixed(4)
         } as KarplusStartVoiceMessage);
     };
-    releaseAll = () => { };
     getParams = () => [];
     set = (params: any) => {
 

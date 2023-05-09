@@ -102,6 +102,77 @@ class IIRFilter1 extends SampleBySampleOperator {
     }
 }
 
+class IIRLPFRochars extends SampleBySampleOperator {
+    // based on https://github.com/rochars/low-pass-filter/blob/master/index.js
+    /*
+    * Copyright (c) 2018-2019 Rafael da Silva Rocha.
+    * Copyright (c) 2011 James Robert, http://jiaaro.com
+    *
+    * Permission is hereby granted, free of charge, to any person obtaining
+    * a copy of this software and associated documentation files (the
+    * "Software"), to deal in the Software without restriction, including
+    * without limitation the rights to use, copy, modify, merge, publish,
+    * distribute, sublicense, and/or sell copies of the Software, and to
+    * permit persons to whom the Software is furnished to do so, subject to
+    * the following conditions:
+    *
+    * The above copyright notice and this permission notice shall be
+    * included in all copies or substantial portions of the Software.
+    *
+    * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    */
+    /** @type {Number} */
+    rc;
+    /** @type {Number} */
+    dt;
+    /** @type {Number} */
+    alpha;
+    /** @type {Number} */
+    last_val = 0;
+    /** @type {Number} */
+    offset;
+    constructor(cutoff) {
+        super();
+        this.setCutoff(cutoff);
+    }
+    setCutoff(cutoff) {
+        this.rc = 1.0 / (cutoff * 2 * Math.PI);
+        this.dt = 1.0 / samplingRate;
+        this.alpha = this.dt / (this.rc + this.dt);
+    }
+    operation = (insample) => {
+        this.offset++;
+        this.last_val = this.last_val
+            + (this.alpha * (insample - this.last_val));
+        return this.last_val;
+    }
+}
+class IIRBPFRochars extends SampleBySampleOperator {
+    /** @type {IIRLPFRochars} */
+    lp;
+    /** @type {IIRLPFRochars} */
+    hp;
+    constructor(hpFreq, lpFreq) {
+        super();
+        this.lp = new IIRLPFRochars(lpFreq);
+        this.hp = new IIRLPFRochars(hpFreq);
+    }
+    setFreqs(hpFreq, lpFreq) {
+        this.lp.setCutoff(lpFreq);
+        this.hp.setCutoff(hpFreq);
+    }
+    operation = (inSample) => {
+        const hiPassed = inSample - this.hp.operation(inSample);
+        return hiPassed - this.lp.operation(hiPassed);
+        // return this.hp.operation(inSample) - this.lp.operation(inSample);
+    }
+}
 
 
 class KarplusVoice extends Voice {
@@ -141,45 +212,64 @@ const clip = (val) => {
     if (val < -1) return -1;
     return val;
 }
-
+const e = Math.E;
+const applyHardnessCurve = (val) => {
+    return e ^ (-val) * (e ^ val) - 1;
+}
+const applySigmoidRange = (input, alpha = 2.5) => {
+    return 2 / (1 + Math.pow(e, -alpha * input)) - 1;
+}
 class Karplus2Voice extends Voice {
-    envVal = 0;
+    noiseEnvVal = 0;
     noiseDecayInverse = 0;
     splsLeft = 0;
-    bleed = -0.1;
+    bleed = 0;
     engaged = false;
 
     delayLine1 = new DelayLine();
     delayLine2 = new DelayLine();
+    delayLine3 = new DelayLine();
+
+    filter1 = new IIRBPFRochars(1, 50);
+    filter2 = new IIRBPFRochars(1, 50);
+    filter3 = new IIRBPFRochars(1, 50);
+
     /** @type {Array<Karplus2Voice>} */
     otherVoices = [];
 
     constructor(voicesPool = []) {
         super();
         // define the characteristics of the synth timbre.
-        const impulseDecay = 0.01; //seconds
+        const impulseDecay = 10; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = -0.99999999;
-        this.delayLine2.feedback = -0.99999999;
+        this.delayLine1.feedback = 1;
+        this.delayLine2.feedback = 1;
         // play with the filter types and "k" values. You could also go and edit the filters themselves.
-        this.delayLine1.sidechainEffect = new IIRFilter({ k: 0.001 });
-        this.delayLine2.sidechainEffect = new IIRFilter({ k: 0.001 });
+        this.delayLine1.sidechainEffect = this.filter1;
+        this.delayLine2.sidechainEffect = this.filter2;
+        this.delayLine2.sidechainEffect = this.filter2;
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
     }
 
     trig({ freq, amp, dur }) {
-        this.envVal = amp;
+        this.noiseEnvVal = amp;
         // const splfq = samplingRate / freq;
         this.delayLine1.delaySamples = samplingRate / freq;
-        this.delayLine2.delaySamples = samplingRate / freq * 1.01;
+        this.delayLine2.delaySamples = (samplingRate / freq) * 0.501;
+        this.delayLine3.delaySamples = (samplingRate / freq) * 0.499;
+
         this.isBusy = true;
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
+
+        this.filter1.setFreqs(freq * 0.1, freq);
+        this.filter2.setFreqs(freq * 0.1, freq / 2);
+        this.filter3.setFreqs(freq * 0.1, freq * 2);
     }
     stop() {
-        this.envVal = 0;
+        this.noiseEnvVal = 0;
         this.isBusy = false;
         this.engaged = false;
         this.splsLeft = 0;
@@ -192,13 +282,15 @@ class Karplus2Voice extends Voice {
         const output = new Float32Array(blockSize);
         if (!this.engaged) return output;
         for (let splN = 0; splN < blockSize; splN++) {
-            let sampleNow = (Math.random() - 0.5) * this.envVal;
+            let sampleNow = applySigmoidRange((Math.random() - 0.5) * this.noiseEnvVal,0.8);
 
             sampleNow += this.delayLine1.operation(sampleNow);
             sampleNow += this.delayLine2.operation(sampleNow);
-            clip(sampleNow);
+            sampleNow += this.delayLine3.operation(sampleNow);
+
+            sampleNow = applySigmoidRange(sampleNow);
             // bleed
-            this.otherVoices.forEach(voice => {
+            if (this.bleed) this.otherVoices.forEach(voice => {
                 if (voice.engaged && voice !== this) {
                     voice.delayLine1.operationNoTime(sampleNow * this.bleed);
                     voice.delayLine2.operationNoTime(sampleNow * this.bleed);
@@ -206,15 +298,15 @@ class Karplus2Voice extends Voice {
             });
             // this.delayLine1.delaySamples += Math.round(sampleNow * 3);
 
-            output[splN] = sampleNow;
-            if (this.envVal <= 0) {
+            output[splN] = clip(sampleNow);
+            if (this.noiseEnvVal <= 0) {
                 this.envVal = 0;
             } else {
                 this.envVal -= this.noiseDecayInverse;
             }
         }
         this.splsLeft -= blockSize;
-        if(this.splsLeft <= 0){
+        if (this.splsLeft <= 0) {
             this.stop();
         }
         return output;
@@ -244,7 +336,7 @@ class PolyManager {
                 } else {
                     found = new VoiceConstructor(this.list);
                     this.list.push(found);
-                    console.log('new voice',this.list.length);
+                    console.log('new voice', this.list.length);
                 }
             }
             return found;
@@ -280,20 +372,18 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
         this.totalSamples = 0;
         // @ts-ignore
         this.port.onmessage = ({ data }) => {
-            // console.log(data);
-            if (data.stopAll) {
-                Object.keys(this.activeVoices).map((key) => {
-                    this.activeVoices[key].stop();
-                    delete this.activeVoices[key];
-                });
-            } else if (data.stop) {
+            if (data.stopall) {
+                this.policarpo.list.forEach(voice => voice.stop());
+            }
+            if (data.stop) {
                 if (this.activeVoices[data.stop]) {
                     this.activeVoices[data.stop].stop();
                     delete this.activeVoices[data.stop];
                 } else {
                     console.warn("no voice " + data.stop + " to stop");
                 }
-            } else {
+            }
+            if (data.freq) {
                 const freq = data.freq;
                 const dur = data.duration || 1;
                 const amp = data.amp || 1;
