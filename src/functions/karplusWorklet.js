@@ -255,7 +255,7 @@ class ButterworthLpf1 extends SampleBySampleOperator {
             }
         }
         this.operation = (input) => 0;
-        this.set(cutoffFreq = 500, gain = 1, sharpness = 1.2);
+        this.set(cutoffFreq, gain, sharpness);
     }
 }
 class ButterworthHpf1 extends SampleBySampleOperator {
@@ -278,7 +278,7 @@ class ButterworthHpf1 extends SampleBySampleOperator {
             }
         }
         this.operation = (input) => 0;
-        this.set(cutoffFreq = 500, gain = 1, sharpness = 1.2);
+        this.set(cutoffFreq, gain, sharpness);
     }
 }
 
