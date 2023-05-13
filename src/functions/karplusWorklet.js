@@ -8,7 +8,6 @@ class SampleBySampleOperator {
     operation = (inSample) => inSample;
 }
 
-
 class Voice {
     getBlock(size) { }
     trigger({ freq, amp }) { }
@@ -172,6 +171,132 @@ class IIRBPFRochars extends SampleBySampleOperator {
         return this.lp.operation(hiPassed);
     }
 }
+class Butterworth1 extends SampleBySampleOperator {
+    /**
+     *    @param {number} fpass Pass frequency, cycles per second
+     *    @param {number} fstop Stop frequency, cycles per second
+     *    @param {number} hpass Minimum passband transmission, fraction 0...1
+     *    @param {number} hstop Maximum stopband transmission, fraction 0...1
+    */
+    constructor(fpass, fstop, hpass, hstop) {
+        super();
+        let x = 0;
+        let x1 = 0;
+        let x2 = 0;
+        let y = 0;
+        let y1 = 0;
+        let y2 = 0;
+        let a0, a1, a2, b1, b2;
+        this.set = (fpass, fstop, hpass, hstop) => {
+            if (!fpass || !fstop || !hpass || !hstop) throw new Error('fpass, fstop, hpass and hstop are required. got ' + fpass + ' ' + fstop + ' ' + hpass + ' ' + hstop);
+            if (fpass <= 0 || fpass >= 0.5 * samplingRate) throw new Error('fpass must be between 0 and 0.5 * samplingRate, got ' + fpass);
+            if (fstop <= 0 || fstop >= 0.5 * samplingRate) throw new Error('fstop must be between 0 and 0.5 * samplingRate, got ' + fstop);
+            if (hpass <= 0 || hpass >= 1) throw new Error('hpass must be between 0 and 1, got ' + hpass);
+            if (hstop <= 0 || hstop >= 1) throw new Error('hstop must be between 0 and 1, got ' + hstop);
+            if (fpass === fstop) throw new Error('fpass and fstop must be different, got ' + fpass);
+
+            const isLowpass = fpass < fstop;
+            const d = 1 / hstop;
+            const e = Math.sqrt(1 / (hpass * hpass) - 1);
+            let n = Math.floor(Math.abs(Math.log(e / Math.sqrt(d * d - 1)) / Math.log(fpass / fstop))) + 1;
+            if (n % 2) ++n;
+            const o = isLowpass ? -1 / n : 1 / n;
+            const fcut = fstop * Math.pow(Math.sqrt(d * d - 1), o);
+            const w0 = Math.PI * 2 * fcut / samplingRate;
+            const c = Math.cos(w0);
+            for (let k = Math.floor(n / 2); k >= 1; --k) {
+                const q = -0.5 / Math.cos(Math.PI * (2 * k + n - 1) / (2 * n));
+                const r = Math.sin(w0) / (2 * q);
+                if (isLowpass) {
+                    a1 = (1 - c) / (1 + r);
+                    a0 = 0.5 * a1;
+                } else {
+                    a1 = -(1 + c) / (1 + r);
+                    a0 = -0.5 * a1;
+                }
+                a2 = a0;
+                b1 = -2 * c / (1 + r);
+                b2 = (1 - r) / (1 + r);
+
+            }
+            return 0;
+        }
+
+        this.set(fpass, fstop, hpass, hstop);
+
+        this.operation = (input) => {
+            x2 = x1;
+            x1 = x;
+            x = input;
+            y2 = y1;
+            y1 = y;
+            y = a0 * x + a1 * x1 + a2 * x2 - b1 * y1 - b2 * y2;
+            return y;
+        }
+    }
+}
+class ButterworthLpf1 extends SampleBySampleOperator {
+    constructor(cutoffFreq = 500, gain = 1, sharpness = 1.2) {
+        super();
+
+        const hpass = 0.95;
+        const hstop = 0.05;
+        let b = null;
+        this.set = (cutoffFreq = 500, gain = 1, sharpness = 1.2) => {
+            const fpass = cutoffFreq;
+            const fstop = cutoffFreq - cutoffFreq / sharpness;
+            if (!b) {
+                b = new Butterworth1(fpass, fstop, hpass, hstop);
+            } else {
+                b.set(fpass, fstop, hpass, hstop);
+            }
+            this.operation = (input) => {
+                return b.operation(input * gain);
+            }
+        }
+        this.operation = (input) => 0;
+        this.set(cutoffFreq = 500, gain = 1, sharpness = 1.2);
+    }
+}
+class ButterworthHpf1 extends SampleBySampleOperator {
+    constructor(cutoffFreq = 1, gain = 1, sharpness = 1.2) {
+        super();
+
+        const hpass = 0.95;
+        const hstop = 0.05;
+        let b = null;
+        this.set = (cutoffFreq = 500, gain = 1, sharpness = 1.2) => {
+            const fpass = cutoffFreq;
+            const fstop = cutoffFreq - cutoffFreq / sharpness;
+            if (!b) {
+                b = new Butterworth1(fpass, fstop, hpass, hstop);
+            } else {
+                b.set(fpass, fstop, hpass, hstop);
+            }
+            this.operation = (input) => {
+                return b.operation(input * gain);
+            }
+        }
+        this.operation = (input) => 0;
+        this.set(cutoffFreq = 500, gain = 1, sharpness = 1.2);
+    }
+}
+
+class ButterworthBpf1 extends SampleBySampleOperator {
+    constructor(hpFreq = 1, lpFreq = 500) {
+        const hp = new ButterworthHpf1(hpFreq);
+        const lp = new ButterworthLpf1(lpFreq);
+        super();
+        this.operation = (input) => {
+            return lp.operation(hp.operation(input));
+        }
+        this.setFreqs = (hpFreq, lpFreq) => {
+            hp.set(hpFreq);
+            lp.set(lpFreq);
+        }
+    }
+}
+
 
 
 class KarplusVoice extends Voice {
@@ -229,9 +354,12 @@ class Karplus2Voice extends Voice {
     delayLine2 = new DelayLine();
     delayLine3 = new DelayLine();
 
-    filter1 = new IIRBPFRochars(1, 1);
-    filter2 = new IIRBPFRochars(1, 1);
-    filter3 = new IIRBPFRochars(1, 1);
+    // filter1 = new ButterworthBpf1(1,600);
+    // filter2 = new ButterworthBpf1(1,600);
+    // filter3 = new ButterworthBpf1(1,600);
+    filter1 = new ButterworthLpf1(600);
+    filter2 = new ButterworthLpf1(600);
+    filter3 = new ButterworthLpf1(600);
 
     /** @type {Array<Karplus2Voice>} */
     otherVoices = [];
@@ -242,9 +370,10 @@ class Karplus2Voice extends Voice {
         const impulseDecay = 10; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = 1;
-        this.delayLine2.feedback = 1;
-        // play with the filter types and "k" values. You could also go and edit the filters themselves.
+        this.delayLine1.feedback = -0.999;
+        this.delayLine2.feedback = -0.999;
+        this.delayLine3.feedback = -0.999;
+        
         this.delayLine1.sidechainEffect = this.filter1;
         this.delayLine2.sidechainEffect = this.filter2;
         this.delayLine2.sidechainEffect = this.filter3;
@@ -263,9 +392,13 @@ class Karplus2Voice extends Voice {
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
         // it seems these are doing barely anyhting to the high end
-        this.filter1.setFreqs(freq * 0.1, freq / 64);
-        this.filter2.setFreqs(freq * 0.1, freq / 64);
-        this.filter3.setFreqs(freq * 0.1, freq / 64);
+        // I think we need butterworth or chevyshev
+        // this.filter1.setFreqs(freq / 64, freq / 64)
+        // this.filter2.setFreqs(freq / 64, freq / 64)
+        // this.filter3.setFreqs(freq / 64, freq / 64)
+        this.filter1.set(freq * 2, 0.1, 2)
+        this.filter2.set(freq * 2, 0.1, 2)
+        this.filter3.set(freq * 2, 0.1, 2)
     }
     stop() {
         this.noiseEnvVal = 0;
@@ -281,13 +414,14 @@ class Karplus2Voice extends Voice {
         const output = new Float32Array(blockSize);
         if (!this.engaged) return output;
         for (let splN = 0; splN < blockSize; splN++) {
-            let sampleNow = applySigmoidRange((Math.random() - 0.5) * this.noiseEnvVal,0.8);
+            let sampleNow = applySigmoidRange((Math.random() - 0.5) * this.noiseEnvVal);
+            // let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
 
             sampleNow += this.delayLine1.operation(sampleNow);
             sampleNow += this.delayLine2.operation(sampleNow);
             sampleNow += this.delayLine3.operation(sampleNow);
 
-            sampleNow = applySigmoidRange(sampleNow);
+            sampleNow = clip(sampleNow);
             // bleed
             if (this.bleed) this.otherVoices.forEach(voice => {
                 if (voice.engaged && voice !== this) {
