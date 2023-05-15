@@ -13,29 +13,37 @@ const clear = () => {
 </script>
 <template>
     <EdgeHidableWidget pulltip="save and load" title="file">
-            <h2>File</h2>
-            <input type="text" v-model="editScore.name" @keydown="e=>e.stopPropagation()"  />
-            <p v-if="editScore.errorMessage" >{{editScore.errorMessage}}</p>
-            <template v-for="filename in editScore.filenamesList" :key="filename">
-                <div style="display:block" >
-                    <Button :onClick="() => editScore.loadFromLibraryItem(filename)" :active="editScore.name === filename">
-                        {{ filename }}
-                    </Button>
-                    <Button v-if="filename === editScore.name" :onClick="() => editScore.deleteItemNamed(filename)" :danger="true">
-                        ×
-                    </Button>
-                </div>
-            </template>
-            <Button :onClick="() => editScore.saveCurrent()" v-if="!editScore.inSyncWithStorage">
-                Save
-            </Button>
-            <p style="padding: 0.5em; display:inline-block;" v-else>In sync</p>
+        <h2>File</h2>
+        <input type="text" v-model="editScore.name" @keydown="e => e.stopPropagation()" />
+        <p v-if="editScore.errorMessage">{{ editScore.errorMessage }}</p>
+        <template v-for="filename in editScore.filenamesList" :key="filename">
+            <div style="display:block">
+                <Button :onClick="() => editScore.loadFromLibraryItem(filename)" :active="editScore.name === filename">
+                    {{ filename }}
+                </Button>
+                <Button v-if="filename === editScore.name" :onClick="() => editScore.deleteItemNamed(filename)"
+                    :danger="true">
+                    ×
+                </Button>
+            </div>
+        </template>
+        <Button :onClick="() => editScore.saveCurrent()" v-if="!editScore.inSyncWithStorage">
+            Save
+        </Button>
+        <p style="padding: 0.5em; display:inline-block;" v-else>In sync</p>
 
-            <Button :onClick="clear" danger>clear</Button>
+        <Button :onClick="clear" danger>clear</Button>
+
+        <h2>JSON</h2>
+
+        <Button :onClick="() => editScore.exportJSON()" v-if="editScore.name">
+            save
+        </Button>
+        <Input type="file"  :onChange="(evt:any)=>editScore.importJSON(evt.target.files)" accept=".json">
+        </Input>
+
     </EdgeHidableWidget>
-
 </template>
 
     
-<style>
-</style>
+<style></style>

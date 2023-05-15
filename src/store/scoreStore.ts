@@ -31,8 +31,14 @@ export const useScoreStore = defineStore("score", () => {
         }
     }
 
+    const toMIDIPitchBend = () => {
+    }
+
+
+
     return {
         notes,
+        toMIDIPitchBend,
         getTimeBounds,
     };
 });

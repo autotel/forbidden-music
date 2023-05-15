@@ -8,6 +8,7 @@ import { useViewStore } from './viewStore.js';
 import LZUTF8 from 'lzutf8';
 import { useToolStore } from './toolStore.js';
 import { useRefHistory } from '@vueuse/core';
+import { SynthParam } from '../synth/SynthInterface.js';
 
 
 interface LibraryItem {
@@ -15,8 +16,14 @@ interface LibraryItem {
     name: string;
     created: Number;
     edited: Number;
-    snaps: Array<[string, boolean]>
+    snaps: Array<[string, boolean]>;
+    instrument?: {
+        type: string;
+        params: Array<SynthParam>;
+    };
 }
+
+type PossibleImportObjects = LibraryItem | Array<Note>
 
 const appNameToRemove = "forbidden-music";
 
@@ -180,6 +187,58 @@ export const useEditNotesStore = defineStore("list", () => {
         }
     });
 
+
+    const downloadString = (text: string, fileType: string, fileName: string) => {
+        const blob = new Blob([text], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+
+        a.href = url;
+        a.download = name.value + ".json";
+        a.click();
+    }
+
+    const exportJSON = () => {
+        const json = JSON.stringify(score.notes);
+        downloadString(json, "application/json", name.value + ".json");
+    }
+
+    const exportMIDIPitchBend = () => {
+    }
+
+    const importJSON = (files: FileList) => {
+        const file = files[0];
+        const filename = file.name;
+        name.value = filename;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            const json = JSON.parse(text);
+            list.value = json.map((note: any) => new EditNote({
+                frequency: note.frequency,
+                start: note.start,
+                duration: note.duration,
+            }, view));
+        }
+        reader.readAsText(file);
+    }
+
+    const importObject = (iobj: PossibleImportObjects) => {
+        if ('notes' in iobj && Array.isArray(iobj.notes)) {
+            list.value = iobj.notes.map(note => new EditNote({
+                frequency: note.frequency,
+                start: note.start,
+                duration: note.duration,
+            }, view));
+        } else if (Array.isArray(iobj)) {
+            list.value = iobj.map(note => new EditNote({
+                frequency: note.frequency,
+                start: note.start,
+                duration: note.duration,
+            }, view));
+        }
+    }
+
     udpateItemsList();
 
     return {
@@ -192,6 +251,11 @@ export const useEditNotesStore = defineStore("list", () => {
         deleteItemNamed,
 
         history, undo, redo,
+
+        exportJSON,
+        importJSON,
+        exportMIDIPitchBend,
+        importObject,
 
         filenamesList,
         errorMessage,
