@@ -10,6 +10,22 @@ const editScore = useEditNotesStore();
 const clear = () => {
     editScore.clear();
 }
+
+const showJsonBrowser = () => {
+
+    let fileInput = document.getElementById('fileInput.JSONUpload') as HTMLInputElement;
+    if(!fileInput){
+        fileInput = document.createElement('input');
+        fileInput.id = 'fileInput.JSONUpload';
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+        fileInput.onchange = (evt: any) => {
+            editScore.importJSON(evt.target.files);
+        }  
+    }
+    fileInput.click();
+}
+
 </script>
 <template>
     <EdgeHidableWidget pulltip="save and load" title="file">
@@ -34,16 +50,20 @@ const clear = () => {
 
         <Button :onClick="clear" danger>clear</Button>
 
-        <h2>JSON</h2>
+        <h2>Save to computer</h2>
 
         <Button :onClick="() => editScore.exportJSON()" v-if="editScore.name">
-            save
+            Download JSOn
         </Button>
-        <Input type="file"  :onChange="(evt:any)=>editScore.importJSON(evt.target.files)" accept=".json">
-        </Input>
+        <Button :onClick="showJsonBrowser">Import JSON</Button>
 
     </EdgeHidableWidget>
 </template>
 
     
-<style></style>
+<style>
+input[type="file"] {
+    display: none;
+}
+
+</style>

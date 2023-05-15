@@ -220,7 +220,7 @@ export const useToolStore = defineStore("edit", () => {
             }
             
             noteThatWouldBeCreated.value.note.start = view.pxToTimeWithOffset(x);
-            noteThatWouldBeCreated.value.note.duration = 0.25;
+            noteThatWouldBeCreated.value.note.duration = 1;
             noteThatWouldBeCreated.value.note.octave = view.pxToOctaveWithOffset(y);
 
             snap.resetSnapExplanation();

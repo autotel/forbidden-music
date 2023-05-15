@@ -208,7 +208,7 @@ export const useEditNotesStore = defineStore("list", () => {
 
     const importJSON = (files: FileList) => {
         const file = files[0];
-        const filename = file.name;
+        const filename = file.name.replace(/.json\b/i, "");
         name.value = filename;
         const reader = new FileReader();
         reader.onload = (e) => {
