@@ -174,39 +174,49 @@ export default [
     "name": "Glockenspiel",
     "samples": [
       {
-        "name": "1381.648.wav",
-        "frequency": 1381.648,
-        "path": "audio/Glockenspiel/1381.648.wav"
+        "name": "1174.42.wav",
+        "frequency": 1174.42,
+        "path": "audio/Glockenspiel/1174.42.wav"
       },
       {
-        "name": "1384.312.wav",
-        "frequency": 1384.312,
-        "path": "audio/Glockenspiel/1384.312.wav"
+        "name": "1318.60-001.wav",
+        "frequency": 1318.6,
+        "path": "audio/Glockenspiel/1318.60-001.wav"
       },
       {
-        "name": "1386.235.wav",
-        "frequency": 1386.235,
-        "path": "audio/Glockenspiel/1386.235.wav"
+        "name": "1318.60-002.wav",
+        "frequency": 1318.6,
+        "path": "audio/Glockenspiel/1318.60-002.wav"
       },
       {
-        "name": "1475.306.wav",
-        "frequency": 1475.306,
-        "path": "audio/Glockenspiel/1475.306.wav"
+        "name": "1318.88.wav",
+        "frequency": 1318.88,
+        "path": "audio/Glockenspiel/1318.88.wav"
       },
       {
-        "name": "1498.078.wav",
-        "frequency": 1498.078,
-        "path": "audio/Glockenspiel/1498.078.wav"
+        "name": "1393.99.wav",
+        "frequency": 1393.99,
+        "path": "audio/Glockenspiel/1393.99.wav"
       },
       {
-        "name": "1611.567.wav",
-        "frequency": 1611.567,
-        "path": "audio/Glockenspiel/1611.567.wav"
+        "name": "1477.46.wav",
+        "frequency": 1477.46,
+        "path": "audio/Glockenspiel/1477.46.wav"
       },
       {
-        "name": "1923.939.wav",
-        "frequency": 1923.939,
-        "path": "audio/Glockenspiel/1923.939.wav"
+        "name": "1574.38.wav",
+        "frequency": 1574.38,
+        "path": "audio/Glockenspiel/1574.38.wav"
+      },
+      {
+        "name": "1760.71.wav",
+        "frequency": 1760.71,
+        "path": "audio/Glockenspiel/1760.71.wav"
+      },
+      {
+        "name": "1767.76.wav",
+        "frequency": 1767.76,
+        "path": "audio/Glockenspiel/1767.76.wav"
       },
       {
         "name": "1977.79.wav",
@@ -214,34 +224,24 @@ export default [
         "path": "audio/Glockenspiel/1977.79.wav"
       },
       {
-        "name": "2171.507.wav",
-        "frequency": 2171.507,
-        "path": "audio/Glockenspiel/2171.507.wav"
+        "name": "2096.57.wav",
+        "frequency": 2096.57,
+        "path": "audio/Glockenspiel/2096.57.wav"
       },
       {
-        "name": "2354.358.wav",
-        "frequency": 2354.358,
-        "path": "audio/Glockenspiel/2354.358.wav"
+        "name": "2349.07.wav",
+        "frequency": 2349.07,
+        "path": "audio/Glockenspiel/2349.07.wav"
       },
       {
-        "name": "2599.889.wav",
-        "frequency": 2599.889,
-        "path": "audio/Glockenspiel/2599.889.wav"
+        "name": "2639.74.wav",
+        "frequency": 2639.74,
+        "path": "audio/Glockenspiel/2639.74.wav"
       },
       {
-        "name": "2790.929.wav",
-        "frequency": 2790.929,
-        "path": "audio/Glockenspiel/2790.929.wav"
-      },
-      {
-        "name": "393.748.wav",
-        "frequency": 393.748,
-        "path": "audio/Glockenspiel/393.748.wav"
-      },
-      {
-        "name": "587.468.wav",
-        "frequency": 587.468,
-        "path": "audio/Glockenspiel/587.468.wav"
+        "name": "2798.45.wav",
+        "frequency": 2798.45,
+        "path": "audio/Glockenspiel/2798.45.wav"
       }
     ],
     "readme": "Sound pack downloaded from Freesound\n----------------------------------------\n\n\"Glockenspiel\"\n\nThis pack of sounds contains sounds by the following user:\n - cabled_mess ( https://freesound.org/people/cabled_mess/ )\n\nYou can find this pack online at: https://freesound.org/people/cabled_mess/packs/19827/\n\n\nPack description\n----------------\n\nSamples of the small Glockenspiel I started out on as a child.\r\nHave fun! :-)\r\n\r\n\r\nRecorded with a Zoom H5 and a Rode NT2000.\r\nEdited in Audacity and ocenaudio.\r\n\r\n\r\nIt&#x27;s always nice to hear what projects you use these sounds for.\r\nLet me know. ;-)\n\n\nLicenses in this pack (see below for individual sound licenses)\n---------------------------------------------------------------\n\nCreative Commons 0: http://creativecommons.org/publicdomain/zero/1.0/\n\n\nSounds in this pack\n-------------------\n\n  * 348924__cabled-mess__glockenspiel-46-f4-04.wav\n    * url: https://freesound.org/s/348924/\n    * license: Creative Commons 0\n  * 348923__cabled-mess__glockenspiel-45-f4-03.wav\n    * url: https://freesound.org/s/348923/\n    * license: Creative Commons 0\n  * 348922__cabled-mess__glockenspiel-44-f4-02.wav\n    * url: https://freesound.org/s/348922/\n    * license: Creative Commons 0\n  * 348921__cabled-mess__glockenspiel-43-f4-01.wav\n    * url: https://freesound.org/s/348921/\n    * license: Creative Commons 0\n  * 348920__cabled-mess__glockenspiel-42-e4-03.wav\n    * url: https://freesound.org/s/348920/\n    * license: Creative Commons 0\n  * 348919__cabled-mess__glockenspiel-41-e4-02.wav\n    * url: https://freesound.org/s/348919/\n    * license: Creative Commons 0\n  * 348918__cabled-mess__glockenspiel-40-e4-01.wav\n    * url: https://freesound.org/s/348918/\n    * license: Creative Commons 0\n  * 348917__cabled-mess__glockenspiel-36-d4-01.wav\n    * url: https://freesound.org/s/348917/\n    * license: Creative Commons 0\n  * 348916__cabled-mess__glockenspiel-38-d4-03.wav\n    * url: https://freesound.org/s/348916/\n    * license: Creative Commons 0\n  * 348915__cabled-mess__glockenspiel-37-d4-02.wav\n    * url: https://freesound.org/s/348915/\n    * license: Creative Commons 0\n  * 348914__cabled-mess__glockenspiel-39-d4-04.wav\n    * url: https://freesound.org/s/348914/\n    * license: Creative Commons 0\n  * 348911__cabled-mess__glockenspiel-32-c4-01.wav\n    * url: https://freesound.org/s/348911/\n    * license: Creative Commons 0\n  * 348910__cabled-mess__glockenspiel-35-c4-04.wav\n    * url: https://freesound.org/s/348910/\n    * license: Creative Commons 0\n  * 348909__cabled-mess__glockenspiel-34-c4-03.wav\n    * url: https://freesound.org/s/348909/\n    * license: Creative Commons 0\n  * 348908__cabled-mess__glockenspiel-33-c4-02.wav\n    * url: https://freesound.org/s/348908/\n    * license: Creative Commons 0\n  * 348907__cabled-mess__glockenspiel-28-b3-01.wav\n    * url: https://freesound.org/s/348907/\n    * license: Creative Commons 0\n  * 348906__cabled-mess__glockenspiel-31-b3-04.wav\n    * url: https://freesound.org/s/348906/\n    * license: Creative Commons 0\n  * 348905__cabled-mess__glockenspiel-30-b3-03.wav\n    * url: https://freesound.org/s/348905/\n    * license: Creative Commons 0\n  * 348904__cabled-mess__glockenspiel-29-b3-02.wav\n    * url: https://freesound.org/s/348904/\n    * license: Creative Commons 0\n  * 348898__cabled-mess__glockenspiel-27-bb3-04.wav\n    * url: https://freesound.org/s/348898/\n    * license: Creative Commons 0\n  * 348897__cabled-mess__glockenspiel-25-bb3-02.wav\n    * url: https://freesound.org/s/348897/\n    * license: Creative Commons 0\n  * 348896__cabled-mess__glockenspiel-26-bb3-03.wav\n    * url: https://freesound.org/s/348896/\n    * license: Creative Commons 0\n  * 348895__cabled-mess__glockenspiel-24-bb3-01.wav\n    * url: https://freesound.org/s/348895/\n    * license: Creative Commons 0\n  * 348893__cabled-mess__glockenspiel-21-a3-03.wav\n    * url: https://freesound.org/s/348893/\n    * license: Creative Commons 0\n  * 348892__cabled-mess__glockenspiel-22-a3-04.wav\n    * url: https://freesound.org/s/348892/\n    * license: Creative Commons 0\n  * 348891__cabled-mess__glockenspiel-19-a3-01.wav\n    * url: https://freesound.org/s/348891/\n    * license: Creative Commons 0\n  * 348890__cabled-mess__glockenspiel-20-a3-02.wav\n    * url: https://freesound.org/s/348890/\n    * license: Creative Commons 0\n  * 348889__cabled-mess__glockenspiel-23-a3-05.wav\n    * url: https://freesound.org/s/348889/\n    * license: Creative Commons 0\n  * 348888__cabled-mess__glockenspiel-12-f-3-01.wav\n    * url: https://freesound.org/s/348888/\n    * license: Creative Commons 0\n  * 348887__cabled-mess__glockenspiel-13-f-3-02.wav\n    * url: https://freesound.org/s/348887/\n    * license: Creative Commons 0\n  * 348886__cabled-mess__glockenspiel-14-f-3-03.wav\n    * url: https://freesound.org/s/348886/\n    * license: Creative Commons 0\n  * 348885__cabled-mess__glockenspiel-16-g3-02.wav\n    * url: https://freesound.org/s/348885/\n    * license: Creative Commons 0\n  * 348884__cabled-mess__glockenspiel-15-g3-01.wav\n    * url: https://freesound.org/s/348884/\n    * license: Creative Commons 0\n  * 348883__cabled-mess__glockenspiel-17-g3-03.wav\n    * url: https://freesound.org/s/348883/\n    * license: Creative Commons 0\n  * 348882__cabled-mess__glockenspiel-19-g3-05.wav\n    * url: https://freesound.org/s/348882/\n    * license: Creative Commons 0\n  * 348880__cabled-mess__glockenspiel-01-f3-01.wav\n    * url: https://freesound.org/s/348880/\n    * license: Creative Commons 0\n  * 348879__cabled-mess__glockenspiel-01-e3-04.wav\n    * url: https://freesound.org/s/348879/\n    * license: Creative Commons 0\n  * 348878__cabled-mess__glockenspiel-01-f3-02.wav\n    * url: https://freesound.org/s/348878/\n    * license: Creative Commons 0\n  * 348877__cabled-mess__glockenspiel-01-e3-03.wav\n    * url: https://freesound.org/s/348877/\n    * license: Creative Commons 0\n  * 348876__cabled-mess__glockenspiel-01-e3-02.wav\n    * url: https://freesound.org/s/348876/\n    * license: Creative Commons 0\n  * 348875__cabled-mess__glockenspiel-01-d3-03.wav\n    * url: https://freesound.org/s/348875/\n    * license: Creative Commons 0\n  * 348874__cabled-mess__glockenspiel-01-d3-01.wav\n    * url: https://freesound.org/s/348874/\n    * license: Creative Commons 0\n  * 348873__cabled-mess__glockenspiel-01-d3-02.wav\n    * url: https://freesound.org/s/348873/\n    * license: Creative Commons 0\n  * 348872__cabled-mess__glockenspiel-01-d3-05.wav\n    * url: https://freesound.org/s/348872/\n    * license: Creative Commons 0\n  * 348871__cabled-mess__glockenspiel-01-e3-01.wav\n    * url: https://freesound.org/s/348871/\n    * license: Creative Commons 0\n  * 348870__cabled-mess__glockenspiel-01-d3-04.wav\n    * url: https://freesound.org/s/348870/\n    * license: Creative Commons 0\n\n\n"
