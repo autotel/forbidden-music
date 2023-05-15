@@ -20,13 +20,14 @@ class DelayLine extends SampleBySampleOperator {
 
     delaySamples = 400;
     feedback = 0.99;
-
-    /** @type {SampleBySampleOperator|null} */
-    sidechainEffect = null;
     /** @type {Array<Number>}*/
     memory = [];
 
-    operation = (insample) => {
+    /**
+     * @param {Number} insample
+     * @param {null | function} sidechain
+     * */
+    operation = (insample, sidechain = null) => {
         let ret = 0;
 
         if (this.memory.length > this.delaySamples) {
@@ -37,8 +38,8 @@ class DelayLine extends SampleBySampleOperator {
         }
         ret += insample;
 
-        if (this.sidechainEffect) {
-            ret = this.sidechainEffect.operation(ret);
+        if (sidechain) {
+            ret = sidechain(ret);
         }
 
         this.memory.push(ret * this.feedback);
@@ -49,6 +50,7 @@ class DelayLine extends SampleBySampleOperator {
 
         ret += this.memory[0] || 0;
         ret += insample;
+
 
         // if (this.sidechainEffect) {
         //     ret = this.sidechainEffect.operation(ret);
@@ -171,6 +173,26 @@ class IIRBPFRochars extends SampleBySampleOperator {
         return this.lp.operation(hiPassed);
     }
 }
+/**
+ * bfilt - High-order Butterworth filter.
+by Andy Allinger, 2021, released to the public domain
+
+   Permission  to  use, copy, modify, and distribute this software and
+   its documentation  for  any  purpose  and  without  fee  is  hereby
+   granted,  without any conditions or restrictions.  This software is
+   provided "as is" without express or implied warranty.
+
+Refer to:
+
+    "Cookbook formulae for audio EQ biquad filter coefficients"
+    Robert Bristow-Johnson, [2005]
+
+    "The Butterworth Low-Pass Filter"
+    John Stensby, 19 Oct 2005
+
+The Butterworth poles lie on a circle.  The product of the qualities
+is 2^(-1/2).
+*/
 class Butterworth1 extends SampleBySampleOperator {
     /**
      *    @param {number} fpass Pass frequency, cycles per second
@@ -194,7 +216,6 @@ class Butterworth1 extends SampleBySampleOperator {
             if (hpass <= 0 || hpass >= 1) throw new Error('hpass must be between 0 and 1, got ' + hpass);
             if (hstop <= 0 || hstop >= 1) throw new Error('hstop must be between 0 and 1, got ' + hstop);
             if (fpass === fstop) throw new Error('fpass and fstop must be different, got ' + fpass);
-
             const isLowpass = fpass < fstop;
             const d = 1 / hstop;
             const e = Math.sqrt(1 / (hpass * hpass) - 1);
@@ -223,7 +244,7 @@ class Butterworth1 extends SampleBySampleOperator {
         }
 
         this.set(fpass, fstop, hpass, hstop);
-
+        this.ll = 1000;
         this.operation = (input) => {
             x2 = x1;
             x1 = x;
@@ -241,10 +262,12 @@ class ButterworthLpf1 extends SampleBySampleOperator {
 
         const hpass = 0.95;
         const hstop = 0.05;
-        let b = null;
-        this.set = (cutoffFreq = 500, gain = 1, sharpness = 1.2) => {
+        /** @type {Butterworth1} */
+        let b;
+        this.set = (cutoffFreq = 500, gain = 1, sharpness = 8) => {
             const fpass = cutoffFreq;
             const fstop = cutoffFreq - cutoffFreq / sharpness;
+            console.log("setf",fpass,fstop)
             if (!b) {
                 b = new Butterworth1(fpass, fstop, hpass, hstop);
             } else {
@@ -264,7 +287,8 @@ class ButterworthHpf1 extends SampleBySampleOperator {
 
         const hpass = 0.95;
         const hstop = 0.05;
-        let b = null;
+        /** @type {Butterworth1} */
+        let b;
         this.set = (cutoffFreq = 500, gain = 1, sharpness = 1.2) => {
             const fpass = cutoffFreq;
             const fstop = cutoffFreq - cutoffFreq / sharpness;
@@ -351,15 +375,8 @@ class Karplus2Voice extends Voice {
     engaged = false;
 
     delayLine1 = new DelayLine();
-    delayLine2 = new DelayLine();
-    delayLine3 = new DelayLine();
 
-    // filter1 = new ButterworthBpf1(1,600);
-    // filter2 = new ButterworthBpf1(1,600);
-    // filter3 = new ButterworthBpf1(1,600);
-    filter1 = new ButterworthLpf1(600);
-    filter2 = new ButterworthLpf1(600);
-    filter3 = new ButterworthLpf1(600);
+    // filter1 = new Butter(1,90);
 
     /** @type {Array<Karplus2Voice>} */
     otherVoices = [];
@@ -367,38 +384,25 @@ class Karplus2Voice extends Voice {
     constructor(voicesPool = []) {
         super();
         // define the characteristics of the synth timbre.
-        const impulseDecay = 10; //seconds
+        const impulseDecay = 0.4; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = -0.999;
-        this.delayLine2.feedback = -0.999;
-        this.delayLine3.feedback = -0.999;
-        
-        this.delayLine1.sidechainEffect = this.filter1;
-        this.delayLine2.sidechainEffect = this.filter2;
-        this.delayLine2.sidechainEffect = this.filter3;
+        this.delayLine1.feedback = 0.9;
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
+
     }
 
     trig({ freq, amp, dur }) {
         this.noiseEnvVal = amp;
         // const splfq = samplingRate / freq;
         this.delayLine1.delaySamples = samplingRate / freq;
-        this.delayLine2.delaySamples = (samplingRate / freq) * 0.501;
-        this.delayLine3.delaySamples = (samplingRate / freq) * 0.499;
 
         this.isBusy = true;
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
-        // it seems these are doing barely anyhting to the high end
-        // I think we need butterworth or chevyshev
-        // this.filter1.setFreqs(freq / 64, freq / 64)
-        // this.filter2.setFreqs(freq / 64, freq / 64)
-        // this.filter3.setFreqs(freq / 64, freq / 64)
-        this.filter1.set(freq * 2, 0.1, 2)
-        this.filter2.set(freq * 2, 0.1, 2)
-        this.filter3.set(freq * 2, 0.1, 2)
+        // it seems this doing barely anyhting to the high end
+        // this.filter1.setFreqs(1, 900);
     }
     stop() {
         this.noiseEnvVal = 0;
@@ -414,20 +418,25 @@ class Karplus2Voice extends Voice {
         const output = new Float32Array(blockSize);
         if (!this.engaged) return output;
         for (let splN = 0; splN < blockSize; splN++) {
-            let sampleNow = applySigmoidRange((Math.random() - 0.5) * this.noiseEnvVal);
-            // let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
 
-            sampleNow += this.delayLine1.operation(sampleNow);
-            sampleNow += this.delayLine2.operation(sampleNow);
-            sampleNow += this.delayLine3.operation(sampleNow);
+
+            let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
+            // let sampleNow = (Math.random() - 0.5);
+
+            sampleNow += this.delayLine1.operation(sampleNow,(s)=>{
+                // return this.filter1.operation(applySigmoidRange(s));
+                return applySigmoidRange(s);
+            });
+            // sampleNow += this.delayLine2.operation(sampleNow);
+            // sampleNow += this.delayLine3.operation(sampleNow);
 
             sampleNow = clip(sampleNow);
             // bleed
             if (this.bleed) this.otherVoices.forEach(voice => {
                 if (voice.engaged && voice !== this) {
                     voice.delayLine1.operationNoTime(sampleNow * this.bleed);
-                    voice.delayLine2.operationNoTime(sampleNow * this.bleed);
-                    voice.delayLine3.operationNoTime(sampleNow * this.bleed);
+                    // voice.delayLine2.operationNoTime(sampleNow * this.bleed);
+                    // voice.delayLine3.operationNoTime(sampleNow * this.bleed);
                 }
             });
             // this.delayLine1.delaySamples += Math.round(sampleNow * 3);
