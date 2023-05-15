@@ -8,6 +8,13 @@ const samplesDir = path.join(scriptDir, "/public", samplesRelativetoSrc);
 const samplePacks = readdir(samplesDir);
 
 /**
+ * make sure that the script is being called from one dir up
+ */
+if (!samplePacks) {
+    throw new Error("run this script from the root of the project");
+}
+
+/**
  * function that maps the array, but if the callback returns false, it will not be included in the result
  */
 const filterMap = (arr, callback) => {
@@ -40,6 +47,7 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
         if (isNaN(fq)) {
             return false
         }
+        console.log("sample",samplePack, sample, fq);
         return {
             name: sample,
             frequency: fq,

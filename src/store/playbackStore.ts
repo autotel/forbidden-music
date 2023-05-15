@@ -36,10 +36,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     // let toneFmSynth = null as ToneFmSynth | null;
     let karplusSynth = null as KarplusSynth | null;
-    let sampler1 = null as MagicSampler | null;
-    let sampler2 = null as MagicSampler | null;
-    let sampler3 = null as MagicSampler | null;
-
+    let samplers = [] as MagicSampler[];
     let availableSynths = ref([] as SynthInstance[]);
 
     let synth = ref<SynthInstance | undefined>(undefined);
@@ -50,27 +47,17 @@ export const usePlaybackStore = defineStore("playback", () => {
         alreadyStarted = true;
         await audioContext.resume();
 
-        sampler1 = new MagicSampler(
-            audioContext,
-            sampleDefinitions[0].samples,
-            sampleDefinitions[0].name,
-            sampleDefinitions[0].readme
-        );
-        sampler2 = new MagicSampler(
-            audioContext,
-            sampleDefinitions[1].samples,
-            sampleDefinitions[1].name,
-            sampleDefinitions[1].readme
-        );
-        sampler3 = new MagicSampler(
-            audioContext,
-            sampleDefinitions[2].samples,
-            sampleDefinitions[2].name,
-            sampleDefinitions[2].readme
-        );
+        sampleDefinitions.forEach((sampleDefinition) => {
+            samplers.push(new MagicSampler(
+                audioContext,
+                sampleDefinition.samples,
+                sampleDefinition.name,
+                sampleDefinition.readme
+            ))
+        });
         // toneFmSynth = new ToneFmSynth(audioContext);
         karplusSynth = new KarplusSynth(audioContext);
-        availableSynths.value = [karplusSynth, sampler1, sampler2, sampler3];
+        availableSynths.value = [karplusSynth, ...samplers];
         synth.value = karplusSynth;
 
         console.log("audio is ready");

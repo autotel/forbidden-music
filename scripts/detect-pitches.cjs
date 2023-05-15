@@ -5,9 +5,21 @@ const path = require('path')
 
 // see below for option parameters.
 const detectPitch = YIN({ sampleRate: 44100 })
-const containerOfAll = path.resolve('../public/audio')
+const containerOfAll = path.resolve('/public/audio')
 //for each wav file in the directory
-const containers = fs.readdirSync(container)
+const containers = fs.readdirSync(containerOfAll)
+
+
+
+/**
+ * make sure that the script is being called from one dir up
+ */
+if (!containers) {
+    throw new Error("run this script from the root of the project");
+}
+
+
+let promises = [];
 
 containers.forEach(containerDir => {
     const container = path.join(containerOfAll, containerDir)
@@ -22,8 +34,6 @@ containers.forEach(containerDir => {
         console.log(`already processed. delete ${alreadyProcessedFn} file to reprocess`)
         return
     }
-
-    let promises = [];
     files.forEach(file => {
 
         promises.push(new Promise(async (resolve, reject) => {
@@ -39,7 +49,11 @@ containers.forEach(containerDir => {
                 const pitch = detectPitch(float64Array) // All detectors are using float64Array internally, but you can also give an ordinary array of numbers
                 const pitchThreeDecimal = pitch.toFixed(3)
                 const newFilePath = path.join(container, `${pitchThreeDecimal}.wav`)
-                console.log(`|| ${filepath}`, `|| \n\t\t${newFilePath}`)
+                // console.log(`|| ${filepath}`, `|| \n\t\t${newFilePath}`)
+                if(pitch < 40 || pitch > 20000) {
+                    console.log(`skipping ${file} because pitch is ${pitch}`)
+                    return  
+                }
                 fs.renameSync(filepath, newFilePath)
                 // create file to indicate that process has been done already 
                 fs.writeFileSync(path.join(container, alreadyProcessedFn), "")
