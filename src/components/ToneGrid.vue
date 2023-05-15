@@ -1,19 +1,38 @@
 <script setup lang="ts">
 import { useViewStore } from '../store/viewStore';
-import { onMounted, Ref, ref, watchEffect, computed } from 'vue';
+import { onMounted, Ref, ref, watch, watchEffect, computed } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
+import { useSnapStore } from '../store/snapStore';
 
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;
 const lineValues = ref([]) as Ref<number[]>;
+const snap = useSnapStore();
 
-watchEffect(() => {
+watch([view,snap.values],() => {
     linePositionsPx.value = [];
     lineValues.value = [];
-    for (let i = 0; i < view.viewHeightOctaves + 1; i++) {
-        linePositionsPx.value.push(
-            view.octaveToPx(view.octaveOffset - i)
-        );
+    if (snap.values['customFrequencyTable']?.active) {
+        // display one line per frequency in the tableä
+        const frequencies = snap.customFrequenciesTable;
+        for (let i = 0; i < frequencies.length; i++) {
+            if(!view.isOctaveInView(i)) continue;
+            linePositionsPx.value.push(
+                view.frequencyToPxWithOffset(frequencies[i])
+            );
+            lineValues.value.push(frequencies[i]);
+        }
+    } else {
+        let cc= 0 
+        for (let i = 0; i < 32; i++) {
+            if(!view.isOctaveInView(i)) continue;
+            linePositionsPx.value.push(
+                view.octaveToPxWithOffset(i)
+            );
+            cc++;
+        }
+        console.log(cc)
+
     }
 });
 onMounted(() => {
@@ -39,6 +58,7 @@ onMounted(() => {
 <style>
 .grid-line {
     stroke: #e0e0e0;
+    /* stroke: #250909; */
     stroke-width: 1px;
     stroke-dasharray: 3px
 }

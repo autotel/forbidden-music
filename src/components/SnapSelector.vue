@@ -3,30 +3,35 @@ import { ref } from 'vue'
 import { Tool } from '../dataTypes/Tool';
 import { useSnapStore, SnapType } from '../store/snapStore';
 import { useToolStore } from '../store/toolStore';
-
+import Pen from './icons/Pen.vue';
 import Button from './Button.vue';
 import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
 const tool = useToolStore();
 const snap = useSnapStore();
-//{{ isnap.active ? '☑' : '☐' }} 
+
+const frequencyTableEditButtonHandler = (e: MouseEvent) => {
+  e.stopImmediatePropagation()
+  tool.showFrequencyTableEditor = true
+  snap.values.customFrequencyTable.active = true
+}
 </script>
 
 <template>
   <EdgeHidableWidget style="bottom: 2em" pulltip="open snaps">
     <h2>Snap control</h2>
-    <Button 
-      v-for="(isnap, snapName) in snap.values" 
-      :onClick="() => isnap.active = !isnap.active" 
-      :class="{
-        active: isnap.active,
-        time: isnap.type === SnapType.Time,
-        tone: isnap.type === SnapType.Tone,
-        toneRelation: isnap.type === SnapType.ToneRelation,
-      }" 
-      :tooltip="isnap.description"
-    >
+    <Button v-for="(isnap, snapName) in snap.values" :onClick="() => isnap.active = !isnap.active" :class="{
+      active: isnap.active,
+      time: isnap.type === SnapType.Time,
+      tone: isnap.type === SnapType.Tone,
+      toneRelation: isnap.type === SnapType.ToneRelation,
+    }" :tooltip="isnap.description">
       {{ isnap.icon }}
+      <template v-if="snapName === 'customFrequencyTable'">
+        <span class="sub-button" :onClick="frequencyTableEditButtonHandler">
+          <Pen/>
+        </span>
+      </template>
     </Button>
   </EdgeHidableWidget>
 </template>
@@ -38,10 +43,21 @@ Button {
   /* font-weight: 600; */
   /* opacity:0.5; */
 }
+
 /* 
 Button:active {
 } */
 
+.sub-button {
+  border-radius: 1em;
+  height: 2em;
+  background-color: rgb(212, 212, 212);
+  padding: 0 0.6em;
+  border: solid 1px;
+}
+.sub-button:hover {
+  background-color: rgba(255, 255, 255, 0.425);
+}
 .active {
   /* border-bottom: solid 4px;
   padding-bottom: 0; */
@@ -50,6 +66,7 @@ Button:active {
   /* top: -4px; */
   border-bottom: solid 4px;
 }
+
 .time {
   background-color: rgb(0, 99, 145);
 }
@@ -57,6 +74,7 @@ Button:active {
 .tone {
   background-color: rgb(187, 153, 0);
 }
+
 .toneRelation {
   background-color: rgb(199, 139, 61);
 }
@@ -72,6 +90,7 @@ Button:active {
 .tone.active:hover {
   background-color: rgb(255, 230, 116);
 }
+
 .toneRelation.active,
 .toneRelation:hover,
 .toneRelation.active:hover {

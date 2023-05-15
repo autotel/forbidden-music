@@ -4,7 +4,7 @@ import { Tool } from '../dataTypes/Tool.js';
 import Fraction from 'fraction.js';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { ref } from 'vue';
-
+import colundi from '../scales/colundi.js';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -190,6 +190,7 @@ export const useSnapStore = defineStore("snap", () => {
     const focusedNote = ref(null as EditNote | null);
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
+    const customFrequenciesTable = ref(colundi as number[]);
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -266,6 +267,19 @@ export const useSnapStore = defineStore("snap", () => {
         }
 
         // Tone snaps
+        if (snapValues.customFrequencyTable.active === true) {
+            if(customFrequenciesTable.value.length > 0) {
+                // find the closest frequency in the table
+                const closestFrequency = customFrequenciesTable.value.reduce((prev, curr) => {
+                    return (Math.abs(curr - targetHz) < Math.abs(prev - targetHz) ? curr : prev);
+                });
+                toneSnap.addSnappedValue(frequencyToOctave(closestFrequency), {
+                    text: "custom frequency table",
+                    relatedNumber: closestFrequency,
+                });
+            }
+        }
+
         if (snapValues.hzEven.active === true) {
             const relatedNumber = Math.round(targetHz / 2) * 2;
             toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
@@ -429,6 +443,7 @@ export const useSnapStore = defineStore("snap", () => {
         focusedNote,
         timeSnapExplanation,
         toneSnapExplanation,
+        customFrequenciesTable,
         setFocusedNote,
         resetSnapExplanation,
         snap,

@@ -24,7 +24,7 @@ export interface NoteDefb {
     frequency: number
 }
 
-const frequencyConstant = 11;
+export const frequencyConstant = 11;
 
 export const octaveToFrequency = (octave: number) => frequencyConstant * Math.pow(2, octave);
 export const frequencyToOctave = (frequency: number) => Math.log2(frequency / frequencyConstant);
