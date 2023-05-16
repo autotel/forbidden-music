@@ -3,24 +3,24 @@ export interface Note {
     /** start in musical time */
     start: number,
     /** duration in musical time */
-    duration: number,
+    duration?: number,
     /** note in octaves */
     octave: number,
     /** frequency hertz */
     frequency: number,
-    /** end, which is not guaranteed be up to date */
-    end: number,
+    /** end */
+    end?: number | undefined,
     clone: () => Note,
 }
 
 export interface NoteDefa {
     start: number,
-    duration: number,
+    duration?: number,
     octave: number
 }
 export interface NoteDefb {
     start: number,
-    duration: number,
+    duration?: number,
     frequency: number
 }
 
@@ -29,9 +29,7 @@ export const frequencyConstant = 11;
 export const octaveToFrequency = (octave: number) => frequencyConstant * Math.pow(2, octave);
 export const frequencyToOctave = (frequency: number) => Math.log2(frequency / frequencyConstant);
 
-
-
-export const makeNote = (noteDef: NoteDefa | NoteDefb):Note => {
+export const makeNote = (noteDef: NoteDefa | NoteDefb): Note => {
     const nn = {
         start: noteDef.start,
         duration: noteDef.duration,
@@ -39,14 +37,18 @@ export const makeNote = (noteDef: NoteDefa | NoteDefb):Note => {
         _frequency: null as number | null,
         selected: false,
         clone() { return makeNote(this) },
-        set end(value: number) {
+        set end(value: number | undefined) {
+            if (value === undefined) {
+                delete this.duration;
+                return
+            }
             this.duration = value - this.start;
             if (this.duration < 0) {
-                throw new Error("end cannot be less than start");
+                throw new Error("end is less than start");
             }
         },
         get end() {
-            return this.start + this.duration;
+            return this.duration ? this.start + this.duration : undefined;
         },
         set octave(value: number) {
             this._octave = value;

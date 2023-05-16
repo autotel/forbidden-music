@@ -1,6 +1,5 @@
 import * as Tone from "tone";
-import { FMSynth, FMSynthOptions, Freeverb, PolySynth } from 'tone';
-import { AnyAudioContext } from "tone/build/esm/core/context/AudioContext";
+import { FMSynthOptions, Freeverb, PolySynth } from 'tone';
 import { ParamType, SynthInstance, SynthParam } from "../synth/SynthInterface";
 
 export class ToneFmSynth implements SynthInstance {

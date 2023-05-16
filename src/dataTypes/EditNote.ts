@@ -19,18 +19,26 @@ export class EditNote {
         return this.view.timeToPxWithOffset(this.note.start)
     }
     get y() {
-        return this.view.octaveToPxWithOffset(this.note.octave) - this.height / 2
+        return this.view.octaveToPxWithOffset(this.note.octave)
     }
     get width() {
-        return this.view.timeToPx(this.note.duration)
+        return this.note.duration ? this.view.timeToPx(this.note.duration) : 0;
     }
     get height() {
-        return Math.abs(this.view.octaveToPx(1 / 12))
+        // return Math.abs(this.view.octaveToPx(1 / 12))}
+        return 18;
+    }
+    get circle() {
+        return {
+            cx: this.x,
+            cy: this.y,
+            r: this.height / 2
+        }
     }
     get rect() {
         return {
             x: this.x,
-            y: this.y,
+            y: this.y - this.height / 2,
             width: this.width,
             height: this.height
         }
@@ -38,17 +46,17 @@ export class EditNote {
     get rightEdge() {
         return {
             x: this.x + this.width - 5,
-            y: this.y,
+            y: this.y - this.height / 2,
             width: 5,
             height: this.height,
         }
     }
 
     dragStart: (mouse: { x: number, y: number }) => void;
-    
+
     dragMove: (dragDelta: { x: number, y: number }) => void;
-    dragMoveOctaves: (octaveDelta:number) => void;
-    dragMoveTimeStart: (dragDelta: number ) => void;
+    dragMoveOctaves: (octaveDelta: number) => void;
+    dragMoveTimeStart: (dragDelta: number) => void;
 
     dragLengthMove: (mouse: { x: number, y: number }) => void;
     dragEnd: (mouse: { x: number, y: number }) => void;
@@ -56,7 +64,7 @@ export class EditNote {
     dragStartedTime = 0;
     dragStartedOctave = 0;
     dragStartedDuration = 0;
-    
+
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         this.note = makeNote(noteDef);
         this.view = view;
@@ -65,18 +73,18 @@ export class EditNote {
         this.dragStart = () => {
             this.dragStartedOctave = this.note.octave;
             this.dragStartedTime = this.note.start;
-            this.dragStartedDuration = this.note.duration;
+            this.dragStartedDuration = this.note.duration || 0;
         }
         this.dragMove = (dragDelta: { x: number, y: number }) => {
             this.note.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
             this.note.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
             this.udpateFlag = makeRandomString();
         }
-        this.dragMoveOctaves = (octaveDelta:number) => {
+        this.dragMoveOctaves = (octaveDelta: number) => {
             this.note.octave = this.dragStartedOctave + octaveDelta;
             this.udpateFlag = makeRandomString();
         }
-        this.dragMoveTimeStart = (timeDelta:number) => {
+        this.dragMoveTimeStart = (timeDelta: number) => {
             this.note.start = this.dragStartedTime + timeDelta;
             this.udpateFlag = makeRandomString();
         }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
-import { SynthParam, NumberSynthParam } from '../toneSynths/SynthInterface';
+import { NumberSynthParam } from '../synth/SynthInterface';
 
 const props = defineProps({
     param: {

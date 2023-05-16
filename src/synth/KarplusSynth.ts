@@ -67,6 +67,19 @@ export class KarplusSynth implements SynthInstance {
             ref: frequency.toFixed(4)
         } as KarplusStartVoiceMessage);
     };
+    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+        if (!this.audioContext) throw new Error("audio context not created");
+        if (!this.engine) throw new Error("engine not created");
+        const startTime = this.audioContext.currentTime + relativeNoteStart;
+
+        this.engine.port.postMessage({
+            freq: frequency,
+            amp: velocity,
+            duration: 8, // TODO: create a perc mode to this synth
+            ref: frequency.toFixed(4)
+        } as KarplusStartVoiceMessage);
+    };
+
     getParams = () => [];
     set = (params: any) => {
 

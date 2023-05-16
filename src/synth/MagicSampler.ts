@@ -1,4 +1,4 @@
-import {SynthInstance} from "./SynthInterface";
+import { SynthInstance } from "./SynthInterface";
 
 interface SampleFileDefinition {
     name: string;
@@ -45,6 +45,7 @@ class SamplerVoice {
     }
 
     private releaseVoice = () => {
+        console.log("v released");
         this.inUse = false;
     }
 
@@ -69,12 +70,19 @@ class SamplerVoice {
         velocity: number
     ) => {
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-        // allow catch up, but not for already ended notes.
-        if (relativeNoteStart + duration < 0) return;
-        if (relativeNoteStart < 0) {
+        let catchup = relativeNoteStart < 0;
+        let skipSample = 0;
+        if (catchup) {
+            // allow catch up, but not for already ended notes.
+            if (relativeNoteStart + duration < 0) return;
             duration += relativeNoteStart;
+            skipSample = -relativeNoteStart;
             relativeNoteStart = 0;
         }
+        const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
+        const absoluteNoteEnd = absoluteNoteStart + duration;
+
+        console.log("start in", relativeNoteStart,"end in", relativeNoteStart + duration);
 
         this.inUse = true;
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
@@ -82,13 +90,23 @@ class SamplerVoice {
 
         if (!this.bufferSource) throw new Error("bufferSource not created");
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
-        
-        this.outputNode.gain.setValueAtTime(0, relativeNoteStart);
-        this.outputNode.gain.linearRampToValueAtTime(velocity, relativeNoteStart + 0.01);
-        this.outputNode.gain.linearRampToValueAtTime(0, relativeNoteStart + duration);
-        this.bufferSource.start(relativeNoteStart, 0, duration);
+
+        this.outputNode.gain.value = velocity;
+        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart);
+        this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd);
+        this.bufferSource.start(absoluteNoteStart, skipSample, duration);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };
+
+    triggerPerc = (
+        frequency: number,
+        relativeNoteStart: number,
+        velocity: number
+    ) => {
+        const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
+        const duration = sampleSource.sampleBuffer!.duration;
+        this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+    }
 
     stop = () => {
         if (!this.bufferSource) return;
@@ -122,8 +140,8 @@ export class MagicSampler implements SynthInstance {
     credits: string = "";
     name: string = "unnamed";
     constructor(
-        audioContext: AudioContext, 
-        sampleDefinitions: SampleFileDefinition[], 
+        audioContext: AudioContext,
+        sampleDefinitions: SampleFileDefinition[],
         name?: string,
         credits?: string
     ) {
@@ -136,7 +154,7 @@ export class MagicSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
         });
         this.outputNode.connect(audioContext.destination);
-        if(credits) this.credits = credits;
+        if (credits) this.credits = credits;
         if (name) this.name = name;
     }
     triggerAttackRelease = (
@@ -157,6 +175,21 @@ export class MagicSampler implements SynthInstance {
 
         }
         sampleVoice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+    };
+    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+        let sampleVoice = this.sampleVoices.find((sampleVoice) => {
+            return !sampleVoice.inUse;
+        });
+        if (!sampleVoice) {
+            const sampleVoiceIndex = this.sampleVoices.length;
+            this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
+            sampleVoice = this.sampleVoices[sampleVoiceIndex];
+            console.log("polyphony increased to", this.sampleVoices.length);
+            sampleVoice.outputNode.connect(this.outputNode);
+
+        }
+        sampleVoice.triggerPerc(frequency, relativeNoteStart, velocity);
+
     };
     releaseAll = () => {
         this.sampleVoices.forEach((sampleVoice) => {
@@ -179,4 +212,3 @@ export class MagicSampler implements SynthInstance {
         return [];
     }
 }
- 

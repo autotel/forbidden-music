@@ -3,7 +3,7 @@ import { computed, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { useScoreStore } from './scoreStore.js';
 import { useEditNotesStore } from './editNotesStore.js';
-import { frequencyConstant } from '../dataTypes/Note.js';
+import { frequencyConstant, frequencyToOctave } from '../dataTypes/Note.js';
 
 // TODO: move editNotes to its own library
 export const useViewStore = defineStore("view", () => {
@@ -28,7 +28,7 @@ export const useViewStore = defineStore("view", () => {
         return editNotes.list.filter(editNote => {
             const note = editNote.note;
             return note.start < timeOffset.value + viewWidthTime.value &&
-                note.start + note.duration > timeOffset.value;
+                note.start + (note.duration || 0) > timeOffset.value;
         });
     });
 
@@ -72,7 +72,7 @@ export const useViewStore = defineStore("view", () => {
         return octaveToPx(octave + octaveOffset.value) + _offsetPxY.value;
     };
     const frequencyToPxWithOffset = (frequency: number): number => {
-        return octaveToPxWithOffset(Math.log2(frequency / frequencyConstant));
+        return octaveToPxWithOffset(frequencyToOctave(frequency / frequencyConstant));
     };
     const isOctaveInView = (octave: number): boolean => {
         const ioctave = viewHeightOctaves.value - octave;

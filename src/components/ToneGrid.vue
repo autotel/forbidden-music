@@ -47,9 +47,9 @@ onMounted(() => {
 
     </template>
     <text x="0" :y="view.octaveToPxWithOffset(0)">0</text>
-    <text x="0" :y="view.octaveToPxWithOffset(2)">2</text>
     <text x="0" :y="view.octaveToPxWithOffset(4)">4</text>
     <text x="0" :y="view.octaveToPxWithOffset(8)">8</text>
+    <text x="0" :y="view.octaveToPxWithOffset(12)">12</text>
     <text x="0" :y="view.octaveToPxWithOffset(16)">16</text>
 </template>
 <style scoped>

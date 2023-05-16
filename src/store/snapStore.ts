@@ -209,7 +209,7 @@ export const useSnapStore = defineStore("snap", () => {
 
         const toneSnap = new SnapTracker(targetOctave);
         const timeSnap = new SnapTracker(editNote.note.start);
-        const durationSnap = new SnapTracker(editNote.note.duration);
+        const durationSnap = editNote.note.duration ? new SnapTracker(editNote.note.duration) : false;
 
         const snapValues = values.value as { [key: string]: SnapDefinition };
 
@@ -221,22 +221,26 @@ export const useSnapStore = defineStore("snap", () => {
                 text: "Quarter snap",
                 relatedNumber,
             });
-            const relatedNumberd = Math.round(editNote.note.duration * 4) / 4
-            durationSnap.addSnappedValue(relatedNumberd, {
-                text: "Quarter snap",
-                relatedNumber: relatedNumberd,
-            });
+            if (durationSnap) {
+                const relatedNumberd = Math.round(editNote.note.duration! * 4) / 4
+                durationSnap.addSnappedValue(relatedNumberd, {
+                    text: "Quarter snap",
+                    relatedNumber: relatedNumberd,
+                });
+            }
         } else if (snapValues.timeInteger.active === true) {
             const relatedStart = Math.round(editNote.note.start);
-            const relatedDuration = Math.round(editNote.note.duration);
             timeSnap.addSnappedValue(relatedStart, {
                 text: "Integer snap",
                 relatedNumber: relatedStart,
             });
-            durationSnap.addSnappedValue(relatedDuration, {
-                text: "Integer snap",
-                relatedNumber: relatedDuration,
-            });
+            if (durationSnap) {
+                const relatedDuration = Math.round(editNote.note.duration!);
+                durationSnap.addSnappedValue(relatedDuration, {
+                    text: "Integer snap",
+                    relatedNumber: relatedDuration,
+                });
+            }
         }
 
         if (snapValues.sameStart.active === true) {
@@ -268,7 +272,7 @@ export const useSnapStore = defineStore("snap", () => {
 
         // Tone snaps
         if (snapValues.customFrequencyTable.active === true) {
-            if(customFrequenciesTable.value.length > 0) {
+            if (customFrequenciesTable.value.length > 0) {
                 // find the closest frequency in the table
                 const closestFrequency = customFrequenciesTable.value.reduce((prev, curr) => {
                     return (Math.abs(curr - targetHz) < Math.abs(prev - targetHz) ? curr : prev);
@@ -426,16 +430,15 @@ export const useSnapStore = defineStore("snap", () => {
 
         editNote.note.octave = toneSnap.getResult();
         editNote.note.start = timeSnap.getResult();
-        editNote.note.duration = durationSnap.getResult();
+        if(durationSnap) editNote.note.duration = durationSnap.getResult();
 
         if (sideEffects) {
             toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
             timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
         }
 
-        return {
-            editNote,
-        }
+        return editNote;
+        
     }
     return {
         simplify,

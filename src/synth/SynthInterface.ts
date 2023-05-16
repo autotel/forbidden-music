@@ -6,6 +6,11 @@ export interface SynthInstance {
         relativeNoteStart: number,
         velocity: number
     ) => void;
+    triggerPerc: (
+        frequency: number,
+        relativeNoteStart: number,
+        velocity: number
+    ) => void;
     releaseAll: () => void;
     getParams: () => SynthParam[]
     set: (params: any) => void;

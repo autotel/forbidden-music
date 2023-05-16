@@ -22,7 +22,8 @@ export const usePlaybackStore = defineStore("playback", () => {
     const currentTimeout = ref(null as null | any);
     /** in seconds */
     const previousClockTime = ref(0);
-
+    /** how long in advance to request the scheduling of events */
+    const foresight = 1; 
     let audioContext = new AudioContext();
 
     const score = useScoreStore();
@@ -58,7 +59,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         // toneFmSynth = new ToneFmSynth(audioContext);
         karplusSynth = new KarplusSynth(audioContext);
         availableSynths.value = [karplusSynth, ...samplers];
-        synth.value = karplusSynth;
+        synth.value = samplers[5] || samplers [0];
 
         console.log("audio is ready");
         window.removeEventListener("mousedown", startContextListener);
@@ -96,16 +97,28 @@ export const usePlaybackStore = defineStore("playback", () => {
             if (!synth.value) throw new Error("synth not created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = note.start - currentScoreTime.value;
-            const noteStart = now + noteStartFromNow;
-            const relativeNoteStart = noteStart;
-            const noteDuration = note.duration / rate;
+            // const noteStart = now + noteStartFromNow;
+            // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
+            const relativeNoteStart = noteStartFromNow;
+
             try {
-                synth.value.triggerAttackRelease(
-                    note.frequency,
-                    noteDuration,
-                    relativeNoteStart,
-                    0.7
-                );
+
+                if (note.duration) {
+                    const noteDuration = note.duration / rate;
+                    synth.value.triggerAttackRelease(
+                        note.frequency,
+                        noteDuration,
+                        relativeNoteStart,
+                        0.7
+                    );
+                } else {
+                    synth.value.triggerPerc(
+                        note.frequency,
+                        relativeNoteStart,
+                        0.7
+                    );
+
+                }
             } catch (e) {
                 console.log("note play error", e);
             }
