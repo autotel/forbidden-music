@@ -40,8 +40,8 @@ export const useToolStore = defineStore("edit", () => {
     const copyOnDrag = ref(false);
 
     const showReferenceKeyboard = ref(false)
-    const constrainTime = ref(false);
-    const constrainOctave = ref(false);
+    const disallowOctaveChange = ref(false);
+    const disallowTimeChange = ref(false);
 
     const currentMouseStringHelper = ref("");
 
@@ -249,12 +249,13 @@ export const useToolStore = defineStore("edit", () => {
             x: e.clientX - mouseDragStart.x,
             y: e.clientY - mouseDragStart.y,
         };
-        if (constrainTime.value) {
+        if (disallowOctaveChange.value) {
             mouseDelta.y = 0;
         }
-        if (constrainOctave.value) {
+        if (disallowTimeChange.value) {
             mouseDelta.x = 0;
         }
+        console.log(disallowTimeChange.value);
         if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
@@ -291,19 +292,18 @@ export const useToolStore = defineStore("edit", () => {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);
 
-            const editNote = new EditNote(noteBeingDragged.value.note, view);
-            
-            if(!constrainOctave.value) {
-                // TODO: need of refactor. note.note = snap.snap.note lol
-                editNote.note = snap.snap(
-                    noteBeingDragged.value,
-                    noteBeingDragged.value.note.octave,
-                    view.visibleNotes.filter(n => {
-                        let ret = n !== noteBeingDragged.value
-                        ret &&= !notesBeingDragged.includes(n);
-                        return ret;
-                    })
-                ).note;
+            const editNote = snap.snap(
+                noteBeingDragged.value,
+                noteBeingDragged.value.note.octave,
+                view.visibleNotes.filter(n => {
+                    let ret = n !== noteBeingDragged.value
+                    ret &&= !notesBeingDragged.includes(n);
+                    return ret;
+                })
+            )
+
+            if(disallowOctaveChange.value) {
+                editNote.note.octave = noteBeingDragged.value.note.octave;
             }
 
             const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.value.dragStartedOctave;
@@ -318,7 +318,7 @@ export const useToolStore = defineStore("edit", () => {
         } else if (isDragging && noteBeingDraggedRightEdge.value) {
             snap.resetSnapExplanation();
             noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
-            const { editNote } = snap.snap(
+            const editNote = snap.snap(
                 noteBeingDraggedRightEdge.value,
                 noteBeingDraggedRightEdge.value.note.octave,
                 view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value)
@@ -376,8 +376,8 @@ export const useToolStore = defineStore("edit", () => {
         current,
         simplify,
         copyOnDrag,
-        constrainTime,
-        constrainOctave,
+        disallowOctaveChange,
+        disallowTimeChange,
         showReferenceKeyboard,
         showFrequencyTableEditor,
 

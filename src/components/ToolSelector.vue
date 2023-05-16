@@ -12,16 +12,16 @@ const {
 } = useEditNotesStore();
 
 const toggleOctaveConstrain = () => {
-  tool.constrainOctave = !tool.constrainOctave;
-  if (tool.constrainTime) {
-    tool.constrainTime = false;
+  tool.disallowTimeChange = !tool.disallowTimeChange;
+  if (tool.disallowOctaveChange) {
+    tool.disallowOctaveChange = false;
   }
 }
 
 const toggleTimeConstrain = () => {
-  tool.constrainTime = !tool.constrainTime;
-  if (tool.constrainOctave) {
-    tool.constrainOctave = false;
+  tool.disallowOctaveChange = !tool.disallowOctaveChange;
+  if (tool.disallowTimeChange) {
+    tool.disallowTimeChange = false;
   }
 }
 
@@ -93,10 +93,10 @@ onUnmounted(()=>{
   </Button>
   <div class="group">
     <label>Constrain</label>
-    <Button :active="tool.constrainOctave" :onClick="toggleOctaveConstrain">
+    <Button :active="tool.disallowTimeChange" :onClick="toggleOctaveConstrain">
       ↕
     </Button>
-    <Button :active="tool.constrainTime" :onClick="toggleTimeConstrain">
+    <Button :active="tool.disallowOctaveChange" :onClick="toggleTimeConstrain">
       ↔
     </Button>
   </div>
