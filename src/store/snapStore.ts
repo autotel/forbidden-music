@@ -201,76 +201,21 @@ export const useSnapStore = defineStore("snap", () => {
         timeSnapExplanation.value = [];
         toneSnapExplanation.value = [];
     };
-    /** has side effects to snap explanations */
-    const snap = (inNote: EditNote, targetOctave: number, otherNotes?: Array<EditNote>, sideEffects: boolean = true) => {
-        /** outNote */
-        const editNote = inNote.clone();
-        const targetHz = octaveToFrequency(targetOctave);
+    interface OctaveSnapParams {
+        targetOctave: number,
+        otherNotes: EditNote[] | undefined,
+        targetHz: number,
+        snapValues: { [key: string]: SnapDefinition },
+    }
+    const octaveSnaps = ({
+        targetOctave,
+        otherNotes,
+        targetHz,
+        snapValues,
+    }: OctaveSnapParams) => {
 
         const toneSnap = new SnapTracker(targetOctave);
-        const timeSnap = new SnapTracker(editNote.note.start);
-        const durationSnap = editNote.note.duration ? new SnapTracker(editNote.note.duration) : false;
 
-        const snapValues = values.value as { [key: string]: SnapDefinition };
-
-        // Time snaps
-
-        if (snapValues.timeQuarter.active === true) {
-            const relatedNumber = Math.round(editNote.note.start * 4);
-            timeSnap.addSnappedValue(relatedNumber / 4, {
-                text: "Quarter snap",
-                relatedNumber,
-            });
-            if (durationSnap) {
-                const relatedNumberd = Math.round(editNote.note.duration! * 4) / 4
-                durationSnap.addSnappedValue(relatedNumberd, {
-                    text: "Quarter snap",
-                    relatedNumber: relatedNumberd,
-                });
-            }
-        } else if (snapValues.timeInteger.active === true) {
-            const relatedStart = Math.round(editNote.note.start);
-            timeSnap.addSnappedValue(relatedStart, {
-                text: "Integer snap",
-                relatedNumber: relatedStart,
-            });
-            if (durationSnap) {
-                const relatedDuration = Math.round(editNote.note.duration!);
-                durationSnap.addSnappedValue(relatedDuration, {
-                    text: "Integer snap",
-                    relatedNumber: relatedDuration,
-                });
-            }
-        }
-
-        if (snapValues.sameStart.active === true) {
-            if (otherNotes) {
-                for (const otherNote of otherNotes) {
-                    timeSnap.addSnappedValue(otherNote.note.start, {
-                        text: "Same start",
-                        relatedNote: otherNote,
-                    });
-                }
-            }
-        }
-
-        if (snapValues.timeIntegerRelationFraction.active === true) {
-            if (otherNotes) {
-                for (const otherNote of otherNotes) {
-                    const otherStart = otherNote.note.start;
-                    const closestStartFraction = new Fraction(editNote.note.start).div(otherStart).simplify(simplify.value);
-                    const closeStartRatio = closestStartFraction.valueOf();
-                    // reintegrate rounded proportion back to the other's start value
-                    const myCandidateStart = closeStartRatio * otherStart;
-                    timeSnap.addSnappedValue(myCandidateStart, {
-                        text: `time fraction ${closestStartFraction.toString()}`,
-                        relatedNote: otherNote,
-                    });
-                }
-            }
-        }
-
-        // Tone snaps
         if (snapValues.customFrequencyTable.active === true) {
             if (customFrequenciesTable.value.length > 0) {
                 // find the closest frequency in the table
@@ -426,19 +371,140 @@ export const useSnapStore = defineStore("snap", () => {
 
             }
         }
+        return { toneSnap };
+    }
+    interface TimeSnapParams {
+        otherNotes: EditNote[] | undefined,
+        editNote: EditNote,
+        durationSnap: SnapTracker | false,
+        snapValues: { [key: string]: SnapDefinition },
+    }
 
+    const timeSnaps = ({
+        otherNotes,
+        editNote,
+        durationSnap,
+        snapValues,
+    }: TimeSnapParams) => {
 
-        editNote.note.octave = toneSnap.getResult();
-        editNote.note.start = timeSnap.getResult();
-        if(durationSnap) editNote.note.duration = durationSnap.getResult();
-
-        if (sideEffects) {
-            toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
-            timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
+        const timeSnap = new SnapTracker(editNote.note.start);
+        if (snapValues.timeQuarter.active === true) {
+            const relatedNumber = Math.round(editNote.note.start * 4);
+            timeSnap.addSnappedValue(relatedNumber / 4, {
+                text: "Quarter snap",
+                relatedNumber,
+            });
+            if (durationSnap) {
+                const relatedNumberd = Math.round(editNote.note.duration! * 4) / 4
+                durationSnap.addSnappedValue(relatedNumberd, {
+                    text: "Quarter snap",
+                    relatedNumber: relatedNumberd,
+                });
+            }
+        } else if (snapValues.timeInteger.active === true) {
+            const relatedStart = Math.round(editNote.note.start);
+            timeSnap.addSnappedValue(relatedStart, {
+                text: "Integer snap",
+                relatedNumber: relatedStart,
+            });
+            if (durationSnap) {
+                const relatedDuration = Math.round(editNote.note.duration!);
+                durationSnap.addSnappedValue(relatedDuration, {
+                    text: "Integer snap",
+                    relatedNumber: relatedDuration,
+                });
+            }
         }
 
+        if (snapValues.sameStart.active === true) {
+            if (otherNotes) {
+                for (const otherNote of otherNotes) {
+                    timeSnap.addSnappedValue(otherNote.note.start, {
+                        text: "Same start",
+                        relatedNote: otherNote,
+                    });
+                }
+            }
+        }
+
+        if (snapValues.timeIntegerRelationFraction.active === true) {
+            if (otherNotes) {
+                for (const otherNote of otherNotes) {
+                    const otherStart = otherNote.note.start;
+                    const closestStartFraction = new Fraction(editNote.note.start).div(otherStart).simplify(simplify.value);
+                    const closeStartRatio = closestStartFraction.valueOf();
+                    // reintegrate rounded proportion back to the other's start value
+                    const myCandidateStart = closeStartRatio * otherStart;
+                    timeSnap.addSnappedValue(myCandidateStart, {
+                        text: `time fraction ${closestStartFraction.toString()}`,
+                        relatedNote: otherNote,
+                    });
+                }
+            }
+        }
+        return { timeSnap };
+    }
+
+    /** has side effects to snap explanations */
+    interface SnapParams {
+        inNote: EditNote,
+        targetOctave: number,
+        otherNotes?: Array<EditNote>,
+        sideEffects?: boolean,
+        skipOctaveSnap?: boolean,
+        skipTimeSnap?: boolean,
+    }
+    const snap = ({
+        inNote,
+        targetOctave,
+        otherNotes,
+        sideEffects = true,
+        skipOctaveSnap = false,
+        skipTimeSnap = false,
+    }: SnapParams) => {
+        /** outNote */
+        const editNote = inNote.clone();
+        const targetHz = octaveToFrequency(targetOctave);
+
+        const durationSnap = editNote.note.duration ? new SnapTracker(editNote.note.duration) : false;
+
+        const snapValues = values.value as { [key: string]: SnapDefinition };
+
+        // Time snaps
+        if (!skipTimeSnap) {
+
+            const { timeSnap } = timeSnaps({
+                otherNotes,
+                editNote,
+                durationSnap,
+                snapValues
+            });
+            editNote.note.start = timeSnap.getResult();
+            if (sideEffects) {
+                timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
+            }
+        }
+        // Tone snaps
+        if (!skipOctaveSnap) {
+            const { toneSnap } = octaveSnaps({
+                otherNotes,
+                targetOctave,
+                targetHz,
+                snapValues
+            });
+            editNote.note.octave = toneSnap.getResult();
+            if (sideEffects) {
+                toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
+            }
+        }
+
+
+        if (durationSnap) editNote.note.duration = durationSnap.getResult();
+
+
+
         return editNote;
-        
+
     }
     return {
         simplify,

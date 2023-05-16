@@ -227,11 +227,11 @@ export const useToolStore = defineStore("edit", () => {
 
             snap.resetSnapExplanation();
 
-            const editNote = snap.snap(
-                noteThatWouldBeCreated.value,
-                view.pxToOctaveWithOffset(y),
-                editNotes.list
-            );
+            const editNote = snap.snap({
+                inNote: noteThatWouldBeCreated.value,
+                targetOctave: view.pxToOctaveWithOffset(y),
+                otherNotes: editNotes.list
+            });
 
             noteThatWouldBeCreated.value = editNote;
             snap.setFocusedNote(noteThatWouldBeCreated.value)
@@ -255,16 +255,15 @@ export const useToolStore = defineStore("edit", () => {
         if (disallowTimeChange.value) {
             mouseDelta.x = 0;
         }
-        console.log(disallowTimeChange.value);
         if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
             notesBeingCreated.value[0].note.duration = clampToZero(view.pxToTime(deltaX));
-            const editNote= snap.snap(
-                notesBeingCreated.value[0],
-                notesBeingCreated.value[0].note.octave,
-                view.visibleNotes.filter(n => n !== notesBeingCreated.value[0])
-            );
+            const editNote = snap.snap({
+                inNote: notesBeingCreated.value[0],
+                targetOctave: notesBeingCreated.value[0].note.octave,
+                otherNotes: view.visibleNotes.filter(n => n !== notesBeingCreated.value[0])
+            });
             notesBeingCreated.value[0].note = editNote.note;
         } else if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
             // first mouse drag tick, when it's copying; a special event bc. notes have to be duplicated only
@@ -292,19 +291,19 @@ export const useToolStore = defineStore("edit", () => {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);
 
-            const editNote = snap.snap(
-                noteBeingDragged.value,
-                noteBeingDragged.value.note.octave,
-                view.visibleNotes.filter(n => {
+            const editNote = snap.snap({
+                inNote: noteBeingDragged.value,
+                targetOctave: noteBeingDragged.value.note.octave,
+                otherNotes: view.visibleNotes.filter(n => {
                     let ret = n !== noteBeingDragged.value
                     ret &&= !notesBeingDragged.includes(n);
                     return ret;
-                })
-            )
+                }),
+                sideEffects: true,
+                skipOctaveSnap: disallowOctaveChange.value,
+                skipTimeSnap: disallowTimeChange.value,
+            })
 
-            if(disallowOctaveChange.value) {
-                editNote.note.octave = noteBeingDragged.value.note.octave;
-            }
 
             const octaveDragDeltaAfterSnap = editNote.note.octave - noteBeingDragged.value.dragStartedOctave;
             const timeDragAfterSnap = editNote.note.start - noteBeingDragged.value.dragStartedTime;
@@ -318,11 +317,11 @@ export const useToolStore = defineStore("edit", () => {
         } else if (isDragging && noteBeingDraggedRightEdge.value) {
             snap.resetSnapExplanation();
             noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
-            const editNote = snap.snap(
-                noteBeingDraggedRightEdge.value,
-                noteBeingDraggedRightEdge.value.note.octave,
-                view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value)
-            );
+            const editNote = snap.snap({
+                inNote: noteBeingDraggedRightEdge.value,
+                targetOctave: noteBeingDraggedRightEdge.value.note.octave,
+                otherNotes: view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value)
+            });
             noteBeingDraggedRightEdge.value.note = editNote.note;
         } else {
             updateNoteThatWouldBeCreated({
