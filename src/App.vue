@@ -270,7 +270,7 @@ onUnmounted(() => {
     </Modal>
 </template>
 
-<style>
+<style scoped>
 .unclickable {
     pointer-events: none;
 

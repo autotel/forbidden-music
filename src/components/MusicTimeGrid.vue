@@ -25,7 +25,7 @@ onMounted(() => {
     <line class="grid-line" v-for="linePositionPx in linePositionsPx" :x1="linePositionPx" :x2="linePositionPx" y1="0"
         :y2="view.viewHeightPx" />
 </template>
-<style>
+<style scoped>
 .grid-line {
     stroke: #e0e0e0;
     stroke-width: 1px;

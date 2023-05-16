@@ -75,7 +75,8 @@ export const useViewStore = defineStore("view", () => {
         return octaveToPxWithOffset(Math.log2(frequency / frequencyConstant));
     };
     const isOctaveInView = (octave: number): boolean => {
-        return octave >= octaveOffset.value && octave <= octaveOffset.value + viewHeightOctaves.value;
+        const ioctave = viewHeightOctaves.value - octave;
+        return ioctave >= octaveOffset.value && ioctave <= octaveOffset.value + viewHeightOctaves.value;
     };
     const updateSize = (width: number, height: number) => {
         viewWidthPx.value = width;

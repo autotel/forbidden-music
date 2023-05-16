@@ -31,7 +31,7 @@ export const frequencyToOctave = (frequency: number) => Math.log2(frequency / fr
 
 
 
-export const makeNote = <Note>(noteDef: NoteDefa | NoteDefb) => {
+export const makeNote = (noteDef: NoteDefa | NoteDefb):Note => {
     const nn = {
         start: noteDef.start,
         duration: noteDef.duration,

@@ -3,36 +3,33 @@ import { useViewStore } from '../store/viewStore';
 import { onMounted, Ref, ref, watch, watchEffect, computed } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useSnapStore } from '../store/snapStore';
-
+import { makeNote } from '../dataTypes/Note';
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;
-const lineValues = ref([]) as Ref<number[]>;
 const snap = useSnapStore();
 
-watch([view,snap.values],() => {
+watch([view, snap.values], () => {
     linePositionsPx.value = [];
-    lineValues.value = [];
     if (snap.values['customFrequencyTable']?.active) {
         // display one line per frequency in the tableä
         const frequencies = snap.customFrequenciesTable;
         for (let i = 0; i < frequencies.length; i++) {
-            if(!view.isOctaveInView(i)) continue;
+            // TODO: conversion should be part of a helper fn, not part of note
+            const {octave} = makeNote({ 
+                frequency: frequencies[i], start: 0, duration: 0 
+            })
+            if (!view.isOctaveInView(octave)) continue;
             linePositionsPx.value.push(
-                view.frequencyToPxWithOffset(frequencies[i])
+                view.octaveToPxWithOffset(octave)
             );
-            lineValues.value.push(frequencies[i]);
         }
     } else {
-        let cc= 0 
-        for (let i = 0; i < 32; i++) {
-            if(!view.isOctaveInView(i)) continue;
+        for (let i = 1; i < 14; i++) {
+            if (!view.isOctaveInView(i)) continue;
             linePositionsPx.value.push(
                 view.octaveToPxWithOffset(i)
             );
-            cc++;
         }
-        console.log(cc)
-
     }
 });
 onMounted(() => {
@@ -55,11 +52,11 @@ onMounted(() => {
     <text x="0" :y="view.octaveToPxWithOffset(8)">8</text>
     <text x="0" :y="view.octaveToPxWithOffset(16)">16</text>
 </template>
-<style>
+<style scoped>
 .grid-line {
     stroke: #e0e0e0;
     /* stroke: #250909; */
     stroke-width: 1px;
-    stroke-dasharray: 3px
+    /* stroke-dasharray: 3px */
 }
 </style>
