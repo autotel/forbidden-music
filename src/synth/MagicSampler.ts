@@ -82,8 +82,6 @@ class SamplerVoice {
         const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
         const absoluteNoteEnd = absoluteNoteStart + duration;
 
-        console.log("start in", relativeNoteStart,"end in", relativeNoteStart + duration);
-
         this.inUse = true;
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
         this.resetBufferSource(sampleSource);
@@ -104,6 +102,7 @@ class SamplerVoice {
         velocity: number
     ) => {
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
+        // TODO: duration might be innacurate bc. of play rate
         const duration = sampleSource.sampleBuffer!.duration;
         this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
     }

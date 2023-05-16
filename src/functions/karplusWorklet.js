@@ -504,7 +504,7 @@ class PolyManager {
     }
 
 */
-
+// TODO: stop when not in use, somehow.
 //@ts-ignore
 registerProcessor('karplus', class extends AudioWorkletProcessor {
     constructor() {

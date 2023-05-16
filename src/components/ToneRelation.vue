@@ -1,23 +1,8 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, watchEffect } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
-import { SnapExplanation, useSnapStore } from '../store/snapStore';
-import { useViewStore } from '../store/viewStore';
+import { useSnapStore } from '../store/snapStore';
+import Lock from './icons/Lock.vue';
 
-
-const view = useViewStore();
 const snap = useSnapStore();
-
-const getOctaveOfSnapExplanation = (relation: SnapExplanation) => {
-    if (relation.relatedNote !== undefined) {
-        return relation.relatedNote.y;
-    } else if (relation.relatedNumber !== undefined) {
-        return relation.relatedNumber;
-    } else {
-        throw new Error("relation has no relatedNote or relatedValue");
-    }
-}
-
 
 </script>
 <template>

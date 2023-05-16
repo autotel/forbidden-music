@@ -225,16 +225,17 @@ export const useToolStore = defineStore("edit", () => {
             noteThatWouldBeCreated.value.note.duration = 0;
             noteThatWouldBeCreated.value.note.octave = view.pxToOctaveWithOffset(y);
 
-            snap.resetSnapExplanation();
+            snap.setFocusedNote(noteThatWouldBeCreated.value)
+            // snap.resetSnapExplanation();
 
             const editNote = snap.snap({
                 inNote: noteThatWouldBeCreated.value,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: editNotes.list
+                otherNotes: editNotes.list,
+                sideEffects: true,
             });
 
             noteThatWouldBeCreated.value = editNote;
-            snap.setFocusedNote(noteThatWouldBeCreated.value)
 
             return;
         } else {

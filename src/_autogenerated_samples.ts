@@ -518,197 +518,6 @@ export default [
     "readme": "-- don't publish this one --"
   },
   {
-    "name": "antonia_vibraphone",
-    "samples": [
-      {
-        "name": "1054.587.wav",
-        "frequency": 1054.587,
-        "path": "audio/antonia_vibraphone/1054.587.wav"
-      },
-      {
-        "name": "1117.630.wav",
-        "frequency": 1117.63,
-        "path": "audio/antonia_vibraphone/1117.630.wav"
-      },
-      {
-        "name": "1184.329.wav",
-        "frequency": 1184.329,
-        "path": "audio/antonia_vibraphone/1184.329.wav"
-      },
-      {
-        "name": "1255.513.wav",
-        "frequency": 1255.513,
-        "path": "audio/antonia_vibraphone/1255.513.wav"
-      },
-      {
-        "name": "1331.265.wav",
-        "frequency": 1331.265,
-        "path": "audio/antonia_vibraphone/1331.265.wav"
-      },
-      {
-        "name": "1411.685.wav",
-        "frequency": 1411.685,
-        "path": "audio/antonia_vibraphone/1411.685.wav"
-      },
-      {
-        "name": "178.559.wav",
-        "frequency": 178.559,
-        "path": "audio/antonia_vibraphone/178.559.wav"
-      },
-      {
-        "name": "190.243.wav",
-        "frequency": 190.243,
-        "path": "audio/antonia_vibraphone/190.243.wav"
-      },
-      {
-        "name": "197.995.wav",
-        "frequency": 197.995,
-        "path": "audio/antonia_vibraphone/197.995.wav"
-      },
-      {
-        "name": "207.293.wav",
-        "frequency": 207.293,
-        "path": "audio/antonia_vibraphone/207.293.wav"
-      },
-      {
-        "name": "219.589.wav",
-        "frequency": 219.589,
-        "path": "audio/antonia_vibraphone/219.589.wav"
-      },
-      {
-        "name": "232.510.wav",
-        "frequency": 232.51,
-        "path": "audio/antonia_vibraphone/232.510.wav"
-      },
-      {
-        "name": "245.287.wav",
-        "frequency": 245.287,
-        "path": "audio/antonia_vibraphone/245.287.wav"
-      },
-      {
-        "name": "262.987.wav",
-        "frequency": 262.987,
-        "path": "audio/antonia_vibraphone/262.987.wav"
-      },
-      {
-        "name": "278.919.wav",
-        "frequency": 278.919,
-        "path": "audio/antonia_vibraphone/278.919.wav"
-      },
-      {
-        "name": "300.009.wav",
-        "frequency": 300.009,
-        "path": "audio/antonia_vibraphone/300.009.wav"
-      },
-      {
-        "name": "316.383.wav",
-        "frequency": 316.383,
-        "path": "audio/antonia_vibraphone/316.383.wav"
-      },
-      {
-        "name": "335.829.wav",
-        "frequency": 335.829,
-        "path": "audio/antonia_vibraphone/335.829.wav"
-      },
-      {
-        "name": "354.225.wav",
-        "frequency": 354.225,
-        "path": "audio/antonia_vibraphone/354.225.wav"
-      },
-      {
-        "name": "373.740.wav",
-        "frequency": 373.74,
-        "path": "audio/antonia_vibraphone/373.740.wav"
-      },
-      {
-        "name": "394.871.wav",
-        "frequency": 394.871,
-        "path": "audio/antonia_vibraphone/394.871.wav"
-      },
-      {
-        "name": "417.936.wav",
-        "frequency": 417.936,
-        "path": "audio/antonia_vibraphone/417.936.wav"
-      },
-      {
-        "name": "442.415.wav",
-        "frequency": 442.415,
-        "path": "audio/antonia_vibraphone/442.415.wav"
-      },
-      {
-        "name": "470.131.wav",
-        "frequency": 470.131,
-        "path": "audio/antonia_vibraphone/470.131.wav"
-      },
-      {
-        "name": "498.017.wav",
-        "frequency": 498.017,
-        "path": "audio/antonia_vibraphone/498.017.wav"
-      },
-      {
-        "name": "527.237.wav",
-        "frequency": 527.237,
-        "path": "audio/antonia_vibraphone/527.237.wav"
-      },
-      {
-        "name": "558.159.wav",
-        "frequency": 558.159,
-        "path": "audio/antonia_vibraphone/558.159.wav"
-      },
-      {
-        "name": "591.524.wav",
-        "frequency": 591.524,
-        "path": "audio/antonia_vibraphone/591.524.wav"
-      },
-      {
-        "name": "626.783.wav",
-        "frequency": 626.783,
-        "path": "audio/antonia_vibraphone/626.783.wav"
-      },
-      {
-        "name": "663.845.wav",
-        "frequency": 663.845,
-        "path": "audio/antonia_vibraphone/663.845.wav"
-      },
-      {
-        "name": "703.914.wav",
-        "frequency": 703.914,
-        "path": "audio/antonia_vibraphone/703.914.wav"
-      },
-      {
-        "name": "745.504.wav",
-        "frequency": 745.504,
-        "path": "audio/antonia_vibraphone/745.504.wav"
-      },
-      {
-        "name": "789.590.wav",
-        "frequency": 789.59,
-        "path": "audio/antonia_vibraphone/789.590.wav"
-      },
-      {
-        "name": "836.223.wav",
-        "frequency": 836.223,
-        "path": "audio/antonia_vibraphone/836.223.wav"
-      },
-      {
-        "name": "885.930.wav",
-        "frequency": 885.93,
-        "path": "audio/antonia_vibraphone/885.930.wav"
-      },
-      {
-        "name": "938.961.wav",
-        "frequency": 938.961,
-        "path": "audio/antonia_vibraphone/938.961.wav"
-      },
-      {
-        "name": "994.345.wav",
-        "frequency": 994.345,
-        "path": "audio/antonia_vibraphone/994.345.wav"
-      }
-    ],
-    "readme": "Sound pack downloaded from Freesound\n----------------------------------------\n\n\"vibraphone\"\n\nThis pack of sounds contains sounds by the following user:\n - atonia ( https://freesound.org/people/atonia/ )\n\nYou can find this pack online at: https://freesound.org/people/atonia/packs/7293/\n\n\nLicenses in this pack (see below for individual sound licenses)\n---------------------------------------------------------------\n\nCreative Commons 0: http://creativecommons.org/publicdomain/zero/1.0/\n\n\nSounds in this pack\n-------------------\n\n  * 144843__atonia__82.wav\n    * url: https://freesound.org/s/144843/\n    * license: Creative Commons 0\n  * 116384__atonia__89.wav\n    * url: https://freesound.org/s/116384/\n    * license: Creative Commons 0\n  * 116383__atonia__88.wav\n    * url: https://freesound.org/s/116383/\n    * license: Creative Commons 0\n  * 116382__atonia__87.wav\n    * url: https://freesound.org/s/116382/\n    * license: Creative Commons 0\n  * 116381__atonia__86.wav\n    * url: https://freesound.org/s/116381/\n    * license: Creative Commons 0\n  * 116380__atonia__85.wav\n    * url: https://freesound.org/s/116380/\n    * license: Creative Commons 0\n  * 116379__atonia__84.wav\n    * url: https://freesound.org/s/116379/\n    * license: Creative Commons 0\n  * 116378__atonia__83.wav\n    * url: https://freesound.org/s/116378/\n    * license: Creative Commons 0\n  * 116376__atonia__81.wav\n    * url: https://freesound.org/s/116376/\n    * license: Creative Commons 0\n  * 116375__atonia__80.wav\n    * url: https://freesound.org/s/116375/\n    * license: Creative Commons 0\n  * 116374__atonia__79.wav\n    * url: https://freesound.org/s/116374/\n    * license: Creative Commons 0\n  * 116373__atonia__78.wav\n    * url: https://freesound.org/s/116373/\n    * license: Creative Commons 0\n  * 116372__atonia__77.wav\n    * url: https://freesound.org/s/116372/\n    * license: Creative Commons 0\n  * 116371__atonia__76.wav\n    * url: https://freesound.org/s/116371/\n    * license: Creative Commons 0\n  * 116370__atonia__75.wav\n    * url: https://freesound.org/s/116370/\n    * license: Creative Commons 0\n  * 116369__atonia__74.wav\n    * url: https://freesound.org/s/116369/\n    * license: Creative Commons 0\n  * 116368__atonia__73.wav\n    * url: https://freesound.org/s/116368/\n    * license: Creative Commons 0\n  * 116367__atonia__72.wav\n    * url: https://freesound.org/s/116367/\n    * license: Creative Commons 0\n  * 116366__atonia__71.wav\n    * url: https://freesound.org/s/116366/\n    * license: Creative Commons 0\n  * 116365__atonia__70.wav\n    * url: https://freesound.org/s/116365/\n    * license: Creative Commons 0\n  * 116364__atonia__69.wav\n    * url: https://freesound.org/s/116364/\n    * license: Creative Commons 0\n  * 116363__atonia__68.wav\n    * url: https://freesound.org/s/116363/\n    * license: Creative Commons 0\n  * 116362__atonia__67.wav\n    * url: https://freesound.org/s/116362/\n    * license: Creative Commons 0\n  * 116361__atonia__66.wav\n    * url: https://freesound.org/s/116361/\n    * license: Creative Commons 0\n  * 116360__atonia__65.wav\n    * url: https://freesound.org/s/116360/\n    * license: Creative Commons 0\n  * 116359__atonia__64.wav\n    * url: https://freesound.org/s/116359/\n    * license: Creative Commons 0\n  * 116358__atonia__63.wav\n    * url: https://freesound.org/s/116358/\n    * license: Creative Commons 0\n  * 116357__atonia__62.wav\n    * url: https://freesound.org/s/116357/\n    * license: Creative Commons 0\n  * 116356__atonia__61.wav\n    * url: https://freesound.org/s/116356/\n    * license: Creative Commons 0\n  * 116355__atonia__60.wav\n    * url: https://freesound.org/s/116355/\n    * license: Creative Commons 0\n  * 116354__atonia__59.wav\n    * url: https://freesound.org/s/116354/\n    * license: Creative Commons 0\n  * 116353__atonia__58.wav\n    * url: https://freesound.org/s/116353/\n    * license: Creative Commons 0\n  * 116352__atonia__57.wav\n    * url: https://freesound.org/s/116352/\n    * license: Creative Commons 0\n  * 116351__atonia__56.wav\n    * url: https://freesound.org/s/116351/\n    * license: Creative Commons 0\n  * 116350__atonia__55.wav\n    * url: https://freesound.org/s/116350/\n    * license: Creative Commons 0\n  * 116349__atonia__54.wav\n    * url: https://freesound.org/s/116349/\n    * license: Creative Commons 0\n  * 116348__atonia__53.wav\n    * url: https://freesound.org/s/116348/\n    * license: Creative Commons 0\n\n\n"
-  },
-  {
     "name": "harpsichord",
     "samples": [
       {
@@ -948,5 +757,196 @@ export default [
       }
     ],
     "readme": "Sound pack downloaded from Freesound\n----------------------------------------\n\n\"Harpsichord\"\n\nThis pack of sounds contains sounds by the following user:\n - pjcohen ( https://freesound.org/people/pjcohen/ )\n\nYou can find this pack online at: https://freesound.org/people/pjcohen/packs/21464/\n\n\nLicenses in this pack (see below for individual sound licenses)\n---------------------------------------------------------------\n\nCreative Commons 0: http://creativecommons.org/publicdomain/zero/1.0/\n\n\nSounds in this pack\n-------------------\n\n  * 381515__pjcohen__harpsichord-e2.wav\n    * url: https://freesound.org/s/381515/\n    * license: Creative Commons 0\n  * 381514__pjcohen__harpsichord-e3.wav\n    * url: https://freesound.org/s/381514/\n    * license: Creative Commons 0\n  * 381513__pjcohen__harpsichord-d5.wav\n    * url: https://freesound.org/s/381513/\n    * license: Creative Commons 0\n  * 381512__pjcohen__harpsichord-e1.wav\n    * url: https://freesound.org/s/381512/\n    * license: Creative Commons 0\n  * 381511__pjcohen__harpsichord-d3.wav\n    * url: https://freesound.org/s/381511/\n    * license: Creative Commons 0\n  * 381510__pjcohen__harpsichord-d4.wav\n    * url: https://freesound.org/s/381510/\n    * license: Creative Commons 0\n  * 381509__pjcohen__harpsichord-d1.wav\n    * url: https://freesound.org/s/381509/\n    * license: Creative Commons 0\n  * 381508__pjcohen__harpsichord-d2.wav\n    * url: https://freesound.org/s/381508/\n    * license: Creative Commons 0\n  * 381507__pjcohen__harpsichord-g3.wav\n    * url: https://freesound.org/s/381507/\n    * license: Creative Commons 0\n  * 381506__pjcohen__harpsichord-g4.wav\n    * url: https://freesound.org/s/381506/\n    * license: Creative Commons 0\n  * 381505__pjcohen__harpsichord-g-1.wav\n    * url: https://freesound.org/s/381505/\n    * license: Creative Commons 0\n  * 381504__pjcohen__harpsichord-e4.wav\n    * url: https://freesound.org/s/381504/\n    * license: Creative Commons 0\n  * 381503__pjcohen__harpsichord-e5.wav\n    * url: https://freesound.org/s/381503/\n    * license: Creative Commons 0\n  * 381502__pjcohen__harpsichord-g-2.wav\n    * url: https://freesound.org/s/381502/\n    * license: Creative Commons 0\n  * 381501__pjcohen__harpsichord-c-4.wav\n    * url: https://freesound.org/s/381501/\n    * license: Creative Commons 0\n  * 381500__pjcohen__harpsichord-c-5.wav\n    * url: https://freesound.org/s/381500/\n    * license: Creative Commons 0\n  * 381499__pjcohen__harpsichord-g-3.wav\n    * url: https://freesound.org/s/381499/\n    * license: Creative Commons 0\n  * 381498__pjcohen__harpsichord-b4.wav\n    * url: https://freesound.org/s/381498/\n    * license: Creative Commons 0\n  * 381497__pjcohen__harpsichord-c-1.wav\n    * url: https://freesound.org/s/381497/\n    * license: Creative Commons 0\n  * 381496__pjcohen__harpsichord-c-2.wav\n    * url: https://freesound.org/s/381496/\n    * license: Creative Commons 0\n  * 381495__pjcohen__harpsichord-c-3.wav\n    * url: https://freesound.org/s/381495/\n    * license: Creative Commons 0\n  * 381494__pjcohen__harpsichord-b0.wav\n    * url: https://freesound.org/s/381494/\n    * license: Creative Commons 0\n  * 381493__pjcohen__harpsichord-b1.wav\n    * url: https://freesound.org/s/381493/\n    * license: Creative Commons 0\n  * 381492__pjcohen__harpsichord-b2.wav\n    * url: https://freesound.org/s/381492/\n    * license: Creative Commons 0\n  * 381491__pjcohen__harpsichord-b3.wav\n    * url: https://freesound.org/s/381491/\n    * license: Creative Commons 0\n  * 381490__pjcohen__harpsichord-g0.wav\n    * url: https://freesound.org/s/381490/\n    * license: Creative Commons 0\n  * 381489__pjcohen__harpsichord-f4.wav\n    * url: https://freesound.org/s/381489/\n    * license: Creative Commons 0\n  * 381488__pjcohen__harpsichord-f3.wav\n    * url: https://freesound.org/s/381488/\n    * license: Creative Commons 0\n  * 381487__pjcohen__harpsichord-g-4.wav\n    * url: https://freesound.org/s/381487/\n    * license: Creative Commons 0\n  * 381486__pjcohen__harpsichord-f-3.wav\n    * url: https://freesound.org/s/381486/\n    * license: Creative Commons 0\n  * 381485__pjcohen__harpsichord-g-0.wav\n    * url: https://freesound.org/s/381485/\n    * license: Creative Commons 0\n  * 381484__pjcohen__harpsichord-g2.wav\n    * url: https://freesound.org/s/381484/\n    * license: Creative Commons 0\n  * 381483__pjcohen__harpsichord-d-1.wav\n    * url: https://freesound.org/s/381483/\n    * license: Creative Commons 0\n  * 381482__pjcohen__harpsichord-c5.wav\n    * url: https://freesound.org/s/381482/\n    * license: Creative Commons 0\n  * 381481__pjcohen__harpsichord-d-3.wav\n    * url: https://freesound.org/s/381481/\n    * license: Creative Commons 0\n  * 381480__pjcohen__harpsichord-d-2.wav\n    * url: https://freesound.org/s/381480/\n    * license: Creative Commons 0\n  * 381479__pjcohen__harpsichord-c2.wav\n    * url: https://freesound.org/s/381479/\n    * license: Creative Commons 0\n  * 381478__pjcohen__harpsichord-c1.wav\n    * url: https://freesound.org/s/381478/\n    * license: Creative Commons 0\n  * 381477__pjcohen__harpsichord-c4.wav\n    * url: https://freesound.org/s/381477/\n    * license: Creative Commons 0\n  * 381476__pjcohen__harpsichord-c3.wav\n    * url: https://freesound.org/s/381476/\n    * license: Creative Commons 0\n  * 381475__pjcohen__harpsichord-f2.wav\n    * url: https://freesound.org/s/381475/\n    * license: Creative Commons 0\n  * 381474__pjcohen__harpsichord-f1.wav\n    * url: https://freesound.org/s/381474/\n    * license: Creative Commons 0\n  * 381473__pjcohen__harpsichord-f0.wav\n    * url: https://freesound.org/s/381473/\n    * license: Creative Commons 0\n  * 381472__pjcohen__harpsichord-f-4.wav\n    * url: https://freesound.org/s/381472/\n    * license: Creative Commons 0\n  * 381471__pjcohen__harpsichord-d-5.wav\n    * url: https://freesound.org/s/381471/\n    * license: Creative Commons 0\n  * 381470__pjcohen__harpsichord-d-4.wav\n    * url: https://freesound.org/s/381470/\n    * license: Creative Commons 0\n  * 381469__pjcohen__harpsichord-f-1.wav\n    * url: https://freesound.org/s/381469/\n    * license: Creative Commons 0\n  * 381468__pjcohen__harpsichord-f-0.wav\n    * url: https://freesound.org/s/381468/\n    * license: Creative Commons 0\n  * 381467__pjcohen__harpsichord-f-2.wav\n    * url: https://freesound.org/s/381467/\n    * license: Creative Commons 0\n  * 381466__pjcohen__harpsichord-g1.wav\n    * url: https://freesound.org/s/381466/\n    * license: Creative Commons 0\n  * 381465__pjcohen__harpsichord-a3.wav\n    * url: https://freesound.org/s/381465/\n    * license: Creative Commons 0\n  * 381464__pjcohen__harpsichord-a4.wav\n    * url: https://freesound.org/s/381464/\n    * license: Creative Commons 0\n  * 381463__pjcohen__harpsichord-a-4.wav\n    * url: https://freesound.org/s/381463/\n    * license: Creative Commons 0\n  * 381462__pjcohen__harpsichord-a0.wav\n    * url: https://freesound.org/s/381462/\n    * license: Creative Commons 0\n  * 381461__pjcohen__harpsichord-a1.wav\n    * url: https://freesound.org/s/381461/\n    * license: Creative Commons 0\n  * 381460__pjcohen__harpsichord-a2.wav\n    * url: https://freesound.org/s/381460/\n    * license: Creative Commons 0\n  * 381459__pjcohen__harpsichord-a-0.wav\n    * url: https://freesound.org/s/381459/\n    * license: Creative Commons 0\n  * 381458__pjcohen__harpsichord-a-1.wav\n    * url: https://freesound.org/s/381458/\n    * license: Creative Commons 0\n  * 381457__pjcohen__harpsichord-a-2.wav\n    * url: https://freesound.org/s/381457/\n    * license: Creative Commons 0\n  * 381456__pjcohen__harpsichord-a-3.wav\n    * url: https://freesound.org/s/381456/\n    * license: Creative Commons 0\n\n\n"
+  },
+  {
+    "name": "vibraphone",
+    "samples": [
+      {
+        "name": "1054.587.wav",
+        "frequency": 1054.587,
+        "path": "audio/vibraphone/1054.587.wav"
+      },
+      {
+        "name": "1117.630.wav",
+        "frequency": 1117.63,
+        "path": "audio/vibraphone/1117.630.wav"
+      },
+      {
+        "name": "1184.329.wav",
+        "frequency": 1184.329,
+        "path": "audio/vibraphone/1184.329.wav"
+      },
+      {
+        "name": "1255.513.wav",
+        "frequency": 1255.513,
+        "path": "audio/vibraphone/1255.513.wav"
+      },
+      {
+        "name": "1331.265.wav",
+        "frequency": 1331.265,
+        "path": "audio/vibraphone/1331.265.wav"
+      },
+      {
+        "name": "1411.685.wav",
+        "frequency": 1411.685,
+        "path": "audio/vibraphone/1411.685.wav"
+      },
+      {
+        "name": "178.559.wav",
+        "frequency": 178.559,
+        "path": "audio/vibraphone/178.559.wav"
+      },
+      {
+        "name": "190.243.wav",
+        "frequency": 190.243,
+        "path": "audio/vibraphone/190.243.wav"
+      },
+      {
+        "name": "197.995.wav",
+        "frequency": 197.995,
+        "path": "audio/vibraphone/197.995.wav"
+      },
+      {
+        "name": "207.293.wav",
+        "frequency": 207.293,
+        "path": "audio/vibraphone/207.293.wav"
+      },
+      {
+        "name": "219.589.wav",
+        "frequency": 219.589,
+        "path": "audio/vibraphone/219.589.wav"
+      },
+      {
+        "name": "232.510.wav",
+        "frequency": 232.51,
+        "path": "audio/vibraphone/232.510.wav"
+      },
+      {
+        "name": "245.287.wav",
+        "frequency": 245.287,
+        "path": "audio/vibraphone/245.287.wav"
+      },
+      {
+        "name": "262.987.wav",
+        "frequency": 262.987,
+        "path": "audio/vibraphone/262.987.wav"
+      },
+      {
+        "name": "278.919.wav",
+        "frequency": 278.919,
+        "path": "audio/vibraphone/278.919.wav"
+      },
+      {
+        "name": "300.009.wav",
+        "frequency": 300.009,
+        "path": "audio/vibraphone/300.009.wav"
+      },
+      {
+        "name": "316.383.wav",
+        "frequency": 316.383,
+        "path": "audio/vibraphone/316.383.wav"
+      },
+      {
+        "name": "335.829.wav",
+        "frequency": 335.829,
+        "path": "audio/vibraphone/335.829.wav"
+      },
+      {
+        "name": "354.225.wav",
+        "frequency": 354.225,
+        "path": "audio/vibraphone/354.225.wav"
+      },
+      {
+        "name": "373.740.wav",
+        "frequency": 373.74,
+        "path": "audio/vibraphone/373.740.wav"
+      },
+      {
+        "name": "394.871.wav",
+        "frequency": 394.871,
+        "path": "audio/vibraphone/394.871.wav"
+      },
+      {
+        "name": "417.936.wav",
+        "frequency": 417.936,
+        "path": "audio/vibraphone/417.936.wav"
+      },
+      {
+        "name": "442.415.wav",
+        "frequency": 442.415,
+        "path": "audio/vibraphone/442.415.wav"
+      },
+      {
+        "name": "470.131.wav",
+        "frequency": 470.131,
+        "path": "audio/vibraphone/470.131.wav"
+      },
+      {
+        "name": "498.017.wav",
+        "frequency": 498.017,
+        "path": "audio/vibraphone/498.017.wav"
+      },
+      {
+        "name": "527.237.wav",
+        "frequency": 527.237,
+        "path": "audio/vibraphone/527.237.wav"
+      },
+      {
+        "name": "558.159.wav",
+        "frequency": 558.159,
+        "path": "audio/vibraphone/558.159.wav"
+      },
+      {
+        "name": "591.524.wav",
+        "frequency": 591.524,
+        "path": "audio/vibraphone/591.524.wav"
+      },
+      {
+        "name": "626.783.wav",
+        "frequency": 626.783,
+        "path": "audio/vibraphone/626.783.wav"
+      },
+      {
+        "name": "663.845.wav",
+        "frequency": 663.845,
+        "path": "audio/vibraphone/663.845.wav"
+      },
+      {
+        "name": "703.914.wav",
+        "frequency": 703.914,
+        "path": "audio/vibraphone/703.914.wav"
+      },
+      {
+        "name": "745.504.wav",
+        "frequency": 745.504,
+        "path": "audio/vibraphone/745.504.wav"
+      },
+      {
+        "name": "789.590.wav",
+        "frequency": 789.59,
+        "path": "audio/vibraphone/789.590.wav"
+      },
+      {
+        "name": "836.223.wav",
+        "frequency": 836.223,
+        "path": "audio/vibraphone/836.223.wav"
+      },
+      {
+        "name": "885.930.wav",
+        "frequency": 885.93,
+        "path": "audio/vibraphone/885.930.wav"
+      },
+      {
+        "name": "938.961.wav",
+        "frequency": 938.961,
+        "path": "audio/vibraphone/938.961.wav"
+      },
+      {
+        "name": "994.345.wav",
+        "frequency": 994.345,
+        "path": "audio/vibraphone/994.345.wav"
+      }
+    ],
+    "readme": "Sound pack downloaded from Freesound\n----------------------------------------\n\n\"vibraphone\"\n\nThis pack of sounds contains sounds by the following user:\n - atonia ( https://freesound.org/people/atonia/ )\n\nYou can find this pack online at: https://freesound.org/people/atonia/packs/7293/\n\n\nLicenses in this pack (see below for individual sound licenses)\n---------------------------------------------------------------\n\nCreative Commons 0: http://creativecommons.org/publicdomain/zero/1.0/\n\n\nSounds in this pack\n-------------------\n\n  * 144843__atonia__82.wav\n    * url: https://freesound.org/s/144843/\n    * license: Creative Commons 0\n  * 116384__atonia__89.wav\n    * url: https://freesound.org/s/116384/\n    * license: Creative Commons 0\n  * 116383__atonia__88.wav\n    * url: https://freesound.org/s/116383/\n    * license: Creative Commons 0\n  * 116382__atonia__87.wav\n    * url: https://freesound.org/s/116382/\n    * license: Creative Commons 0\n  * 116381__atonia__86.wav\n    * url: https://freesound.org/s/116381/\n    * license: Creative Commons 0\n  * 116380__atonia__85.wav\n    * url: https://freesound.org/s/116380/\n    * license: Creative Commons 0\n  * 116379__atonia__84.wav\n    * url: https://freesound.org/s/116379/\n    * license: Creative Commons 0\n  * 116378__atonia__83.wav\n    * url: https://freesound.org/s/116378/\n    * license: Creative Commons 0\n  * 116376__atonia__81.wav\n    * url: https://freesound.org/s/116376/\n    * license: Creative Commons 0\n  * 116375__atonia__80.wav\n    * url: https://freesound.org/s/116375/\n    * license: Creative Commons 0\n  * 116374__atonia__79.wav\n    * url: https://freesound.org/s/116374/\n    * license: Creative Commons 0\n  * 116373__atonia__78.wav\n    * url: https://freesound.org/s/116373/\n    * license: Creative Commons 0\n  * 116372__atonia__77.wav\n    * url: https://freesound.org/s/116372/\n    * license: Creative Commons 0\n  * 116371__atonia__76.wav\n    * url: https://freesound.org/s/116371/\n    * license: Creative Commons 0\n  * 116370__atonia__75.wav\n    * url: https://freesound.org/s/116370/\n    * license: Creative Commons 0\n  * 116369__atonia__74.wav\n    * url: https://freesound.org/s/116369/\n    * license: Creative Commons 0\n  * 116368__atonia__73.wav\n    * url: https://freesound.org/s/116368/\n    * license: Creative Commons 0\n  * 116367__atonia__72.wav\n    * url: https://freesound.org/s/116367/\n    * license: Creative Commons 0\n  * 116366__atonia__71.wav\n    * url: https://freesound.org/s/116366/\n    * license: Creative Commons 0\n  * 116365__atonia__70.wav\n    * url: https://freesound.org/s/116365/\n    * license: Creative Commons 0\n  * 116364__atonia__69.wav\n    * url: https://freesound.org/s/116364/\n    * license: Creative Commons 0\n  * 116363__atonia__68.wav\n    * url: https://freesound.org/s/116363/\n    * license: Creative Commons 0\n  * 116362__atonia__67.wav\n    * url: https://freesound.org/s/116362/\n    * license: Creative Commons 0\n  * 116361__atonia__66.wav\n    * url: https://freesound.org/s/116361/\n    * license: Creative Commons 0\n  * 116360__atonia__65.wav\n    * url: https://freesound.org/s/116360/\n    * license: Creative Commons 0\n  * 116359__atonia__64.wav\n    * url: https://freesound.org/s/116359/\n    * license: Creative Commons 0\n  * 116358__atonia__63.wav\n    * url: https://freesound.org/s/116358/\n    * license: Creative Commons 0\n  * 116357__atonia__62.wav\n    * url: https://freesound.org/s/116357/\n    * license: Creative Commons 0\n  * 116356__atonia__61.wav\n    * url: https://freesound.org/s/116356/\n    * license: Creative Commons 0\n  * 116355__atonia__60.wav\n    * url: https://freesound.org/s/116355/\n    * license: Creative Commons 0\n  * 116354__atonia__59.wav\n    * url: https://freesound.org/s/116354/\n    * license: Creative Commons 0\n  * 116353__atonia__58.wav\n    * url: https://freesound.org/s/116353/\n    * license: Creative Commons 0\n  * 116352__atonia__57.wav\n    * url: https://freesound.org/s/116352/\n    * license: Creative Commons 0\n  * 116351__atonia__56.wav\n    * url: https://freesound.org/s/116351/\n    * license: Creative Commons 0\n  * 116350__atonia__55.wav\n    * url: https://freesound.org/s/116350/\n    * license: Creative Commons 0\n  * 116349__atonia__54.wav\n    * url: https://freesound.org/s/116349/\n    * license: Creative Commons 0\n  * 116348__atonia__53.wav\n    * url: https://freesound.org/s/116348/\n    * license: Creative Commons 0\n\n\n"
   }
 ]
