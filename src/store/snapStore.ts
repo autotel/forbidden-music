@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import { frequencyToOctave, makeNote, Note, octaveToFrequency } from '../dataTypes/Note.js';
 import { Tool } from '../dataTypes/Tool.js';
 import Fraction from 'fraction.js';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { ref } from 'vue';
 import colundi from '../scales/colundi.js';
+import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters.js';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 

@@ -291,4 +291,4 @@ class FMSynthesizer extends AudioWorkletProcessor
     }
 }
 
-registerProcessor("fm-synthesizer", FMSynthesizer);
+registerProcessor("fm-synth", FMSynthesizer);

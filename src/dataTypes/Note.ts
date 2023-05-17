@@ -1,3 +1,7 @@
+import {
+    frequencyToOctave,
+    octaveToFrequency,
+} from "../functions/toneConverters";
 
 export interface Note {
     /** start in musical time */
@@ -25,9 +29,6 @@ export interface NoteDefb {
 }
 
 export const frequencyConstant = 11;
-
-export const octaveToFrequency = (octave: number) => frequencyConstant * Math.pow(2, octave);
-export const frequencyToOctave = (frequency: number) => Math.log2(frequency / frequencyConstant);
 
 export const makeNote = (noteDef: NoteDefa | NoteDefb): Note => {
     const nn = {

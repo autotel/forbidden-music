@@ -1,8 +1,6 @@
 <script setup lang="ts">
+import { Ref, ref, watchEffect } from 'vue';
 import { useViewStore } from '../store/viewStore';
-import { onMounted, Ref, ref, watchEffect, computed } from 'vue';
-import { usePlaybackStore } from '../store/playbackStore';
-import { frequencyToOctave, octaveToFrequency } from '../dataTypes/Note';
 
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;
@@ -34,7 +32,6 @@ interface keyRect {
 const keys = ref([] as Array<keyRect>);
 
 watchEffect(() => {
-    const topLimit = frequencyToOctave(20000);
     // let totalOctave = 0;//view.viewHeightOctaves - 0 - view.octaveOffset;
     let index = 0;
     for (let oct = 0; oct < view.viewHeightOctaves; oct++) {

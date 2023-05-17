@@ -60,26 +60,54 @@ class DelayLine extends SampleBySampleOperator {
         return ret;
 
     }
+    reset = () => {
+        this.memory = [];
+    }
 }
 
 class IIRFilter extends SampleBySampleOperator {
     /** @type {Number}*/
-    memory = 0;
-    k = 0.01;
-    amp = 0.99;
-    operation = (insample) => {
-        let ret = 0;
-        let ik = 1 - this.k;
-        ret = insample * ik;
-        ret += this.memory * this.k;
-        ret *= this.amp;
 
-        this.memory = ret;
-        return ret;
-    }
+
+
+
     constructor(props = {}) {
         super();
-        Object.assign(this, props);
+
+        let { memory, k, amp } = Object.assign(props, {
+            memory: 0,
+            k: 0.01,
+            amp: 0.99,
+        });
+        let ik = 1 - k;
+
+        this.set = (props) => {
+            if(props.memory) this.memory = props.memory;
+            if(props.k) this.k = props.k;
+            if(props.amp) this.amp = props.amp;
+            ik = 1 - this.k;
+        }
+
+        this.operation = (insample) => {
+            let ret = 0;
+            ret = insample * ik;
+            ret += memory * k;
+            ret *= amp;
+
+            memory = ret;
+            return ret;
+        }
+    }
+}
+
+class DCRemover extends SampleBySampleOperator {
+    /** @type {Number}*/
+    memory = 0;
+    operation = (insample) => {
+        let ret = 0;
+        ret = insample - this.memory;
+        this.memory = insample * 0.01 + this.memory * 0.99;
+        return ret;
     }
 }
 
@@ -267,7 +295,7 @@ class ButterworthLpf1 extends SampleBySampleOperator {
         this.set = (cutoffFreq = 500, gain = 1, sharpness = 8) => {
             const fpass = cutoffFreq;
             const fstop = cutoffFreq - cutoffFreq / sharpness;
-            console.log("setf",fpass,fstop)
+            console.log("setf", fpass, fstop)
             if (!b) {
                 b = new Butterworth1(fpass, fstop, hpass, hstop);
             } else {
@@ -321,36 +349,49 @@ class ButterworthBpf1 extends SampleBySampleOperator {
     }
 }
 
+class LpMoog extends SampleBySampleOperator {
+    constructor(frequency, reso) {
+        super();
+        let msgcount = 0;
+        let in1, in2, in3, in4, out1, out2, out3, out4
+        in1 = in2 = in3 = in4 = out1 = out2 = out3 = out4 = 0.0;
 
-
-class KarplusVoice extends Voice {
-    noiseEnvVal = 0;
-    noiseDecayInverse = 16 / samplingRate;
-    delayLine = new DelayLine();
-    trig({ freq, amp, dur }) {
-        this.noiseEnvVal = amp;
-        this.delayLine.delaySamples = samplingRate / freq;
-        this.isBusy = true;
-    }
-    stop() {
-        this.noiseEnvVal = 0;
-        this.isBusy = false;
-    }
-    /** @param {number} blockSize*/
-    getBlock(blockSize) {
-        const output = new Float32Array(blockSize);
-
-        for (let splN = 0; splN < blockSize; splN++) {
-            let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
-            sampleNow += this.delayLine.operation(sampleNow);
-            output[splN] = sampleNow;
-            if (this.noiseEnvVal < 0) {
-                this.noiseEnvVal = 0;
-            } else {
-                this.noiseEnvVal -= this.noiseDecayInverse;
-            }
+        this.reset = () => {
+            in1 = in2 = in3 = in4 = out1 = out2 = out3 = out4 = 0.0;
+            msgcount = 0;
         }
-        return output;
+        let f, af, sqf, fb;
+        this.set = (frequency, reso) => {
+            this.reset();
+            if (frequency < 0) frequency = 0;
+            f = (frequency / samplingRate) * Math.PI * 2 // probably bogus, origially was * 1.16 but was not working well
+
+            af = 1 - f;
+            sqf = f * f;
+
+            fb = reso * (1.0 - 0.15 * sqf);
+        }
+
+        this.operation = (sample, saturate = false) => {
+
+            let outSample = 0;
+            sample -= out4 * fb;
+            sample *= 0.35013 * (sqf) * (sqf);
+
+            out1 = sample + 0.3 * in1 + af * out1; // Pole 1
+            in1 = sample;
+            out2 = out1 + 0.3 * in2 + af * out2; // Pole 2
+            in2 = out1;
+            out3 = out2 + 0.3 * in3 + af * out3; // Pole 3
+            in3 = out2;
+            out4 = out3 + 0.3 * in4 + af * out4; // Pole 4
+            in4 = out3;
+
+            outSample = out4;
+
+            return saturate ? clip(outSample) : outSample;
+        }
+        this.set(frequency, reso);
     }
 }
 
@@ -376,7 +417,8 @@ class Karplus2Voice extends Voice {
 
     delayLine1 = new DelayLine();
 
-    // filter1 = new Butter(1,90);
+    filter1 = new LpMoog(100, 0.9);
+    dcRemover = new DCRemover();
 
     /** @type {Array<Karplus2Voice>} */
     otherVoices = [];
@@ -387,7 +429,7 @@ class Karplus2Voice extends Voice {
         const impulseDecay = 0.4; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = 0.9;
+        this.delayLine1.feedback = -0.999;
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
 
@@ -403,6 +445,10 @@ class Karplus2Voice extends Voice {
         this.splsLeft = dur * samplingRate;
         // it seems this doing barely anyhting to the high end
         // this.filter1.setFreqs(1, 900);
+        this.filter1.set(freq * 16, 0.01);
+        this.filter1.reset();
+        this.delayLine1.reset();
+        this.dcRemover.memory = 0;
     }
     stop() {
         this.noiseEnvVal = 0;
@@ -423,9 +469,10 @@ class Karplus2Voice extends Voice {
             let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
             // let sampleNow = (Math.random() - 0.5);
 
-            sampleNow += this.delayLine1.operation(sampleNow,(s)=>{
-                // return this.filter1.operation(applySigmoidRange(s));
-                return applySigmoidRange(s);
+            sampleNow += this.delayLine1.operation(sampleNow, (s) => {
+                const lpFiltered = this.filter1.operation(s);
+                const dcRemoved = this.dcRemover.operation(lpFiltered);
+                return dcRemoved;
             });
             // sampleNow += this.delayLine2.operation(sampleNow);
             // sampleNow += this.delayLine3.operation(sampleNow);
