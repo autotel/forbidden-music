@@ -4,7 +4,7 @@ import { onMounted, ref, watchEffect } from 'vue';
 
 const samplingRate = 44100; // note its 44100 / 10
 
-
+const ftCalcs = ref(0);
 const frequency = 180
 const inputSquareWave = new Array(441).fill(0).map((_, i) => {
     const period = samplingRate / frequency;
@@ -20,67 +20,26 @@ const sineWindow = (i: number, period: number) => {
     return Math.sin(i / period * Math.PI);
 }
 const noise = (len: number) => new Array(len).fill(0).map((_, i) => {
-    return (Math.random() ) * sineWindow(i, len);
+    return (Math.random());// * sineWindow(i, len);
 });
+
 const outputWave = ref(new Array(inputSquareWave.length).fill(0));
 const outputNoiseFft = ref(new Array(noiseLen).fill(0));
 const errors = ref<string[]>([]);
 const testFilterFunctionString = ref(`arr => {
-    const samplingRate = 44100;
-    const clip = (x) => {
-        return Math.max(-1, Math.min(1, x));
-    }
-    class LpMoog {
-        constructor(frequency, reso) {
-            let msgcount = 0;
-            let in1, in2, in3, in4, out1, out2, out3, out4
-            in1 = in2 = in3 = in4 = out1 = out2 = out3 = out4 = 0.0;
-
-            this.reset = () => {
-                in1 = in2 = in3 = in4 = out1 = out2 = out3 = out4 = 0.0;
-                msgcount = 0;
+    class LpBoxcar {
+        constructor(k) {
+            let mem = 0;
+            this.operation = (x) => {
+                mem = k * x + (1 - k) * mem;
+                return mem;
             }
-            let f, af, sqf, fb;
-            this.set = (frequency, reso) => {
-                this.reset();
-                if (frequency < 0) frequency = 0;
-                f = (frequency / samplingRate) * 1.16;
-
-                af = 1 - f;
-                sqf = f * f;
-
-                fb = reso * (1.0 - 0.15 * sqf);
-            }
-
-            this.operation = (sample, saturate = false) => {
-
-                let outSample = 0;
-                sample -= out4 * fb;
-                sample *= 0.35013 * (sqf) * (sqf);
-
-                out1 = sample + 0.3 * in1 + af * out1; // Pole 1
-                in1 = sample;
-                out2 = out1 + 0.3 * in2 + af * out2; // Pole 2
-                in2 = out1;
-                out3 = out2 + 0.3 * in3 + af * out3; // Pole 3
-                in3 = out2;
-                out4 = out3 + 0.3 * in4 + af * out4; // Pole 4
-                in4 = out3;
-
-                outSample = out4;
-
-                return saturate ? clip(outSample) : outSample;
-            }
-            this.set(frequency, reso);
         }
     }
 
-    const lp = new LpMoog(4400, 0.5);
+    const lp = new LpBoxcar(0.01);
     return arr.map((x) => {
-
-
-
-        return lp.operation(x, true);
+        return x-lp.operation(x);
     })
 }`);
 /**
@@ -120,13 +79,13 @@ const calcFt = () => {
     try {
         const testFilterFunction = eval(testFilterFunctionString.value);
         const testNoise = noise(noiseLen);
-        const outNoiseResult: number[] = testFilterFunction(testNoise);
+        const outNoiseResult: number[] = testFilterFunction([...testNoise]);
         const noiseChange = outNoiseResult.map((x, i) => {
-            return nOrZero(x) - nOrZero(previousNoiseFft[i]);
+            return (x) - (testNoise[i]);
         });
         // const outNoiseResult: number[] = testFilterFunction(inputSquareWave);
         FFT(noiseChange, outImaginary);
-        const weightNew = 0.1;
+        const weightNew = 1 / (ftCalcs.value + 1);
         const weightOld = 1 - weightNew;
         const outNoiseFtAverage = outNoiseResult.map((x, i) => {
             x = isNaN(x) ? 0 : x;
@@ -134,26 +93,29 @@ const calcFt = () => {
         });
         previousNoiseFft.splice(0, previousNoiseFft.length, ...outNoiseFtAverage);
 
-        outputNoiseFft.value = previousNoiseFft;
+        outputNoiseFft.value = outNoiseFtAverage;
         // console.log("ft");
+        ftCalcs.value++;
     } catch (e: any) {
         errors.value = [e + ""];
     }
     if (ftTimeout.value) clearTimeout(ftTimeout.value);
-    ftTimeout.value = setTimeout(calcFt, 10);
+    ftTimeout.value = setTimeout(calcFt, 90);
 }
-setTimeout(calcFt, 100);
 
 onMounted(() => {
     if (ftTimeout.value) {
         console.log("clear");
         clearTimeout(ftTimeout.value);
     }
+    ftCalcs.value = 0;
+    setTimeout(calcFt, 100);
 });
 watchEffect(() => {
     try {
         const testFilterFunction = eval(testFilterFunctionString.value);
         outputWave.value = testFilterFunction(inputSquareWave);
+        ftCalcs.value = 0;
         errors.value = [];
     } catch (e: any) {
         errors.value = [e + ""];
@@ -168,6 +130,8 @@ watchEffect(() => {
 <template>
     <div class="side-by-side">
         <svg ref="outputDisplay" class="output svg" :viewBox="`0 0 ${inputSquareWave.length} 140`" style="width: 50%">
+            <line class="zero" x1="0" y1="70" :x2="inputSquareWave.length" y2="70" />
+            <text fill="rgba(255,0,0,0.23)" font-size="12" x="0" y="0" dy="1em">precision: {{ftCalcs}}</text>
             <path v-if="outputWave && outputWave.length > 0" class="output trace"
                 :d="`M${outputWave.map((y, x) => `${x},${y * 100 + 70}`).join(' ')}`" />
             <path v-if="outputNoiseFft && outputNoiseFft.length > 0" class="ft output trace"
@@ -179,6 +143,20 @@ watchEffect(() => {
 </template>
 
 <style scoped>
+.zero {
+    stroke: rgba(255, 255, 255, 0.397);
+}
+
+.frequencyLine {
+    stroke: rgba(255, 255, 255, 0.397);
+    fill: none;
+}
+
+.frequencyText {
+    fill: rgba(255, 255, 255, 0.397);
+    font-size: 10px;
+}
+
 .side-by-side {
     display: flex;
     flex-direction: row;

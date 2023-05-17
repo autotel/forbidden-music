@@ -64,42 +64,19 @@ class DelayLine extends SampleBySampleOperator {
         this.memory = [];
     }
 }
-
-class IIRFilter extends SampleBySampleOperator {
-    /** @type {Number}*/
-
-
-
-
-    constructor(props = {}) {
+class LpBoxcar extends SampleBySampleOperator {
+    constructor(k) {
         super();
-
-        let { memory, k, amp } = Object.assign(props, {
-            memory: 0,
-            k: 0.01,
-            amp: 0.99,
-        });
-        let ik = 1 - k;
-
-        this.set = (props) => {
-            if(props.memory) this.memory = props.memory;
-            if(props.k) this.k = props.k;
-            if(props.amp) this.amp = props.amp;
-            ik = 1 - this.k;
+        let mem = 0;
+        this.operation = (x) => {
+            mem = k * x + (1 - k) * mem;
+            return mem;
         }
-
-        this.operation = (insample) => {
-            let ret = 0;
-            ret = insample * ik;
-            ret += memory * k;
-            ret *= amp;
-
-            memory = ret;
-            return ret;
+        this.reset = () => {
+            mem = 0;
         }
     }
 }
-
 class DCRemover extends SampleBySampleOperator {
     /** @type {Number}*/
     memory = 0;
@@ -414,10 +391,12 @@ class Karplus2Voice extends Voice {
     splsLeft = 0;
     bleed = 0;
     engaged = false;
+    measuredOutputLevel = 0;
+    applyGain = 1;
 
     delayLine1 = new DelayLine();
 
-    filter1 = new LpMoog(100, 0.9);
+    filter1 = new LpBoxcar(0.1);
     dcRemover = new DCRemover();
 
     /** @type {Array<Karplus2Voice>} */
@@ -426,10 +405,10 @@ class Karplus2Voice extends Voice {
     constructor(voicesPool = []) {
         super();
         // define the characteristics of the synth timbre.
-        const impulseDecay = 0.4; //seconds
+        const impulseDecay = 0.02; //seconds
         this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
         // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = -0.999;
+        this.delayLine1.feedback = 1;
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
 
@@ -439,13 +418,12 @@ class Karplus2Voice extends Voice {
         this.noiseEnvVal = amp;
         // const splfq = samplingRate / freq;
         this.delayLine1.delaySamples = samplingRate / freq;
-
         this.isBusy = true;
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
         // it seems this doing barely anyhting to the high end
         // this.filter1.setFreqs(1, 900);
-        this.filter1.set(freq * 16, 0.01);
+        // this.filter1.set(freq *32, 0.01);
         this.filter1.reset();
         this.delayLine1.reset();
         this.dcRemover.memory = 0;
@@ -470,10 +448,13 @@ class Karplus2Voice extends Voice {
             // let sampleNow = (Math.random() - 0.5);
 
             sampleNow += this.delayLine1.operation(sampleNow, (s) => {
-                const lpFiltered = this.filter1.operation(s);
-                const dcRemoved = this.dcRemover.operation(lpFiltered);
-                return dcRemoved;
+                s = this.filter1.operation(s) * 0.5 + s * 0.5;
+                this.measuredOutputLevel = this.measuredOutputLevel * 0.9 + Math.abs(s) * 0.1;
+                this.applyGain = 1 / this.measuredOutputLevel;
+                s *= this.applyGain;
+                return s;
             });
+            sampleNow = this.dcRemover.operation(sampleNow);
             // sampleNow += this.delayLine2.operation(sampleNow);
             // sampleNow += this.delayLine3.operation(sampleNow);
 
