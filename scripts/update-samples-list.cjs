@@ -54,11 +54,14 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
             path: path.join(samplesRelativetoSrc, samplePack, sample)
         };
     });
+    const isComplexSampler = samplesList.find(sample => sample.frequency <= 0) !== undefined;
+    
     if (samplesList.length === 0) {
         return false;
     }
     return {
         name: samplePack,
+        isComplexSampler,
         samples: samplesList,
         readme: readmesList.join('\n'),
     };

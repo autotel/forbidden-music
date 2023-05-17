@@ -5,6 +5,7 @@ import { Note } from '../dataTypes/Note';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { FmSynth } from '../synth/FmSynth';
 import { MagicSampler } from '../synth/MagicSampler';
+import { ComplexSampler } from '../synth/ComplexSampler';
 import { OptionSynthParam, ParamType, SynthInstance } from "../synth/SynthInterface";
 import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
@@ -23,7 +24,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     /** in seconds */
     const previousClockTime = ref(0);
     /** how long in advance to request the scheduling of events */
-    const foresight = 1; 
+    const foresight = 1;
     let audioContext = new AudioContext();
 
     const score = useScoreStore();
@@ -38,7 +39,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     // let toneFmSynth = null as ToneFmSynth | null;
     let karplusSynth = null as KarplusSynth | null;
     let fmSynth = null as FmSynth | null;
-    let samplers = [] as MagicSampler[];
+    let samplers = [] as (ComplexSampler | MagicSampler)[];
     let availableSynths = ref([] as SynthInstance[]);
 
     let synth = ref<SynthInstance | undefined>(undefined);
@@ -50,18 +51,28 @@ export const usePlaybackStore = defineStore("playback", () => {
         await audioContext.resume();
 
         sampleDefinitions.forEach((sampleDefinition) => {
-            samplers.push(new MagicSampler(
-                audioContext,
-                sampleDefinition.samples,
-                sampleDefinition.name,
-                sampleDefinition.readme
-            ))
+            if (sampleDefinition.isComplexSampler) {
+                samplers.push(new ComplexSampler(
+                    audioContext,
+                    sampleDefinition.samples,
+                    "(CPX)" + sampleDefinition.name,
+                    sampleDefinition.readme
+                ))
+            } else {
+
+                samplers.push(new MagicSampler(
+                    audioContext,
+                    sampleDefinition.samples,
+                    sampleDefinition.name,
+                    sampleDefinition.readme
+                ))
+            }
         });
         // toneFmSynth = new ToneFmSynth(audioContext);
         karplusSynth = new KarplusSynth(audioContext);
         fmSynth = new FmSynth(audioContext);
         availableSynths.value = [karplusSynth, fmSynth, ...samplers];
-        synth.value = fmSynth || samplers[5] || samplers [0];
+        synth.value = fmSynth || samplers[5] || samplers[0];
 
         console.log("audio is ready");
         window.removeEventListener("mousedown", startContextListener);

@@ -1,6 +1,7 @@
 export default [
   {
     "name": "Celtic_Harp",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "103.703.wav",
@@ -172,6 +173,7 @@ export default [
   },
   {
     "name": "Glockenspiel",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "1174.42.wav",
@@ -248,6 +250,7 @@ export default [
   },
   {
     "name": "Hohner_Pianet",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "109.882.wav",
@@ -274,6 +277,7 @@ export default [
   },
   {
     "name": "K1_harp",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "1176.140.wav",
@@ -300,6 +304,7 @@ export default [
   },
   {
     "name": "Kankles",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "220.224.wav",
@@ -341,6 +346,7 @@ export default [
   },
   {
     "name": "Nylon_Strings",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "110.074.wav",
@@ -382,6 +388,7 @@ export default [
   },
   {
     "name": "Trumpet",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "1106.081.wav",
@@ -453,6 +460,7 @@ export default [
   },
   {
     "name": "harpsichord",
+    "isComplexSampler": true,
     "samples": [
       {
         "name": "-1.000.wav",
@@ -694,6 +702,7 @@ export default [
   },
   {
     "name": "insane piano",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "121.183.wav",
@@ -759,7 +768,25 @@ export default [
     "readme": "Sound pack downloaded from Freesound\n----------------------------------------\n\n\"Grand Piano\"\n\nThis pack of sounds contains sounds by the following user:\n - tarane468 ( https://freesound.org/people/tarane468/ )\n\nYou can find this pack online at: https://freesound.org/people/tarane468/packs/26581/\n\n\nLicenses in this pack (see below for individual sound licenses)\n---------------------------------------------------------------\n\nCreative Commons 0: http://creativecommons.org/publicdomain/zero/1.0/\n\n\nSounds in this pack\n-------------------\n\n  * 469655__tarane468__013-c7.wav\n    * url: https://freesound.org/s/469655/\n    * license: Creative Commons 0\n  * 469654__tarane468__012-f-6.wav\n    * url: https://freesound.org/s/469654/\n    * license: Creative Commons 0\n  * 469653__tarane468__010-f-5.wav\n    * url: https://freesound.org/s/469653/\n    * license: Creative Commons 0\n  * 469652__tarane468__011-c6.wav\n    * url: https://freesound.org/s/469652/\n    * license: Creative Commons 0\n  * 469651__tarane468__008-f-4.wav\n    * url: https://freesound.org/s/469651/\n    * license: Creative Commons 0\n  * 469650__tarane468__009-c5.wav\n    * url: https://freesound.org/s/469650/\n    * license: Creative Commons 0\n  * 469649__tarane468__004-f-2.wav\n    * url: https://freesound.org/s/469649/\n    * license: Creative Commons 0\n  * 469648__tarane468__005-c3.wav\n    * url: https://freesound.org/s/469648/\n    * license: Creative Commons 0\n  * 469647__tarane468__006-f-3.wav\n    * url: https://freesound.org/s/469647/\n    * license: Creative Commons 0\n  * 469646__tarane468__007-c4.wav\n    * url: https://freesound.org/s/469646/\n    * license: Creative Commons 0\n  * 469645__tarane468__000-f-0.wav\n    * url: https://freesound.org/s/469645/\n    * license: Creative Commons 0\n  * 469644__tarane468__001-c1.wav\n    * url: https://freesound.org/s/469644/\n    * license: Creative Commons 0\n  * 469643__tarane468__002-f-1.wav\n    * url: https://freesound.org/s/469643/\n    * license: Creative Commons 0\n  * 469642__tarane468__003-c2.wav\n    * url: https://freesound.org/s/469642/\n    * license: Creative Commons 0\n\n\n"
   },
   {
+    "name": "test-tone",
+    "isComplexSampler": true,
+    "samples": [
+      {
+        "name": "-1.wav",
+        "frequency": -1,
+        "path": "audio/test-tone/-1.wav"
+      },
+      {
+        "name": "440.wav",
+        "frequency": 440,
+        "path": "audio/test-tone/440.wav"
+      }
+    ],
+    "readme": ""
+  },
+  {
     "name": "vibraphone",
+    "isComplexSampler": false,
     "samples": [
       {
         "name": "1054.587.wav",
