@@ -282,13 +282,16 @@ onUnmounted(() => {
 
 <style scoped>
 .drawers-container {
-    position: fixed;
+    /* position: fixed; */
+    position: absolute;
     top: 0;
     right: 0;
-    display: flex;
+    width: 0;
+    display:inline-block;
+    /*display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow: auto;
+    overflow: auto; */
 }
 .unclickable {
     pointer-events: none;

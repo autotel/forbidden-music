@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { ref } from "vue";
+import { computed, onMounted, ref, watchEffect } from "vue";
 import Button from "./Button.vue";
 import Lock from "./icons/Lock.vue";
 import LockOpen from "./icons/LockOpen.vue";
@@ -12,13 +12,26 @@ const props = defineProps<{
 }>();
 const hovered = ref(false);
 const keepOn = ref(false);
+const sizer = ref<HTMLDivElement | null>(null);
+
+const height = ref("0");
+watchEffect(() => {
+    if (!sizer.value) return 0;
+    height.value = sizer.value.getBoundingClientRect().height + "px";
+});
+
 </script>
 
 <template>
-    <div class="drawer-container" @mouseenter="hovered = true" @mouseleave="hovered = false" :class="{ hide: !keepOn && !hovered }">
-        <slot>
+    <div class="outer" :style="{ height: height }">
 
-        </slot>
+        <div ref="sizer" class="drawer-container" @mouseenter="hovered = true" @mouseleave="hovered = false"
+            :class="{ hide: !keepOn && !hovered }">
+            <slot>
+
+            </slot>
+
+        </div>
         <Button :onClick="() => keepOn = !keepOn" tooltip="keep open">
             <span class="icon">
                 <template v-if="hovered || keepOn">
@@ -42,24 +55,23 @@ const keepOn = ref(false);
     fill: rgb(218, 62, 0);
 }
 
+.outer {
+    position: relative;
+
+}
 
 .drawer-container {
-    position: relative;
-    right: 0;
-    margin-right: 2em;
+    position: absolute;
+    right: 2em;
+    /* margin-right: 2em; */
     width: 300px;
     transition: right 0.03s;
     background-color: rgba(255, 255, 255, 0.884);
 }
 
-.drawer-container.hide Button {
-    left: 0;
-    transition: left 0.03s;
-}
-
-.drawer-container Button {
+Button {
     position: absolute;
-    right: -2em;
+    right: 0;
     top: 0;
     height: 100%;
     transition: left 0.03s;
