@@ -10,9 +10,9 @@ import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 
 
-interface LibraryItem {
-    notes: Array<Note>;
+export interface LibraryItem {
     name: string;
+    notes: Array<Note>;
     created: Number;
     edited: Number;
     snaps: Array<[string, boolean]>;
@@ -80,22 +80,16 @@ export const useLibraryStore = defineStore("library store", () => {
         setInterval(autosaveCall, 1000);
     }, 100);
 
-    const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
-        return [key, snaps.values[key].active];
-    });
     const saveToNewLibraryItem = () => {
         try {
             if (exists(projectStore.name)) {
                 throw new Error("File already exists");
             }
 
-            saveToLocalStorage(projectStore.name, {
-                notes: score.notes,
-                name: projectStore.name,
-                created: projectStore.created,
-                edited: Date.now().valueOf(),
-                snaps: getSnapsList(),
-            });
+            saveToLocalStorage(
+                projectStore.name,
+                projectStore.getProjectDefintion()
+            );
 
             inSyncWithStorage.value = true;
         } catch (e) {
@@ -108,13 +102,10 @@ export const useLibraryStore = defineStore("library store", () => {
 
     const saveCurrent = () => {
         try {
-            saveToLocalStorage(projectStore.name, {
-                notes: score.notes,
-                name: projectStore.name,
-                created: projectStore.created,
-                edited: projectStore.edited,
-                snaps: getSnapsList(),
-            });
+            saveToLocalStorage(
+                projectStore.name,
+                projectStore.getProjectDefintion()
+            );
             inSyncWithStorage.value = true;
         } catch (e) {
             console.error("could not save", e);
@@ -133,15 +124,7 @@ export const useLibraryStore = defineStore("library store", () => {
             clear();
             const item = retrieveFromLocalStorage(filename);
             console.log("opening", item);
-            score.notes = item.notes;
-            projectStore.name = item.name;
-            projectStore.created = item.created;
-            projectStore.edited = item.edited;
-            projectStore.list = item.notes.map(note => new EditNote(note, view));
-            item.snaps.forEach(([name, activeState]) => {
-                if (!snaps.values[name]) return;
-                snaps.values[name].active = activeState;
-            });
+            importObject(item);
             nextTick(() => {
                 inSyncWithStorage.value = true;
             });
@@ -162,7 +145,7 @@ export const useLibraryStore = defineStore("library store", () => {
         inSyncWithStorage.value = false;
     };
 
-    watch([projectStore, snaps.values], () => inSyncWithStorage.value = false);
+    watch([projectStore], () => inSyncWithStorage.value = false);
 
     watchEffect(() => {
         if (errorMessage.value) {
@@ -184,7 +167,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const exportJSON = () => {
-        const json = JSON.stringify(score.notes);
+        const json = JSON.stringify(projectStore.getProjectDefintion());
         downloadString(json, "application/json", projectStore.name + ".json");
     }
 
@@ -198,23 +181,15 @@ export const useLibraryStore = defineStore("library store", () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const text = e.target?.result as string;
-            const json = JSON.parse(text);
-            projectStore.list = json.map((note: any) => new EditNote({
-                frequency: note.frequency,
-                start: note.start,
-                duration: note.duration,
-            }, view));
+            const object = JSON.parse(text);
+            importObject(object);
         }
         reader.readAsText(file);
     }
 
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
-            projectStore.list = iobj.notes.map(note => new EditNote({
-                frequency: note.frequency,
-                start: note.start,
-                duration: note.duration,
-            }, view));
+            projectStore.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             projectStore.list = iobj.map(note => new EditNote({
                 frequency: note.frequency,

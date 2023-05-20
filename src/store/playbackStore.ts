@@ -37,11 +37,6 @@ export const usePlaybackStore = defineStore("playback", () => {
     const paused = computed(() => (!playing.value) && currentScoreTime.value != 0);
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
-    // let toneFmSynth = null as ToneFmSynth | null;
-    let karplusSynth = null as KarplusSynth | null;
-    let sineSynth = null as SineSynth | null;
-    let fmSynth = null as FmSynth | null;
-    let samplers = [] as (ComplexSampler | MagicSampler)[];
     let availableSynths = ref([] as SynthInstance[]);
 
     let synth = ref<SynthInstance | undefined>(undefined);
@@ -51,7 +46,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (alreadyStarted) return;
         alreadyStarted = true;
         await audioContext.resume();
-
+        const samplers = [] as (MagicSampler | ComplexSampler)[];
         sampleDefinitions.forEach((sampleDefinition) => {
             if (sampleDefinition.isComplexSampler) {
                 samplers.push(new ComplexSampler(
@@ -70,12 +65,14 @@ export const usePlaybackStore = defineStore("playback", () => {
                 ))
             }
         });
-        // toneFmSynth = new ToneFmSynth(audioContext);
-        karplusSynth = new KarplusSynth(audioContext);
-        sineSynth = new SineSynth(audioContext);
-        fmSynth = new FmSynth(audioContext);
-        availableSynths.value = [sineSynth, karplusSynth, fmSynth, ...samplers];
-        synth.value = sineSynth || samplers[5] || samplers[0];
+
+        availableSynths.value = [
+            new KarplusSynth(audioContext),
+            new SineSynth(audioContext),
+            new FmSynth(audioContext),
+            ...samplers
+        ];
+        synth.value = availableSynths.value[0];
 
         console.log("audio is ready");
         window.removeEventListener("mousedown", startContextListener);
@@ -171,6 +168,20 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = false;
     }
 
+    const setSynthByName = (synthName: string) => {
+        const foundSynth = availableSynths.value.find((s) => s.name === synthName);
+        if (foundSynth) {
+            // change synth but with workaround 
+            // to force update synthParams.
+            synth.value = undefined;
+            setTimeout(() => {
+            synth.value = foundSynth;
+            }, 0);
+        } else {
+            console.error("synth not found", synthName);
+        }
+    }
+
     const synthParams = computed(() => {
         if (!synth.value) return [];
         return [
@@ -200,12 +211,14 @@ export const usePlaybackStore = defineStore("playback", () => {
     });
 
     watchEffect(() => {
+        if (!view.timeToPxWithOffset) return;
         playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
     });
 
     return {
         playing,
         bpm,
+        availableSynths,
         currentScoreTime,
         previousScoreTime,
         currentTimeout,
@@ -218,6 +231,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         stop,
         pause,
         synthParams,
+        setSynthByName,
     };
 });
 

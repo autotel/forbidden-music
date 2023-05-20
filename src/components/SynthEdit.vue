@@ -33,6 +33,7 @@ const showCurrentSynthCredits = () => {
                 <Button :on-click="() => { }">Click to start audio engine</Button>
             </template>
             <div>
+                
                 <template v-for="param in playback.synthParams">
                     <PropOption v-if="param.type === ParamType.option" :param="param" />
                     <PropSlider v-if="param.type === ParamType.number" :param="param" />
