@@ -9,15 +9,18 @@ const props = defineProps<{
     pulltip?: string,
     side?: "top" | "bottom" | "left" | "right",
     title?: string,
+    height?: string,
 }>();
 const hovered = ref(false);
 const keepOn = ref(false);
 const sizer = ref<HTMLDivElement | null>(null);
 
-const height = ref("0");
-watchEffect(() => {
-    if (!sizer.value) return 0;
-    height.value = sizer.value.getBoundingClientRect().height + "px";
+const height = ref(props.height || "0");
+
+onMounted(() => {
+    if(height.value === "0") {
+        height.value = sizer.value?.getBoundingClientRect().height + "px";
+    }
 });
 
 </script>

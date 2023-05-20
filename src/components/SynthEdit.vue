@@ -28,19 +28,21 @@ const showCurrentSynthCredits = () => {
             <HeartPulse />
         </template>
         <h2>synth params</h2>
-        <Suspense>
-            <template #fallback>
-                <Button :on-click="() => { }">Click to start audio engine</Button>
-            </template>
-            <div>
-                
-                <template v-for="param in playback.synthParams">
-                    <PropOption v-if="param.type === ParamType.option" :param="param" />
-                    <PropSlider v-if="param.type === ParamType.number" :param="param" />
+        <div style="height:4em">
+            <Suspense>
+                <template #fallback>
+                    <Button :on-click="() => { }">Click to start audio engine</Button>
                 </template>
-            </div>
-        </Suspense>
-        <Button v-if="playback.synth?.credits" :on-click="showCurrentSynthCredits">Credits</Button>
+                <div>
+                    
+                    <template v-for="param in playback.synthParams">
+                        <PropOption v-if="param.type === ParamType.option" :param="param" />
+                        <PropSlider v-if="param.type === ParamType.number" :param="param" />
+                    </template>
+                </div>
+            </Suspense>
+            <Button v-if="playback.synth?.credits" :on-click="showCurrentSynthCredits">Credits</Button>
+        </div>
     </EdgeHidableWidget>
 
 </template>
