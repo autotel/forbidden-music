@@ -8,12 +8,14 @@ import Button from './Button.vue';
 import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
 import Magnet from "./icons/Magnet.vue";
+import { useMonoModeInteraction } from '../store/monoModeInteraction';
 const tool = useToolStore();
 const snap = useSnapStore();
+const monoModeInteraction = useMonoModeInteraction();
 
 const frequencyTableEditButtonHandler = (e: MouseEvent) => {
   e.stopImmediatePropagation()
-  tool.showOctaveTableEditor = true
+  monoModeInteraction.activate("octave table editor")
   snap.values.customFrequencyTable.active = true
 }
 </script>

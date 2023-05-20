@@ -26,12 +26,12 @@ import { useToolStore, MouseDownActions } from './store/toolStore';
 import { useViewStore, View } from './store/viewStore';
 import Modal from './components/Modal.vue';
 import CustomOctaveTableTextEditor from './components/CustomOctaveTableTextEditor.vue';
+import { useMonoModeInteraction } from './store/monoModeInteraction';
 
 
-
+const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
-const playbackStore = usePlaybackStore();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const score = useScoreStore();
@@ -42,11 +42,9 @@ const modalText = ref("");
 const clickOutsideCatcher = ref();
 const snap = useSnapStore();
 
-provide('modalText', modalText);
+const mainInteraction = monoModeInteraction.createInteractionModal("default");
 
-const modalTextTransform = (text: string) => {
-    return text.replace(/\n/g, '<br>').replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
-}
+provide('modalText', modalText);
 
 
 // concerning middle wheel dragging to pan
@@ -55,6 +53,15 @@ let viewDragStartX = 0;
 let viewDragStartTime = 0;
 let viewDragStartY = 0;
 let viewDragStartOctave = 0;
+
+const mouseWheelListener = (e: WheelEvent) => {
+        view.viewWidthTime **= 1 + e.deltaY / 1000;
+        view.viewHeightOctaves **= 1 + e.deltaY / 1000;
+        // prevent viewWidthTime from going out of bounds
+        if (view.viewWidthTime < 0.1) {
+            view.viewWidthTime = 0.1;
+        }
+    }
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
@@ -83,6 +90,9 @@ const mouseMoveListener = (e: MouseEvent) => {
 
 
 const keyDownListener = (e: KeyboardEvent) => {
+    if(e.target instanceof HTMLInputElement) {
+        return;
+    }
     // delete selected notes
     if (e.key === 'Delete') {
         editNotes.list = editNotes.list.filter(note => !note.selected);
@@ -184,17 +194,16 @@ onMounted(() => {
     }
 
     resize();
-    // when user drags on the viewport, add a note an extend it's duration
-    $viewPort.addEventListener('mousedown', mouseDownListener);
+    
+    mainInteraction.addEventListener($viewPort,'mousedown', mouseDownListener);
+    mainInteraction.addEventListener($viewPort,'mousemove', mouseMoveListener);
+    mainInteraction.addEventListener($viewPort,'wheel', mouseWheelListener);
 
-    window.addEventListener('mousemove', mouseMoveListener);
-    //make the timedEventsViewport always fill the window
-    window.addEventListener('resize', resize);
     window.addEventListener('mouseup', mouseUpListener);
 
-    // TODO: well, this all needs refactor
-    // export score
-    window.addEventListener('keydown', keyDownListener);
+    mainInteraction.addEventListener(window,'keydown', keyDownListener);
+    mainInteraction.addEventListener(window,'resize', resize);
+
 
 
     // import score from cookie
@@ -211,61 +220,63 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    window.removeEventListener('mousemove', mouseMoveListener);
-    window.removeEventListener('resize', resize);
 
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
-    $viewPort.removeEventListener('mousedown', mouseDownListener);
+    
     window.removeEventListener('mouseup', mouseUpListener);
-    window.removeEventListener('keydown', keyDownListener);
+    mainInteraction.removeAllEventListeners();
 });
 
 
 </script>
 <template>
-    <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
-        <g id="grid">
-            <TimeGrid />
-            <ToneGrid />
-        </g>
-        <g id="tone-relations">
-            <ToneRelation />
-        </g>
-        <g id="note-would-be-created">
-            <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated" interactionDisabled />
-        </g>
-        <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
-            stroke-width="1" />
-        <g id="edit-notes">
-            <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
-        </g>
-        <g id="notes-being-created">
-            <NoteElement v-for="editNote in tool.notesBeingCreated" :editNote="editNote" />
-        </g>
-        <RangeSelection />
-    </svg>
-    <TimeScrollBar />
-    <div style="position: fixed; bottom:0; right: 0;">
-        <ToolSelector />
+    <div :style="{
+        transition: 'filter 0.2s',
+        filter: mainInteraction.isActive()?'':'blur(2px)',
+    }">
+        <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
+            <g id="grid">
+                <TimeGrid />
+                <ToneGrid />
+            </g>
+            <g id="tone-relations">
+                <ToneRelation />
+            </g>
+            <g id="note-would-be-created">
+                <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated" interactionDisabled />
+            </g>
+            <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
+                stroke-width="1" />
+            <g id="edit-notes">
+                <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
+            </g>
+            <g id="notes-being-created">
+                <NoteElement v-for="editNote in tool.notesBeingCreated" :editNote="editNote" />
+            </g>
+            <RangeSelection />
+        </svg>
+        <TimeScrollBar />
+        <div style="position: fixed; bottom:0; right: 0;">
+            <ToolSelector />
+        </div>
+        <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
+            {{ tool.currentMouseStringHelper }}
+        </div>
+        <Pianito v-if="tool.showReferenceKeyboard" />
+        <div style="position: fixed; bottom: 0;">
+            <SnapSelector />
+            <Transport />
+        </div>
+        <Suspense>
+            <SynthEdit />
+        </Suspense>
+        <LibraryManager />
     </div>
-    <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
-        {{ tool.currentMouseStringHelper }}
-    </div>
-    <Pianito v-if="tool.showReferenceKeyboard" />
-    <div style="position: fixed; bottom: 0;">
-        <SnapSelector />
-        <Transport />
-    </div>
-    <Suspense>
-        <SynthEdit />
-    </Suspense>
-    <LibraryManager />
-    <Modal v-if="modalText" :on-click-outside="() => modalText = ''">
+    <Modal name="credits modal" :onClose="() => modalText = ''">
             <pre>{{ (modalText) }}</pre>
-            <Button :on-click="() => modalText = ''">OK</Button>
     </Modal>
-    <Modal v-else-if="tool.showOctaveTableEditor" :on-click-outside="()=>tool.showOctaveTableEditor = false">
+    <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
     </Modal>
 </template>

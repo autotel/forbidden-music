@@ -1,22 +1,34 @@
 <script setup lang="ts">
-defineProps<{
-    onClickOutside: () => void
+import { computed, ref, watchEffect } from 'vue'
+import { useMonoModeInteraction } from '../store/monoModeInteraction'
+
+const props = defineProps<{
+    name: string
+    onClose?: () => void
 }>()
+
+const monoModeInteraction = ref(useMonoModeInteraction().createInteractionModal(props.name))
 
 const stopPP = (e: Event) => {
     e.stopPropagation()
     e.stopImmediatePropagation()
 }
 
+const close = (e: Event) => {
+    console.log('close')
+    monoModeInteraction.value.deactivate()
+    if (props.onClose) props.onClose()
+}
+
+const showing = computed(() => monoModeInteraction.value.isActive())
+
 </script>
-<template v-if="modalText">
-    <div 
-        class="click-outside-catcher" 
-        ref="clickOutsideCatcher" 
-        @click="(e) =>{ stopPP(e); onClickOutside()}"
-        ></div>
-    <div class="modal-text-display">
-        <slot></slot>
+<template  >
+    <div v-if="showing" class="main-modal">
+        <div class="click-outside-catcher" ref="clickOutsideCatcher" @click=close></div>
+        <div class="modal-text-display">
+            <slot></slot>
+        </div>
     </div>
 </template>
 <style scoped>
@@ -26,10 +38,9 @@ const stopPP = (e: Event) => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    /* background-color: rgba(0, 0, 0, 0.5); */
+    background-color: rgba(11, 0, 36, 0.205);
     z-index: 9;
 
-    filter: blur(1px);
 }
 
 .modal-text-display {

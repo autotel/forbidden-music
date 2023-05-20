@@ -7,14 +7,17 @@ import EdgeHidableWidget from "./EdgeHidableWidget.vue";
 import PropOption from "./PropOption.vue";
 import PropSlider from './PropSlider.vue';
 import HeartPulse from "./icons/HeartPulse.vue";
+import { useMonoModeInteraction } from "../store/monoModeInteraction";
 const playback = usePlaybackStore();
 
 const creditsModal = inject<Ref<string>>('modalText');
+const monoModeInteraction = useMonoModeInteraction();
 
 const showCurrentSynthCredits = () => {
     if (!creditsModal) throw new Error('creditsModal not injected');
     if (playback.synth?.credits) {
         creditsModal.value = playback.synth.credits;
+        monoModeInteraction.activate("credits modal");
     }
 }
 

@@ -45,8 +45,6 @@ export const useToolStore = defineStore("edit", () => {
 
     const currentMouseStringHelper = ref("");
 
-    const showOctaveTableEditor = ref(false);
-
     let newNoteDragX = 0;
 
     // TODO: add a enum to select different abstractions of tone.
@@ -379,7 +377,6 @@ export const useToolStore = defineStore("edit", () => {
         disallowOctaveChange,
         disallowTimeChange,
         showReferenceKeyboard,
-        showOctaveTableEditor,
 
         notesBeingCreated: notesBeingCreated,
         noteBeingHovered,
