@@ -23,7 +23,7 @@ const showCurrentSynthCredits = () => {
 
 </script>
 <template>
-    <EdgeHidableWidget id="synthParamsWindow" style="top:50vh">
+    <EdgeHidableWidget id="synthParamsWindow">
         <template #icon>
             <HeartPulse />
         </template>

@@ -21,7 +21,7 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
 </script>
 
 <template>
-  <EdgeHidableWidget style="bottom: 2em" pulltip="open snaps">
+  <EdgeHidableWidget style="" pulltip="open snaps">
     <template v-slot:icon>
       <Magnet/>
     </template>

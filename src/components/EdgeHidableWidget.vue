@@ -15,7 +15,7 @@ const keepOn = ref(false);
 </script>
 
 <template>
-    <div @mouseenter="hovered = true" @mouseleave="hovered = false" :class="{ hide: !keepOn && !hovered }">
+    <div class="drawer-container" @mouseenter="hovered = true" @mouseleave="hovered = false" :class="{ hide: !keepOn && !hovered }">
         <slot>
 
         </slot>
@@ -43,8 +43,8 @@ const keepOn = ref(false);
 }
 
 
-div {
-    position: fixed;
+.drawer-container {
+    position: relative;
     right: 0;
     margin-right: 2em;
     width: 300px;
@@ -52,12 +52,12 @@ div {
     background-color: rgba(255, 255, 255, 0.884);
 }
 
-div.hide Button {
+.drawer-container.hide Button {
     left: 0;
     transition: left 0.03s;
 }
 
-div Button {
+.drawer-container Button {
     position: absolute;
     right: -2em;
     top: 0;
@@ -66,7 +66,7 @@ div Button {
     width: 2em;
 }
 
-div.hide {
+.drawer-container.hide {
     right: -300px;
 }
 </style>

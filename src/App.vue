@@ -255,21 +255,22 @@ onUnmounted(() => {
             <RangeSelection />
         </svg>
         <TimeScrollBar />
-        <div style="position: fixed; bottom:0; right: 0;">
-            <ToolSelector />
-        </div>
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}
         </div>
+
+        <div style="position: fixed; bottom:0; right: 0;">
+            <ToolSelector />
+        </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <div style="position: fixed; bottom: 0;">
-            <SnapSelector />
             <Transport />
         </div>
-        <Suspense>
+        <div class="drawers-container">
+            <LibraryManager />
             <SynthEdit />
-        </Suspense>
-        <LibraryManager />
+            <SnapSelector />
+        </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
             <pre>{{ (modalText) }}</pre>
@@ -280,6 +281,15 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.drawers-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: auto;
+}
 .unclickable {
     pointer-events: none;
 
