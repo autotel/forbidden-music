@@ -6,6 +6,7 @@ import Button from "./Button.vue";
 import EdgeHidableWidget from "./EdgeHidableWidget.vue";
 import PropOption from "./PropOption.vue";
 import PropSlider from './PropSlider.vue';
+import HeartPulse from "./icons/HeartPulse.vue";
 const playback = usePlaybackStore();
 
 const creditsModal = inject<Ref<string>>('modalText');
@@ -20,6 +21,9 @@ const showCurrentSynthCredits = () => {
 </script>
 <template>
     <EdgeHidableWidget id="synthParamsWindow" style="top:50vh">
+        <template #icon>
+            <HeartPulse />
+        </template>
         <h2>synth params</h2>
         <Suspense>
             <template #fallback>

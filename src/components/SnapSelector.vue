@@ -7,18 +7,22 @@ import Pen from './icons/Pen.vue';
 import Button from './Button.vue';
 import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
+import Magnet from "./icons/Magnet.vue";
 const tool = useToolStore();
 const snap = useSnapStore();
 
 const frequencyTableEditButtonHandler = (e: MouseEvent) => {
   e.stopImmediatePropagation()
-  tool.showFrequencyTableEditor = true
+  tool.showOctaveTableEditor = true
   snap.values.customFrequencyTable.active = true
 }
 </script>
 
 <template>
   <EdgeHidableWidget style="bottom: 2em" pulltip="open snaps">
+    <template v-slot:icon>
+      <Magnet/>
+    </template>
     <h2>Snap control</h2>
     <Button v-for="(isnap, snapName) in snap.values" :onClick="() => isnap.active = !isnap.active" :class="{
       active: isnap.active,

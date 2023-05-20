@@ -25,7 +25,7 @@ import { useSnapStore } from './store/snapStore';
 import { useToolStore, MouseDownActions } from './store/toolStore';
 import { useViewStore, View } from './store/viewStore';
 import Modal from './components/Modal.vue';
-import CustomFrequencyTableTextEditor from './components/CustomFrequencyTableTextEditor.vue';
+import CustomOctaveTableTextEditor from './components/CustomOctaveTableTextEditor.vue';
 
 
 
@@ -265,8 +265,8 @@ onUnmounted(() => {
             <pre>{{ (modalText) }}</pre>
             <Button :on-click="() => modalText = ''">OK</Button>
     </Modal>
-    <Modal v-else-if="tool.showFrequencyTableEditor" :on-click-outside="()=>tool.showFrequencyTableEditor = false">
-        <CustomFrequencyTableTextEditor />
+    <Modal v-else-if="tool.showOctaveTableEditor" :on-click-outside="()=>tool.showOctaveTableEditor = false">
+        <CustomOctaveTableTextEditor />
     </Modal>
 </template>
 

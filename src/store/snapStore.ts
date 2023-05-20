@@ -183,14 +183,15 @@ const snaps: { [key: string]: SnapDefinition } = {
     }
 }
 
-
+// TODO: bug when resizing; it snaps tone. Why is it even spending 
+// time on tone snapping when resizing!?
 export const useSnapStore = defineStore("snap", () => {
     const simplify = ref<number>(0.1);
     const values = ref(snaps);
     const focusedNote = ref(null as EditNote | null);
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
-    const customFrequenciesTable = ref(colundi as number[]);
+    const customOctavesTable = ref(colundi as number[]);
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -217,14 +218,14 @@ export const useSnapStore = defineStore("snap", () => {
         const toneSnap = new SnapTracker(targetOctave);
 
         if (snapValues.customFrequencyTable.active === true) {
-            if (customFrequenciesTable.value.length > 0) {
+            if (customOctavesTable.value.length > 0) {
                 // find the closest frequency in the table
-                const closestFrequency = customFrequenciesTable.value.reduce((prev, curr) => {
-                    return (Math.abs(curr - targetHz) < Math.abs(prev - targetHz) ? curr : prev);
+                const closestOctave = customOctavesTable.value.reduce((prev, curr) => {
+                    return (Math.abs(curr - targetOctave) < Math.abs(prev - targetOctave) ? curr : prev);
                 });
-                toneSnap.addSnappedValue(frequencyToOctave(closestFrequency), {
+                toneSnap.addSnappedValue(closestOctave, {
                     text: "custom frequency table",
-                    relatedNumber: closestFrequency,
+                    relatedNumber: closestOctave,
                 });
             }
         }
@@ -512,7 +513,7 @@ export const useSnapStore = defineStore("snap", () => {
         focusedNote,
         timeSnapExplanation,
         toneSnapExplanation,
-        customFrequenciesTable,
+        customOctavesTable,
         setFocusedNote,
         resetSnapExplanation,
         snap,

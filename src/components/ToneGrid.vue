@@ -12,12 +12,9 @@ watch([view, snap.values], () => {
     linePositionsPx.value = [];
     if (snap.values['customFrequencyTable']?.active) {
         // display one line per frequency in the tableä
-        const frequencies = snap.customFrequenciesTable;
-        for (let i = 0; i < frequencies.length; i++) {
-            // TODO: conversion should be part of a helper fn, not part of note
-            const {octave} = makeNote({ 
-                frequency: frequencies[i], start: 0, duration: 0 
-            })
+        const octaves = snap.customOctavesTable;
+        for (let i = 0; i < octaves.length; i++) {
+            const octave = octaves[i];
             if (!view.isOctaveInView(octave)) continue;
             linePositionsPx.value.push(
                 view.octaveToPxWithOffset(octave)

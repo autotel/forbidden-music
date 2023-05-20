@@ -45,7 +45,7 @@ export const useToolStore = defineStore("edit", () => {
 
     const currentMouseStringHelper = ref("");
 
-    const showFrequencyTableEditor = ref(false);
+    const showOctaveTableEditor = ref(false);
 
     let newNoteDragX = 0;
 
@@ -379,7 +379,7 @@ export const useToolStore = defineStore("edit", () => {
         disallowOctaveChange,
         disallowTimeChange,
         showReferenceKeyboard,
-        showFrequencyTableEditor,
+        showOctaveTableEditor,
 
         notesBeingCreated: notesBeingCreated,
         noteBeingHovered,

@@ -5,6 +5,7 @@ import { useEditNotesStore } from "../store/editNotesStore";
 import Button from "./Button.vue";
 import PropSlider from './PropSlider.vue';
 import EdgeHidableWidget from "./EdgeHidableWidget.vue";
+import Folder from "./icons/Folder.vue";
 const editScore = useEditNotesStore();
 
 const clear = () => {
@@ -29,6 +30,9 @@ const showJsonBrowser = () => {
 </script>
 <template>
     <EdgeHidableWidget pulltip="save and load" title="file">
+        <template #icon>
+            <Folder />
+        </template>
         <h2>File</h2>
         <input type="text" v-model="editScore.name" @keydown="e => e.stopPropagation()" />
         <p v-if="editScore.errorMessage">{{ editScore.errorMessage }}</p>

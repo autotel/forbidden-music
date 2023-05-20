@@ -2,6 +2,9 @@
 
 import { ref } from "vue";
 import Button from "./Button.vue";
+import Lock from "./icons/Lock.vue";
+import LockOpen from "./icons/LockOpen.vue";
+import AnglesLeft from "./icons/AnglesLeft.vue";
 const props = defineProps<{
     pulltip?: string,
     side?: "top" | "bottom" | "left" | "right",
@@ -12,35 +15,54 @@ const keepOn = ref(false);
 </script>
 
 <template>
-    <div @mouseenter="hovered = true" @mouseleave="hovered = false"
-        :class="{ hide: !keepOn && !hovered }">
-        <Button :onClick="() => keepOn = !keepOn" tooltip="keep open">
-            {{ keepOn? '🔒': '🔓' }}
-        </Button>
+    <div @mouseenter="hovered = true" @mouseleave="hovered = false" :class="{ hide: !keepOn && !hovered }">
         <slot>
 
         </slot>
+        <Button :onClick="() => keepOn = !keepOn" tooltip="keep open">
+            <span class="icon">
+                <template v-if="hovered || keepOn">
+                    <Lock v-if="keepOn" />
+                    <LockOpen v-else />
+                </template>
+                <template v-else>
+                    <slot name="icon">
+                        <AnglesLeft />
+                    </slot>
+                </template>
+            </span>
+
+        </Button>
     </div>
 </template>
 <style scoped>
+.icon {
+    font-size: 1.5em;
+    text-align: center;
+    fill: rgb(218, 62, 0);
+}
+
+
 div {
     position: fixed;
     right: 0;
+    margin-right: 2em;
     width: 300px;
-    transition: right 0.3s;
+    transition: right 0.03s;
     background-color: rgba(255, 255, 255, 0.884);
 }
 
 div.hide Button {
-    left: -2em;
+    left: 0;
+    transition: left 0.03s;
 }
 
 div Button {
     position: absolute;
-    left: -2em;
+    right: -2em;
     top: 0;
     height: 100%;
-    transition: left 0.3s;
+    transition: left 0.03s;
     width: 2em;
 }
 

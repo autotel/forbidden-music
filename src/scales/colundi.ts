@@ -1,4 +1,7 @@
-export default [
+import { frequencyToOctave } from "../functions/toneConverters";
+
+
+export default ([
     424.36434553764,
     485.980601537905,
     1040.59718075149,
@@ -126,4 +129,4 @@ export default [
     11439.3898528632,
     11825.5304346664,
     12141.3448537286,
-];
+]).map(frequencyToOctave);
