@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { useScoreStore } from './scoreStore.js';
-import { useEditNotesStore } from './editNotesStore.js';
+import { useProjectStore } from './projectStore.js';
 import { frequencyToOctave } from '../functions/toneConverters.js';
 
 // TODO: move editNotes to its own library
@@ -20,7 +20,7 @@ export const useViewStore = defineStore("view", () => {
     // TODO integrate this, so that view always zooms to center or mouse pos).
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
-    const editNotes = useEditNotesStore();
+    const editNotes = useProjectStore();
     const score = useScoreStore();
 
     const visibleNotes = computed((): Array<EditNote> => {

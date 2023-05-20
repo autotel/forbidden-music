@@ -2,14 +2,14 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Tool, toolCasesArray } from '../dataTypes/Tool';
 import { MouseDownActions, useToolStore } from '../store/toolStore';
-import { useEditNotesStore } from '../store/editNotesStore';
+import { useProjectStore } from '../store/projectStore';
 import Button from './Button.vue';
 import { useRefHistory } from '@vueuse/core';
 
 const tool = useToolStore();
 const {
   list, history, undo, redo
-} = useEditNotesStore();
+} = useProjectStore();
 
 const toggleOctaveConstrain = () => {
   tool.disallowTimeChange = !tool.disallowTimeChange;

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref, Ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { Tool } from '../dataTypes/Tool.js';
-import { useEditNotesStore } from './editNotesStore.js';
+import { useProjectStore } from './projectStore.js';
 import { useScoreStore } from './scoreStore.js';
 import { useSelectStore } from './selectStore.js';
 import { useSnapStore } from './snapStore.js';
@@ -31,7 +31,7 @@ export const useToolStore = defineStore("edit", () => {
     // hmm.. I might be not so good at choosing where stuff goes..
     const selection = useSelectStore();
     const view = useViewStore();
-    const editNotes = useEditNotesStore();
+    const editNotes = useProjectStore();
     const snap = useSnapStore();
 
     // TODO: probably not all these need to be refs

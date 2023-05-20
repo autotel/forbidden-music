@@ -17,7 +17,7 @@ import Transport from './components/Transport.vue';
 import { EditNote } from './dataTypes/EditNote';
 import { Note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
-import { useEditNotesStore } from './store/editNotesStore';
+import { useProjectStore } from './store/projectStore';
 import { usePlaybackStore } from './store/playbackStore';
 import { useScoreStore } from './store/scoreStore';
 import { useSelectStore } from './store/selectStore';
@@ -27,15 +27,16 @@ import { useViewStore, View } from './store/viewStore';
 import Modal from './components/Modal.vue';
 import CustomOctaveTableTextEditor from './components/CustomOctaveTableTextEditor.vue';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
+import { useLibraryStore } from './store/libraryStore';
 
-
+const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const score = useScoreStore();
-const editNotes = useEditNotesStore();
+const editNotes = useProjectStore();
 const select = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
@@ -136,7 +137,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         // // save json to cookie
         // document.cookie = "score=" + json;
         console.log("saved");
-        editNotes.saveCurrent();
+        libraryStore.saveCurrent();
         e.preventDefault();
         e.stopPropagation();
     }

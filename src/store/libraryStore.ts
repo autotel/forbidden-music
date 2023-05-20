@@ -1,14 +1,13 @@
-import { defineStore, storeToRefs } from 'pinia'
-import { computed, nextTick, ref, Ref, watch, watchEffect } from 'vue';
+import LZUTF8 from 'lzutf8';
+import { defineStore } from 'pinia';
+import { nextTick, ref, watch, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
-import { makeNote, Note } from '../dataTypes/Note.js';
+import { Note, makeNote } from '../dataTypes/Note.js';
+import { SynthParam } from '../synth/SynthInterface.js';
+import { useProjectStore } from './projectStore.js';
 import { useScoreStore } from './scoreStore.js';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
-import LZUTF8 from 'lzutf8';
-import { useToolStore } from './toolStore.js';
-import { useRefHistory } from '@vueuse/core';
-import { SynthParam } from '../synth/SynthInterface.js';
 
 
 interface LibraryItem {
@@ -25,10 +24,10 @@ interface LibraryItem {
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 
-const appNameToRemove = "forbidden-music";
+const reservedEntryName = "forbidden-music";
 
 const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
-    if (filename === appNameToRemove) throw new Error(`filename cannot be "${appNameToRemove}"`);
+    if (filename === reservedEntryName) throw new Error(`filename cannot be "${reservedEntryName}"`);
     const value: any = inValue as LibraryItem;
     value.notes = inValue.notes.map(note => ({
         frequency: note.frequency,
@@ -47,7 +46,7 @@ const retrieveFromLocalStorage = (filename: string) => {
 }
 
 const listLocalStorageFiles = () => {
-    return Object.keys(localStorage).filter(n => n !== appNameToRemove);
+    return Object.keys(localStorage).filter(n => n !== reservedEntryName);
 }
 
 const exists = (filename: string) => {
@@ -58,29 +57,23 @@ const deleteItem = (filename: string) => {
     localStorage.removeItem(filename);
 }
 
-export const useEditNotesStore = defineStore("list", () => {
-    const list = ref([] as Array<EditNote>);
+export const useLibraryStore = defineStore("library store", () => {
     const view = useViewStore();
     const score = useScoreStore();
     const snaps = useSnapStore();
-
+    const projectStore = useProjectStore();
 
 
     const filenamesList = ref([] as Array<string>);
-    const edited = ref(Date.now().valueOf() as Number);
-    const created = ref(Date.now().valueOf() as Number);
-    const name = ref("unnamed (autosave)" as string);
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
 
 
 
-    const { history, undo, redo } = useRefHistory(list);
-
     setTimeout(() => {
-        loadFromLibraryItem(name.value);
+        loadFromLibraryItem(projectStore.name);
         let autosaveCall = () => {
-            if (name.value === "unnamed (autosave)") {
+            if (projectStore.name === "unnamed (autosave)") {
                 saveCurrent();
             }
         }
@@ -92,14 +85,14 @@ export const useEditNotesStore = defineStore("list", () => {
     });
     const saveToNewLibraryItem = () => {
         try {
-            if (exists(name.value)) {
+            if (exists(projectStore.name)) {
                 throw new Error("File already exists");
             }
 
-            saveToLocalStorage(name.value, {
+            saveToLocalStorage(projectStore.name, {
                 notes: score.notes,
-                name: name.value,
-                created: created.value,
+                name: projectStore.name,
+                created: projectStore.created,
                 edited: Date.now().valueOf(),
                 snaps: getSnapsList(),
             });
@@ -115,11 +108,11 @@ export const useEditNotesStore = defineStore("list", () => {
 
     const saveCurrent = () => {
         try {
-            saveToLocalStorage(name.value, {
+            saveToLocalStorage(projectStore.name, {
                 notes: score.notes,
-                name: name.value,
-                created: created.value,
-                edited: edited.value,
+                name: projectStore.name,
+                created: projectStore.created,
+                edited: projectStore.edited,
                 snaps: getSnapsList(),
             });
             inSyncWithStorage.value = true;
@@ -141,10 +134,10 @@ export const useEditNotesStore = defineStore("list", () => {
             const item = retrieveFromLocalStorage(filename);
             console.log("opening", item);
             score.notes = item.notes;
-            name.value = item.name;
-            created.value = item.created;
-            edited.value = item.edited;
-            list.value = item.notes.map(note => new EditNote(note, view));
+            projectStore.name = item.name;
+            projectStore.created = item.created;
+            projectStore.edited = item.edited;
+            projectStore.list = item.notes.map(note => new EditNote(note, view));
             item.snaps.forEach(([name, activeState]) => {
                 if (!snaps.values[name]) return;
                 snaps.values[name].active = activeState;
@@ -165,19 +158,11 @@ export const useEditNotesStore = defineStore("list", () => {
     }
 
     const clear = () => {
-        list.value = [];
+        projectStore.list = [];
         inSyncWithStorage.value = false;
     };
 
-    // TODO: is a store the right place where to put this??
-    // when list changes, also change score
-    watchEffect(() => {
-        inSyncWithStorage.value = false;
-        score.notes = list.value.map(note => note.note);
-    });
-
-    watch(name, () => inSyncWithStorage.value = false);
-    watch(snaps.values, () => inSyncWithStorage.value = false);
+    watch([projectStore, snaps.values], () => inSyncWithStorage.value = false);
 
     watchEffect(() => {
         if (errorMessage.value) {
@@ -194,13 +179,13 @@ export const useEditNotesStore = defineStore("list", () => {
         const a = document.createElement("a");
 
         a.href = url;
-        a.download = name.value + ".json";
+        a.download = projectStore.name + ".json";
         a.click();
     }
 
     const exportJSON = () => {
         const json = JSON.stringify(score.notes);
-        downloadString(json, "application/json", name.value + ".json");
+        downloadString(json, "application/json", projectStore.name + ".json");
     }
 
     const exportMIDIPitchBend = () => {
@@ -209,12 +194,12 @@ export const useEditNotesStore = defineStore("list", () => {
     const importJSON = (files: FileList) => {
         const file = files[0];
         const filename = file.name.replace(/.json\b/i, "");
-        name.value = filename;
+        projectStore.name = filename;
         const reader = new FileReader();
         reader.onload = (e) => {
             const text = e.target?.result as string;
             const json = JSON.parse(text);
-            list.value = json.map((note: any) => new EditNote({
+            projectStore.list = json.map((note: any) => new EditNote({
                 frequency: note.frequency,
                 start: note.start,
                 duration: note.duration,
@@ -225,13 +210,13 @@ export const useEditNotesStore = defineStore("list", () => {
 
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
-            list.value = iobj.notes.map(note => new EditNote({
+            projectStore.list = iobj.notes.map(note => new EditNote({
                 frequency: note.frequency,
                 start: note.start,
                 duration: note.duration,
             }, view));
         } else if (Array.isArray(iobj)) {
-            list.value = iobj.map(note => new EditNote({
+            projectStore.list = iobj.map(note => new EditNote({
                 frequency: note.frequency,
                 start: note.start,
                 duration: note.duration,
@@ -242,15 +227,12 @@ export const useEditNotesStore = defineStore("list", () => {
     udpateItemsList();
 
     return {
-        list,
         clear,
 
         saveToNewLibraryItem,
         loadFromLibraryItem,
         saveCurrent,
         deleteItemNamed,
-
-        history, undo, redo,
 
         exportJSON,
         importJSON,
@@ -259,9 +241,6 @@ export const useEditNotesStore = defineStore("list", () => {
 
         filenamesList,
         errorMessage,
-        name,
-        edited,
-        created,
         inSyncWithStorage,
     }
 

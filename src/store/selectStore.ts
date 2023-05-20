@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
 import { Note } from '../dataTypes/Note';
-import { useEditNotesStore } from './editNotesStore';
+import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
 
@@ -29,7 +29,7 @@ const getNotesInRange = (
 export const useSelectStore = defineStore("select", () => {
     const view = useViewStore();
     const selectedNotes = ref(new Set() as Set<EditNote>);
-    const editNotes = useEditNotesStore();
+    const editNotes = useProjectStore();
     const refreshNoteSelectionState = () => {
         editNotes.list.forEach(n => n.selected = isEditNoteSelected(n))
     }
