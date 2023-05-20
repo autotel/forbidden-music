@@ -25,7 +25,7 @@ export const useMonoModeInteraction = defineStore("monoModeInteraction", () => {
     // create an interface to create event modals that can only be triggered
     // when said modal is active
     const createInteractionModal = (key: string) => {
-        const isActive = () => { console.log(currentModeKey.value == key); return currentModeKey.value == key };
+        const isActive = () => currentModeKey.value == key;
         const eventListenerRemovers = [] as (() => void)[];
         existingKeysForDebug.push(key);
         type EventListenerTarget = HTMLElement | SVGElement | Document | Window;

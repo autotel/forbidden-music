@@ -231,10 +231,7 @@ onUnmounted(() => {
 
 </script>
 <template>
-    <div :style="{
-        transition: 'filter 0.2s',
-        filter: mainInteraction.isActive()?'':'blur(2px)',
-    }">
+    <div>
         <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
             <g id="grid">
                 <TimeGrid />
