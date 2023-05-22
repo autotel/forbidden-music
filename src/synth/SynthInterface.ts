@@ -14,6 +14,8 @@ export interface SynthInstance {
     releaseAll: () => void;
     getParams: () => SynthParam[]
     set: (params: any) => void;
+    enable: () => void;
+    disable: () => void;
     credits?: string;
     
 }

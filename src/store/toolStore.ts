@@ -1,12 +1,11 @@
 import { defineStore } from 'pinia';
-import { computed, ref, Ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { Tool } from '../dataTypes/Tool.js';
 import { useProjectStore } from './projectStore.js';
-import { useScoreStore } from './scoreStore.js';
 import { useSelectStore } from './selectStore.js';
 import { useSnapStore } from './snapStore.js';
-import { useViewStore, View } from './viewStore.js';
+import { useViewStore } from './viewStore.js';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 const forceRedraw = (el: { udpateFlag: string }) => {
@@ -346,8 +345,12 @@ export const useToolStore = defineStore("edit", () => {
             editNotes.list.push(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
+        if (noteBeingDraggedRightEdge.value) {
+            noteBeingDraggedRightEdge.value = false;
+        }
         noteBeingDragged.value = false;
         noteBeingDraggedRightEdge.value = false;
+        noteRightEdgeBeingHovered.value = false;
     }
 
     watch(() => current, () => {

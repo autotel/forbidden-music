@@ -29,8 +29,13 @@ export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;
     gainNode?: GainNode;
     engine?: AudioWorkletNode;
+    enable:()=>void;
+    disable:()=>void;
     constructor(audioContext: AudioContext) {
         this.setAudioContext(audioContext);
+        // TODO... or not
+        this.enable = () => {}
+        this.disable = () => {}
     }
 
     async setAudioContext(audioContext: AudioContext) {

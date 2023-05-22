@@ -65,6 +65,8 @@ export class SineSynth implements SynthInstance {
     private outputNode?: GainNode;
     credits: string = "";
     name: string = "sine";
+    enable: () => void;
+    disable: () => void;
     constructor(
         audioContext: AudioContext,
         name?: string,
@@ -85,6 +87,9 @@ export class SineSynth implements SynthInstance {
             this.outputNode.connect(maximizer);
             maximizer.connect(audioContext.destination);
         })()
+
+        this.enable = () => {}
+        this.disable = () => {}
 
     }
     triggerAttackRelease = (

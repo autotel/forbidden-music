@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Tool, toolCasesArray } from '../dataTypes/Tool';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { Tool } from '../dataTypes/Tool';
 import { MouseDownActions, useToolStore } from '../store/toolStore';
-import { useProjectStore } from '../store/projectStore';
+// import { useUndoStore } from '../store/undoStore';
 import Button from './Button.vue';
-import { useRefHistory } from '@vueuse/core';
-import { useUndoStore } from '../store/undoStore';
 
 const tool = useToolStore();
-const {
-  history, undo, redo, canUndo, canRedo, undoStack, redoStack
-} = useUndoStore();
+// const {
+//   history, undo, redo, canUndo, canRedo, undoStack, redoStack
+// } = useUndoStore();
 
 const toggleOctaveConstrain = () => {
   tool.disallowTimeChange = !tool.disallowTimeChange;
@@ -62,27 +60,13 @@ onUnmounted(() => {
     keybooard
   </Button>
 
-  <Button :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
+  <!-- <Button :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
     ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
   </Button>
   <Button :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
     ↷
-  </Button>
-  <!-- <Button :onClick="editNotes.redo" :disabled="editNotes.redoIsPossible">
-    ↷
   </Button> -->
 
-  <!-- <Button v-for="(value, k) in toolCasesArray()" 
-    :onClick="(e) => {
-      e.stopPropagation(); 
-      e.stopImmediatePropagation(); 
-      e.preventDefault(); 
-      tool.current = value.tool
-    }"
-    :active="tool.current == value.tool"
-  >
-    {{ value.name }}
-  </Button> -->
   <Button :onClick="(e) => {
     e.stopPropagation();
     e.stopImmediatePropagation();

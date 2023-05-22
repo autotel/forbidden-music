@@ -153,15 +153,30 @@ class SampleSource {
     sampleBuffer?: AudioBuffer;
     sampleInherentFrequency: number;
 
+    private isLoaded: boolean = false;
+    private isLoading: boolean = false;
+    load = async () => {
+        console.error("samplesource constructed wrong");
+    };
+
+
     constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition) {
         this.audioContext = audioContext;
         this.sampleInherentFrequency = sampleDefinition.frequency;
-        fetch(sampleDefinition.path).then(async (response) => {
-            const arrayBuffer = await response.arrayBuffer();
-            this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        this.load = async () => {
 
-            console.log("loaded", sampleDefinition.name);
-        });
+            if (this.isLoaded || this.isLoading) return;
+            this.isLoading = true;
+
+            await fetch(sampleDefinition.path).then(async (response) => {
+                const arrayBuffer = await response.arrayBuffer();
+                this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+                console.log("loaded", sampleDefinition.name);
+                this.isLoaded = true;
+                this.isLoading = false;
+            });
+        }
     }
 }
 
@@ -173,6 +188,8 @@ export class ComplexSampler implements SynthInstance {
     private outputNode: GainNode;
     credits: string = "";
     name: string = "unnamed";
+    enable:()=>void;
+    disable:()=>void;
     constructor(
         audioContext: AudioContext,
         sampleDefinitions: SampleFileDefinition[],
@@ -199,6 +216,13 @@ export class ComplexSampler implements SynthInstance {
         this.outputNode.connect(audioContext.destination);
         if (credits) this.credits = credits;
         if (name) this.name = name;
+        this.enable = () => {
+            this.sampleSources.forEach((sampleSource) => {
+                sampleSource.load();
+            });
+        }
+        this.disable = () => {
+        }
     }
     triggerAttackRelease = (
         frequency: number,
