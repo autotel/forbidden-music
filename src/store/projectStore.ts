@@ -1,7 +1,7 @@
 import { useRefHistory } from '@vueuse/core';
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
-import { nextTick, ref, watch, watchEffect } from 'vue';
+import { computed, nextTick, ref, watch, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { Note, makeNote } from '../dataTypes/Note.js';
 import { SynthParam } from '../synth/SynthInterface.js';
@@ -21,11 +21,11 @@ export const useProjectStore = defineStore("current project", () => {
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
 
-    const { history, undo, redo } = useRefHistory(list);
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
     });
+
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
@@ -45,13 +45,12 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const setFromProjecDefinition = (pDef: LibraryItem) => {
-        
         score.notes = pDef.notes;
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
         list.value = pDef.notes.map(note => new EditNote(note, view));
-        if(pDef.instrument){
+        if (pDef.instrument) {
             playbackStore.setSynthByName(pDef.instrument.type);
         }
 
@@ -61,17 +60,9 @@ export const useProjectStore = defineStore("current project", () => {
         });
     }
 
-
-    // TODO: is a store the right place where to put this??
-    // when list changes, also change score
-    watchEffect(() => {
-        score.notes = list.value.map(note => note.note);
-    });
-
     return {
         list,
         name, edited, created, snaps,
-        history, undo, redo,
         getProjectDefintion,
         setFromProjecDefinition,
     }

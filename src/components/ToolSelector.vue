@@ -5,11 +5,12 @@ import { MouseDownActions, useToolStore } from '../store/toolStore';
 import { useProjectStore } from '../store/projectStore';
 import Button from './Button.vue';
 import { useRefHistory } from '@vueuse/core';
+import { useUndoStore } from '../store/undoStore';
 
 const tool = useToolStore();
 const {
-  list, history, undo, redo
-} = useProjectStore();
+  history, undo, redo
+} = useUndoStore();
 
 const toggleOctaveConstrain = () => {
   tool.disallowTimeChange = !tool.disallowTimeChange;

@@ -18,7 +18,7 @@ const sizer = ref<HTMLDivElement | null>(null);
 const height = ref(props.height || "0");
 
 onMounted(() => {
-    if(height.value === "0") {
+    if (height.value === "0") {
         height.value = sizer.value?.getBoundingClientRect().height + "px";
     }
 });
@@ -26,10 +26,9 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="outer" :style="{ height: height }">
+    <div class="outer" :style="{ height: height }" @mouseenter="hovered = true" @mouseleave="hovered = false">
 
-        <div ref="sizer" class="drawer-container" @mouseenter="hovered = true" @mouseleave="hovered = false"
-            :class="{ hide: !keepOn && !hovered }">
+        <div ref="sizer" class="drawer-container" :class="{ hide: !keepOn && !hovered }">
             <slot>
 
             </slot>
