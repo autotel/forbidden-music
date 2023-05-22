@@ -62,10 +62,10 @@ onUnmounted(() => {
     keybooard
   </Button>
 
-  <Button :class="undoStack.length?'':'disabled'" :onClick="undo">
-    ↶ <small>{{undoStack.length}}</small>
+  <Button :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
+    ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
   </Button>
-  <Button :class="redoStack.length?'':'disabled'" :onClick="redo">
+  <Button :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
     ↷
   </Button>
   <!-- <Button :onClick="editNotes.redo" :disabled="editNotes.redoIsPossible">

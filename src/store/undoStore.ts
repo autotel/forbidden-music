@@ -14,13 +14,7 @@ export const useUndoStore = defineStore("undo history store", () => {
     const project = useProjectStore();
     const currentResumeTimeout = ref<NodeJS.Timeout | null>(null);
 
-    const projectStateZipped = ref<string | null>(
-        LZUTF8.compress(
-            JSON.stringify(
-                project.getProjectDefintion()
-            )
-        )
-    );
+    const projectStateZipped = ref<string | null>(null);
 
     const undoStateWriter = watchPausable(project.getProjectDefintion, () => {
         console.log("store to undo history");
