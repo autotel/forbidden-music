@@ -36,9 +36,11 @@ export const useUndoStore = defineStore("undo history store", () => {
         }
         currentResumeTimeout.value = setTimeout(() => {
             undoStateWriter.resume();
-        }, 700);
+            // TODO: insert new state after resuming, then increase timeout
+        }, 500);
         undoStateWriter.pause();
     });
+
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {
         undoStateWriter.pause();
         if(!zipped) {
@@ -58,12 +60,19 @@ export const useUndoStore = defineStore("undo history store", () => {
         });
     });
 
-    const { history, undo, redo } = useRefHistory(projectStateZipped, {
+    const { 
+        history, 
+        undoStack, redoStack,
+        undo, redo, 
+        canRedo, canUndo 
+    } = useRefHistory(projectStateZipped, {
         capacity: 15,
     });
 
     return {
         history, undo, redo,
+        undoStack, redoStack,
+        canRedo, canUndo,
     }
 
 });

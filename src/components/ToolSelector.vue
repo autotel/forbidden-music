@@ -9,7 +9,7 @@ import { useUndoStore } from '../store/undoStore';
 
 const tool = useToolStore();
 const {
-  history, undo, redo
+  history, undo, redo, canUndo, canRedo, undoStack, redoStack
 } = useUndoStore();
 
 const toggleOctaveConstrain = () => {
@@ -35,14 +35,14 @@ const updateToolWouldDo = () => {
   whatWouldMouseMoveDoText.value = mouseDownActionValues[whatWouldMouseMoveDo.value];
 }
 
-onMounted(()=>{
+onMounted(() => {
   window.addEventListener('mousemove', updateToolWouldDo);
   window.addEventListener('keydown', updateToolWouldDo);
   window.addEventListener('keyup', updateToolWouldDo);
   window.addEventListener('mousedown', updateToolWouldDo);
   window.addEventListener('mouseup', updateToolWouldDo);
 })
-onUnmounted(()=>{
+onUnmounted(() => {
   window.removeEventListener('mousemove', updateToolWouldDo);
   window.removeEventListener('keydown', updateToolWouldDo);
   window.removeEventListener('keyup', updateToolWouldDo);
@@ -53,17 +53,20 @@ onUnmounted(()=>{
 </script>
 
 <template>
-  <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag"
-    :onClick="() => tool.copyOnDrag = !tool.copyOnDrag" tooltip="copy when dragging. [ALT]">
+  <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag" :onClick="() => tool.copyOnDrag = !tool.copyOnDrag"
+    tooltip="copy when dragging. [ALT]">
     Copy
   </Button>
 
-  <Button :active="tool.showReferenceKeyboard" :onClick="()=>tool.showReferenceKeyboard=!tool.showReferenceKeyboard">
+  <Button :active="tool.showReferenceKeyboard" :onClick="() => tool.showReferenceKeyboard = !tool.showReferenceKeyboard">
     keybooard
   </Button>
 
-  <Button v-if="history.length" :onClick="undo">
-    ↶
+  <Button :class="undoStack.length?'':'disabled'" :onClick="undo">
+    ↶ <small>{{undoStack.length}}</small>
+  </Button>
+  <Button :class="redoStack.length?'':'disabled'" :onClick="redo">
+    ↷
   </Button>
   <!-- <Button :onClick="editNotes.redo" :disabled="editNotes.redoIsPossible">
     ↷
@@ -80,16 +83,12 @@ onUnmounted(()=>{
   >
     {{ value.name }}
   </Button> -->
-  <Button 
-    :onClick="(e) => {
-      e.stopPropagation(); 
-      e.stopImmediatePropagation(); 
-      e.preventDefault(); 
-      tool.current = Tool.Select
-    }"
-    :active="tool.current == Tool.Select"
-    tooltip="Select mode [CTRL]"
-  >
+  <Button :onClick="(e) => {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    tool.current = Tool.Select
+  }" :active="tool.current == Tool.Select" tooltip="Select mode [CTRL]">
     Select
   </Button>
   <div class="group">
@@ -102,13 +101,17 @@ onUnmounted(()=>{
     </Button>
   </div>
   <!-- <p>{{whatWouldMouseMoveDoText}}</p> -->
-
 </template>
 
 <style scoped>
 .selected {
   background-color: #888;
   /* color: rgb(196, 0, 0); */
+}
+
+.disabled {
+  color: #888;
+  pointer-events: none;
 }
 
 .group {
