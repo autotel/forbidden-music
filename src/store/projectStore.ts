@@ -1,26 +1,19 @@
-import { useRefHistory } from '@vueuse/core';
-import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
-import { computed, nextTick, ref, watch, watchEffect } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
-import { Note, makeNote } from '../dataTypes/Note.js';
-import { SynthParam } from '../synth/SynthInterface.js';
-import { useScoreStore } from './scoreStore.js';
-import { useSnapStore } from './snapStore';
-import { useViewStore } from './viewStore.js';
 import { LibraryItem } from './libraryStore.js';
 import { usePlaybackStore } from './playbackStore.js';
+import { useSnapStore } from './snapStore';
+import { useViewStore } from './viewStore.js';
 
 export const useProjectStore = defineStore("current project", () => {
     const list = ref([] as Array<EditNote>);
     const view = useViewStore();
-    const score = useScoreStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
-
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
@@ -44,8 +37,38 @@ export const useProjectStore = defineStore("current project", () => {
         return ret;
     }
 
+
+    const getTimeBounds = () => {
+        // get the the note with the lowest start
+        if(list.value.length === 0) {
+            return {
+                start: 0,
+                end: 0,
+                first: null,
+                last: null,
+            }
+        }
+        let first = list.value[0].note;
+        list.value.forEach(({note}) => {
+            if (note.start < first.start) {
+                first = note;
+            }
+        });
+        let last = list.value[0].note;
+        list.value.forEach(({note}) => {
+            if ((note.end || note.start) > (last.end || last.start)) {
+                last = note;
+            }
+        });
+        if (!last.end) throw new Error("last.end is undefined");
+        return {
+            start: first.start,
+            end: last.end,
+            first, last,
+        }
+    }
+
     const setFromProjecDefinition = (pDef: LibraryItem) => {
-        score.notes = pDef.notes;
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
@@ -63,6 +86,7 @@ export const useProjectStore = defineStore("current project", () => {
     return {
         list,
         name, edited, created, snaps,
+        getTimeBounds,
         getProjectDefintion,
         setFromProjecDefinition,
     }

@@ -1,14 +1,13 @@
 import { defineStore } from 'pinia'
 import { computed, ref, Ref, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
-import { useScoreStore } from './scoreStore.js';
 import { useProjectStore } from './projectStore.js';
 import { frequencyToOctave } from '../functions/toneConverters.js';
 
 // TODO: move editNotes to its own library
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
-    const octaveOffset = ref(1);
+    const octaveOffset = ref(-3);
     const timeOffset = ref(0);
     const centerFrequency = ref(440);
     const viewWidthPx = ref(1920);
@@ -21,7 +20,6 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
     const editNotes = useProjectStore();
-    const score = useScoreStore();
 
     const visibleNotes = computed((): Array<EditNote> => {
         //TODO: also filter by octave component

@@ -2,13 +2,13 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../dataTypes/Tool';
 import { MouseDownActions, useToolStore } from '../store/toolStore';
-// import { useUndoStore } from '../store/undoStore';
+import { useUndoStore } from '../store/undoStore';
 import Button from './Button.vue';
 
 const tool = useToolStore();
-// const {
-//   history, undo, redo, canUndo, canRedo, undoStack, redoStack
-// } = useUndoStore();
+const {
+  history, undo, redo, canUndo, canRedo, undoStack, redoStack
+} = useUndoStore();
 
 const toggleOctaveConstrain = () => {
   tool.disallowTimeChange = !tool.disallowTimeChange;
@@ -60,12 +60,12 @@ onUnmounted(() => {
     keybooard
   </Button>
 
-  <!-- <Button :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
+  <Button :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
     ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
   </Button>
   <Button :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
     ↷
-  </Button> -->
+  </Button>
 
   <Button :onClick="(e) => {
     e.stopPropagation();

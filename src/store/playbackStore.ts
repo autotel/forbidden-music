@@ -8,11 +8,11 @@ import { FmSynth } from '../synth/FmSynth';
 import { MagicSampler } from '../synth/MagicSampler';
 import { ComplexSampler } from '../synth/ComplexSampler';
 import { OptionSynthParam, ParamType, SynthInstance } from "../synth/SynthInterface";
-import { useScoreStore } from './scoreStore';
 import { useViewStore } from './viewStore';
-
+import { useProjectStore } from './projectStore';
 export const usePlaybackStore = defineStore("playback", () => {
 
+    const project = useProjectStore();
     // TODO: many of these need not to be refs nor be exported.
     const playing = ref(false);
     // time units per second?
@@ -28,7 +28,6 @@ export const usePlaybackStore = defineStore("playback", () => {
     const foresight = 1;
     let audioContext = new AudioContext();
 
-    const score = useScoreStore();
     const view = useViewStore();
 
     const playbarPxPosition = ref(0);
@@ -90,8 +89,8 @@ export const usePlaybackStore = defineStore("playback", () => {
     window.addEventListener("mousedown", startContextListener);
 
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
-        const events = score.notes.filter((event) => {
-            return event.start >= frameStartTime && event.start < frameEndTime;
+        const events = project.list.filter(({note}) => {
+            return note.start >= frameStartTime && note.start < frameEndTime;
         });
         // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);
         return events;
@@ -106,7 +105,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value);
 
 
-        playNotes.forEach((note: Note) => {
+        playNotes.forEach(({note}) => {
             if (!synth.value) throw new Error("synth not created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = note.start - currentScoreTime.value;

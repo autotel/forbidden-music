@@ -1,14 +1,8 @@
+import { useRefHistory, watchPausable } from '@vueuse/core';
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
-import { computed, nextTick, ref, watch, watchEffect } from 'vue';
-import { EditNote } from '../dataTypes/EditNote.js';
-import { Note, makeNote } from '../dataTypes/Note.js';
-import { SynthParam } from '../synth/SynthInterface.js';
+import { nextTick, ref } from 'vue';
 import { useProjectStore } from './projectStore.js';
-import { useScoreStore } from './scoreStore.js';
-import { useSnapStore } from './snapStore';
-import { useViewStore } from './viewStore.js';
-import { useRefHistory, watchPausable } from '@vueuse/core';
 
 export const useUndoStore = defineStore("undo history store", () => {
     const project = useProjectStore();
@@ -29,10 +23,10 @@ export const useUndoStore = defineStore("undo history store", () => {
             clearTimeout(currentResumeTimeout.value);
         }
         currentResumeTimeout.value = setTimeout(() => {
-            undoStateWriter.resume();
+            // undoStateWriter.resume();
             // TODO: insert new state after resuming, then increase timeout
         }, 500);
-        undoStateWriter.pause();
+        // undoStateWriter.pause();
     });
 
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {

@@ -5,8 +5,6 @@ import { EditNote } from '../dataTypes/EditNote.js';
 import { Note, makeNote } from '../dataTypes/Note.js';
 import { SynthParam } from '../synth/SynthInterface.js';
 import { useProjectStore } from './projectStore.js';
-import { useScoreStore } from './scoreStore.js';
-import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 
 
@@ -59,8 +57,6 @@ const deleteItem = (filename: string) => {
 
 export const useLibraryStore = defineStore("library store", () => {
     const view = useViewStore();
-    const score = useScoreStore();
-    const snaps = useSnapStore();
     const projectStore = useProjectStore();
 
 
