@@ -25,8 +25,8 @@ export class EditNote {
         return this.note.duration ? this.view.timeToPx(this.note.duration) : 0;
     }
     get height() {
-        // return Math.abs(this.view.octaveToPx(1 / 12))}
-        return 18;
+        return Math.abs(this.view.octaveToPx(1 / 12))
+        // return 18;
     }
     get circle() {
         return {

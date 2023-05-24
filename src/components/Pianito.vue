@@ -66,8 +66,7 @@ const keyboardHtml = (()=>{
     top: 0;
     width: 2rem;
     /* background-color: black; */
-    opacity: 0.4;
-    border:1px solid black
+    opacity: 0.3;
 }
 #pianito *{
     stroke: black;
