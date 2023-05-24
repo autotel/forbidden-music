@@ -47,7 +47,7 @@ export class EditNote {
         return {
             x: this.x + this.width - 5,
             y: this.y - this.height / 2,
-            width: 5,
+            width: this.selected? 10 : 5,
             height: this.height,
         }
     }

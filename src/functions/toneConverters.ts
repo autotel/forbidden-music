@@ -1,4 +1,4 @@
-export const baseFrequency = 11;
+export const baseFrequency = 13.75;
 export const base12TETNote = 0;
 
 export const octaveToFrequency = (octave: number) => baseFrequency * Math.pow(2, octave);

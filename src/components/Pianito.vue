@@ -1,69 +1,64 @@
 <script setup lang="ts">
-import { Ref, ref, watchEffect } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useViewStore } from '../store/viewStore';
-
+const octavesHeight = 8;
 const view = useViewStore();
-const linePositionsPx = ref([]) as Ref<number[]>;
-const lineValues = ref([]) as Ref<number[]>;
-const isIBlack = [
-    false,
-    true,
-    false,
-    true,
-    false,
-
-    false,
-    true,
-    false,
-    true,
-    false,
-    true,
-    false
-];
-
-const keyHeight = ref(0);
-
-interface keyRect {
-    y: number,
-    black: boolean,
-    k: string,
+const eightOctavesHeight = ref(0);
+const topOctavePosition = ref(0);
+const posUpdate = () => {
+    eightOctavesHeight.value = Math.abs(view.octaveToPx(octavesHeight + (1/24))); /// the offset is so that it aligns to the center of the note
+    console.log('eightOctavesHeight', eightOctavesHeight.value);
+    topOctavePosition.value = view.octaveToPxWithOffset(octavesHeight);
+    console.log('topOctavePosition', topOctavePosition.value);
 }
 
-const keys = ref([] as Array<keyRect>);
+watch(view,posUpdate);
+onMounted(posUpdate);
 
-watchEffect(() => {
-    // let totalOctave = 0;//view.viewHeightOctaves - 0 - view.octaveOffset;
-    let index = 0;
-    for (let oct = 0; oct < view.viewHeightOctaves; oct++) {
-        // totalOctave = oct - (view.viewHeightOctaves + view.octaveOffset);
-        // if (totalOctave > topLimit) continue;
 
-        for (let note = 0; note < 12; note++) {
-            console.log(index);
-            // console.log(index);
-            keys.value[index] = {
-                y: view.octaveToPxWithOffset(index / 12) % view.viewHeightPx,
-                black: isIBlack[note],
-                k: index + (isIBlack[note] ? "b" : ""),
-            };
-            index++;
-        }
+const keyboardHtml = (()=>{
+    
+    const isIBlack = [
+    
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+
+        false,
+        true,
+        false,
+        true,
+        false,
+    ];
+    const octaves = 8;
+    const keyRect = (note:number,w:number) => {
+        const black = isIBlack[note%12];
+        return `<rect x="-5" y="${note}" width="10" height="1" fill="${black?"black":"white"}"></rect>`;
     }
-    keys.value.splice(index);
-    // console.log(view.octaveOffset);
-});
-
-watchEffect(() => {
-    keyHeight.value = view.octaveToPx(-1 / 12) - 2;
-});
+    const octave = (octave:number) => {
+        const octaveRects = [];
+        for(let i=0;i<12;i++) {
+            octaveRects.push(keyRect(i+octave*12,10));
+        }
+        return octaveRects.join('');
+    }
+    const octavesHtml = (()=>{
+        const octavesHtml = [];
+        for(let i=0;i<octaves;i++) {
+            octavesHtml.push(octave(i));
+        }
+        return octavesHtml.join('');
+    })();
+    return `${octavesHtml}`;
+})();
 
 </script>
 <template>
-    <svg id="pianito">
-        <template v-for="key in keys">
-            <rect :fill="key.black ? 'black' : 'white'" stroke-width="1px" x="0" :y="key.y" width="40"
-                :height="keyHeight" />
-        </template>
+    <svg id="pianito" :viewBox="`0 0 1 ${12*octavesHeight}`" :style="`top:${topOctavePosition}px; height:${eightOctavesHeight}px`" v-html="keyboardHtml">
     </svg>
 </template>
 <style scoped>
@@ -71,9 +66,13 @@ watchEffect(() => {
     position: fixed;
     left: 0;
     top: 0;
-    height: 100%;
     width: 2rem;
-    background-color: black;
+    /* background-color: black; */
     opacity: 0.4;
+    border:1px solid black
+}
+#pianito *{
+    stroke: black;
+    stroke-width: 1;
 }
 </style>

@@ -231,6 +231,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div>
+        <Pianito v-if="tool.showReferenceKeyboard" />
         <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
             <g id="grid">
                 <TimeGrid />
@@ -260,7 +261,6 @@ onUnmounted(() => {
         <div style="position: fixed; bottom:0; right: 0;">
             <ToolSelector />
         </div>
-        <Pianito v-if="tool.showReferenceKeyboard" />
         <div style="position: fixed; bottom: 0;">
             <Transport />
         </div>
