@@ -1,10 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
-import { Note } from '../dataTypes/Note';
 import { useProjectStore } from './projectStore';
-import { useToolStore } from './toolStore';
-import { useViewStore } from './viewStore';
+import { throttledWatch } from '@vueuse/core';
 
 const getNotesInRange = (
     notes: EditNote[],
@@ -29,6 +27,9 @@ const getNotesInRange = (
 export const useSelectStore = defineStore("select", () => {
     const selectedNotes = ref(new Set() as Set<EditNote>);
     const editNotes = useProjectStore();
+    const isEditNoteSelected = (note: EditNote) => {
+        return selectedNotes.value.has(note);
+    };
     const refreshNoteSelectionState = () => {
         editNotes.list.forEach(n => n.selected = isEditNoteSelected(n))
     }
@@ -36,9 +37,9 @@ export const useSelectStore = defineStore("select", () => {
         return [...selectedNotes.value];
     };
     const select = (...editNotes: EditNote[]) => {
+        console.log("select", editNotes.length);
         selectedNotes.value.clear();
         selectedNotes.value = new Set(editNotes);
-        refreshNoteSelectionState();
     };
     const toggle = (...editNotes: EditNote[]) => {
         editNotes.forEach((n) => {
@@ -48,21 +49,18 @@ export const useSelectStore = defineStore("select", () => {
                 selectedNotes.value.add(n);
             }
         });
-        refreshNoteSelectionState();
     };
     const remove = (...editNotes: (EditNote)[]) => {
         editNotes.forEach((n) => {
             if (!n) return;
             selectedNotes.value.delete(n);
         });
-        refreshNoteSelectionState();
     }
     const add = (...editNote: (EditNote)[]) => {
         editNote.forEach((n) => {
             if (!n) return;
             selectedNotes.value.add(n);
         });
-        refreshNoteSelectionState();
     };
     const selectRange = (range: {
         startTime: number,
@@ -74,7 +72,6 @@ export const useSelectStore = defineStore("select", () => {
             editNotes.list,
             range
         ));
-        refreshNoteSelectionState();
     };
     const addRange = (range: {
         startTime: number,
@@ -87,32 +84,23 @@ export const useSelectStore = defineStore("select", () => {
             range
         );
         add(...newNotes);
-        refreshNoteSelectionState();
     };
     const clear = () => {
         console.log("clear");
         selectedNotes.value.clear();
-        refreshNoteSelectionState();
     };
     const selectAll = () => {
         select(...editNotes.list);
-        refreshNoteSelectionState();
     };
-    const isEditNoteSelected = (note: EditNote) => {
-        return selectedNotes.value.has(note);
-    };
-    watch(selectedNotes, refreshNoteSelectionState);
+    throttledWatch(selectedNotes, refreshNoteSelectionState);
 
     return {
-        // selectedNotes:selectedNotes.value,
-        // selectedNotes,
         selectRange,
         selectAll,
         addRange,
         add, select, toggle, get,
         clear: clear, remove,
         isEditNoteSelected,
-        // toggleEditNoteSelected,
     };
 
 });

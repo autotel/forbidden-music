@@ -37,7 +37,13 @@ export const useToolStore = defineStore("edit", () => {
     const current = ref(Tool.Edit);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
-
+    const selectRange = ref({
+        timeStart: 0,
+        timeSize: 0,
+        octaveStart: 0,
+        octaveSize: 0,
+        active: false
+    });
     const showReferenceKeyboard = ref(false)
     const disallowOctaveChange = ref(false);
     const disallowTimeChange = ref(false);
@@ -170,6 +176,18 @@ export const useToolStore = defineStore("edit", () => {
             y: e.clientY,
         }
         switch (mouseAction) {
+            case MouseDownActions.AreaSelect:{
+                selection.clear();
+                const x = e.clientX;
+                const y = e.clientY;
+                selectRange.value.timeStart = view.pxToTimeWithOffset(x);
+                selectRange.value.octaveStart = view.pxToOctaveWithOffset(y);
+                selectRange.value.timeSize = 0;
+                selectRange.value.octaveSize = 0;
+                selectRange.value.active = true;
+
+                break;
+            }
             case MouseDownActions.Lengthen:
                 _lengthenDragStartAction(mouse);
                 break;
@@ -253,7 +271,23 @@ export const useToolStore = defineStore("edit", () => {
         if (disallowTimeChange.value) {
             mouseDelta.x = 0;
         }
-        if (notesBeingCreated.value.length === 1) {
+        if (current.value === Tool.Select && selectRange.value.active) {
+            if (selectRange.value.active) {
+                const x = e.clientX;
+                const y = e.clientY;
+                selectRange.value.timeSize = view.pxToTimeWithOffset(x) - selectRange.value.timeStart;
+                selectRange.value.octaveSize = view.pxToOctaveWithOffset(y) - selectRange.value.octaveStart;
+                
+                const range = {
+                    startTime: selectRange.value.timeStart,
+                    endTime: selectRange.value.timeStart + selectRange.value.timeSize,
+                    startOctave: selectRange.value.octaveStart,
+                    endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
+                }
+                selection.selectRange(range);
+            }
+
+        } else if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
             notesBeingCreated.value[0].note.duration = clampToZero(view.pxToTime(deltaX));
@@ -348,6 +382,21 @@ export const useToolStore = defineStore("edit", () => {
         if (noteBeingDraggedRightEdge.value) {
             noteBeingDraggedRightEdge.value = false;
         }
+        if(current.value === Tool.Select && selectRange.value.active){
+            const x = e.clientX;
+            const y = e.clientY;
+            selectRange.value.timeSize = view.pxToTime(x) - selectRange.value.timeStart;
+            selectRange.value.octaveSize = view.pxToOctave(y) - selectRange.value.octaveStart;
+            
+            // const range = {
+            //     startTime: selectRange.value.timeStart,
+            //     endTime: selectRange.value.timeStart + selectRange.value.timeSize,
+            //     startOctave: selectRange.value.octaveStart,
+            //     endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
+            // }
+            // selection.selectRange(range);
+            selectRange.value.active = false;
+        }
         noteBeingDragged.value = false;
         noteBeingDraggedRightEdge.value = false;
         noteRightEdgeBeingHovered.value = false;
@@ -380,6 +429,8 @@ export const useToolStore = defineStore("edit", () => {
         disallowOctaveChange,
         disallowTimeChange,
         showReferenceKeyboard,
+
+        selectRange,
 
         notesBeingCreated: notesBeingCreated,
         noteBeingHovered,
