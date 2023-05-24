@@ -34,7 +34,9 @@ class SineVoice {
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
             oscillator.frequency.value = frequency;
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
-            oscillator.onended = releaseVoice;
+            setTimeout(() => {
+                releaseVoice();
+            }, duration * 1000);
         };
 
         this.triggerPerc = (
@@ -48,7 +50,9 @@ class SineVoice {
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
             oscillator.frequency.value = frequency;
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
-            oscillator.onended = releaseVoice;
+            setTimeout(() => {
+                releaseVoice();
+            }, 3000);
 
         }
 
