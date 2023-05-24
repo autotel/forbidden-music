@@ -10,7 +10,18 @@ export const useUndoStore = defineStore("undo history store", () => {
 
     const projectStateZipped = ref<string | null>(null);
 
+    const unpauseAltiro = (t=1) => {
+        if(currentResumeTimeout.value) {
+            clearTimeout(currentResumeTimeout.value);
+        }
+        currentResumeTimeout.value = setTimeout(() => {
+            undoStateWriter.resume();
+        }, t);
+    }
+
     const undoStateWriter = watchPausable(project.getProjectDefintion, () => {
+        // so that it stores fewere steps
+        undoStateWriter.pause();
         console.log("store to undo history");
         const json = JSON.stringify(project.getProjectDefintion());
         const zipped = LZUTF8.compress(json, { outputEncoding: "Base64" });
@@ -19,14 +30,7 @@ export const useUndoStore = defineStore("undo history store", () => {
         nextTick(() => {
             undoApplicator.resume();
         });
-        if(currentResumeTimeout.value) {
-            clearTimeout(currentResumeTimeout.value);
-        }
-        currentResumeTimeout.value = setTimeout(() => {
-            // undoStateWriter.resume();
-            // TODO: insert new state after resuming, then increase timeout
-        }, 500);
-        // undoStateWriter.pause();
+        unpauseAltiro(500);
     });
 
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {
@@ -43,9 +47,7 @@ export const useUndoStore = defineStore("undo history store", () => {
             console.error("undo history seems to be corrupted");
             console.error(e);
         }
-        nextTick(() => {
-            undoStateWriter.resume();
-        });
+        unpauseAltiro();
     });
 
     const { 

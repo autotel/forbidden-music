@@ -7,9 +7,7 @@ const eightOctavesHeight = ref(0);
 const topOctavePosition = ref(0);
 const posUpdate = () => {
     eightOctavesHeight.value = Math.abs(view.octaveToPx(octavesHeight + (1/24))); /// the offset is so that it aligns to the center of the note
-    console.log('eightOctavesHeight', eightOctavesHeight.value);
     topOctavePosition.value = view.octaveToPxWithOffset(octavesHeight);
-    console.log('topOctavePosition', topOctavePosition.value);
 }
 
 watch(view,posUpdate);

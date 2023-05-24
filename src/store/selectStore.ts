@@ -40,7 +40,6 @@ export const useSelectStore = defineStore("select", () => {
         return [...selectedNotes.value];
     };
     const select = (...editNotes: EditNote[]) => {
-        console.log("select", editNotes.length);
         selectedNotes.value.clear();
         selectedNotes.value = new Set(editNotes);
     };
@@ -89,7 +88,6 @@ export const useSelectStore = defineStore("select", () => {
         add(...newNotes);
     };
     const clear = () => {
-        console.log("clear");
         selectedNotes.value.clear();
     };
     const selectAll = () => {
