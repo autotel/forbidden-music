@@ -7,6 +7,7 @@ import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 
 export const useProjectStore = defineStore("current project", () => {
+    /** todo: rename to something unambiguous **/
     const list = ref([] as Array<EditNote>);
     const view = useViewStore();
     const snaps = useSnapStore();

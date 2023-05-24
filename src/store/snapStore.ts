@@ -109,16 +109,10 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Tone,
         active: false,
     },
-    hzMult88: {
-        description: "frequencies which are multiple of 88",
-        icon: "88\u00d7",
-        type: SnapType.Tone,
-        active: false,
-    },
-    hzMult44: {
-        description: "frequencies which are multiple of 44",
-        icon: "44\u00d7",
-        type: SnapType.Tone,
+    hzMult: {
+        description: "frequencies which are multiple of one another",
+        icon: "a\u00d7b",
+        type: SnapType.ToneRelation,
         active: false,
     },
     hzRelationFraction: {
@@ -239,21 +233,6 @@ export const useSnapStore = defineStore("snap", () => {
         };
 
 
-        if (snapValues.hzMult88.active === true) {
-            const relatedNumber = Math.round(targetHz / 88) * 88;
-            toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
-                text: "hzMult88",
-                relatedNumber,
-            });
-        };
-        if (snapValues.hzMult44.active === true) {
-            const relatedNumber = Math.round(targetHz / 44) * 44;
-            toneSnap.addSnappedValue(
-                frequencyToOctave(relatedNumber), {
-                text: "hzMult44",
-                relatedNumber,
-            });
-        };
 
         if (snapValues.hzFundamentalMultiple.active === true) {
             const relatedNumber = fundamental;
@@ -295,6 +274,20 @@ export const useSnapStore = defineStore("snap", () => {
                 }
             } else {
                 // It is presumed that fraction includes all these possibilites
+
+                if (snapValues.hzMult.active === true) {
+                    for (const otherNote of otherNotes) {
+                        const relatedNumber = Math.round(targetHz / otherNote.note.frequency) * otherNote.note.frequency;
+                        if(relatedNumber > 0) {
+                            toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
+                                text: "multiple of "+otherNote.note.frequency.toPrecision(3),
+                                relatedNumber,
+                                relatedNote: otherNote,
+                            });
+                        }
+                    }
+                };
+                
                 if (snapValues.hzHalfOrDouble.active === true) {
                     for (const otherNote of otherNotes) {
                         const myCandidateHzDouble = otherNote.note.frequency * 2

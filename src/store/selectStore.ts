@@ -27,7 +27,6 @@ const getNotesInRange = (
 
 
 export const useSelectStore = defineStore("select", () => {
-    const view = useViewStore();
     const selectedNotes = ref(new Set() as Set<EditNote>);
     const editNotes = useProjectStore();
     const refreshNoteSelectionState = () => {
@@ -95,6 +94,10 @@ export const useSelectStore = defineStore("select", () => {
         selectedNotes.value.clear();
         refreshNoteSelectionState();
     };
+    const selectAll = () => {
+        select(...editNotes.list);
+        refreshNoteSelectionState();
+    };
     const isEditNoteSelected = (note: EditNote) => {
         return selectedNotes.value.has(note);
     };
@@ -104,6 +107,7 @@ export const useSelectStore = defineStore("select", () => {
         // selectedNotes:selectedNotes.value,
         // selectedNotes,
         selectRange,
+        selectAll,
         addRange,
         add, select, toggle, get,
         clear: clear, remove,
