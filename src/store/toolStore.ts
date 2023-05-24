@@ -6,6 +6,7 @@ import { useProjectStore } from './projectStore.js';
 import { useSelectStore } from './selectStore.js';
 import { useSnapStore } from './snapStore.js';
 import { useViewStore } from './viewStore.js';
+import { useThrottleFn } from '@vueuse/core';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 const forceRedraw = (el: { udpateFlag: string }) => {
@@ -223,6 +224,22 @@ export const useToolStore = defineStore("edit", () => {
         }
     }
 
+    const applyRangeSelection = useThrottleFn((e:MouseEvent) =>{
+        if (selectRange.value.active) {
+            const x = e.clientX;
+            const y = e.clientY;
+            selectRange.value.timeSize = view.pxToTimeWithOffset(x) - selectRange.value.timeStart;
+            selectRange.value.octaveSize = view.pxToOctaveWithOffset(y) - selectRange.value.octaveStart;
+            
+            const range = {
+                startTime: selectRange.value.timeStart,
+                endTime: selectRange.value.timeStart + selectRange.value.timeSize,
+                startOctave: selectRange.value.octaveStart,
+                endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
+            }
+            selection.selectRange(range);
+        }
+    },25);
 
     const updateNoteThatWouldBeCreated = (mouse: { x: number, y: number }) => {
         const { x, y } = mouse;
@@ -272,20 +289,7 @@ export const useToolStore = defineStore("edit", () => {
             mouseDelta.x = 0;
         }
         if (current.value === Tool.Select && selectRange.value.active) {
-            if (selectRange.value.active) {
-                const x = e.clientX;
-                const y = e.clientY;
-                selectRange.value.timeSize = view.pxToTimeWithOffset(x) - selectRange.value.timeStart;
-                selectRange.value.octaveSize = view.pxToOctaveWithOffset(y) - selectRange.value.octaveStart;
-                
-                const range = {
-                    startTime: selectRange.value.timeStart,
-                    endTime: selectRange.value.timeStart + selectRange.value.timeSize,
-                    startOctave: selectRange.value.octaveStart,
-                    endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
-                }
-                selection.selectRange(range);
-            }
+            applyRangeSelection(e);
 
         } else if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();

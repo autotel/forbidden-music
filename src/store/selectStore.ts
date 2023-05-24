@@ -13,11 +13,14 @@ const getNotesInRange = (
         endOctave: number
     }
 ) => {
-    const timeRange = [range.startTime, range.endTime].sort();
-    const octaveRange = [range.startOctave, range.endOctave].sort();
+    const octaveStart = Math.min(range.startOctave, range.endOctave);
+    const octaveEnd = Math.max(range.startOctave, range.endOctave);
+    const timeStart = Math.min(range.startTime, range.endTime);
+    const timeEnd = Math.max(range.startTime, range.endTime);
+    
     return notes.filter(({ note }) => {
-        const octaveInRange = note.octave >= octaveRange[0] && note.octave <= octaveRange[1];
-        const timeInRange = note.start >= timeRange[0] && note.start <= timeRange[1];
+        const octaveInRange = note.octave >= octaveStart && note.octave <= octaveEnd;
+        const timeInRange = note.start >= timeStart && note.start <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };
