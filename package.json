@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
+    "@vitejs/plugin-basic-ssl": "^1.0.1",
     "vue": "^3.2.45",
     "wav-decoder": "^1.3.0"
   },

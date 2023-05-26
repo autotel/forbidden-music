@@ -83,17 +83,36 @@ interface SnapDefinition {
     type: SnapType,
     active: boolean,
 }
+/*
 
+
+        if (snapValues.equal1.active === true) {
+            toneSnap.addSnappedValue(Math.round(targetOctave));
+        }
+        if (snapValues.equal10.active === true) {
+            EDOSsnap(10, targetOctave, toneSnap);
+        }
+        if (snapValues.equal12.active === true) {
+            EDOSsnap(12, targetOctave, toneSnap);
+        }
+        if (snapValues.equal19.active === true) {
+            EDOSsnap(19, targetOctave, toneSnap);
+        }
+        if (snapValues.equal22.active === true) {
+            EDOSsnap(22, targetOctave, toneSnap);
+        }
+        if (snapValues.equal24.active === true) {
+            EDOSsnap(24, targetOctave, toneSnap);
+        }
+        if (snapValues.equal31.active === true) {
+            EDOSsnap(31, targetOctave, toneSnap);
+        }
+        
+*/
 const snaps: { [key: string]: SnapDefinition } = {
     customFrequencyTable: {
         description: "Snap to custom frequency table",
         icon: "Custom",
-        type: SnapType.Tone,
-        active: false,
-    },
-    equal12: {
-        description: "Equal temperament, 12 tones. Tone is divided equally into 12 tones per octave",
-        icon: "12TET",
         type: SnapType.Tone,
         active: false,
     },
@@ -103,9 +122,57 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Tone,
         active: true,
     },
+    equal10: {
+        description: "Equal temperament, 10 tones. Tone is divided equally into 12 tones per octave",
+        icon: "10EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
+    equal12: {
+        description: "Equal temperament, 12 tones. Tone is divided equally into 12 tones per octave",
+        icon: "12EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
+    equal19: {
+        description: "Equal temperament, 19 tones. Tone is divided equally into 12 tones per octave",
+        icon: "19EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
+    equal22: {
+        description: "Equal temperament, 22 tones. Tone is divided equally into 12 tones per octave",
+        icon: "22EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
+    equal24: {
+        description: "Equal temperament, 24 tones. Tone is divided equally into 12 tones per octave",
+        icon: "24EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
+    equal31: {
+        description: "Equal temperament, 31 tones. Tone is divided equally into 12 tones per octave",
+        icon: "31EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
+    equal48: {
+        description: "Equal temperament, 48 tones. Tone is divided equally into 12 tones per octave",
+        icon: "48EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
     hzEven: {
         description: "frequencies which are multiple of 2",
         icon: "2\u00d7",
+        type: SnapType.Tone,
+        active: false,
+    },
+    hzFundamentalMultiple: {
+        description: "frequencies which are multiple of the fundamental frequency.",
+        icon: "FF\u00d7",
         type: SnapType.Tone,
         active: false,
     },
@@ -145,12 +212,6 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.ToneRelation,
         active: false,
     },
-    hzFundamentalMultiple: {
-        description: "frequencies which are multiple of the fundamental frequency.",
-        icon: "FF\u00d7",
-        type: SnapType.Tone,
-        active: false,
-    },
     timeInteger: {
         description: "Times that are multiple of 1 time unit",
         icon: "1\u00d7",
@@ -175,7 +236,7 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Time,
         active: false,
     }
-}
+};
 
 // TODO: bug when resizing; it snaps tone. Why is it even spending 
 // time on tone snapping when resizing!?
@@ -202,6 +263,15 @@ export const useSnapStore = defineStore("snap", () => {
         targetHz: number,
         snapValues: { [key: string]: SnapDefinition },
     }
+
+    const EDOSsnap = (edo:number, targetOctave:number, toneSnap: SnapTracker)=>{
+        const relatedNumber = Math.round(targetOctave * edo) / edo;
+        toneSnap.addSnappedValue(relatedNumber, {
+            text: "equal"+edo,
+            relatedNumber,
+        });
+    }
+
     const octaveSnaps = ({
         targetOctave,
         otherNotes,
@@ -242,16 +312,32 @@ export const useSnapStore = defineStore("snap", () => {
                 relatedNumber,
             });
         }
-        if (snapValues.equal12.active === true) {
-            const relatedNumber = Math.round(targetOctave * 12) / 12;
-            toneSnap.addSnappedValue(relatedNumber, {
-                text: "equal12",
-                relatedNumber,
-            });
-        } else if (snapValues.equal1.active === true) {
-            // else because equal1 is subset of equal 12
+        if (snapValues.equal1.active === true) {
             toneSnap.addSnappedValue(Math.round(targetOctave));
         }
+        if (snapValues.equal10.active === true) {
+            EDOSsnap(10, targetOctave, toneSnap);
+        }
+        if (snapValues.equal12.active === true) {
+            EDOSsnap(12, targetOctave, toneSnap);
+        }
+        if (snapValues.equal19.active === true) {
+            EDOSsnap(19, targetOctave, toneSnap);
+        }
+        if (snapValues.equal22.active === true) {
+            EDOSsnap(22, targetOctave, toneSnap);
+        }
+        if (snapValues.equal24.active === true) {
+            EDOSsnap(24, targetOctave, toneSnap);
+        }
+        if (snapValues.equal31.active === true) {
+            EDOSsnap(31, targetOctave, toneSnap);
+        }
+        if (snapValues.equal48.active === true) {
+            EDOSsnap(48, targetOctave, toneSnap);
+        }
+        
+        
 
         /** 
          * target / other = other * 1 / target

@@ -69,7 +69,6 @@ onMounted(() => {
 </script>
 <template>
     <div class="option-container" ref="valueDraggable" :class="{ active: dragging }" style="width:300px">
-
         <div class="sw-button" ref="minusButton" @click="minusButtonClicked">
             {{ triangleLeft }}
         </div>

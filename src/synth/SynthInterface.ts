@@ -1,3 +1,7 @@
+export interface SynthParamsSetter {
+    [key: string]: number | boolean | string;
+}
+
 export interface SynthInstance {
     name: any;
     triggerAttackRelease: (
@@ -13,7 +17,7 @@ export interface SynthInstance {
     ) => void;
     releaseAll: () => void;
     getParams: () => SynthParam[]
-    set: (params: any) => void;
+    set: (params: SynthParamsSetter) => void;
     enable: () => void;
     disable: () => void;
     credits?: string;
@@ -24,6 +28,7 @@ export enum ParamType {
     number = "number",
     boolean = "boolean",
     option = "option",
+    infoText = "info text",
 }
 
 export interface NumberSynthParam {
@@ -55,4 +60,10 @@ export interface OptionSynthParam {
     displayName: string;
 }
 
-export type SynthParam = NumberSynthParam | BooleanSynthParam | OptionSynthParam;
+export interface InfoTextSynthParam {
+    type: ParamType.infoText;
+    getter: () => string;
+    displayName: string;
+}
+
+export type SynthParam = NumberSynthParam | BooleanSynthParam | OptionSynthParam | InfoTextSynthParam ;
