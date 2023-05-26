@@ -34,7 +34,7 @@ const tool = useToolStore();
 const timedEventsViewport = ref<SVGSVGElement>();
 const view = useViewStore();
 const playback = usePlaybackStore();
-const editNotes = useProjectStore();
+const project = useProjectStore();
 const select = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
@@ -94,7 +94,8 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     // delete selected notes
     if (e.key === 'Delete') {
-        editNotes.list = editNotes.list.filter(note => !note.selected);
+        project.score = project.score.filter(note => !note.selected);
+        project.guideNotes = project.guideNotes.filter(note => !note.selected);
         select.clear();
     }
     // alt activates tool copyOnDrag mode
@@ -128,12 +129,6 @@ const keyDownListener = (e: KeyboardEvent) => {
         window.addEventListener('keyup', dectl);
     }
     if (e.ctrlKey && e.key === 's') {
-        // const json = JSON.stringify(editNotes.list.map(note => note.note));
-        // const blob = new Blob([json], { type: 'application/json' });
-        // const url = URL.createObjectURL(blob);
-        // window.open(url);
-        // // save json to cookie
-        // document.cookie = "score=" + json;
         console.log("saved");
         libraryStore.saveCurrent();
         e.preventDefault();
@@ -205,12 +200,12 @@ onMounted(() => {
 
 
 
-    // import score from cookie
+    // import score from cookie TODO: ???
     const cookie = document.cookie;
     const scoreCookie = cookie.split(';').find(c => c.startsWith('score='));
     if (scoreCookie) {
         const json = scoreCookie.split('=')[1];
-        editNotes.list = JSON.parse(json).map((note: Note, index: number) => {
+        project.score = JSON.parse(json).map((note: Note, index: number) => {
             console.log("import note", index, ":", note);
             return new EditNote(note as Note, view);
         });
@@ -239,6 +234,9 @@ onUnmounted(() => {
             </g>
             <g id="tone-relations">
                 <ToneRelation />
+            </g>
+            <g id="guide-notes">
+                <NoteElement v-for="editNote in view.visibleGuideNotes" :editNote="editNote" :key="editNote.udpateFlag" />
             </g>
             <g id="note-would-be-created">
                 <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated" interactionDisabled />

@@ -57,7 +57,7 @@ const deleteItem = (filename: string) => {
 
 export const useLibraryStore = defineStore("library store", () => {
     const view = useViewStore();
-    const projectStore = useProjectStore();
+    const project = useProjectStore();
 
 
     const filenamesList = ref([] as Array<string>);
@@ -67,9 +67,9 @@ export const useLibraryStore = defineStore("library store", () => {
 
 
     setTimeout(() => {
-        loadFromLibraryItem(projectStore.name);
+        loadFromLibraryItem(project.name);
         let autosaveCall = () => {
-            if (projectStore.name === "unnamed (autosave)") {
+            if (project.name === "unnamed (autosave)") {
                 saveCurrent();
             }
         }
@@ -78,13 +78,13 @@ export const useLibraryStore = defineStore("library store", () => {
 
     const saveToNewLibraryItem = () => {
         try {
-            if (exists(projectStore.name)) {
+            if (exists(project.name)) {
                 throw new Error("File already exists");
             }
 
             saveToLocalStorage(
-                projectStore.name,
-                projectStore.getProjectDefintion()
+                project.name,
+                project.getProjectDefintion()
             );
 
             inSyncWithStorage.value = true;
@@ -99,8 +99,8 @@ export const useLibraryStore = defineStore("library store", () => {
     const saveCurrent = () => {
         try {
             saveToLocalStorage(
-                projectStore.name,
-                projectStore.getProjectDefintion()
+                project.name,
+                project.getProjectDefintion()
             );
             inSyncWithStorage.value = true;
         } catch (e) {
@@ -137,11 +137,12 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const clear = () => {
-        projectStore.list = [];
+        project.score = [];
+        project.guideNotes = [];
         inSyncWithStorage.value = false;
     };
 
-    watch([projectStore], () => inSyncWithStorage.value = false);
+    watch([project], () => inSyncWithStorage.value = false);
 
     watchEffect(() => {
         if (errorMessage.value) {
@@ -158,13 +159,13 @@ export const useLibraryStore = defineStore("library store", () => {
         const a = document.createElement("a");
 
         a.href = url;
-        a.download = projectStore.name + ".json";
+        a.download = project.name + ".json";
         a.click();
     }
 
     const exportJSON = () => {
-        const json = JSON.stringify(projectStore.getProjectDefintion());
-        downloadString(json, "application/json", projectStore.name + ".json");
+        const json = JSON.stringify(project.getProjectDefintion());
+        downloadString(json, "application/json", project.name + ".json");
     }
 
     const exportMIDIPitchBend = () => {
@@ -173,7 +174,7 @@ export const useLibraryStore = defineStore("library store", () => {
     const importJSON = (files: FileList) => {
         const file = files[0];
         const filename = file.name.replace(/.json\b/i, "");
-        projectStore.name = filename;
+        project.name = filename;
         const reader = new FileReader();
         reader.onload = (e) => {
             const text = e.target?.result as string;
@@ -185,9 +186,9 @@ export const useLibraryStore = defineStore("library store", () => {
 
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
-            projectStore.setFromProjecDefinition(iobj as LibraryItem);
+            project.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
-            projectStore.list = iobj.map(note => new EditNote({
+            project.score = iobj.map(note => new EditNote({
                 frequency: note.frequency,
                 start: note.start,
                 duration: note.duration,

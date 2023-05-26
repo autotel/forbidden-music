@@ -89,7 +89,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     window.addEventListener("mousedown", startContextListener);
 
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
-        const events = project.list.filter(({note}) => {
+        const events = project.score.filter(({note}) => {
             return note.start >= frameStartTime && note.start < frameEndTime;
         });
         // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);

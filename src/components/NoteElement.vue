@@ -12,6 +12,7 @@ const tool = useToolStore();
 const props = defineProps<{
     editNote: EditNote
     interactionDisabled?: boolean
+    sounds?: boolean
 }>();
 
 const noteBody = ref<SVGRectElement>();
@@ -60,6 +61,7 @@ onUnmounted(() => {
             selected: editNote.selected,
             editable: tool.current == Tool.Edit,
             interactionDisabled: interactionDisabled,
+            muted: !sounds,
         }" :...=editNote.rect ref="noteBody" />
         <rect v-if="!interactionDisabled" class="rightEdge" :class="{
             selected: editNote.selected,
@@ -88,6 +90,10 @@ onUnmounted(() => {
 
 .body.selected {
     fill: #f889;
+}
+
+.body.muted{
+    fill: rgba(136, 136, 136, 0.274);
 }
 
 .body.editable {

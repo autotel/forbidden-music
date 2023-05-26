@@ -29,22 +29,23 @@ const getNotesInRange = (
 
 export const useSelectStore = defineStore("select", () => {
     const selectedNotes = ref(new Set() as Set<EditNote>);
-    const editNotes = useProjectStore();
+    const project = useProjectStore();
     const isEditNoteSelected = (note: EditNote) => {
         return selectedNotes.value.has(note);
     };
     const refreshNoteSelectionState = () => {
-        editNotes.list.forEach(n => n.selected = isEditNoteSelected(n))
+        project.score.forEach(n => n.selected = isEditNoteSelected(n))
+        project.guideNotes.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const get = () => {
         return [...selectedNotes.value];
     };
-    const select = (...editNotes: EditNote[]) => {
+    const select = (...project: EditNote[]) => {
         selectedNotes.value.clear();
-        selectedNotes.value = new Set(editNotes);
+        selectedNotes.value = new Set(project);
     };
-    const toggle = (...editNotes: EditNote[]) => {
-        editNotes.forEach((n) => {
+    const toggle = (...project: EditNote[]) => {
+        project.forEach((n) => {
             if (selectedNotes.value.has(n)) {
                 selectedNotes.value.delete(n);
             } else {
@@ -52,8 +53,8 @@ export const useSelectStore = defineStore("select", () => {
             }
         });
     };
-    const remove = (...editNotes: (EditNote)[]) => {
-        editNotes.forEach((n) => {
+    const remove = (...project: (EditNote)[]) => {
+        project.forEach((n) => {
             if (!n) return;
             selectedNotes.value.delete(n);
         });
@@ -71,7 +72,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         select(...getNotesInRange(
-            editNotes.list,
+            project.score,
             range
         ));
     };
@@ -82,7 +83,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         const newNotes = getNotesInRange(
-            editNotes.list,
+            project.score,
             range
         );
         add(...newNotes);
@@ -91,7 +92,7 @@ export const useSelectStore = defineStore("select", () => {
         selectedNotes.value.clear();
     };
     const selectAll = () => {
-        select(...editNotes.list);
+        select(...project.score);
     };
     throttledWatch(selectedNotes, refreshNoteSelectionState);
 

@@ -4,7 +4,6 @@ import { EditNote } from '../dataTypes/EditNote.js';
 import { useProjectStore } from './projectStore.js';
 import { frequencyToOctave } from '../functions/toneConverters.js';
 
-// TODO: move editNotes to its own library
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
     const octaveOffset = ref(-3);
@@ -19,17 +18,25 @@ export const useViewStore = defineStore("view", () => {
     // TODO integrate this, so that view always zooms to center or mouse pos).
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
-    const editNotes = useProjectStore();
+    const project = useProjectStore();
 
     const visibleNotes = computed((): Array<EditNote> => {
         //TODO: also filter by octave component
-        return editNotes.list.filter(editNote => {
+        return project.score.filter(editNote => {
             const note = editNote.note;
             return note.start < timeOffset.value + viewWidthTime.value &&
                 note.start + (note.duration || 0) > timeOffset.value;
         });
     });
 
+    const visibleGuideNotes = computed((): Array<EditNote> => {
+        //TODO: also filter by octave component
+        return project.guideNotes.filter(editNote => {
+            const note = editNote.note;
+            return note.start < timeOffset.value + viewWidthTime.value &&
+                note.start + (note.duration || 0) > timeOffset.value;
+        });
+    });
     const setTimeOffset = (newTimeOffset: number) => {
         timeOffset.value = newTimeOffset;
     };
@@ -115,6 +122,7 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxX,
         _offsetPxY,
         visibleNotes,
+        visibleGuideNotes,
     };
 });
 

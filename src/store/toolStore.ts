@@ -31,7 +31,7 @@ export const useToolStore = defineStore("edit", () => {
     // hmm.. I might be not so good at choosing where stuff goes..
     const selection = useSelectStore();
     const view = useViewStore();
-    const editNotes = useProjectStore();
+    const project = useProjectStore();
     const snap = useSnapStore();
 
     // TODO: probably not all these need to be refs
@@ -263,7 +263,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteThatWouldBeCreated.value,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: editNotes.list,
+                otherNotes: project.score,
                 sideEffects: true,
             });
 
@@ -313,7 +313,7 @@ export const useToolStore = defineStore("edit", () => {
 
                 prevDraggableNotes.forEach(editNote => {
                     const newNote = new EditNote(editNote.note, view);
-                    editNotes.list.push(newNote);
+                    project.score.push(newNote);
                     cloned.push(newNote);
                     newNote.dragStart(mouseDragStart);
                     editNote.dragCancel();
@@ -380,7 +380,7 @@ export const useToolStore = defineStore("edit", () => {
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
             // store them to store
-            editNotes.list.push(...notesBeingCreated.value);
+            project.score.push(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
         if (noteBeingDraggedRightEdge.value) {
@@ -405,6 +405,32 @@ export const useToolStore = defineStore("edit", () => {
         noteBeingDraggedRightEdge.value = false;
         noteRightEdgeBeingHovered.value = false;
     }
+
+    const guideNoteToNote = (guideNotes: EditNote[]) => {
+        const notes = guideNotes.map(guideNote => {
+            const note = new EditNote(guideNote.note,view);
+            const guideNoteIndex = project.guideNotes.indexOf(guideNote);
+            if(guideNoteIndex === -1) throw new Error("guide note not found to remove");
+            project.guideNotes.splice(guideNoteIndex,1);
+            return note;
+        });
+        project.score.push(...notes);
+    };
+
+    const notesToGuideNotes = (notes: EditNote[]) => {
+        const guideNotes = notes.map(note => {
+            const guideNote = new EditNote(note.note,view);
+            const noteIndex = project.score.indexOf(note);
+
+            if(noteIndex === -1) throw new Error("note not found to remove");
+            project.score.splice(noteIndex,1);
+            return guideNote;
+        });
+        project.guideNotes.push(...guideNotes);
+    };
+
+
+
 
     watch(() => current, () => {
         if (whatWouldMouseDownDo() !== MouseDownActions.Create) {

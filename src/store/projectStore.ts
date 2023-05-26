@@ -8,7 +8,8 @@ import { useViewStore } from './viewStore.js';
 
 export const useProjectStore = defineStore("current project", () => {
     /** todo: rename to something unambiguous **/
-    const list = ref([] as Array<EditNote>);
+    const score = ref([] as Array<EditNote>);
+    const guideNotes = ref([] as Array<EditNote>);
     const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
@@ -23,7 +24,7 @@ export const useProjectStore = defineStore("current project", () => {
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: list.value.map(note => note.note),
+            notes: score.value.map(note => note.note),
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
@@ -41,7 +42,7 @@ export const useProjectStore = defineStore("current project", () => {
 
     const getTimeBounds = () => {
         // get the the note with the lowest start
-        if(list.value.length === 0) {
+        if(score.value.length === 0) {
             return {
                 start: 0,
                 end: 0,
@@ -49,14 +50,14 @@ export const useProjectStore = defineStore("current project", () => {
                 last: null,
             }
         }
-        let first = list.value[0].note;
-        list.value.forEach(({note}) => {
+        let first = score.value[0].note;
+        score.value.forEach(({note}) => {
             if (note.start < first.start) {
                 first = note;
             }
         });
-        let last = list.value[0].note;
-        list.value.forEach(({note}) => {
+        let last = score.value[0].note;
+        score.value.forEach(({note}) => {
             if ((note.end || note.start) > (last.end || last.start)) {
                 last = note;
             }
@@ -73,7 +74,7 @@ export const useProjectStore = defineStore("current project", () => {
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
-        list.value = pDef.notes.map(note => new EditNote(note, view));
+        score.value = pDef.notes.map(note => new EditNote(note, view));
         if (pDef.instrument) {
             playbackStore.setSynthByName(pDef.instrument.type);
         }
@@ -85,7 +86,7 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     return {
-        list,
+        score, guideNotes,
         name, edited, created, snaps,
         getTimeBounds,
         getProjectDefintion,
