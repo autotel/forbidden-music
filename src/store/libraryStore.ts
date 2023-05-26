@@ -31,6 +31,7 @@ const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
         frequency: note.frequency,
         start: note.start,
         duration: note.duration,
+        mute: note.mute,
     }));
     localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
@@ -39,6 +40,7 @@ const retrieveFromLocalStorage = (filename: string) => {
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
     const retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
+    console.log("retrieved", retrieved.notes.filter((n: any) => n.mute !== false));
     retrieved.notes = retrieved.notes.map((note: any) => makeNote(note));
     return retrieved as LibraryItem;
 }
@@ -138,7 +140,6 @@ export const useLibraryStore = defineStore("library store", () => {
 
     const clear = () => {
         project.score = [];
-        project.guideNotes = [];
         inSyncWithStorage.value = false;
     };
 
@@ -188,11 +189,7 @@ export const useLibraryStore = defineStore("library store", () => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             project.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
-            project.score = iobj.map(note => new EditNote({
-                frequency: note.frequency,
-                start: note.start,
-                duration: note.duration,
-            }, view));
+            project.score = iobj.map(note => new EditNote(note, view));
         }
     }
 

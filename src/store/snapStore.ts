@@ -247,6 +247,7 @@ export const useSnapStore = defineStore("snap", () => {
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
     const customOctavesTable = ref(colundi as number[]);
+    const onlyWithMutednotes = ref(false);
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -272,13 +273,20 @@ export const useSnapStore = defineStore("snap", () => {
         });
     }
 
+    const onlyMutedIfWanted = (otherNotes: EditNote[] | undefined) => {
+        if(otherNotes === undefined) return;
+        if(!onlyWithMutednotes.value) return otherNotes;
+        return otherNotes.filter(({note}) => note.mute);
+    } 
+
+
     const octaveSnaps = ({
         targetOctave,
         otherNotes,
         targetHz,
         snapValues,
     }: OctaveSnapParams) => {
-
+        otherNotes = onlyMutedIfWanted(otherNotes);
         const toneSnap = new SnapTracker(targetOctave);
 
         if (snapValues.customFrequencyTable.active === true) {
@@ -467,6 +475,7 @@ export const useSnapStore = defineStore("snap", () => {
         snapValues,
     }: TimeSnapParams) => {
 
+        otherNotes = onlyMutedIfWanted(otherNotes);
         const timeSnap = new SnapTracker(editNote.note.start);
         if (snapValues.timeQuarter.active === true) {
             const relatedNumber = Math.round(editNote.note.start * 4);
@@ -542,6 +551,7 @@ export const useSnapStore = defineStore("snap", () => {
         skipOctaveSnap = false,
         skipTimeSnap = false,
     }: SnapParams) => {
+        otherNotes = onlyMutedIfWanted(otherNotes);
         /** outNote */
         const editNote = inNote.clone();
         const targetHz = octaveToFrequency(targetOctave);
@@ -593,6 +603,7 @@ export const useSnapStore = defineStore("snap", () => {
         timeSnapExplanation,
         toneSnapExplanation,
         customOctavesTable,
+        onlyWithMutednotes,
         setFocusedNote,
         resetSnapExplanation,
         snap,

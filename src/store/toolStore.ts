@@ -406,32 +406,6 @@ export const useToolStore = defineStore("edit", () => {
         noteRightEdgeBeingHovered.value = false;
     }
 
-    const guideNoteToNote = (guideNotes: EditNote[]) => {
-        const notes = guideNotes.map(guideNote => {
-            const note = new EditNote(guideNote.note,view);
-            const guideNoteIndex = project.guideNotes.indexOf(guideNote);
-            if(guideNoteIndex === -1) throw new Error("guide note not found to remove");
-            project.guideNotes.splice(guideNoteIndex,1);
-            return note;
-        });
-        project.score.push(...notes);
-    };
-
-    const notesToGuideNotes = (notes: EditNote[]) => {
-        const guideNotes = notes.map(note => {
-            const guideNote = new EditNote(note.note,view);
-            const noteIndex = project.score.indexOf(note);
-
-            if(noteIndex === -1) throw new Error("note not found to remove");
-            project.score.splice(noteIndex,1);
-            return guideNote;
-        });
-        project.guideNotes.push(...guideNotes);
-    };
-
-
-
-
     watch(() => current, () => {
         if (whatWouldMouseDownDo() !== MouseDownActions.Create) {
             noteThatWouldBeCreated.value = false;

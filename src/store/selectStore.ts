@@ -35,7 +35,6 @@ export const useSelectStore = defineStore("select", () => {
     };
     const refreshNoteSelectionState = () => {
         project.score.forEach(n => n.selected = isEditNoteSelected(n))
-        project.guideNotes.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const get = () => {
         return [...selectedNotes.value];
@@ -64,6 +63,7 @@ export const useSelectStore = defineStore("select", () => {
             if (!n) return;
             selectedNotes.value.add(n);
         });
+        refreshNoteSelectionState();
     };
     const selectRange = (range: {
         startTime: number,
@@ -103,6 +103,7 @@ export const useSelectStore = defineStore("select", () => {
         add, select, toggle, get,
         clear: clear, remove,
         isEditNoteSelected,
+        selectedNotes,
     };
 
 });

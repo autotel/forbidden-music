@@ -39,6 +39,10 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
         </span>
       </template>
     </Button>
+    <Button :onClick="()=>snap.onlyWithMutednotes = !snap.onlyWithMutednotes"
+      :class="{active: snap.onlyWithMutednotes}" :tooltip="snap.onlyWithMutednotes ? 'only with muted notes. Use CTRL+M to mute a note' : 'all notes'">
+      Monly
+    </Button>
   </EdgeHidableWidget>
 </template>
 

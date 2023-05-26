@@ -14,22 +14,25 @@ export interface Note {
     frequency: number,
     /** end */
     end?: number | undefined,
+    mute: boolean;
     clone: () => Note,
 }
 
 export interface NoteDefa {
     start: number,
     duration?: number,
-    octave: number
+    octave: number,
+    mute?: boolean,
 }
 export interface NoteDefb {
     start: number,
     duration?: number,
-    frequency: number
+    frequency: number,
+    mute?: boolean,
 }
 
 export const frequencyConstant = 11;
-
+// TODO: refactor
 export const makeNote = (noteDef: NoteDefa | NoteDefb): Note => {
     const nn = {
         start: noteDef.start,
@@ -37,6 +40,7 @@ export const makeNote = (noteDef: NoteDefa | NoteDefb): Note => {
         _octave: null as number | null,
         _frequency: null as number | null,
         selected: false,
+        mute: noteDef.mute || false ,
         clone() { return makeNote(this) },
         set end(value: number | undefined) {
             if (value === undefined) {

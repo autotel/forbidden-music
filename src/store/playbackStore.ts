@@ -104,7 +104,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         const now = audioContext.currentTime;
         const deltaTime = now - previousClockTime.value;
         currentScoreTime.value += deltaTime * rate;
-        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value);
+        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value).filter(({ note }) => !note.mute);
 
 
         playNotes.forEach(({ note }) => {

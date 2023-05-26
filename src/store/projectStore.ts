@@ -9,7 +9,6 @@ import { useViewStore } from './viewStore.js';
 export const useProjectStore = defineStore("current project", () => {
     /** todo: rename to something unambiguous **/
     const score = ref([] as Array<EditNote>);
-    const guideNotes = ref([] as Array<EditNote>);
     const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
@@ -75,6 +74,8 @@ export const useProjectStore = defineStore("current project", () => {
         created.value = pDef.created;
         edited.value = pDef.edited;
         score.value = pDef.notes.map(note => new EditNote(note, view));
+        
+        console.log(pDef.notes.filter(note=>note.mute))
         if (pDef.instrument) {
             playbackStore.setSynthByName(pDef.instrument.type);
         }
@@ -86,7 +87,7 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     return {
-        score, guideNotes,
+        score,
         name, edited, created, snaps,
         getTimeBounds,
         getProjectDefintion,

@@ -29,14 +29,6 @@ export const useViewStore = defineStore("view", () => {
         });
     });
 
-    const visibleGuideNotes = computed((): Array<EditNote> => {
-        //TODO: also filter by octave component
-        return project.guideNotes.filter(editNote => {
-            const note = editNote.note;
-            return note.start < timeOffset.value + viewWidthTime.value &&
-                note.start + (note.duration || 0) > timeOffset.value;
-        });
-    });
     const setTimeOffset = (newTimeOffset: number) => {
         timeOffset.value = newTimeOffset;
     };
@@ -122,7 +114,6 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxX,
         _offsetPxY,
         visibleNotes,
-        visibleGuideNotes,
     };
 });
 

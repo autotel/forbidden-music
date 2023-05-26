@@ -27,6 +27,7 @@ import Modal from './components/Modal.vue';
 import CustomOctaveTableTextEditor from './components/CustomOctaveTableTextEditor.vue';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { useLibraryStore } from './store/libraryStore';
+import { useUndoStore } from './store/undoStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -39,8 +40,7 @@ const select = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
-const snap = useSnapStore();
-
+const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.createInteractionModal("default");
 
 provide('modalText', modalText);
@@ -95,7 +95,6 @@ const keyDownListener = (e: KeyboardEvent) => {
     // delete selected notes
     if (e.key === 'Delete') {
         project.score = project.score.filter(note => !note.selected);
-        project.guideNotes = project.guideNotes.filter(note => !note.selected);
         select.clear();
     }
     // alt activates tool copyOnDrag mode
@@ -127,10 +126,31 @@ const keyDownListener = (e: KeyboardEvent) => {
             }
         }
         window.addEventListener('keyup', dectl);
+
     }
+
+    // mute selected note
+    if (e.ctrlKey && e.key === 'm') {
+        select.selectedNotes.forEach(eNote => eNote.note.mute = !eNote.note.mute);
+    }
+    // save
     if (e.ctrlKey && e.key === 's') {
         console.log("saved");
         libraryStore.saveCurrent();
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // undo
+    if (e.ctrlKey && e.key === 'z') {
+        console.log("undo");
+        undoStore.undo();
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // download 
+    if (e.ctrlKey && e.key === 'd') {
+        console.log("downloaded");
+        libraryStore.exportJSON();
         e.preventDefault();
         e.stopPropagation();
     }
@@ -234,9 +254,6 @@ onUnmounted(() => {
             </g>
             <g id="tone-relations">
                 <ToneRelation />
-            </g>
-            <g id="guide-notes">
-                <NoteElement v-for="editNote in view.visibleGuideNotes" :editNote="editNote" :key="editNote.udpateFlag" />
             </g>
             <g id="note-would-be-created">
                 <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated" interactionDisabled />
