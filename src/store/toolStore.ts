@@ -20,6 +20,7 @@ export enum MouseDownActions {
     RemoveFromSelectionAndDrag,
     Create,
     Lengthen,
+    DragVelocity,
     Copy,
     AreaSelect,
     Move,
@@ -110,37 +111,11 @@ export const useToolStore = defineStore("edit", () => {
     const whatWouldMouseDownDo = () => {
         let ret = MouseDownActions.None as MouseDownActions;
         currentMouseStringHelper.value = "";
-        if (noteRightEdgeBeingHovered.value) {
-            ret = MouseDownActions.Lengthen;
-            currentMouseStringHelper.value = "⟷";
-        } else if (current.value === Tool.Edit) {
-            if (noteBeingHovered.value) {
-                ret = MouseDownActions.Move;
-                if (!selection.isEditNoteSelected(noteBeingHovered.value)) {
-                    if (currentLeftHand.value === Tool.Select) {
-                        ret = MouseDownActions.AddToSelection;
-                        currentMouseStringHelper.value = "+";
-                    } else {
-                        ret = MouseDownActions.SetSelectionAndDrag;
-                        currentMouseStringHelper.value = "=";
-                    }
-                } else {
-                    if (currentLeftHand.value === Tool.Select) {
-                        ret = MouseDownActions.RemoveFromSelection;
-                        currentMouseStringHelper.value = "-";
-                    }
-                }
-            } else {
-                if (currentLeftHand.value === Tool.Select) {
-                    ret = MouseDownActions.AreaSelect;
-                    currentMouseStringHelper.value = "⃞";
-                } else {
-                    ret = MouseDownActions.Create;
-                }
-            }
+        if (current.value === Tool.Modulation) {
+            ret = MouseDownActions.DragVelocity;
         } else if (
-            currentLeftHand.value === Tool.Select ||
-            current.value === Tool.Select
+            current.value === Tool.Select ||
+            currentLeftHand.value === Tool.Select
         ) {
             if (noteBeingHovered.value) {
                 if (selection.isEditNoteSelected(noteBeingHovered.value)) {
@@ -149,12 +124,29 @@ export const useToolStore = defineStore("edit", () => {
                 } else {
                     ret = MouseDownActions.AddToSelection;
                     currentMouseStringHelper.value = "+";
+                    if(current.value===Tool.Edit){
+                        ret = MouseDownActions.AddToSelectionAndDrag;
+                    }
                 }
             } else {
                 ret = MouseDownActions.AreaSelect;
                 currentMouseStringHelper.value = "⃞";
             }
 
+        }else if (current.value === Tool.Edit) {
+            if (noteRightEdgeBeingHovered.value) {
+                ret = MouseDownActions.Lengthen;
+                currentMouseStringHelper.value = "⟷";
+            } else if (noteBeingHovered.value) {
+                ret = MouseDownActions.Move;
+                if (selection.isEditNoteSelected(noteBeingHovered.value)) {
+                    ret = MouseDownActions.Move;
+                } else {
+                    ret = MouseDownActions.SetSelectionAndDrag;
+                }
+            } else {
+                ret = MouseDownActions.Create;
+            }
         }
         return ret;
     }
@@ -221,7 +213,11 @@ export const useToolStore = defineStore("edit", () => {
             case MouseDownActions.AddToSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.add(noteBeingHovered.value);
-                // _dragStartAction(mouse);
+                break;
+            case MouseDownActions.AddToSelectionAndDrag:
+                if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
+                selection.add(noteBeingHovered.value);
+                _dragStartAction(mouse);
                 break;
             case MouseDownActions.SetSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
@@ -231,7 +227,6 @@ export const useToolStore = defineStore("edit", () => {
             case MouseDownActions.RemoveFromSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.remove(noteBeingHovered.value);
-                // _dragStartAction(mouse);
                 break;
             case MouseDownActions.Move:
                 _dragStartAction(mouse);
@@ -420,14 +415,6 @@ export const useToolStore = defineStore("edit", () => {
             const y = e.clientY;
             selectRange.value.timeSize = view.pxToTime(x) - selectRange.value.timeStart;
             selectRange.value.octaveSize = view.pxToOctave(y) - selectRange.value.octaveStart;
-
-            // const range = {
-            //     startTime: selectRange.value.timeStart,
-            //     endTime: selectRange.value.timeStart + selectRange.value.timeSize,
-            //     startOctave: selectRange.value.octaveStart,
-            //     endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
-            // }
-            // selection.selectRange(range);
             selectRange.value.active = false;
         }
         noteBeingDragged.value = false;

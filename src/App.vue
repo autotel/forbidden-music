@@ -54,13 +54,13 @@ let viewDragStartY = 0;
 let viewDragStartOctave = 0;
 
 const mouseWheelListener = (e: WheelEvent) => {
-        view.viewWidthTime **= 1 + e.deltaY / 1000;
-        view.viewHeightOctaves **= 1 + e.deltaY / 1000;
-        // prevent viewWidthTime from going out of bounds
-        if (view.viewWidthTime < 0.1) {
-            view.viewWidthTime = 0.1;
-        }
+    view.viewWidthTime **= 1 + e.deltaY / 1000;
+    view.viewHeightOctaves **= 1 + e.deltaY / 1000;
+    // prevent viewWidthTime from going out of bounds
+    if (view.viewWidthTime < 0.1) {
+        view.viewWidthTime = 0.1;
     }
+}
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
@@ -89,7 +89,7 @@ const mouseMoveListener = (e: MouseEvent) => {
 
 
 const keyDownListener = (e: KeyboardEvent) => {
-    if(e.target instanceof HTMLInputElement) {
+    if (e.target instanceof HTMLInputElement) {
         return;
     }
     // delete selected notes
@@ -130,6 +130,10 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         window.addEventListener('keyup', dectl);
 
+    }
+
+    if (e.key === 'm') {
+        tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
     }
 
     // mute selected note
@@ -190,7 +194,7 @@ const resize = () => {
 
     $viewPort.style.width = window.innerWidth - 2 + "px";
     $viewPort.style.height = window.innerHeight - 2 + "px";
-    
+
     view.updateSize(window.innerWidth, window.innerHeight);
 
 };
@@ -211,15 +215,15 @@ onMounted(() => {
     }
 
     resize();
-    
-    mainInteraction.addEventListener($viewPort,'mousedown', mouseDownListener);
-    mainInteraction.addEventListener($viewPort,'mousemove', mouseMoveListener);
-    mainInteraction.addEventListener($viewPort,'wheel', mouseWheelListener);
+
+    mainInteraction.addEventListener($viewPort, 'mousedown', mouseDownListener);
+    mainInteraction.addEventListener($viewPort, 'mousemove', mouseMoveListener);
+    mainInteraction.addEventListener($viewPort, 'wheel', mouseWheelListener);
 
     window.addEventListener('mouseup', mouseUpListener);
 
-    mainInteraction.addEventListener(window,'keydown', keyDownListener);
-    mainInteraction.addEventListener(window,'resize', resize);
+    mainInteraction.addEventListener(window, 'keydown', keyDownListener);
+    mainInteraction.addEventListener(window, 'resize', resize);
 
 
 
@@ -240,7 +244,7 @@ onUnmounted(() => {
 
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
-    
+
     window.removeEventListener('mouseup', mouseUpListener);
     mainInteraction.removeAllEventListeners();
 });
@@ -259,7 +263,8 @@ onUnmounted(() => {
                 <ToneRelation />
             </g>
             <g id="note-would-be-created">
-                <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated" interactionDisabled />
+                <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated"
+                    interactionDisabled />
             </g>
             <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
                 stroke-width="1" />
@@ -289,7 +294,7 @@ onUnmounted(() => {
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
-            <pre>{{ (modalText) }}</pre>
+        <pre>{{ (modalText) }}</pre>
     </Modal>
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
@@ -303,12 +308,13 @@ onUnmounted(() => {
     top: 0;
     right: 0;
     width: 0;
-    display:inline-block;
+    display: inline-block;
     /*display: flex;
     flex-direction: column;
     height: 100vh;
     overflow: auto; */
 }
+
 .unclickable {
     pointer-events: none;
 
