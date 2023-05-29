@@ -4,7 +4,8 @@ import { Tool } from '../dataTypes/Tool';
 import { MouseDownActions, useToolStore } from '../store/toolStore';
 import { useUndoStore } from '../store/undoStore';
 import Button from './Button.vue';
-
+import { useMonoModeInteraction } from '../store/monoModeInteraction';
+const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
 const {
   history, undo, redo, canUndo, canRedo, undoStack, redoStack
@@ -24,30 +25,13 @@ const toggleTimeConstrain = () => {
   }
 }
 
-const mouseDownActionValues = Object.values(MouseDownActions);
-const whatWouldMouseMoveDo = ref(MouseDownActions.None);
-const whatWouldMouseMoveDoText = ref(mouseDownActionValues[MouseDownActions.None]);
-
-const updateToolWouldDo = () => {
-  whatWouldMouseMoveDo.value = tool.whatWouldMouseDownDo();
-  whatWouldMouseMoveDoText.value = mouseDownActionValues[whatWouldMouseMoveDo.value];
+const toggleSelectTool = () => {
+  if (tool.current == Tool.Select) {
+    tool.current = Tool.Edit;
+  } else {
+    tool.current = Tool.Select;
+  }
 }
-
-onMounted(() => {
-  window.addEventListener('mousemove', updateToolWouldDo);
-  window.addEventListener('keydown', updateToolWouldDo);
-  window.addEventListener('keyup', updateToolWouldDo);
-  window.addEventListener('mousedown', updateToolWouldDo);
-  window.addEventListener('mouseup', updateToolWouldDo);
-})
-onUnmounted(() => {
-  window.removeEventListener('mousemove', updateToolWouldDo);
-  window.removeEventListener('keydown', updateToolWouldDo);
-  window.removeEventListener('keyup', updateToolWouldDo);
-  window.removeEventListener('mousedown', updateToolWouldDo);
-  window.removeEventListener('mouseup', updateToolWouldDo);
-})
-
 </script>
 
 <template>
@@ -67,13 +51,13 @@ onUnmounted(() => {
     ↷
   </Button>
 
-  <Button :onClick="(e) => {
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    e.preventDefault();
-    tool.current = Tool.Select
-  }" :active="tool.current == Tool.Select" tooltip="Select mode [CTRL]">
+  <Button :onClick="toggleSelectTool" :active="tool.current == Tool.Select" tooltip="Select mode [CTRL]">
     Select
+  </Button>
+  <Button :onClick="(e) => {
+    tool.current = Tool.Modulation
+  }" :active="tool.current == Tool.Modulation" tooltip="Modulation[M]">
+    Modulation
   </Button>
   <div class="group">
     <label>Constrain</label>

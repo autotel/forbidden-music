@@ -57,6 +57,7 @@ export const useSelectStore = defineStore("select", () => {
             if (!n) return;
             selectedNotes.value.delete(n);
         });
+        refreshNoteSelectionState();
     }
     const add = (...editNote: (EditNote)[]) => {
         editNote.forEach((n) => {

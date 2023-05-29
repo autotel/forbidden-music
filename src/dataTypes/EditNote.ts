@@ -64,6 +64,7 @@ export class EditNote {
     dragStartedTime = 0;
     dragStartedOctave = 0;
     dragStartedDuration = 0;
+    forceUpdate: () => void;
 
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         this.note = makeNote(noteDef);
@@ -78,21 +79,23 @@ export class EditNote {
         this.dragMove = (dragDelta: { x: number, y: number }) => {
             this.note.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
             this.note.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
-            this.udpateFlag = makeRandomString();
+            this.forceUpdate();
         }
         this.dragMoveOctaves = (octaveDelta: number) => {
             this.note.octave = this.dragStartedOctave + octaveDelta;
-            this.udpateFlag = makeRandomString();
+            this.forceUpdate();
         }
         this.dragMoveTimeStart = (timeDelta: number) => {
             this.note.start = this.dragStartedTime + timeDelta;
-            this.udpateFlag = makeRandomString();
+            this.forceUpdate();
         }
         this.dragLengthMove = (dragDelta: { x: number, y: number }) => {
             this.note.duration = Math.max(this.dragStartedDuration + view.pxToTime(dragDelta.x), 0);
+            this.forceUpdate();
+        }
+        this.forceUpdate = () => {
             this.udpateFlag = makeRandomString();
         }
-
         this.dragCancel = () => {
             this.note.start = this.dragStartedTime;
             this.note.octave = this.dragStartedOctave;

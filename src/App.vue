@@ -95,7 +95,10 @@ const keyDownListener = (e: KeyboardEvent) => {
     // delete selected notes
     if (e.key === 'Delete') {
         project.score = project.score.filter(note => !note.selected);
-        tool.noteBeingHovered = false;
+        // minimalistic option:
+        // tool.noteBeingHovered = false;
+        // programmatic option:
+        tool.resetState();
         select.clear();
     }
     // alt activates tool copyOnDrag mode
@@ -118,11 +121,10 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
     }
     if (e.ctrlKey) {
-        // const prevTool = tool.current;
-        tool.current = Tool.Select;
+        tool.currentLeftHand = Tool.Select;
         const dectl = (e: KeyboardEvent) => {
             if (e.key == "Control") {
-                tool.current = Tool.Edit;
+                tool.currentLeftHand = Tool.None;
                 window.removeEventListener('keyup', dectl);
             }
         }

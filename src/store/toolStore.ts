@@ -9,15 +9,15 @@ import { useViewStore } from './viewStore.js';
 import { useThrottleFn } from '@vueuse/core';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
-const forceRedraw = (el: { udpateFlag: string }) => {
-    el.udpateFlag = Math.random().toString(36).slice(2);
-}
 
 export enum MouseDownActions {
     None,
     AddToSelection,
     SetSelection,
     RemoveFromSelection,
+    AddToSelectionAndDrag,
+    SetSelectionAndDrag,
+    RemoveFromSelectionAndDrag,
     Create,
     Lengthen,
     Copy,
@@ -35,7 +35,10 @@ export const useToolStore = defineStore("edit", () => {
     const snap = useSnapStore();
 
     // TODO: probably not all these need to be refs
+    /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
+    /** tool that might have been activated temporarily by holding a key */
+    const currentLeftHand = ref(Tool.None);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
     const selectRange = ref({
@@ -110,27 +113,48 @@ export const useToolStore = defineStore("edit", () => {
         if (noteRightEdgeBeingHovered.value) {
             ret = MouseDownActions.Lengthen;
             currentMouseStringHelper.value = "⟷";
-        } else if (noteBeingHovered.value) {
-            ret = MouseDownActions.Move;
-            if (!selection.isEditNoteSelected(noteBeingHovered.value)) {
-                if (current.value === Tool.Select) {
-                    ret = MouseDownActions.AddToSelection;
-                    currentMouseStringHelper.value = "+";
+        } else if (current.value === Tool.Edit) {
+            if (noteBeingHovered.value) {
+                ret = MouseDownActions.Move;
+                if (!selection.isEditNoteSelected(noteBeingHovered.value)) {
+                    if (currentLeftHand.value === Tool.Select) {
+                        ret = MouseDownActions.AddToSelection;
+                        currentMouseStringHelper.value = "+";
+                    } else {
+                        ret = MouseDownActions.SetSelectionAndDrag;
+                        currentMouseStringHelper.value = "=";
+                    }
                 } else {
-                    ret = MouseDownActions.SetSelection;
-                    currentMouseStringHelper.value = "=";
+                    if (currentLeftHand.value === Tool.Select) {
+                        ret = MouseDownActions.RemoveFromSelection;
+                        currentMouseStringHelper.value = "-";
+                    }
                 }
             } else {
-                if (current.value === Tool.Select) {
-                    ret = MouseDownActions.RemoveFromSelection;
-                    currentMouseStringHelper.value = "-";
+                if (currentLeftHand.value === Tool.Select) {
+                    ret = MouseDownActions.AreaSelect;
+                    currentMouseStringHelper.value = "⃞";
+                } else {
+                    ret = MouseDownActions.Create;
                 }
             }
-        } else if (current.value === Tool.Edit) {
-            ret = MouseDownActions.Create;
-        } else if (current.value === Tool.Select) {
-            ret = MouseDownActions.AreaSelect;
-            currentMouseStringHelper.value = "⃞";
+        } else if (
+            currentLeftHand.value === Tool.Select ||
+            current.value === Tool.Select
+        ) {
+            if (noteBeingHovered.value) {
+                if (selection.isEditNoteSelected(noteBeingHovered.value)) {
+                    ret = MouseDownActions.RemoveFromSelection;
+                    currentMouseStringHelper.value = "-";
+                } else {
+                    ret = MouseDownActions.AddToSelection;
+                    currentMouseStringHelper.value = "+";
+                }
+            } else {
+                ret = MouseDownActions.AreaSelect;
+                currentMouseStringHelper.value = "⃞";
+            }
+
         }
         return ret;
     }
@@ -138,6 +162,7 @@ export const useToolStore = defineStore("edit", () => {
     const _dragStartAction = (mouse: { x: number, y: number }) => {
         noteBeingDragged.value = noteBeingHovered.value;
         if (!noteBeingDragged.value) throw new Error('no noteBeingDragged');
+
         notesBeingDragged = selection.get();
         notesBeingDragged.forEach(editNote => {
             editNote.dragStart(mouse);
@@ -176,8 +201,9 @@ export const useToolStore = defineStore("edit", () => {
             x: e.clientX,
             y: e.clientY,
         }
+        console.log("mouse down, action name:", MouseDownActions[mouseAction]);
         switch (mouseAction) {
-            case MouseDownActions.AreaSelect:{
+            case MouseDownActions.AreaSelect: {
                 selection.clear();
                 const x = e.clientX;
                 const y = e.clientY;
@@ -195,9 +221,9 @@ export const useToolStore = defineStore("edit", () => {
             case MouseDownActions.AddToSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.add(noteBeingHovered.value);
-                _dragStartAction(mouse);
+                // _dragStartAction(mouse);
                 break;
-            case MouseDownActions.SetSelection:
+            case MouseDownActions.SetSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.select(noteBeingHovered.value);
                 _dragStartAction(mouse);
@@ -205,7 +231,7 @@ export const useToolStore = defineStore("edit", () => {
             case MouseDownActions.RemoveFromSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.remove(noteBeingHovered.value);
-                _dragStartAction(mouse);
+                // _dragStartAction(mouse);
                 break;
             case MouseDownActions.Move:
                 _dragStartAction(mouse);
@@ -224,13 +250,13 @@ export const useToolStore = defineStore("edit", () => {
         }
     }
 
-    const applyRangeSelection = useThrottleFn((e:MouseEvent) =>{
+    const applyRangeSelection = useThrottleFn((e: MouseEvent) => {
         if (selectRange.value.active) {
             const x = e.clientX;
             const y = e.clientY;
             selectRange.value.timeSize = view.pxToTimeWithOffset(x) - selectRange.value.timeStart;
             selectRange.value.octaveSize = view.pxToOctaveWithOffset(y) - selectRange.value.octaveStart;
-            
+
             const range = {
                 startTime: selectRange.value.timeStart,
                 endTime: selectRange.value.timeStart + selectRange.value.timeSize,
@@ -239,7 +265,7 @@ export const useToolStore = defineStore("edit", () => {
             }
             selection.selectRange(range);
         }
-    },25);
+    }, 25);
 
     const updateNoteThatWouldBeCreated = (mouse: { x: number, y: number }) => {
         const { x, y } = mouse;
@@ -288,7 +314,10 @@ export const useToolStore = defineStore("edit", () => {
         if (disallowTimeChange.value) {
             mouseDelta.x = 0;
         }
-        if (current.value === Tool.Select && selectRange.value.active) {
+        if ((
+            current.value === Tool.Select ||
+            currentLeftHand.value === Tool.Select
+        ) && selectRange.value.active) {
             applyRangeSelection(e);
 
         } else if (notesBeingCreated.value.length === 1) {
@@ -386,12 +415,12 @@ export const useToolStore = defineStore("edit", () => {
         if (noteBeingDraggedRightEdge.value) {
             noteBeingDraggedRightEdge.value = false;
         }
-        if(current.value === Tool.Select && selectRange.value.active){
+        if (selectRange.value.active) {
             const x = e.clientX;
             const y = e.clientY;
             selectRange.value.timeSize = view.pxToTime(x) - selectRange.value.timeStart;
             selectRange.value.octaveSize = view.pxToOctave(y) - selectRange.value.octaveStart;
-            
+
             // const range = {
             //     startTime: selectRange.value.timeStart,
             //     endTime: selectRange.value.timeStart + selectRange.value.timeSize,
@@ -427,7 +456,7 @@ export const useToolStore = defineStore("edit", () => {
         noteThatWouldBeCreated,
         currentMouseStringHelper,
 
-        current,
+        current, currentLeftHand,
         simplify,
         copyOnDrag,
         disallowOctaveChange,
