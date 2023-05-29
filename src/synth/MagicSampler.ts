@@ -45,7 +45,6 @@ class SamplerVoice {
     }
 
     private releaseVoice = () => {
-        console.log("v released");
         this.inUse = false;
     }
 

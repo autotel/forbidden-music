@@ -28,6 +28,7 @@ import CustomOctaveTableTextEditor from './components/CustomOctaveTableTextEdito
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { useLibraryStore } from './store/libraryStore';
 import { useUndoStore } from './store/undoStore';
+import MidiInputConfig from './components/MidiInputConfig.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -277,6 +278,7 @@ onUnmounted(() => {
             <LibraryManager />
             <SynthEdit />
             <SnapSelector />
+            <MidiInputConfig v-if="playback.midiInputs.length" />
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">

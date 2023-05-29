@@ -201,7 +201,6 @@ export const useToolStore = defineStore("edit", () => {
             x: e.clientX,
             y: e.clientY,
         }
-        console.log("mouse down, action name:", MouseDownActions[mouseAction]);
         switch (mouseAction) {
             case MouseDownActions.AreaSelect: {
                 selection.clear();
