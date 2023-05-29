@@ -104,10 +104,11 @@ export const usePlaybackStore = defineStore("playback", () => {
         const now = audioContext.currentTime;
         const deltaTime = now - previousClockTime.value;
         currentScoreTime.value += deltaTime * rate;
-        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value).filter(({ note }) => !note.mute);
+        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value)
 
 
         playNotes.forEach(({ note }) => {
+            if (note.mute) return;
             if (!synth.value) throw new Error("synth not created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = note.start - currentScoreTime.value;
@@ -123,13 +124,13 @@ export const usePlaybackStore = defineStore("playback", () => {
                         note.frequency,
                         noteDuration,
                         relativeNoteStart,
-                        0.7
+                        note.velocity
                     );
                 } else {
                     synth.value.triggerPerc(
                         note.frequency,
                         relativeNoteStart,
-                        0.7
+                        note.velocity
                     );
 
                 }

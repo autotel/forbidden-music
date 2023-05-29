@@ -15,6 +15,7 @@ export interface Note {
     /** end */
     end?: number | undefined,
     mute: boolean;
+    velocity: number;
     clone: () => Note,
 }
 
@@ -23,12 +24,14 @@ export interface NoteDefa {
     duration?: number,
     octave: number,
     mute?: boolean,
+    velocity?:number,
 }
 export interface NoteDefb {
     start: number,
     duration?: number,
     frequency: number,
     mute?: boolean,
+    velocity?:number,
 }
 
 export const frequencyConstant = 11;
@@ -41,6 +44,7 @@ export const makeNote = (noteDef: NoteDefa | NoteDefb): Note => {
         _frequency: null as number | null,
         selected: false,
         mute: noteDef.mute || false ,
+        velocity: noteDef.velocity || 0.7,
         clone() { return makeNote(this) },
         set end(value: number | undefined) {
             if (value === undefined) {

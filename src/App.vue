@@ -133,13 +133,13 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
 
     if (e.key === 'm') {
-        tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
+        if (e.ctrlKey) {
+            select.selectedNotes.forEach(eNote => eNote.note.mute = !eNote.note.mute);
+        } else {
+            tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
+        }
     }
 
-    // mute selected note
-    if (e.ctrlKey && e.key === 'm') {
-        select.selectedNotes.forEach(eNote => eNote.note.mute = !eNote.note.mute);
-    }
     // save
     if (e.ctrlKey && e.key === 's') {
         console.log("saved");
@@ -207,7 +207,6 @@ onMounted(() => {
     if (clickOutsideCatcher.value) {
         window.addEventListener('wheel', (e) => {
             if (e.target === clickOutsideCatcher.value) {
-                // not working :/
                 e.stopPropagation();
                 e.stopImmediatePropagation();
             }
@@ -224,19 +223,6 @@ onMounted(() => {
 
     mainInteraction.addEventListener(window, 'keydown', keyDownListener);
     mainInteraction.addEventListener(window, 'resize', resize);
-
-
-
-    // import score from cookie TODO: ???
-    const cookie = document.cookie;
-    const scoreCookie = cookie.split(';').find(c => c.startsWith('score='));
-    if (scoreCookie) {
-        const json = scoreCookie.split('=')[1];
-        project.score = JSON.parse(json).map((note: Note, index: number) => {
-            console.log("import note", index, ":", note);
-            return new EditNote(note as Note, view);
-        });
-    }
 
 })
 

@@ -111,9 +111,7 @@ export const useToolStore = defineStore("edit", () => {
     const whatWouldMouseDownDo = () => {
         let ret = MouseDownActions.None as MouseDownActions;
         currentMouseStringHelper.value = "";
-        if (current.value === Tool.Modulation) {
-            ret = MouseDownActions.DragVelocity;
-        } else if (
+        if (
             current.value === Tool.Select ||
             currentLeftHand.value === Tool.Select
         ) {
@@ -124,7 +122,7 @@ export const useToolStore = defineStore("edit", () => {
                 } else {
                     ret = MouseDownActions.AddToSelection;
                     currentMouseStringHelper.value = "+";
-                    if(current.value===Tool.Edit){
+                    if (current.value === Tool.Edit) {
                         ret = MouseDownActions.AddToSelectionAndDrag;
                     }
                 }
@@ -133,7 +131,17 @@ export const useToolStore = defineStore("edit", () => {
                 currentMouseStringHelper.value = "⃞";
             }
 
-        }else if (current.value === Tool.Edit) {
+        } else if (current.value === Tool.Modulation) {
+            if (noteBeingHovered.value) {
+                if (selection.isEditNoteSelected(noteBeingHovered.value)) {
+                    ret = MouseDownActions.DragVelocity;
+                } else {
+                    // thus far no distinction needed
+                    ret = MouseDownActions.SetSelectionAndDrag;
+                }
+            } 
+            currentMouseStringHelper.value = "⇅";
+        } else if (current.value === Tool.Edit) {
             if (noteRightEdgeBeingHovered.value) {
                 ret = MouseDownActions.Lengthen;
                 currentMouseStringHelper.value = "⟷";
@@ -207,6 +215,9 @@ export const useToolStore = defineStore("edit", () => {
 
                 break;
             }
+            case MouseDownActions.DragVelocity:
+                _dragStartAction(mouse);
+                break;
             case MouseDownActions.Lengthen:
                 _lengthenDragStartAction(mouse);
                 break;
@@ -314,7 +325,8 @@ export const useToolStore = defineStore("edit", () => {
             currentLeftHand.value === Tool.Select
         ) && selectRange.value.active) {
             applyRangeSelection(e);
-
+        } else if (isDragging && current.value === Tool.Modulation) {
+            notesBeingDragged.forEach((n)=>n.dragMoveVelocity(mouseDelta));
         } else if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
@@ -452,7 +464,8 @@ export const useToolStore = defineStore("edit", () => {
 
         selectRange,
 
-        notesBeingCreated: notesBeingCreated,
+        notesBeingCreated,
+        notesBeingDragged,
         noteBeingHovered,
     }
 })

@@ -75,6 +75,14 @@ export const useViewStore = defineStore("view", () => {
         const ioctave = viewHeightOctaves.value - octave;
         return ioctave >= octaveOffset.value && ioctave <= octaveOffset.value + viewHeightOctaves.value;
     };
+    const veloPXK = 4;
+    const velocityToPx = (velocity: number): number => {
+        return velocity * viewHeightPx.value / veloPXK;
+    };
+    const pxToVelocity = (px: number): number => {
+        return px * veloPXK / viewHeightPx.value;
+    };
+
     const updateSize = (width: number, height: number) => {
         viewWidthPx.value = width;
         viewHeightPx.value = height;
@@ -98,7 +106,8 @@ export const useViewStore = defineStore("view", () => {
         pxToOctaveWithOffset,
         octaveToPxWithOffset,
         frequencyToPxWithOffset,
-        
+        velocityToPx,
+        pxToVelocity,
         isOctaveInView,
 
         updateSize,
@@ -117,24 +126,4 @@ export const useViewStore = defineStore("view", () => {
     };
 });
 
-export interface View {
-    octaveOffset: number;
-    timeOffset: number;
-    centerFrequency: number;
-    viewWidthPx: number;
-    viewHeightPx: number;
-    viewWidthTime: number;
-    viewHeightOctaves: number;
-    scrollBound: number;
-    pxToBounds(px: number): number;
-    timeToBounds(time: number): number;
-    boundsToTime(bounds: number): number;
-    pxToTime(px: number): number;
-    timeToPx(time: number): number;
-    timeToPxWithOffset(time: number): number;
-    pxToTimeWithOffset(px: number): number;
-    pxToOctave(px: number): number;
-    octaveToPx(octave: number): number;
-    pxToOctaveWithOffset(px: number): number;
-    octaveToPxWithOffset(octave: number): number;
-}
+export type View = ReturnType<typeof useViewStore>;

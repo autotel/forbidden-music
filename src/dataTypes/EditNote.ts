@@ -4,7 +4,7 @@ import { View } from "../store/viewStore";
 import { makeNote, Note, NoteDefa, NoteDefb } from "./Note"
 
 const makeRandomString = () => Math.random().toString(36).slice(2);
-
+// TODO: memoize x, y ... rect ... etc
 export class EditNote {
     note: Note;
     selected: boolean = false;
@@ -47,7 +47,7 @@ export class EditNote {
         return {
             x: this.x + this.width - 5,
             y: this.y - this.height / 2,
-            width: this.selected? 10 : 5,
+            width: this.selected ? 10 : 5,
             height: this.height,
         }
     }
@@ -57,13 +57,14 @@ export class EditNote {
     dragMove: (dragDelta: { x: number, y: number }) => void;
     dragMoveOctaves: (octaveDelta: number) => void;
     dragMoveTimeStart: (dragDelta: number) => void;
-
+    dragMoveVelocity: (mouse: { x: number, y: number }) => void;
     dragLengthMove: (mouse: { x: number, y: number }) => void;
     dragEnd: (mouse: { x: number, y: number }) => void;
     dragCancel: () => void;
     dragStartedTime = 0;
     dragStartedOctave = 0;
     dragStartedDuration = 0;
+    dragStartedVelocity = 0;
     forceUpdate: () => void;
 
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
@@ -75,6 +76,7 @@ export class EditNote {
             this.dragStartedOctave = this.note.octave;
             this.dragStartedTime = this.note.start;
             this.dragStartedDuration = this.note.duration || 0;
+            this.dragStartedVelocity = this.note.velocity;
         }
         this.dragMove = (dragDelta: { x: number, y: number }) => {
             this.note.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
@@ -91,6 +93,12 @@ export class EditNote {
         }
         this.dragLengthMove = (dragDelta: { x: number, y: number }) => {
             this.note.duration = Math.max(this.dragStartedDuration + view.pxToTime(dragDelta.x), 0);
+            this.forceUpdate();
+        }
+        this.dragMoveVelocity = (dragDelta: { x: number, y: number }) => {
+            this.note.velocity = this.dragStartedVelocity + view.pxToVelocity(-dragDelta.y)
+            if (this.note.velocity < 0) this.note.velocity = 0;
+            if (this.note.velocity > 1) this.note.velocity = 1;
             this.forceUpdate();
         }
         this.forceUpdate = () => {
