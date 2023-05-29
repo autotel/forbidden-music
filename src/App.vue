@@ -95,6 +95,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     // delete selected notes
     if (e.key === 'Delete') {
         project.score = project.score.filter(note => !note.selected);
+        tool.noteBeingHovered = false;
         select.clear();
     }
     // alt activates tool copyOnDrag mode
