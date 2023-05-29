@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import { Tool } from '../dataTypes/Tool';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
-import { SawtoothSynth } from '../synth/SawtoothSynth';
 import Button from './Button.vue';
 
 const view = useViewStore();

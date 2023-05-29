@@ -2,9 +2,12 @@ import { frequencyToMidiNote } from '../functions/toneConverters';
 import { ParamType, SynthInstance, SynthParam, SynthParamsSetter } from './SynthInterface';
 
 
+//@ts-ignore
 const getMidiOutputsArray = (midiAccess: MIDIAccess) => {
+    //@ts-ignore
     const outputs = [] as MIDIOutput[];
-    midiAccess.outputs.forEach((output) => {
+    //@ts-ignore
+    midiAccess.outputs.forEach((output:MIDIOutput) => {
         outputs.push(output);
     });
     return outputs;
@@ -24,6 +27,7 @@ export class ExternalMidiSynth implements SynthInstance {
 
     }
     name = "External midi Synth";
+    //@ts-ignore
     midiOutputs: MIDIOutput[] = [];
     selectedMidiOutputIndex = 0;
 
@@ -66,12 +70,12 @@ export class ExternalMidiSynth implements SynthInstance {
     triggerAttackRelease = (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => {
         const midiOutput = this.midiOutputs[this.selectedMidiOutputIndex];
         // if note end is in the past, return and warn
-        if(relativeNoteStart + duration < 0) return console.warn("note end is in the past");
+        if (relativeNoteStart + duration < 0) return console.warn("note end is in the past");
 
         if (!midiOutput) return;
         const { note, cents } = frequencyToMidiNote(frequency);
         const channel = this.getChannelAssignation(note)
-        console.log("triggering note",{ note, cents, channel});
+        console.log("triggering note", { note, cents, channel });
         let channelNibble = channel & 0x0F;
         const midiVelocity = Math.floor(velocity * 127);
         const noteOnMessage = [0x90 | channelNibble, note, midiVelocity];
@@ -111,6 +115,7 @@ export class ExternalMidiSynth implements SynthInstance {
             displayName: "off",
             getter: () => [
                 "to activate, switch to a different instrument and then back",
+                "it might be possible that your browser doesn't support midi",
             ].join("\n")
 
         }] as SynthParam[];
@@ -150,7 +155,11 @@ export class ExternalMidiSynth implements SynthInstance {
     }
     set = (_p: SynthParamsSetter) => { }
     enable = () => {
+        //@ts-ignore
+        if (!navigator.requestMIDIAccess) return console.warn("no midi access possible");
         (async () => {
+
+            //@ts-ignore
             const midiAccess = await navigator.requestMIDIAccess();
             this.midiOutputs = getMidiOutputsArray(midiAccess);
             this.sendTestChord();

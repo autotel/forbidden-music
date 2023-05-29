@@ -1,4 +1,3 @@
-import { Synth } from "./Synth";
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
 import { SynthInstance } from "./SynthInterface";
 
