@@ -78,9 +78,6 @@ const reaperMidiInputHandler = (tick: () => void, play:()=>void, stop:()=>void, 
                 // midiLog("area started", d1, d2)
                 this.startAction();
                 return true;
-            case 0xFB:
-                // midiLog("looped with offset", d1, d2)
-                return true;
 
         }
         return false

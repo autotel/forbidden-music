@@ -32,12 +32,15 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
     const samples = readdir(path.join(samplesDir, samplePack));
 
     const readmesList = filterMap(samples, sample => {
-        if (!sample.match(/readme\.txt$/)) {
+        if (!sample.match(/_readme\.txt$/)) {
             return false;
         }
         const contents = require('fs').readFileSync(path.join(samplesDir, samplePack, sample), 'utf8');
         return contents;
     });
+
+    const exclusive = samples.includes("_exclusive")
+    const onlyLocal = samples.includes("_only_local")
 
     const samplesList = filterMap(samples, sample => {
         if (!sample.match(/[\d\.]+\.wav$/)) {
@@ -62,6 +65,8 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
     return {
         name: samplePack,
         isComplexSampler,
+        exclusive,
+        onlyLocal,
         samples: samplesList,
         readme: readmesList.join('\n'),
     };

@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
 import { usePlaybackStore } from '../store/playbackStore';
-import Link from "./icons/Link.vue";
+import Link from "../components/icons/Link.vue";
 
 const playback = usePlaybackStore();
 </script>

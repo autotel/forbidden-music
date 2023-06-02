@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { OptionSynthParam } from '../synth/SynthInterface';
+import { OptionSynthParam } from '../../synth/SynthInterface';
 
 const triangleLeft = '◀';
 const triangleRight = '▶';
@@ -25,7 +25,7 @@ enum UpOrDown {
 
 const applyValueDelta = (ud: UpOrDown) => {
     const paramOptions = props.param.options;
-    const currentOption = props.param.getter();
+    const currentOption = props.param.value;
     const delta = ud === UpOrDown.Up ? 1 : -1;
     let nextOption = currentOption + delta;
     if (nextOption < 0) {
@@ -35,7 +35,7 @@ const applyValueDelta = (ud: UpOrDown) => {
         nextOption = 0;
     }
 
-    props.param.setter(nextOption);
+    props.param.value = nextOption;
     currentValueName.value = paramOptions[nextOption].displayName;
 }
 
@@ -62,7 +62,8 @@ const mouseDown = (e: MouseEvent) => {
 }
 
 onMounted(() => {
-    currentValueName.value = props.param.options[props.param.getter()].displayName;
+    const selectedOption = props.param.value;
+    currentValueName.value = props.param.options[selectedOption].displayName;
 });
 
 

@@ -3,11 +3,11 @@ import { ref } from 'vue'
 import { Tool } from '../dataTypes/Tool';
 import { useSnapStore, SnapType } from '../store/snapStore';
 import { useToolStore } from '../store/toolStore';
-import Pen from './icons/Pen.vue';
-import Button from './Button.vue';
+import Pen from "../components/icons/Pen.vue";
+import Magnet from "../components/icons/Magnet.vue";
+import Button from '../components/Button.vue';
 import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
-import Magnet from "./icons/Magnet.vue";
 import { useMonoModeInteraction } from '../store/monoModeInteraction';
 const tool = useToolStore();
 const snap = useSnapStore();

@@ -1,5 +1,12 @@
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
-import { SynthInstance } from "./SynthInterface";
+import { SynthInstance, SynthParam } from "./SynthInterface";
+
+// It's really difficult to measure the filter cutoff, though possible.
+// maybe we can use this approach to comb filter instead of the worklet
+// https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
+// perhaps its even cheaper computationally and allow me more exploration
+
+
 
 interface KarplusStopVoiceMessage {
     stop: true;
@@ -83,11 +90,7 @@ export class KarplusSynth implements SynthInstance {
             ref: frequency.toFixed(4)
         } as KarplusStartVoiceMessage);
     };
-
-    getParams = () => [];
-    set = (params: any) => {
-
-    };
+    params = [] as SynthParam[];
     credits = "Karplus strong synth implementation by Autotel.";
 
 }

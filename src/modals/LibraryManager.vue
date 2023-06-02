@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useLibraryStore } from "../store/libraryStore";
 import { useProjectStore } from "../store/projectStore";
-import Button from "./Button.vue";
+import Button from "../components/Button.vue";
 import EdgeHidableWidget from "./EdgeHidableWidget.vue";
-import Folder from "./icons/Folder.vue";
+import Folder from "../components/icons/Folder.vue";
 const project = useProjectStore();
 const libraryStore = useLibraryStore();
 const clear = () => {

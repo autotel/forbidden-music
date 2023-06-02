@@ -6,11 +6,17 @@ import { ExternalMidiSynth } from '../synth/ExternalMidiSynth';
 import { FmSynth } from '../synth/FmSynth';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { MagicSampler } from '../synth/MagicSampler';
+import { FourierSynth } from '../synth/FourierSynth';
 import { SineSynth } from '../synth/SineSynth';
 import { OptionSynthParam, ParamType, SynthInstance, SynthParam } from "../synth/SynthInterface";
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
 import reaperMidiInputHandler from '../functions/reaperMidiInputHandler';
+import { useExclusiveContentsStore } from './exclusiveContentsStore';
+import isDev from '../functions/isDev';
+
+
+
 interface MidiConnectionMode {
     name: string;
     inputAction: (midi: number[], timeStamp?: number) => void;
@@ -36,6 +42,7 @@ const getMidiInputsArray = async () => {
 
 export const usePlaybackStore = defineStore("playback", () => {
 
+    const exclusives = useExclusiveContentsStore();
     const project = useProjectStore();
     // TODO: many of these need not to be refs nor be exported.
     const playing = ref(false);
@@ -75,13 +82,13 @@ export const usePlaybackStore = defineStore("playback", () => {
     const midiConectionModes = [
         reaperMidiInputHandler(
             clockTicker,
-            ()=>{
+            () => {
                 play();
             },
-            ()=>{
+            () => {
                 stop();
             },
-            (to)=>{
+            (to) => {
                 currentScoreTime.value = to;
             }
         )
@@ -96,17 +103,21 @@ export const usePlaybackStore = defineStore("playback", () => {
         alreadyStarted = true;
         await audioContext.resume();
         const samplers = [] as (MagicSampler | ComplexSampler)[];
+        const exclusiveSamplers = [] as (MagicSampler | ComplexSampler)[];
+        const localOnlySamplers = [] as (MagicSampler | ComplexSampler)[];
+
+
         sampleDefinitions.forEach((sampleDefinition) => {
+            const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
             if (sampleDefinition.isComplexSampler) {
-                samplers.push(new ComplexSampler(
+                arrayWhereToPush.push(new ComplexSampler(
                     audioContext,
                     sampleDefinition.samples,
                     "(CPX)" + sampleDefinition.name,
                     sampleDefinition.readme
                 ))
             } else {
-
-                samplers.push(new MagicSampler(
+                arrayWhereToPush.push(new MagicSampler(
                     audioContext,
                     sampleDefinition.samples,
                     sampleDefinition.name,
@@ -118,10 +129,25 @@ export const usePlaybackStore = defineStore("playback", () => {
         availableSynths.value = [
             new SineSynth(audioContext),
             new ExternalMidiSynth(audioContext),
-            new KarplusSynth(audioContext),
-            new FmSynth(audioContext),
             ...samplers
         ];
+
+        if (exclusives.enabled) {
+            availableSynths.value.push(...exclusiveSamplers);
+        } else {
+            console.log("exclusives disabled");
+        }
+        if (isDev()) {
+            // bc. unfinished
+            availableSynths.value.push(new KarplusSynth(audioContext));
+            availableSynths.value.push(new FmSynth(audioContext));
+            availableSynths.value.unshift(new FourierSynth(audioContext));
+            // bc. pirate
+            availableSynths.value.push(...localOnlySamplers);
+        } else {
+            console.log("local only samples disabled");
+        }
+        console.log("available synths", availableSynths.value.map(s => s.name));
         synth.value = availableSynths.value[0];
 
         console.log("audio is ready");
@@ -269,37 +295,34 @@ export const usePlaybackStore = defineStore("playback", () => {
     const synthParams = ref([] as SynthParam[]);
     watch([
         synth,
-        synth.value?.getParams(),
+        synth.value?.params,
     ], () => {
 
-        if (synth.value) {
-            synthParams.value = [
-                {
-                    type: ParamType.option,
-                    displayName: "Synth",
-                    getter: () => {
-                        const ret = synth.value ? availableSynths.value.indexOf(
-                            synth.value
-                        ) : 0;
-                        if (ret === -1) {
-                            console.error("synth not found");
-                            return 0;
-                        }
-                        return ret;
-                    },
-                    setter: (choiceNo: number) => {
-                        synth.value = availableSynths.value[choiceNo];
-                    },
-                    options: availableSynths.value.map((s, index) => ({
-                        value: index,
-                        displayName: s.name,
-                    })),
-                } as OptionSynthParam,
-                ...synth.value.getParams()
-            ];
-        } else {
-            synthParams.value = [];
-        }
+        synthParams.value = [
+            {
+                type: ParamType.option,
+                displayName: "Synth",
+                get value() {
+                    const ret = synth.value ? availableSynths.value.indexOf(
+                        synth.value
+                    ) : 0;
+                    if (ret === -1) {
+                        console.error("synth not found");
+                        return 0;
+                    }
+                    return ret;
+                },
+                set value(choiceNo: number) {
+                    synth.value = availableSynths.value[choiceNo];
+                },
+                options: availableSynths.value.map((s, index) => ({
+                    value: index,
+                    displayName: s.name,
+                })),
+            } as OptionSynthParam,
+            ...(synth.value?.params || [])
+        ];
+
     });
 
 

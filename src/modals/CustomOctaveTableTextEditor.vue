@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, watchEffect } from 'vue';
 import { useSnapStore } from '../store/snapStore';
-import Toggle from './inputs/Toggle.vue';
+import Toggle from '../components/inputs/Toggle.vue';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 
 const snap = useSnapStore();

@@ -2,11 +2,11 @@
 import { inject, reactive, Ref, ref, watch } from "vue";
 import { usePlaybackStore } from "../store/playbackStore";
 import { ParamType } from "../synth/SynthInterface";
-import Button from "./Button.vue";
+import Button from "../components/Button.vue";
 import EdgeHidableWidget from "./EdgeHidableWidget.vue";
-import PropOption from "./PropOption.vue";
-import PropSlider from './PropSlider.vue';
-import HeartPulse from "./icons/HeartPulse.vue";
+import PropOption from "../components/paramEditors/PropOption.vue";
+import PropSlider from '../components/paramEditors/PropSlider.vue';
+import HeartPulse from "../components/icons/HeartPulse.vue";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 const playback = usePlaybackStore();
 

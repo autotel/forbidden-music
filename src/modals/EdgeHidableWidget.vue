@@ -1,10 +1,10 @@
 <script setup lang="ts">
 
 import { computed, onMounted, ref, watchEffect } from "vue";
-import Button from "./Button.vue";
-import Lock from "./icons/Lock.vue";
-import LockOpen from "./icons/LockOpen.vue";
-import AnglesLeft from "./icons/AnglesLeft.vue";
+import Button from "../components/Button.vue";
+import Lock from "../components/icons/Lock.vue";
+import LockOpen from "../components/icons/LockOpen.vue";
+import AnglesLeft from "../components/icons/AnglesLeft.vue";
 const props = defineProps<{
     pulltip?: string,
     side?: "top" | "bottom" | "left" | "right",

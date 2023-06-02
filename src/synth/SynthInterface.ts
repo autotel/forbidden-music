@@ -1,6 +1,3 @@
-export interface SynthParamsSetter {
-    [key: string]: number | boolean | string;
-}
 
 export interface SynthInstance {
     name: any;
@@ -16,12 +13,11 @@ export interface SynthInstance {
         velocity: number
     ) => void;
     releaseAll: () => void;
-    getParams: () => SynthParam[]
-    set: (params: SynthParamsSetter) => void;
+    params: SynthParam[];
     enable: () => void;
     disable: () => void;
     credits?: string;
-    
+
 }
 
 export enum ParamType {
@@ -29,41 +25,58 @@ export enum ParamType {
     boolean = "boolean",
     option = "option",
     infoText = "info text",
+    FT = "FT",
 }
 
-export interface NumberSynthParam {
+type SynthParamBasic <T> = {
+    displayName: string;
+    type: ParamType;
+    value: T;
+    [key: string]: any;
+}
+
+export interface NumberSynthParam extends SynthParamBasic<number> {
     type: ParamType.number;
-    getter: () => number;
-    setter: (n: number) => void;
+    value: number;
     displayName: string;
     min: number
     max: number
 }
 
-export interface BooleanSynthParam {
+export interface BooleanSynthParam extends SynthParamBasic<boolean> {
     type: ParamType.boolean;
-    getter: () => boolean;
-    setter: (b: boolean) => void;
+    value: boolean;
     displayName: string;
 }
 
-interface OptionOption {
-    value: string | number;
-    displayName: string;
-}
-
-export interface OptionSynthParam {
+export interface OptionSynthParam extends SynthParamBasic<number> {
     type: ParamType.option;
-    getter: () => number;
-    setter: (optionIndex: number) => void;
-    options: OptionOption[]
+    /** choice number */
+    value: number;
+    options: {
+        value: string | number;
+        displayName: string;
+    }[]
     displayName: string;
 }
 
-export interface InfoTextSynthParam {
+export interface InfoTextSynthParam extends SynthParamBasic<string> {
     type: ParamType.infoText;
-    getter: () => string;
+    value: string;
     displayName: string;
 }
 
-export type SynthParam = NumberSynthParam | BooleanSynthParam | OptionSynthParam | InfoTextSynthParam ;
+export interface FTSynthParam extends SynthParamBasic<[[][]]> {
+    type: ParamType.FT;
+    value: [[][]];
+    displayName: string;
+}
+
+
+export type SynthParam =
+    NumberSynthParam |
+    BooleanSynthParam |
+    OptionSynthParam |
+    InfoTextSynthParam |
+    FTSynthParam;
+

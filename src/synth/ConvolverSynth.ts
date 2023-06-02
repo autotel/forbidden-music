@@ -1,14 +1,29 @@
 import { SynthInstance, SynthParam } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 
-class SineVoice {
+type SimpleRef<T> = {
+    value: T;
+}
+type NullableRef<T> = {
+    value: T | null;
+}
+
+// implement https://itnext.io/convolution-reverb-and-web-audio-api-8ee65108f4ae
+// and make the buffer either syntesized from periodic table, or from sample
+// the important bit is that the convolution gets pitch-shifted, and that the
+// user can choose the impulse's timbre and envelope 
+// convolution gain should also be adjustable as a way of physical model param.
+// (no envelope to response's gain)
+
+class ConvolverVoice {
     inUse: boolean = false;
     triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
     stop: () => void;
     outputNode: any;
-    constructor(audioContext: AudioContext) {
+    constructor(audioContext: AudioContext, periodicWaveRef: SimpleRef<PeriodicWave>) {
         const oscillator = audioContext.createOscillator();
+        oscillator.setPeriodicWave(periodicWaveRef.value);
         const gainNode = audioContext.createGain();
         this.outputNode = gainNode;
         oscillator.connect(gainNode);
@@ -63,12 +78,16 @@ class SineVoice {
 }
 
 
-export class SineSynth implements SynthInstance {
+export class ConvolverSynth implements SynthInstance {
     private audioContext: AudioContext;
-    private voices: SineVoice[] = [];
+    private voices: 
+ConvolverVoice[] = [];
     private outputNode?: GainNode;
+    periodicWaveRef: NullableRef<PeriodicWave> = {
+        value: null
+    }
     credits: string = "";
-    name: string = "sine";
+    name: string = "fourier";
     enable: () => void;
     disable: () => void;
     constructor(
@@ -92,8 +111,8 @@ export class SineSynth implements SynthInstance {
             maximizer.connect(audioContext.destination);
         })()
 
-        this.enable = () => {}
-        this.disable = () => {}
+        this.enable = () => { }
+        this.disable = () => { }
 
     }
     triggerAttackRelease = (
@@ -102,12 +121,15 @@ export class SineSynth implements SynthInstance {
         relativeNoteStart: number,
         velocity: number
     ) => {
+        if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
+        const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
         if (!voice) {
             const voiceIndex = this.voices.length;
-            this.voices.push(new SineVoice(this.audioContext));
+            this.voices.push(new 
+            ConvolverVoice(this.audioContext, periodicWaveRef));
             voice = this.voices[voiceIndex];
             console.log("polyphony increased to", this.voices.length);
             voice.outputNode.connect(this.outputNode);
@@ -116,12 +138,15 @@ export class SineSynth implements SynthInstance {
         voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
     };
     triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+        if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
+        const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
         if (!voice) {
             const voiceIndex = this.voices.length;
-            this.voices.push(new SineVoice(this.audioContext));
+            this.voices.push(new 
+            ConvolverVoice(this.audioContext, periodicWaveRef));
             voice = this.voices[voiceIndex];
             console.log("polyphony increased to", this.voices.length);
             voice.outputNode.connect(this.outputNode);
@@ -135,5 +160,6 @@ export class SineSynth implements SynthInstance {
             voice.stop();
         });
     }
+    
     params = [] as SynthParam[];
 }

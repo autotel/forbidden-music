@@ -1,4 +1,4 @@
-import { SynthInstance } from "./SynthInterface";
+import { SynthInstance, SynthParam } from "./SynthInterface";
 
 interface SampleFileDefinition {
     name: string;
@@ -273,19 +273,11 @@ export class ComplexSampler implements SynthInstance {
             sampleVoice.stop();
         });
     }
-    set = (params: any) => {
-        // do nothing
-    }
-    get = () => {
-        return {};
-    }
     connect = (destination: AudioNode) => {
         this.outputNode.connect(destination);
     }
     disconnect = () => {
         this.outputNode.disconnect();
     }
-    getParams = () => {
-        return [];
-    }
+    params = [] as SynthParam[];
 }

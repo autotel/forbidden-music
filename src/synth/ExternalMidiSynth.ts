@@ -1,5 +1,5 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
-import { ParamType, SynthInstance, SynthParam, SynthParamsSetter } from './SynthInterface';
+import { ParamType, SynthInstance, SynthParam, OptionSynthParam } from './SynthInterface';
 
 
 //@ts-ignore
@@ -7,7 +7,7 @@ const getMidiOutputsArray = (midiAccess: MIDIAccess) => {
     //@ts-ignore
     const outputs = [] as MIDIOutput[];
     //@ts-ignore
-    midiAccess.outputs.forEach((output:MIDIOutput) => {
+    midiAccess.outputs.forEach((output: MIDIOutput) => {
         outputs.push(output);
     });
     return outputs;
@@ -21,6 +21,7 @@ type HeldChannel = {
     note: number;
     identifier: any;
 }
+
 export class ExternalMidiSynth implements SynthInstance {
     constructor(audioContext: AudioContext) {
 
@@ -108,24 +109,37 @@ export class ExternalMidiSynth implements SynthInstance {
             this.usedChannels[channel] = false;
         });
     };
-    getParams = () => {
-        console.log("getParams", this.midiOutputs.length);
-        if (!this.midiOutputs.length) return [{
+    updateParams = () => {
+
+        console.log("update params", this.midiOutputs.length);
+
+        if (!this.midiOutputs.length) this.params = [{
             type: ParamType.infoText,
             displayName: "off",
-            getter: () => [
+            value: ([
                 "to activate, switch to a different instrument and then back",
                 "it might be possible that your browser doesn't support midi",
-            ].join("\n")
-
+            ].join("\n"))
+        }, {
+            type: ParamType.boolean,
+            displayName: "enable",
+            getter: () => false,
+            setter: (n: boolean) => {
+                if (n) {
+                    this.enable(() => {
+                        this.updateParams();
+                    });
+                }
+            },
         }] as SynthParam[];
 
         return [{
             type: ParamType.option,
-            getter: () => {
+            selectedMidiOutputIndex: 0,
+            get value() {
                 return this.selectedMidiOutputIndex;
             },
-            setter: (n: number) => {
+            set value(n: number) {
                 this.selectedMidiOutputIndex = n;
                 this.sendTestChord();
             },
@@ -139,7 +153,7 @@ export class ExternalMidiSynth implements SynthInstance {
         }, {
             type: ParamType.infoText,
             displayName: "notes",
-            getter: () => [
+            value: [
                 "notes:",
                 "1. this midi interface doesn't use MPE, but it sends each",
                 "\t voice to a different channel, so that each can have their",
@@ -153,8 +167,8 @@ export class ExternalMidiSynth implements SynthInstance {
             ].join("\n")
         }] as SynthParam[];
     }
-    set = (_p: SynthParamsSetter) => { }
-    enable = () => {
+    params = [] as SynthParam[];
+    enable = (callback?: () => void) => {
         //@ts-ignore
         if (!navigator.requestMIDIAccess) return console.warn("no midi access possible");
         (async () => {
@@ -163,6 +177,7 @@ export class ExternalMidiSynth implements SynthInstance {
             const midiAccess = await navigator.requestMIDIAccess();
             this.midiOutputs = getMidiOutputsArray(midiAccess);
             this.sendTestChord();
+            if (callback) callback();
         })();
     }
     disable = () => { };

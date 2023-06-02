@@ -1,13 +1,42 @@
 import { SynthInstance, SynthParam } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 
-class SineVoice {
+const subharmonics = 4;
+const frequencyMultiplier = 1
+const defaultPericWaveContents = () => {
+
+    const harmonics = 8;
+    const real = []
+    const imaginary = []
+    for (let i = 0; i < harmonics; i++) {
+        real.push(0);
+        imaginary.push(0);
+    }
+    /*
+    lol, I spent so long calculationg transposition correspoinding to subharmonics, 
+    and not getting it to work. 
+    it turns out that web audio api centers it around the highest value 
+    */
+    real[subharmonics] = 1;
+    return [real, imaginary] as number[][];
+}
+
+
+
+type SimpleRef<T> = {
+    value: T;
+}
+type NullableRef<T> = {
+    value: T | null;
+}
+
+class FourierVoice {
     inUse: boolean = false;
     triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
     stop: () => void;
     outputNode: any;
-    constructor(audioContext: AudioContext) {
+    constructor(audioContext: AudioContext, periodicWaveRef: SimpleRef<PeriodicWave>) {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         this.outputNode = gainNode;
@@ -32,7 +61,7 @@ class SineVoice {
             gainNode.gain.value = 0;
             gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + duration / 4);
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
-            oscillator.frequency.value = frequency;
+            oscillator.frequency.value = frequency * frequencyMultiplier;
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
             setTimeout(() => {
                 releaseVoice();
@@ -48,7 +77,7 @@ class SineVoice {
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.value = velocity;
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
-            oscillator.frequency.value = frequency;
+            oscillator.frequency.value = frequency * frequencyMultiplier;
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
             setTimeout(() => {
                 releaseVoice();
@@ -63,13 +92,21 @@ class SineVoice {
 }
 
 
-export class SineSynth implements SynthInstance {
+export class FourierSynth implements SynthInstance {
     private audioContext: AudioContext;
-    private voices: SineVoice[] = [];
+    private voices: FourierVoice[] = [];
     private outputNode?: GainNode;
+    periodicWaveRef: NullableRef<PeriodicWave> = {
+        value: null
+    }
+
+    periodicWaveContents = defaultPericWaveContents();
+
     credits: string = "";
-    name: string = "sine";
-    enable: () => void;
+    name: string = "fourier";
+    enable = () => {
+        this.updatePeriodicWave();
+    }
     disable: () => void;
     constructor(
         audioContext: AudioContext,
@@ -92,9 +129,24 @@ export class SineSynth implements SynthInstance {
             maximizer.connect(audioContext.destination);
         })()
 
-        this.enable = () => {}
-        this.disable = () => {}
+        this.enable = () => { }
+        this.disable = () => { }
 
+        this.periodicWaveRef = {
+            value: audioContext.createPeriodicWave(
+                new Float32Array(this.periodicWaveContents[0]),
+                new Float32Array(this.periodicWaveContents[1])
+            )
+        }
+
+    }
+    updatePeriodicWave = () => {
+        if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
+        const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
+        periodicWaveRef.value = this.audioContext.createPeriodicWave(
+            new Float32Array(this.periodicWaveContents[0]),
+            new Float32Array(this.periodicWaveContents[1])
+        );
     }
     triggerAttackRelease = (
         frequency: number,
@@ -102,12 +154,14 @@ export class SineSynth implements SynthInstance {
         relativeNoteStart: number,
         velocity: number
     ) => {
+        if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
+        const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
         if (!voice) {
             const voiceIndex = this.voices.length;
-            this.voices.push(new SineVoice(this.audioContext));
+            this.voices.push(new FourierVoice(this.audioContext, periodicWaveRef));
             voice = this.voices[voiceIndex];
             console.log("polyphony increased to", this.voices.length);
             voice.outputNode.connect(this.outputNode);
@@ -116,12 +170,14 @@ export class SineSynth implements SynthInstance {
         voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
     };
     triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+        if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
+        const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
         if (!voice) {
             const voiceIndex = this.voices.length;
-            this.voices.push(new SineVoice(this.audioContext));
+            this.voices.push(new FourierVoice(this.audioContext, periodicWaveRef));
             voice = this.voices[voiceIndex];
             console.log("polyphony increased to", this.voices.length);
             voice.outputNode.connect(this.outputNode);
@@ -136,4 +192,8 @@ export class SineSynth implements SynthInstance {
         });
     }
     params = [] as SynthParam[];
+}
+
+interface FourierSynthParamSetter {
+    periodicWave: number[][];
 }

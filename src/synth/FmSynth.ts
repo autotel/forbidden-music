@@ -1,6 +1,7 @@
 import { createFmWorklet } from '../functions/fmWorkletFactory';
 import { baseFrequency, frequencyToMidiNote, frequencyToNote12, frequencyToOctave } from '../functions/toneConverters';
-import { SynthInstance } from "./SynthInterface";
+import { SynthInstance, SynthParam } from "./SynthInterface";
+
 
 interface FmStopVoiceMessage {
     stop: true;
@@ -29,13 +30,13 @@ export class FmSynth implements SynthInstance {
     private audioContext?: AudioContext;
     gainNode?: GainNode;
     engine?: AudioWorkletNode;
-    enable:()=>void
-    disable:()=>void
+    enable: () => void
+    disable: () => void
     constructor(audioContext: AudioContext) {
         this.setAudioContext(audioContext);
         // TODO... or not
-        this.enable = () => {}
-        this.disable = () => {}
+        this.enable = () => { }
+        this.disable = () => { }
     }
 
 
@@ -66,7 +67,7 @@ export class FmSynth implements SynthInstance {
         if (!this.engine) throw new Error("engine not created");
         // const startTime = this.audioContext.currentTime + relativeNoteStart;
         const note = frequencyToNote12(frequency);
-        console.log("trig note",note);
+        console.log("trig note", note);
         // TODO: maybe use frequency directly, would need to edit the worklet
         this.engine.port.postMessage({
             noteOn: {
@@ -86,10 +87,8 @@ export class FmSynth implements SynthInstance {
         this.triggerAttackRelease(frequency, 0.7, relativeNoteStart, velocity);
     };
 
-    getParams = () => [];
-    set = (params: any) => {
 
-    };
+    params = [] as SynthParam[];
     credits = `
     Worklet from https://github.com/kazssym/web-fm-sound
 

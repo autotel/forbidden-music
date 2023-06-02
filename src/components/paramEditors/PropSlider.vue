@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
-import { NumberSynthParam } from '../synth/SynthInterface';
+import { NumberSynthParam } from '../../synth/SynthInterface';
 
 const props = defineProps({
     param: {
@@ -47,7 +47,7 @@ const mouseDrag = (e: MouseEvent) => {
         val = props.param.min;
     }
     currentValue.value = val;
-    props.param.setter(val);
+    props.param.value = val;
 }
 const windowMouseMove = (e: MouseEvent) => {
     if (!dragging.value) return;
@@ -69,7 +69,7 @@ const mouseUp = (e: MouseEvent) => {
     dragging.value = false;
 }
 onMounted(() => {
-    currentValue.value = props.param.getter();
+    currentValue.value = props.param.value;
     const $valueDraggable = valueDraggable.value;
     if (!$valueDraggable) throw new Error("valueDraggable ref is " + valueDraggable.value);
     $valueDraggable.addEventListener('mousedown', mouseDown);
