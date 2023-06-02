@@ -23,6 +23,7 @@ const getMidiInputsArray = async () => {
     const midiAccess = await navigator.requestMIDIAccess();
     //@ts-ignore
     const inputs = [] as MIDIInput[];
+    //@ts-ignore
     midiAccess.inputs.forEach((input) => {
         inputs.push(input);
     });
@@ -60,6 +61,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
     const availableSynths = ref([] as SynthInstance[]);
+    //@ts-ignore
     const midiInputs = ref([] as MIDIInput[]);
 
     const clockTicker = () => {
@@ -137,6 +139,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     // otherwise, wait for interaction
     window.addEventListener("mousedown", startContextListener);
 
+    //@ts-ignore
     const currentMidiInput = ref<MIDIInput | null>(null);
 
     getMidiInputsArray().then((inputs) => {
