@@ -25,7 +25,7 @@ export enum ParamType {
     boolean = "boolean",
     option = "option",
     infoText = "info text",
-    FT = "FT",
+    nArray = "nArray",
 }
 
 type SynthParamBasic <T> = {
@@ -66,10 +66,12 @@ export interface InfoTextSynthParam extends SynthParamBasic<string> {
     displayName: string;
 }
 
-export interface FTSynthParam extends SynthParamBasic<[[][]]> {
-    type: ParamType.FT;
-    value: [[][]];
+export interface ArraySynthParam extends SynthParamBasic<number[]> {
+    type: ParamType.nArray;
+    value: number[];
     displayName: string;
+    min: number
+    max: number
 }
 
 
@@ -78,5 +80,5 @@ export type SynthParam =
     BooleanSynthParam |
     OptionSynthParam |
     InfoTextSynthParam |
-    FTSynthParam;
+    ArraySynthParam;
 

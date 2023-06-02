@@ -1,5 +1,6 @@
 import { SynthInstance, SynthParam } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
+import { useThrottleFn } from "@vueuse/core";
 
 const subharmonics = 4;
 const frequencyMultiplier = 1
@@ -36,13 +37,14 @@ class FourierVoice {
     triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
     stop: () => void;
     outputNode: any;
+    periodicWaveRef: SimpleRef<PeriodicWave>;
     constructor(audioContext: AudioContext, periodicWaveRef: SimpleRef<PeriodicWave>) {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         this.outputNode = gainNode;
         oscillator.connect(gainNode);
         oscillator.start();
-
+        this.periodicWaveRef = periodicWaveRef;
         const releaseVoice = () => {
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.value = 0;
@@ -62,6 +64,7 @@ class FourierVoice {
             gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + duration / 4);
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
             oscillator.frequency.value = frequency * frequencyMultiplier;
+            oscillator.setPeriodicWave(this.periodicWaveRef.value);
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
             setTimeout(() => {
                 releaseVoice();
@@ -78,6 +81,7 @@ class FourierVoice {
             gainNode.gain.value = velocity;
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
             oscillator.frequency.value = frequency * frequencyMultiplier;
+            oscillator.setPeriodicWave(this.periodicWaveRef.value);
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
             setTimeout(() => {
                 releaseVoice();
@@ -99,7 +103,7 @@ export class FourierSynth implements SynthInstance {
     periodicWaveRef: NullableRef<PeriodicWave> = {
         value: null
     }
-
+    params: SynthParam[];
     periodicWaveContents = defaultPericWaveContents();
 
     credits: string = "";
@@ -139,15 +143,43 @@ export class FourierSynth implements SynthInstance {
             )
         }
 
+
+
+        const parent = this;
+        this.params = [{
+            displayName: "levels",
+            type: "nArray",
+            min: -1,
+            max: 1,
+            set value(value: number[]) {
+                parent.periodicWaveContents[0] = value;
+                parent.updatePeriodicWave();
+            },
+            get value() {
+                return parent.periodicWaveContents[0];
+            }
+        }, {
+            displayName: "phases",
+            type: "nArray",
+            set value(value: number[]) {
+                parent.periodicWaveContents[1] = value;
+                parent.updatePeriodicWave();
+            },
+            get value() {
+                return parent.periodicWaveContents[1];
+            }
+        }] as SynthParam[];
+
     }
-    updatePeriodicWave = () => {
+    updatePeriodicWave = useThrottleFn(() => {
         if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
         const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
         periodicWaveRef.value = this.audioContext.createPeriodicWave(
             new Float32Array(this.periodicWaveContents[0]),
             new Float32Array(this.periodicWaveContents[1])
         );
-    }
+        console.log("periodic wave updated");
+    }, 4)
     triggerAttackRelease = (
         frequency: number,
         duration: number,
@@ -191,7 +223,6 @@ export class FourierSynth implements SynthInstance {
             voice.stop();
         });
     }
-    params = [] as SynthParam[];
 }
 
 interface FourierSynthParamSetter {

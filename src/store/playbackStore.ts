@@ -293,12 +293,8 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     const synthParams = ref([] as SynthParam[]);
-    watch([
-        synth,
-        synth.value?.params,
-    ], () => {
-
-        synthParams.value = [
+    watch(() => synth.value?.params, () => {
+        const val = [
             {
                 type: ParamType.option,
                 displayName: "Synth",
@@ -319,10 +315,11 @@ export const usePlaybackStore = defineStore("playback", () => {
                     value: index,
                     displayName: s.name,
                 })),
-            } as OptionSynthParam,
-            ...(synth.value?.params || [])
-        ];
-
+            },
+        ] as SynthParam[];
+        if (synth.value?.params) val.push(...synth.value.params);
+        synthParams.value = val;
+        console.log("params", synth.value);
     });
 
 

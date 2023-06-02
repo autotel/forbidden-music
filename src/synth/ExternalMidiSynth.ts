@@ -24,7 +24,7 @@ type HeldChannel = {
 
 export class ExternalMidiSynth implements SynthInstance {
     constructor(audioContext: AudioContext) {
-
+        this.updateParams();
 
     }
     name = "External midi Synth";
@@ -110,30 +110,34 @@ export class ExternalMidiSynth implements SynthInstance {
         });
     };
     updateParams = () => {
-
+        const parent = this;
+        const activate = () => {
+            this.enable();
+        }
         console.log("update params", this.midiOutputs.length);
 
-        if (!this.midiOutputs.length) this.params = [{
-            type: ParamType.infoText,
-            displayName: "off",
-            value: ([
-                "to activate, switch to a different instrument and then back",
-                "it might be possible that your browser doesn't support midi",
-            ].join("\n"))
-        }, {
-            type: ParamType.boolean,
-            displayName: "enable",
-            getter: () => false,
-            setter: (n: boolean) => {
-                if (n) {
-                    this.enable(() => {
-                        this.updateParams();
-                    });
-                }
-            },
-        }] as SynthParam[];
+        if (!this.midiOutputs.length) {
+            this.params = [{
+                type: ParamType.infoText,
+                displayName: "off",
+                get value() {
+                    activate()
+                    return [
+                        "to activate, switch to a different instrument and then back",
+                        "it might be possible that your browser doesn't support midi",
+                    ].join("\n")
+                },
+            }, {
+                type: ParamType.boolean,
+                displayName: "enable",
+                get value() { return false },
+                set value(n: boolean) {
+                    activate();
+                },
+            }] as SynthParam[];
+        }
 
-        return [{
+        this.params = [{
             type: ParamType.option,
             selectedMidiOutputIndex: 0,
             get value() {
@@ -168,7 +172,7 @@ export class ExternalMidiSynth implements SynthInstance {
         }] as SynthParam[];
     }
     params = [] as SynthParam[];
-    enable = (callback?: () => void) => {
+    enable = () => {
         //@ts-ignore
         if (!navigator.requestMIDIAccess) return console.warn("no midi access possible");
         (async () => {
@@ -177,7 +181,8 @@ export class ExternalMidiSynth implements SynthInstance {
             const midiAccess = await navigator.requestMIDIAccess();
             this.midiOutputs = getMidiOutputsArray(midiAccess);
             this.sendTestChord();
-            if (callback) callback();
+
+            this.updateParams();
         })();
     }
     disable = () => { };

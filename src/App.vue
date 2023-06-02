@@ -283,7 +283,6 @@ onUnmounted(() => {
         <CustomOctaveTableTextEditor />
     </Modal>
 </template>
-
 <style scoped>
 .drawers-container {
     /* position: fixed; */
@@ -339,8 +338,11 @@ g#notes-being-created rect.body {
     fill: transparent;
 }
 
-text,
-t {
+</style>
+
+
+<style>
+* {
     user-select: none;
 }
 </style>

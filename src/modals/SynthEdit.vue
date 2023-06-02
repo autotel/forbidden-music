@@ -8,6 +8,8 @@ import PropOption from "../components/paramEditors/PropOption.vue";
 import PropSlider from '../components/paramEditors/PropSlider.vue';
 import HeartPulse from "../components/icons/HeartPulse.vue";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
+import NumberArrayEditor from "../components/paramEditors/NumberArrayEditor.vue";
+import { onMounted } from "vue";
 const playback = usePlaybackStore();
 
 const infoTextModal = inject<Ref<string>>('modalText');
@@ -25,6 +27,9 @@ const showInfo = (info: string) => {
     infoTextModal.value = info;
     monoModeInteraction.activate("credits modal");
 }
+onMounted(()=>{
+    console.log('mounted synth edit', playback.synthParams);
+})
 </script>
 <template>
     <EdgeHidableWidget id="synthParamsWindow">
@@ -42,8 +47,9 @@ const showInfo = (info: string) => {
                     <template v-for="param in playback.synthParams">
                         <PropOption v-if="param.type === ParamType.option" :param="param" />
                         <PropSlider v-if="param.type === ParamType.number" :param="param" />
+                        <NumberArrayEditor v-if="param.type === ParamType.nArray" :param="param" />
                         <Button v-if="param.type === ParamType.infoText"
-                            :on-click="()=>showInfo(param.getter())">{{ param.displayName }}</Button>
+                            :on-click="()=>showInfo(param.value)">{{ param.displayName }}</Button>
                     </template>
                 </div>
             </Suspense>

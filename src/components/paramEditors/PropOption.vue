@@ -63,7 +63,7 @@ const mouseDown = (e: MouseEvent) => {
 
 onMounted(() => {
     const selectedOption = props.param.value;
-    currentValueName.value = props.param.options[selectedOption].displayName;
+    currentValueName.value = props.param.options[selectedOption]?.displayName;
 });
 
 
