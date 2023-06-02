@@ -86,7 +86,7 @@ const mouseUp = (e: MouseEvent) => {
                     }"></div>
                 </div>
             </template>
-            <span style="{position: absolute; z-index: 2;}">
+            <span class="text" style="{position: absolute; display:block; z-index: 2; height:100%}">
                 {{ modelValue.toFixed(2) }}
             </span>
         </div>
@@ -133,8 +133,12 @@ const mouseUp = (e: MouseEvent) => {
 }
 .number-knob-container.vertical>* {
     transform-origin: center;
-    transform: rotate(90deg);
+    transform: rotate(-90deg);
     width: 3em;
     height: 2em;
+}
+.number-knob-container.vertical .text {
+    transform-origin: center;
+    transform: rotate(180deg);
 }
 </style>

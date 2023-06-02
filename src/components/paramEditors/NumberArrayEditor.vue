@@ -14,8 +14,11 @@ const emit = defineEmits({
 const liveArray = ref(props.param.value);
 
 watch(liveArray, () => {
-    console.log("changed local")
     props.param.value = liveArray.value;
+});
+
+watch(props.param, () => {
+    liveArray.value = props.param.value;
 });
 
 const update = (val:number, i: number) => {
@@ -28,15 +31,17 @@ const update = (val:number, i: number) => {
 <template>
     <div class="vals-container">
         {{ props.param.displayName }}
-        <NumberKnob
-            v-for="(val, i) in liveArray"
-            :key="i"
-            :value="val"
-            :min="props.param.min"
-            :max="props.param.max"
-            :model-value="liveArray[i]"
-            @update:modelValue="update($event, i)"
-            vertical
-        ></NumberKnob>
+        <div style="width:100%">
+            <NumberKnob
+                v-for="(val, i) in liveArray"
+                :key="i"
+                :value="val"
+                :min="props.param.min"
+                :max="props.param.max"
+                :model-value="liveArray[i]"
+                @update:modelValue="update($event, i)"
+                vertical
+            ></NumberKnob>
+        </div>
     </div>
 </template>

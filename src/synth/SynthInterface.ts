@@ -28,14 +28,19 @@ export enum ParamType {
     nArray = "nArray",
 }
 
-type SynthParamBasic <T> = {
+export type SynthParamStored = {
+    displayName: string;
+    value: any;
+}
+
+export type SynthParamMinimum <T> = {
     displayName: string;
     type: ParamType;
     value: T;
     [key: string]: any;
 }
 
-export interface NumberSynthParam extends SynthParamBasic<number> {
+export interface NumberSynthParam extends SynthParamMinimum<number> {
     type: ParamType.number;
     value: number;
     displayName: string;
@@ -43,13 +48,13 @@ export interface NumberSynthParam extends SynthParamBasic<number> {
     max: number
 }
 
-export interface BooleanSynthParam extends SynthParamBasic<boolean> {
+export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
     type: ParamType.boolean;
     value: boolean;
     displayName: string;
 }
 
-export interface OptionSynthParam extends SynthParamBasic<number> {
+export interface OptionSynthParam extends SynthParamMinimum<number> {
     type: ParamType.option;
     /** choice number */
     value: number;
@@ -60,13 +65,13 @@ export interface OptionSynthParam extends SynthParamBasic<number> {
     displayName: string;
 }
 
-export interface InfoTextSynthParam extends SynthParamBasic<string> {
+export interface InfoTextSynthParam extends SynthParamMinimum<string> {
     type: ParamType.infoText;
     value: string;
     displayName: string;
 }
 
-export interface ArraySynthParam extends SynthParamBasic<number[]> {
+export interface ArraySynthParam extends SynthParamMinimum<number[]> {
     type: ParamType.nArray;
     value: number[];
     displayName: string;

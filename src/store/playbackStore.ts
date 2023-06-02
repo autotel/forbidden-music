@@ -278,7 +278,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = false;
     }
 
-    const setSynthByName = (synthName: string) => {
+    const setSynthByName = (synthName: string) => new Promise<SynthInstance>((resolve, reject) => {
         const foundSynth = availableSynths.value.find((s) => s.name === synthName);
         if (foundSynth) {
             // change synth but with workaround 
@@ -286,11 +286,13 @@ export const usePlaybackStore = defineStore("playback", () => {
             synth.value = undefined;
             setTimeout(() => {
                 synth.value = foundSynth;
+                resolve(foundSynth);
             }, 0);
         } else {
             console.error("synth not found", synthName);
+            reject();
         }
-    }
+    })
 
     const synthParams = ref([] as SynthParam[]);
     watch(() => synth.value?.params, () => {

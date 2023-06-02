@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
 import { Note, makeNote } from '../dataTypes/Note.js';
-import { SynthParam } from '../synth/SynthInterface.js';
+import { SynthParam, SynthParamMinimum, SynthParamStored } from '../synth/SynthInterface.js';
 import { useProjectStore } from './projectStore.js';
 import { useViewStore } from './viewStore.js';
 
@@ -16,7 +16,7 @@ export interface LibraryItem {
     snaps: Array<[string, boolean]>;
     instrument?: {
         type: string;
-        params: Array<SynthParam>;
+        params: Array<SynthParamStored>;
     };
 }
 

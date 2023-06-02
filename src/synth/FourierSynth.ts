@@ -6,7 +6,7 @@ const subharmonics = 4;
 const frequencyMultiplier = 1
 const defaultPericWaveContents = () => {
 
-    const harmonics = 8;
+    const harmonics = 16;
     const real = []
     const imaginary = []
     for (let i = 0; i < harmonics; i++) {
@@ -61,7 +61,7 @@ class FourierVoice {
             this.inUse = true;
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.value = 0;
-            gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + duration / 4);
+            gainNode.gain.linearRampToValueAtTime(velocity, audioContext.currentTime + duration / 4);
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
             oscillator.frequency.value = frequency * frequencyMultiplier;
             oscillator.setPeriodicWave(this.periodicWaveRef.value);
