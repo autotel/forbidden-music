@@ -17,7 +17,11 @@ watch(liveArray, () => {
     props.param.value = liveArray.value;
 });
 
-watch(props.param, () => {
+watch(()=>props.param.value, () => {
+    liveArray.value = props.param.value;
+});
+
+watch(()=>props.param.updateFlag, () => {
     liveArray.value = props.param.value;
 });
 

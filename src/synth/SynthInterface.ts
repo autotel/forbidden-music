@@ -75,6 +75,7 @@ export interface ArraySynthParam extends SynthParamMinimum<number[]> {
     type: ParamType.nArray;
     value: number[];
     displayName: string;
+    updateFlag?: string;
     min: number
     max: number
 }
