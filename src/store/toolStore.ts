@@ -391,7 +391,8 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteBeingDraggedRightEdge.value,
                 targetOctave: noteBeingDraggedRightEdge.value.note.octave,
-                otherNotes: view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value)
+                otherNotes: view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value),
+                skipOctaveSnap: true,
             });
             noteBeingDraggedRightEdge.value.note = editNote.note;
         } else {
