@@ -313,7 +313,7 @@ export const useToolStore = defineStore("edit", () => {
             x: e.clientX - mouseDragStart.x,
             y: e.clientY - mouseDragStart.y,
         };
-        if (disallowOctaveChange.value) {
+        if (disallowOctaveChange.value && current.value !== Tool.Modulation) {
             mouseDelta.y = 0;
         }
         if (disallowTimeChange.value) {

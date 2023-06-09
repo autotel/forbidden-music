@@ -110,6 +110,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     // space plays/stops
     if (e.key === ' ') {
+        e.preventDefault();
         if (playback.playing) {
             playback.stop();
         } else {

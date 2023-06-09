@@ -77,7 +77,7 @@ onUnmounted(() => {
             interactionDisabled: interactionDisabled,
         }" ...=editNote.circle ref="noteBody" />
     </template>
-    <!-- <template v-if="tool.current === Tool.Modulation && !editNote.note.mute">
+    <template v-if="tool.current === Tool.Modulation">
         <line :x1="editNote.x" :y1="view.viewHeightPx - view.velocityToPx(editNote.note.velocity)" :x2="editNote.x"
             :y2="view.viewHeightPx" class="veloline" :class="{
                 selected: editNote.selected,
@@ -86,7 +86,7 @@ onUnmounted(() => {
             }" />
         <circle :cx="editNote.x" :cy="view.viewHeightPx - view.velocityToPx(editNote.note.velocity)" r="3" fill="black" />
 
-    </template> -->
+    </template>
 </template>
 <style scoped>
 .texts {

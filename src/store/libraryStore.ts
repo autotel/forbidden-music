@@ -18,6 +18,7 @@ export interface LibraryItem {
         type: string;
         params: Array<SynthParamStored>;
     };
+    bpm?: number;
 }
 
 type PossibleImportObjects = LibraryItem | Array<Note>

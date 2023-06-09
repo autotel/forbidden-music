@@ -27,6 +27,7 @@ export const useProjectStore = defineStore("current project", () => {
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
+            bpm: playbackStore.bpm,
         } as LibraryItem;
         if (playbackStore.synth) {
             ret.instrument = {
@@ -76,6 +77,7 @@ export const useProjectStore = defineStore("current project", () => {
         created.value = pDef.created;
         edited.value = pDef.edited;
         score.value = pDef.notes.map(note => new EditNote(note, view));
+        if(pDef.bpm) playbackStore.bpm = pDef.bpm;
         
         console.log(pDef.notes.filter(note=>note.mute))
         if (pDef.instrument) {
