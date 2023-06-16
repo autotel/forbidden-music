@@ -105,7 +105,7 @@ export const useToolStore = defineStore("edit", () => {
         noteRightEdgeBeingHovered.value = false;
     }
 
-    let notesBeingDragged = [] as EditNote[];
+    let notesBeingDragged: EditNote[] = [];
     let alreadyDuplicatedForThisDrag = false;
 
     const whatWouldMouseDownDo = () => {
@@ -139,7 +139,7 @@ export const useToolStore = defineStore("edit", () => {
                     // thus far no distinction needed
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
-            } 
+            }
             currentMouseStringHelper.value = "⇅";
         } else if (current.value === Tool.Edit) {
             if (noteRightEdgeBeingHovered.value) {
@@ -222,21 +222,21 @@ export const useToolStore = defineStore("edit", () => {
                 break;
             case MouseDownActions.AddToSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.add(noteBeingHovered.value  as EditNote);
+                selection.add(noteBeingHovered.value as EditNote);
                 break;
             case MouseDownActions.AddToSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.add(noteBeingHovered.value  as EditNote);
+                selection.add(noteBeingHovered.value as EditNote);
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.SetSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.select(noteBeingHovered.value  as EditNote);
+                selection.select(noteBeingHovered.value as EditNote);
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.RemoveFromSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.remove(noteBeingHovered.value  as EditNote);
+                selection.remove(noteBeingHovered.value as EditNote);
                 break;
             case MouseDownActions.Move:
                 _dragStartAction(mouse);
@@ -294,7 +294,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteThatWouldBeCreated.value as EditNote,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: project.score as EditNote[],
+                otherNotes: project.score(),
                 sideEffects: true,
             });
 
@@ -325,13 +325,13 @@ export const useToolStore = defineStore("edit", () => {
         ) && selectRange.value.active) {
             applyRangeSelection(e);
         } else if (isDragging && current.value === Tool.Modulation) {
-            notesBeingDragged.forEach((n)=>n.dragMoveVelocity(mouseDelta));
+            notesBeingDragged.forEach((n) => n.dragMoveVelocity(mouseDelta));
         } else if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
             notesBeingCreated.value[0].duration = clampToZero(view.pxToTime(deltaX));
             const editNote = snap.snap({
-                inNote: notesBeingCreated.value[0]  as EditNote,
+                inNote: notesBeingCreated.value[0] as EditNote,
                 targetOctave: notesBeingCreated.value[0].octave,
                 otherNotes: view.visibleNotes.filter(n => n !== notesBeingCreated.value[0])
             });
@@ -344,11 +344,11 @@ export const useToolStore = defineStore("edit", () => {
                 snap.resetSnapExplanation();
                 alreadyDuplicatedForThisDrag = true;
                 const prevDraggableNotes = notesBeingDragged;
-                const cloned = [] as EditNote[];
+                const cloned: EditNote[] = [];
 
                 prevDraggableNotes.forEach(editNote => {
                     const newNote = editNote.clone();
-                    project.score.push(newNote);
+                    project.appendNote(newNote);
                     cloned.push(newNote);
                     newNote.dragStart(mouseDragStart);
                     editNote.dragCancel();
@@ -416,7 +416,7 @@ export const useToolStore = defineStore("edit", () => {
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
             // store them to store
-            project.score.push(...notesBeingCreated.value);
+            project.appendNote(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
         if (noteBeingDraggedRightEdge.value) {

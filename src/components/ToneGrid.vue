@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { useViewStore } from '../store/viewStore';
-import { onMounted, Ref, ref, watch, watchEffect, computed } from 'vue';
-import { usePlaybackStore } from '../store/playbackStore';
+import { Ref, onMounted, ref, watch } from 'vue';
 import { useSnapStore } from '../store/snapStore';
-import { makeNote } from '../dataTypes/Note';
+import { useViewStore } from '../store/viewStore';
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;
 const snap = useSnapStore();

@@ -5,12 +5,15 @@ import fs from 'fs'
 export default defineConfig({
   server: {
     host: true,
-    
+
     port: 3000,
     https: {
       key: './certificates/private.key',
       cert: './certificates/cert.crt',
     },
+    // disable hot module reload
+    hmr: { overlay: false }
+
   },
   plugins: [
     vue(),

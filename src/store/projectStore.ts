@@ -1,20 +1,26 @@
 import { defineStore } from 'pinia';
-import { ref, watchEffect } from 'vue';
+import { reactive, ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
+import { Group, MaybeGroupedEditNote } from '../dataTypes/Group.js';
+import { Note, NoteDefa, NoteDefb } from '../dataTypes/Note.js';
 import { LibraryItem } from './libraryStore.js';
 import { usePlaybackStore } from './playbackStore.js';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 
 export const useProjectStore = defineStore("current project", () => {
-    /** todo: rename to something unambiguous **/
-    const score = ref([] as Array<EditNote>);
     const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
+    // TODO: later might use the main group names as a project name
+    // opening the door to mixing projects
+    const mainGroup = reactive(new Group("main"));
+
+    const score = (reutilize = false): MaybeGroupedEditNote[] => mainGroup.getFlatNotes(reutilize)
+
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
@@ -23,7 +29,13 @@ export const useProjectStore = defineStore("current project", () => {
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: score.value.map(editNote => editNote.getNoteDefa()),
+            notes: score().map((editNote) => ({
+                frequency: editNote.frequency,
+                start: editNote.start,
+                duration: editNote.duration,
+                mute: editNote.mute,
+                groupId: editNote.group?.id || null,
+            })),
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
@@ -41,60 +53,34 @@ export const useProjectStore = defineStore("current project", () => {
         return ret;
     }
 
-
-    const getTimeBounds = () => {
-        // get the the note with the lowest start
-        if(score.value.length === 0) {
-            return {
-                start: 0,
-                end: 0,
-                first: null,
-                last: null,
-            }
-        }
-        let first = score.value[0];
-        score.value.forEach((editNote) => {
-            if (editNote.start < first.start) {
-                first = editNote;
-            }
-        });
-        let last = score.value[0];
-        score.value.forEach((editNote) => {
-            if ((editNote.end || editNote.start) > (last.end || last.start)) {
-                last = editNote;
-            }
-        });
-        if (!last.end) throw new Error("last.end is undefined");
-        return {
-            start: first.start,
-            end: last.end,
-            first, last,
-        }
+    const setScore = (newScore: (NoteDefa | NoteDefb | EditNote | Note)[]) => {
+        clearScore();
+        mainGroup.notes = newScore.map(note => new EditNote(note, view));
     }
 
     const setFromProjecDefinition = (pDef: LibraryItem) => {
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
-        score.value = pDef.notes.map(note => new EditNote(note, view));
-        if(pDef.bpm) playbackStore.bpm = pDef.bpm;
-        
-        console.log(pDef.notes.filter(note=>note.mute))
+        setScore(pDef.notes);
+        if (pDef.bpm) playbackStore.bpm = pDef.bpm;
+
+        console.log(pDef.notes.filter(note => note.mute))
         if (pDef.instrument) {
-            playbackStore.setSynthByName(pDef.instrument.type).then((synth)=>{
+            playbackStore.setSynthByName(pDef.instrument.type).then((synth) => {
                 pDef.instrument?.params.forEach((param, index) => {
                     const foundNamedParam = synth.params.find((synthParam) => {
                         return synthParam.displayName === param.displayName;
                     })
-                    if(foundNamedParam) {
+                    if (foundNamedParam) {
                         foundNamedParam.value = param.value;
                         console.log("import param", param.displayName, param.value);
-                    }else{
+                    } else {
                         console.warn(`ignoring imported param ${param.displayName} in synth ${synth.name}`);
                     }
                 });
             })
-            
+
         }
 
         pDef.snaps.forEach(([name, activeState]) => {
@@ -103,12 +89,37 @@ export const useProjectStore = defineStore("current project", () => {
         });
     }
 
+    const clearScore = () => {
+        mainGroup.notes = [];
+        mainGroup.groups = [];
+    }
+
+    const appendNote = (...notes: MaybeGroupedEditNote[]) => {
+        notes.map((note) => {
+            let destinationGroup = mainGroup;
+            if (note.group) {
+                destinationGroup = note.group;
+            }
+            destinationGroup.notes.push(note);
+        });
+    }
+
+    const deleteNote = (...notes: MaybeGroupedEditNote[]) => {
+        notes.map((note) => {
+            let destinationGroup = mainGroup;
+            if (note.group) {
+                destinationGroup = note.group;
+            }
+            destinationGroup.notes = destinationGroup.notes.filter((n) => n !== note);
+        })
+    }
+
     return {
-        score,
+        score, mainGroup,
         name, edited, created, snaps,
-        getTimeBounds,
         getProjectDefintion,
         setFromProjecDefinition,
+        clearScore, setScore, appendNote, deleteNote,
     }
 
 });

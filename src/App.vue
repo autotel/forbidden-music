@@ -93,7 +93,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     // delete selected notes
     if (e.key === 'Delete') {
-        project.score = project.score.filter(note => !note.selected);
+        project.deleteNote(... project.score(true).filter(note => note.selected))
         // minimalistic option:
         // tool.noteBeingHovered = false;
         // programmatic option:

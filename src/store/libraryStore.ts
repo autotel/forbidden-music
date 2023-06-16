@@ -2,15 +2,19 @@ import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
-import { Note } from '../dataTypes/Note.js';
+import { Note, NoteDefa, NoteDefb } from '../dataTypes/Note.js';
 import { SynthParam, SynthParamMinimum, SynthParamStored } from '../synth/SynthInterface.js';
 import { useProjectStore } from './projectStore.js';
 import { useViewStore } from './viewStore.js';
+import { Group } from '../dataTypes/Group.js';
 
+export type GroupNoteDef = NoteDefb & {
+    groupId: number;
+}
 
 export interface LibraryItem {
     name: string;
-    notes: Array<Note>;
+    notes: Array<GroupNoteDef>;
     created: Number;
     edited: Number;
     snaps: Array<[string, boolean]>;
@@ -28,11 +32,11 @@ const reservedEntryName = "forbidden-music";
 const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
     if (filename === reservedEntryName) throw new Error(`filename cannot be "${reservedEntryName}"`);
     const value: any = inValue as LibraryItem;
-    value.notes = inValue.notes.map(note => ({
-        frequency: note.frequency,
-        start: note.start,
-        duration: note.duration,
-        mute: note.mute,
+    value.notes = inValue.notes.map((groupedNote) => ({
+        frequency: groupedNote.frequency,
+        start: groupedNote.start,
+        duration: groupedNote.duration,
+        mute: groupedNote.mute,
     }));
     localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
@@ -129,7 +133,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const clear = () => {
-        project.score = [];
+        project.clearScore();
         inSyncWithStorage.value = false;
     };
 
@@ -179,7 +183,7 @@ export const useLibraryStore = defineStore("library store", () => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             project.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
-            project.score = iobj.map(note => new EditNote(note, view));
+            project.setScore(iobj);
         }
     }
 

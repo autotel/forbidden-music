@@ -124,8 +124,8 @@ export class Note {
       throw new Error("end is less than start");
     }
   }
-  get end() {
-    return this.duration ? this.start + this.duration : undefined;
+  get end(): number {
+    return this.duration ? this.start + this.duration : this.start;
   }
   set frequency(value: number) {
     this._frequency = value;

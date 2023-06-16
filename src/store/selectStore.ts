@@ -20,7 +20,7 @@ const getNotesInRange = (
     
     return notes.filter((editNote) => {
         const octaveInRange = editNote.octave >= octaveStart && editNote.octave <= octaveEnd;
-        const timeInRange = editNote.start >= timeStart && editNote.start <= timeEnd;
+        const timeInRange = editNote.end >= timeStart && editNote.start <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };
@@ -34,7 +34,7 @@ export const useSelectStore = defineStore("select", () => {
         return selectedNotes.value.has(editNote);
     };
     const refreshNoteSelectionState = () => {
-        project.score.forEach(n => n.selected = isEditNoteSelected(n))
+        project.score(true).forEach(n => n.selected = isEditNoteSelected(n))
     }
     const get = () => {
         return [...selectedNotes.value];
@@ -73,7 +73,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         select(...getNotesInRange(
-            project.score,
+            project.score(true),
             range
         ));
     };
@@ -84,7 +84,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         const newNotes = getNotesInRange(
-            project.score,
+            project.score(true),
             range
         );
         add(...newNotes);
@@ -93,9 +93,9 @@ export const useSelectStore = defineStore("select", () => {
         selectedNotes.value.clear();
     };
     const selectAll = () => {
-        select(...project.score);
+        select(...project.score(true));
     };
-    throttledWatch(selectedNotes, refreshNoteSelectionState);
+    throttledWatch(()=>selectedNotes.value.size, refreshNoteSelectionState);
 
     return {
         selectRange,
