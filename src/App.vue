@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import Pianito from './components/Pianito.vue';
@@ -25,6 +25,8 @@ import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
 
+type Timeout = ReturnType<typeof setTimeout>;
+
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
@@ -38,6 +40,7 @@ const modalText = ref("");
 const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.createInteractionModal("default");
+const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 
 provide('modalText', modalText);
 
@@ -210,6 +213,17 @@ onMounted(() => {
         });
     }
 
+
+    libraryStore.loadFromLibraryItem(project.name);
+    let autosaveCall = () => {
+        if (project.name === "unnamed (autosave)") {
+            libraryStore.saveCurrent();
+        }
+    }
+    if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
+    autosaveTimeout.value = setInterval(autosaveCall, 1000);
+
+
     resize();
 
     mainInteraction.addEventListener($viewPort, 'mousedown', mouseDownListener);
@@ -222,6 +236,10 @@ onMounted(() => {
     mainInteraction.addEventListener(window, 'resize', resize);
 
 })
+onBeforeUnmount(() => {
+    if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
+    libraryStore.clear();
+});
 
 onUnmounted(() => {
 
@@ -338,7 +356,6 @@ svg#viewport {
 g#notes-being-created rect.body {
     fill: transparent;
 }
-
 </style>
 
 

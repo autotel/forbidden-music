@@ -68,17 +68,6 @@ export const useLibraryStore = defineStore("library store", () => {
     const errorMessage = ref("");
 
 
-
-    setTimeout(() => {
-        loadFromLibraryItem(project.name);
-        let autosaveCall = () => {
-            if (project.name === "unnamed (autosave)") {
-                saveCurrent();
-            }
-        }
-        setInterval(autosaveCall, 1000);
-    }, 100);
-
     const saveToNewLibraryItem = () => {
         try {
             if (exists(project.name)) {
