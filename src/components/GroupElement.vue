@@ -54,25 +54,25 @@ const rightEdge = ref<SVGRectElement>();
 
 const rect = ref<{ x: number, y: number, width: number, height: number }>({ x: 0, y: 0, width: 0, height: 0 })
 
-watch([view,() => props.group.bounds], () => {
+watch([view, () => props.group.bounds], () => {
     const extraMarginH = 1 / 4;
     const extraMarginV = 1 / 12;
     const fromTo = [
-        view.octaveToPxWithOffset(props.group.bounds.octaveStart - extraMarginV * 2),
-        view.octaveToPxWithOffset(props.group.bounds.octaveEnd + extraMarginV),
+        view.octaveToPxWithOffset(props.group.bounds[1][0] - extraMarginV * 2),
+        view.octaveToPxWithOffset(props.group.bounds[1][1] + extraMarginV),
     ].sort();
-
+    const duration = props.group.bounds[0][1] - props.group.bounds[0][0];
     rect.value = {
-        x: view.timeToPxWithOffset(props.group.bounds.start - extraMarginH),
+        x: view.timeToPxWithOffset(props.group.bounds[0][0] - extraMarginH),
         y: fromTo[0] - 7,
-        width: view.timeToPx(props.group.bounds.duration + extraMarginH * 2),
+        width: view.timeToPx(duration + extraMarginH * 2),
         height: fromTo[1] - fromTo[0],
     }
 })
 
 </script>
 <template>
-    <g :name="group.name">
+    <g :id="'group' + group.name">
         <text class="texts" v-if="view.viewWidthTime < 50" :x="rect.x" :y="rect.y + 5" font-size="10">
             {{ group.name }}
         </text>

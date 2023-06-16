@@ -183,7 +183,7 @@ export const useLibraryStore = defineStore("library store", () => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             project.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
-            project.setScore(iobj);
+            project.setFromListOfNoteDefinitions(iobj);
         }
     }
 

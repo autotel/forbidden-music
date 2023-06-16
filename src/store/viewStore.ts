@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
-import { computed, ref, Ref, watch, watchEffect } from "vue";
+import { ref, watch, watchEffect } from "vue";
 import { EditNote } from "../dataTypes/EditNote.js";
-import { useProjectStore } from "./projectStore.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
-import { MaybeGroupedEditNote } from "../dataTypes/Group.js";
+import { useProjectStore } from "./projectStore.js";
+import { useToolStore } from "./toolStore.js";
 
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
@@ -20,21 +20,19 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
     const project = useProjectStore();
-
-    const visibleNotes = ref<EditNote[]>([]);
+    const tool = useToolStore();
 
     watch([
-        octaveOffset,timeOffset, viewWidthTime, viewHeightOctaves,
-        project.score, ()=>project.mainGroup.notes
-    ], () => {
+        viewWidthTime, viewHeightOctaves,
+        timeOffset, octaveOffset,
+    ],() => {
         console.log("visibleNotes");
-        visibleNotes.value = project.score(false).filter((editNote) => {
-            const note = editNote;
-            return (
-                note.start < timeOffset.value + viewWidthTime.value &&
-                note.end > timeOffset.value &&
-                note.octave > -octaveOffset.value &&
-                note.octave < -octaveOffset.value + viewHeightOctaves.value
+        project.score.forEach((editNote:EditNote) => {
+            editNote.inViewRange = (
+                editNote.start < timeOffset.value + viewWidthTime.value &&
+                editNote.end > timeOffset.value &&
+                editNote.octave > -octaveOffset.value &&
+                editNote.octave < -octaveOffset.value + viewHeightOctaves.value
             );
         });
     });
@@ -145,7 +143,6 @@ export const useViewStore = defineStore("view", () => {
         scrollBound,
         _offsetPxX,
         _offsetPxY,
-        visibleNotes,
     };
 });
 

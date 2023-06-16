@@ -294,7 +294,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteThatWouldBeCreated.value as EditNote,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: project.score(),
+                otherNotes: project.score,
                 sideEffects: true,
             });
 
@@ -333,7 +333,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: notesBeingCreated.value[0] as EditNote,
                 targetOctave: notesBeingCreated.value[0].octave,
-                otherNotes: view.visibleNotes.filter(n => n !== notesBeingCreated.value[0])
+                otherNotes: project.score.filter(n => n.inViewRange && n !== notesBeingCreated.value[0])
             });
             notesBeingCreated.value[0].apply(editNote);
         } else if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
@@ -365,7 +365,8 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteBeingDragged.value as EditNote,
                 targetOctave: noteBeingDragged.value.octave,
-                otherNotes: view.visibleNotes.filter(n => {
+                otherNotes: project.score.filter(n => {
+                    if(!n.inViewRange) return false;
                     let ret = n !== noteBeingDragged.value
                     ret &&= !notesBeingDragged.includes(n);
                     return ret;
@@ -391,7 +392,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteBeingDraggedRightEdge.value as EditNote,
                 targetOctave: noteBeingDraggedRightEdge.value.octave,
-                otherNotes: view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value),
+                otherNotes: project.score.filter(n => n.inViewRange && n !== noteBeingDraggedRightEdge.value),
                 skipOctaveSnap: true,
             });
             noteBeingDraggedRightEdge.value.apply(editNote);

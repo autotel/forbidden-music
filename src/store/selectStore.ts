@@ -34,7 +34,7 @@ export const useSelectStore = defineStore("select", () => {
         return selectedNotes.value.has(editNote);
     };
     const refreshNoteSelectionState = () => {
-        project.score(true).forEach(n => n.selected = isEditNoteSelected(n))
+        project.score.forEach(n => n.selected = isEditNoteSelected(n))
     }
     const get = () => {
         return [...selectedNotes.value];
@@ -73,7 +73,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         select(...getNotesInRange(
-            project.score(true),
+            project.score,
             range
         ));
     };
@@ -84,7 +84,7 @@ export const useSelectStore = defineStore("select", () => {
         endOctave: number
     }) => {
         const newNotes = getNotesInRange(
-            project.score(true),
+            project.score,
             range
         );
         add(...newNotes);
@@ -93,7 +93,7 @@ export const useSelectStore = defineStore("select", () => {
         selectedNotes.value.clear();
     };
     const selectAll = () => {
-        select(...project.score(true));
+        select(...project.score);
     };
     throttledWatch(()=>selectedNotes.value.size, refreshNoteSelectionState);
 

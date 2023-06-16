@@ -95,7 +95,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     // delete selected notes
     if (e.key === 'Delete') {
-        project.deleteNote(... project.score(true).filter(note => note.selected))
+        project.score = project.score.filter(note => !note.selected)
         // minimalistic option:
         // tool.noteBeingHovered = false;
         // programmatic option:
@@ -259,8 +259,9 @@ onUnmounted(() => {
     <div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
-            <GroupElement :group="project.mainGroup" />
-
+            <g id="groups">
+                <GroupElement v-for="group in project.groups" :group="group" :key="group.id" />
+            </g>
             <g id="grid">
                 <TimeGrid />
                 <ToneGrid />
@@ -275,7 +276,9 @@ onUnmounted(() => {
             <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
                 stroke-width="1" />
             <g id="edit-notes">
-                <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
+                <template v-for="editNote in project.score.filter(e=>e.inViewRange)"  :key="editNote.udpateFlag">
+                    <NoteElement :editNote="editNote" />
+                </template>
             </g>
             <g id="notes-being-created">
                 <NoteElement v-for="editNote in tool.notesBeingCreated" :editNote="editNote" />

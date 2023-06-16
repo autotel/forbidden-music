@@ -22,6 +22,7 @@ const mouseEnter = (e: MouseEvent) => {
         }, 500);
     }
 }
+
 const mouseLeave = (e: MouseEvent) => {
     if (showTimeout.value) clearTimeout(showTimeout.value);
     showTimeout.value = false;
