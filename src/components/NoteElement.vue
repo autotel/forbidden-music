@@ -53,38 +53,38 @@ onUnmounted(() => {
 </script>
 <template>
     <text class="texts" v-if="view.viewWidthTime < 10" :x="editNote.x" :y="editNote.y + 5" font-size="10">
-        (2^{{ editNote.note.octave.toFixed(3) }})n = {{ editNote.note.frequency.toFixed(3) }} hz
+        (2^{{ editNote.octave.toFixed(3) }})n = {{ editNote.frequency.toFixed(3) }} hz
     </text>
-    <template v-if="editNote.note.duration">
+    <template v-if="editNote.duration">
         <rect class="body" :class="{
             selected: editNote.selected,
             editable: tool.current == Tool.Edit,
             interactionDisabled: interactionDisabled,
-            muted: editNote.note.mute,
-        }" :...=editNote.rect :style="{ opacity: editNote.note.velocity + 0.5 }" ref="noteBody" />
+            muted: editNote.mute,
+        }" :...=editNote.rect :style="{ opacity: editNote.velocity + 0.5 }" ref="noteBody" />
         <rect v-if="!interactionDisabled" class="rightEdge" :class="{
             selected: editNote.selected,
             editable: tool.current == Tool.Edit,
             interactionDisabled: interactionDisabled,
         }" ref="rightEdge" :...=editNote.rightEdge :data-key="editNote.udpateFlag"
-            :style="{ opacity: editNote.note.velocity }" />
+            :style="{ opacity: editNote.velocity }" />
     </template>
     <template v-else>
         <circle class="body" :class="{
             selected: editNote.selected,
             editable: tool.current == Tool.Edit,
-            muted: editNote.note.mute,
+            muted: editNote.mute,
             interactionDisabled: interactionDisabled,
         }" ...=editNote.circle ref="noteBody" />
     </template>
     <template v-if="tool.current === Tool.Modulation">
-        <line :x1="editNote.x" :y1="view.viewHeightPx - view.velocityToPx(editNote.note.velocity)" :x2="editNote.x"
+        <line :x1="editNote.x" :y1="view.viewHeightPx - view.velocityToPx(editNote.velocity)" :x2="editNote.x"
             :y2="view.viewHeightPx" class="veloline" :class="{
                 selected: editNote.selected,
-                muted: editNote.note.mute,
+                muted: editNote.mute,
                 interactionDisabled: interactionDisabled,
             }" />
-        <circle :cx="editNote.x" :cy="view.viewHeightPx - view.velocityToPx(editNote.note.velocity)" r="3" fill="black" />
+        <circle :cx="editNote.x" :cy="view.viewHeightPx - view.velocityToPx(editNote.velocity)" r="3" fill="black" />
 
     </template>
 </template>

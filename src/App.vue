@@ -131,7 +131,7 @@ const keyDownListener = (e: KeyboardEvent) => {
 
     if (e.key === 'm') {
         if (e.ctrlKey) {
-            select.selectedNotes.forEach(eNote => eNote.note.mute = !eNote.note.mute);
+            select.selectedNotes.forEach(eNote => eNote.mute = !eNote.mute);
         } else {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
         }

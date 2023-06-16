@@ -1,28 +1,59 @@
 // represents a Note as displayed in the gui
 // adding properties such as drag offset, selected, position in screen.
 import { View } from "../store/viewStore";
-import { makeNote, Note, NoteDefa, NoteDefb } from "./Note"
+import {  Note, NoteDefa, NoteDefb } from "./Note"
 
 const makeRandomString = () => Math.random().toString(36).slice(2);
 // TODO: memoize x, y ... rect ... etc
-export class EditNote {
-    note: Note;
+// perhaps could change all note vars into getters and setters thus allowing me to 
+// register a "dirty" flag. needs a bit more thought.
+export class EditNote extends Note {
+    // EditNote section
+
     selected: boolean = false;
     udpateFlag: string;
-    /** make a clone of editnote. only note properties are cloned*/
-    clone() {
-        return new EditNote(this.note, this.view);
+    /** 
+     * make a clone of editnote. only note properties are cloned    
+     * TODO: clone could now clone all the props. To get a clone of the 
+     * note alone, now we can use get note.
+     **/
+    override clone():EditNote {
+        return new EditNote(this, this.view);
     }
-    view: View;
 
+    getNote(): Note {
+        return new Note(this);
+    }
+
+    getNoteDefa(): NoteDefa {
+        return {
+            start: this.start,
+            duration: this.duration,
+            octave: this.octave,
+            mute: this.mute,
+            velocity: this.velocity,
+        }
+    }
+    getNoteDefb(): NoteDefb {
+        return {
+            start: this.start,
+            duration: this.duration,
+            frequency: this.frequency,
+            mute: this.mute,
+            velocity: this.velocity,
+        }
+    }
+
+    view: View;
+        
     get x() {
-        return this.view.timeToPxWithOffset(this.note.start)
+        return this.view.timeToPxWithOffset(this.start)
     }
     get y() {
-        return this.view.octaveToPxWithOffset(this.note.octave)
+        return this.view.octaveToPxWithOffset(this.octave)
     }
     get width() {
-        return this.note.duration ? this.view.timeToPx(this.note.duration) : 0;
+        return this.duration ? this.view.timeToPx(this.duration) : 0;
     }
     get height() {
         return Math.abs(this.view.octaveToPx(1 / 12))
@@ -53,7 +84,6 @@ export class EditNote {
     }
 
     dragStart: (mouse: { x: number, y: number }) => void;
-
     dragMove: (dragDelta: { x: number, y: number }) => void;
     dragMoveOctaves: (octaveDelta: number) => void;
     dragMoveTimeStart: (dragDelta: number) => void;
@@ -68,46 +98,47 @@ export class EditNote {
     forceUpdate: () => void;
 
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
-        this.note = makeNote(noteDef);
+        super(noteDef);
+
         this.view = view;
         this.udpateFlag = makeRandomString();
 
         this.dragStart = () => {
-            this.dragStartedOctave = this.note.octave;
-            this.dragStartedTime = this.note.start;
-            this.dragStartedDuration = this.note.duration || 0;
-            this.dragStartedVelocity = this.note.velocity;
+            this.dragStartedOctave = this.octave;
+            this.dragStartedTime = this.start;
+            this.dragStartedDuration = this.duration || 0;
+            this.dragStartedVelocity = this.velocity;
         }
         this.dragMove = (dragDelta: { x: number, y: number }) => {
-            this.note.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
-            this.note.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
+            this.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
+            this.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
             this.forceUpdate();
         }
         this.dragMoveOctaves = (octaveDelta: number) => {
-            this.note.octave = this.dragStartedOctave + octaveDelta;
+            this.octave = this.dragStartedOctave + octaveDelta;
             this.forceUpdate();
         }
         this.dragMoveTimeStart = (timeDelta: number) => {
-            this.note.start = this.dragStartedTime + timeDelta;
+            this.start = this.dragStartedTime + timeDelta;
             this.forceUpdate();
         }
         this.dragLengthMove = (dragDelta: { x: number, y: number }) => {
-            this.note.duration = Math.max(this.dragStartedDuration + view.pxToTime(dragDelta.x), 0);
+            this.duration = Math.max(this.dragStartedDuration + view.pxToTime(dragDelta.x), 0);
             this.forceUpdate();
         }
         this.dragMoveVelocity = (dragDelta: { x: number, y: number }) => {
-            this.note.velocity = this.dragStartedVelocity + view.pxToVelocity(-dragDelta.y)
-            if (this.note.velocity < 0) this.note.velocity = 0;
-            if (this.note.velocity > 1) this.note.velocity = 1;
+            this.velocity = this.dragStartedVelocity + view.pxToVelocity(-dragDelta.y)
+            if (this.velocity < 0) this.velocity = 0;
+            if (this.velocity > 1) this.velocity = 1;
             this.forceUpdate();
         }
         this.forceUpdate = () => {
             this.udpateFlag = makeRandomString();
         }
         this.dragCancel = () => {
-            this.note.start = this.dragStartedTime;
-            this.note.octave = this.dragStartedOctave;
-            this.note.duration = this.dragStartedDuration;
+            this.start = this.dragStartedTime;
+            this.octave = this.dragStartedOctave;
+            this.duration = this.dragStartedDuration;
         }
 
         this.dragEnd = () => {

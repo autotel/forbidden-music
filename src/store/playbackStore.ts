@@ -199,8 +199,8 @@ export const usePlaybackStore = defineStore("playback", () => {
 
 
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
-        const events = project.score.filter(({ note }) => {
-            return note.start >= frameStartTime && note.start < frameEndTime;
+        const events = project.score.filter((editNote) => {
+            return editNote.start >= frameStartTime && editNote.start < frameEndTime;
         });
         // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);
         return events;
@@ -215,30 +215,30 @@ export const usePlaybackStore = defineStore("playback", () => {
         const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value)
 
 
-        playNotes.forEach(({ note }) => {
-            if (note.mute) return;
+        playNotes.forEach((editNote) => {
+            if (editNote.mute) return;
             if (!synth.value) throw new Error("synth not created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
-            const noteStartFromNow = note.start - currentScoreTime.value;
+            const noteStartFromNow = editNote.start - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
             // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
             const relativeNoteStart = noteStartFromNow;
 
             try {
 
-                if (note.duration) {
-                    const noteDuration = note.duration / rate;
+                if (editNote.duration) {
+                    const noteDuration = editNote.duration / rate;
                     synth.value.triggerAttackRelease(
-                        note.frequency,
+                        editNote.frequency,
                         noteDuration,
                         relativeNoteStart,
-                        note.velocity
+                        editNote.velocity
                     );
                 } else {
                     synth.value.triggerPerc(
-                        note.frequency,
+                        editNote.frequency,
                         relativeNoteStart,
-                        note.velocity
+                        editNote.velocity
                     );
 
                 }

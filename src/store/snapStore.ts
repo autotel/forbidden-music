@@ -276,7 +276,7 @@ export const useSnapStore = defineStore("snap", () => {
     const onlyMutedIfWanted = (otherNotes: EditNote[] | undefined) => {
         if(otherNotes === undefined) return;
         if(!onlyWithMutednotes.value) return otherNotes;
-        return otherNotes.filter(({note}) => note.mute);
+        return otherNotes.filter((editNote) => editNote.mute);
     } 
 
 
@@ -355,7 +355,7 @@ export const useSnapStore = defineStore("snap", () => {
         if (otherNotes) {
             if (snapValues.hzRelationFraction.active === true) {
                 for (const otherNote of otherNotes) {
-                    const otherHz = otherNote.note.frequency;
+                    const otherHz = otherNote.frequency;
                     const fraction = new Fraction(targetHz).div(otherHz).simplify(simplify.value);
                     const closeHzRatio = fraction.valueOf();
                     // reintegrate rounded proportion back to the other's hz value
@@ -371,10 +371,10 @@ export const useSnapStore = defineStore("snap", () => {
 
                 if (snapValues.hzMult.active === true) {
                     for (const otherNote of otherNotes) {
-                        const relatedNumber = Math.round(targetHz / otherNote.note.frequency) * otherNote.note.frequency;
+                        const relatedNumber = Math.round(targetHz / otherNote.frequency) * otherNote.frequency;
                         if(relatedNumber > 0) {
                             toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
-                                text: "multiple of "+otherNote.note.frequency.toPrecision(3),
+                                text: "multiple of "+otherNote.frequency.toPrecision(3),
                                 relatedNumber,
                                 relatedNote: otherNote,
                             });
@@ -384,11 +384,11 @@ export const useSnapStore = defineStore("snap", () => {
                 
                 if (snapValues.hzHalfOrDouble.active === true) {
                     for (const otherNote of otherNotes) {
-                        const myCandidateHzDouble = otherNote.note.frequency * 2
+                        const myCandidateHzDouble = otherNote.frequency * 2
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
-                        const myCandidateHzHalf = otherNote.note.frequency / 2
+                        const myCandidateHzHalf = otherNote.frequency / 2
                         const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
-                        const myCandidateEqual = otherNote.note.frequency;
+                        const myCandidateEqual = otherNote.frequency;
                         const myCandidateEqualOctave = frequencyToOctave(myCandidateEqual);
 
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
@@ -407,9 +407,9 @@ export const useSnapStore = defineStore("snap", () => {
                 }
                 if (snapValues.hzThird.active === true) {
                     for (const otherNote of otherNotes) {
-                        const myCandidateHzDouble = otherNote.note.frequency * 3
+                        const myCandidateHzDouble = otherNote.frequency * 3
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
-                        const myCandidateHzHalf = otherNote.note.frequency / 3
+                        const myCandidateHzHalf = otherNote.frequency / 3
                         const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
 
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
@@ -424,9 +424,9 @@ export const useSnapStore = defineStore("snap", () => {
                 }
                 if (snapValues.hzFifth.active === true) {
                     for (const otherNote of otherNotes) {
-                        const myCandidateHzDouble = otherNote.note.frequency * 5
+                        const myCandidateHzDouble = otherNote.frequency * 5
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
-                        const myCandidateHzHalf = otherNote.note.frequency / 5
+                        const myCandidateHzHalf = otherNote.frequency / 5
                         const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
 
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
@@ -441,9 +441,9 @@ export const useSnapStore = defineStore("snap", () => {
                 }
                 if (snapValues.hzSeventh.active === true) {
                     for (const otherNote of otherNotes) {
-                        const myCandidateHzDouble = otherNote.note.frequency * 7
+                        const myCandidateHzDouble = otherNote.frequency * 7
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
-                        const myCandidateHzHalf = otherNote.note.frequency / 7
+                        const myCandidateHzHalf = otherNote.frequency / 7
                         const myCandidateOctaveHalf = frequencyToOctave(myCandidateHzHalf);
 
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
@@ -476,28 +476,28 @@ export const useSnapStore = defineStore("snap", () => {
     }: TimeSnapParams) => {
 
         otherNotes = onlyMutedIfWanted(otherNotes);
-        const timeSnap = new SnapTracker(editNote.note.start);
+        const timeSnap = new SnapTracker(editNote.start);
         if (snapValues.timeQuarter.active === true) {
-            const relatedNumber = Math.round(editNote.note.start * 4);
+            const relatedNumber = Math.round(editNote.start * 4);
             timeSnap.addSnappedValue(relatedNumber / 4, {
                 text: "Quarter snap",
                 relatedNumber,
             });
             if (durationSnap) {
-                const relatedNumberd = Math.round(editNote.note.duration! * 4) / 4
+                const relatedNumberd = Math.round(editNote.duration! * 4) / 4
                 durationSnap.addSnappedValue(relatedNumberd, {
                     text: "Quarter snap",
                     relatedNumber: relatedNumberd,
                 });
             }
         } else if (snapValues.timeInteger.active === true) {
-            const relatedStart = Math.round(editNote.note.start);
+            const relatedStart = Math.round(editNote.start);
             timeSnap.addSnappedValue(relatedStart, {
                 text: "Integer snap",
                 relatedNumber: relatedStart,
             });
             if (durationSnap) {
-                const relatedDuration = Math.round(editNote.note.duration!);
+                const relatedDuration = Math.round(editNote.duration!);
                 durationSnap.addSnappedValue(relatedDuration, {
                     text: "Integer snap",
                     relatedNumber: relatedDuration,
@@ -508,7 +508,7 @@ export const useSnapStore = defineStore("snap", () => {
         if (snapValues.sameStart.active === true) {
             if (otherNotes) {
                 for (const otherNote of otherNotes) {
-                    timeSnap.addSnappedValue(otherNote.note.start, {
+                    timeSnap.addSnappedValue(otherNote.start, {
                         text: "Same start",
                         relatedNote: otherNote,
                     });
@@ -519,8 +519,8 @@ export const useSnapStore = defineStore("snap", () => {
         if (snapValues.timeIntegerRelationFraction.active === true) {
             if (otherNotes) {
                 for (const otherNote of otherNotes) {
-                    const otherStart = otherNote.note.start;
-                    const closestStartFraction = new Fraction(editNote.note.start).div(otherStart).simplify(simplify.value);
+                    const otherStart = otherNote.start;
+                    const closestStartFraction = new Fraction(editNote.start).div(otherStart).simplify(simplify.value);
                     const closeStartRatio = closestStartFraction.valueOf();
                     // reintegrate rounded proportion back to the other's start value
                     const myCandidateStart = closeStartRatio * otherStart;
@@ -556,7 +556,7 @@ export const useSnapStore = defineStore("snap", () => {
         const editNote = inNote.clone();
         const targetHz = octaveToFrequency(targetOctave);
 
-        const durationSnap = editNote.note.duration ? new SnapTracker(editNote.note.duration) : false;
+        const durationSnap = editNote.duration ? new SnapTracker(editNote.duration) : false;
 
         const snapValues = values.value as { [key: string]: SnapDefinition };
 
@@ -569,7 +569,7 @@ export const useSnapStore = defineStore("snap", () => {
                 durationSnap,
                 snapValues
             });
-            editNote.note.start = timeSnap.getResult();
+            editNote.start = timeSnap.getResult();
             if (sideEffects) {
                 timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
             }
@@ -582,14 +582,14 @@ export const useSnapStore = defineStore("snap", () => {
                 targetHz,
                 snapValues
             });
-            editNote.note.octave = toneSnap.getResult();
+            editNote.octave = toneSnap.getResult();
             if (sideEffects) {
                 toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
             }
         }
 
 
-        if (durationSnap) editNote.note.duration = durationSnap.getResult();
+        if (durationSnap) editNote.duration = durationSnap.getResult();
 
 
 

@@ -18,9 +18,9 @@ const getNotesInRange = (
     const timeStart = Math.min(range.startTime, range.endTime);
     const timeEnd = Math.max(range.startTime, range.endTime);
     
-    return notes.filter(({ note }) => {
-        const octaveInRange = note.octave >= octaveStart && note.octave <= octaveEnd;
-        const timeInRange = note.start >= timeStart && note.start <= timeEnd;
+    return notes.filter((editNote) => {
+        const octaveInRange = editNote.octave >= octaveStart && editNote.octave <= octaveEnd;
+        const timeInRange = editNote.start >= timeStart && editNote.start <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };
@@ -30,8 +30,8 @@ const getNotesInRange = (
 export const useSelectStore = defineStore("select", () => {
     const selectedNotes = ref(new Set() as Set<EditNote>);
     const project = useProjectStore();
-    const isEditNoteSelected = (note: EditNote) => {
-        return selectedNotes.value.has(note);
+    const isEditNoteSelected = (editNote: EditNote) => {
+        return selectedNotes.value.has(editNote);
     };
     const refreshNoteSelectionState = () => {
         project.score.forEach(n => n.selected = isEditNoteSelected(n))

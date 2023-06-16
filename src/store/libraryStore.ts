@@ -2,7 +2,7 @@ import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
-import { Note, makeNote } from '../dataTypes/Note.js';
+import { Note } from '../dataTypes/Note.js';
 import { SynthParam, SynthParamMinimum, SynthParamStored } from '../synth/SynthInterface.js';
 import { useProjectStore } from './projectStore.js';
 import { useViewStore } from './viewStore.js';
@@ -42,7 +42,7 @@ const retrieveFromLocalStorage = (filename: string) => {
     const retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
     console.log("retrieved", retrieved.notes.filter((n: any) => n.mute !== false));
-    retrieved.notes = retrieved.notes.map((note: any) => makeNote(note));
+    retrieved.notes = retrieved.notes.map((note: any) => new Note(note));
     return retrieved as LibraryItem;
 }
 

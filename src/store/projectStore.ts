@@ -23,7 +23,7 @@ export const useProjectStore = defineStore("current project", () => {
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: score.value.map(note => note.note),
+            notes: score.value.map(editNote => editNote.getNoteDefa()),
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
@@ -52,16 +52,16 @@ export const useProjectStore = defineStore("current project", () => {
                 last: null,
             }
         }
-        let first = score.value[0].note;
-        score.value.forEach(({note}) => {
-            if (note.start < first.start) {
-                first = note;
+        let first = score.value[0];
+        score.value.forEach((editNote) => {
+            if (editNote.start < first.start) {
+                first = editNote;
             }
         });
-        let last = score.value[0].note;
-        score.value.forEach(({note}) => {
-            if ((note.end || note.start) > (last.end || last.start)) {
-                last = note;
+        let last = score.value[0];
+        score.value.forEach((editNote) => {
+            if ((editNote.end || editNote.start) > (last.end || last.start)) {
+                last = editNote;
             }
         });
         if (!last.end) throw new Error("last.end is undefined");
