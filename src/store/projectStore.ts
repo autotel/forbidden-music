@@ -17,10 +17,9 @@ export const useProjectStore = defineStore("current project", () => {
     const name = ref("unnamed (autosave)" as string);
     // TODO: later might use the main group names as a project name
     // opening the door to mixing projects
-    const mainGroup = reactive(new Group("main"));
+    const mainGroup = new Group("main");
 
     const score = (reutilize = false): MaybeGroupedEditNote[] => mainGroup.getFlatNotes(reutilize)
-
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];

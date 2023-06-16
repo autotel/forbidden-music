@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref, Ref, watchEffect } from "vue";
+import { computed, ref, Ref, watch, watchEffect } from "vue";
 import { EditNote } from "../dataTypes/EditNote.js";
 import { useProjectStore } from "./projectStore.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
@@ -21,8 +21,14 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxY = ref(1080);
     const project = useProjectStore();
 
-    const visibleNotes = computed((): EditNote[] => {
-        return project.score(true).filter((editNote) => {
+    const visibleNotes = ref<EditNote[]>([]);
+
+    watch([
+        octaveOffset,timeOffset, viewWidthTime, viewHeightOctaves,
+        project.score, ()=>project.mainGroup.notes
+    ], () => {
+        console.log("visibleNotes");
+        visibleNotes.value = project.score(false).filter((editNote) => {
             const note = editNote;
             return (
                 note.start < timeOffset.value + viewWidthTime.value &&
@@ -51,10 +57,14 @@ export const useViewStore = defineStore("view", () => {
     const pxToTime = (time: number): number => {
         return (time * viewWidthTime.value) / viewWidthPx.value;
     };
-    const timeToPx = (px: number): number => {
-        return (px * viewWidthPx.value) / viewWidthTime.value;
+    const timeToPx = (time: number): number => {
+        if (time === Infinity) return viewWidthPx.value + 2;
+        if (time === -Infinity) return -viewWidthPx.value - 2;
+        return (time * viewWidthPx.value) / viewWidthTime.value;
     };
     const timeToPxWithOffset = (time: number): number => {
+        if (time === Infinity) return viewWidthPx.value + 2;
+        if (time === -Infinity) return -viewWidthPx.value - 2;
         return timeToPx(time - timeOffset.value);
     };
     const pxToTimeWithOffset = (px: number): number => {
@@ -64,15 +74,21 @@ export const useViewStore = defineStore("view", () => {
         return (px * -viewHeightOctaves.value) / viewHeightPx.value;
     };
     const octaveToPx = (octave: number): number => {
+        if (octave === Infinity) return viewHeightPx.value + 2;
+        if (octave === -Infinity) return -viewHeightPx.value - 2;
         return (octave * viewHeightPx.value) / -viewHeightOctaves.value;
     };
     const pxToOctaveWithOffset = (px: number): number => {
         return pxToOctave(px - _offsetPxY.value) - octaveOffset.value;
     };
     const octaveToPxWithOffset = (octave: number): number => {
+        if (octave === Infinity) return viewHeightPx.value + 2;
+        if (octave === -Infinity) return -viewHeightPx.value - 2;
         return octaveToPx(octave + octaveOffset.value) + _offsetPxY.value;
     };
     const frequencyToPxWithOffset = (frequency: number): number => {
+        if (frequency === Infinity) return viewHeightPx.value + 2;
+        if (frequency === -Infinity) return -viewHeightPx.value - 2;
         return octaveToPxWithOffset(frequencyToOctave(frequency));
     };
     const isOctaveInView = (octave: number): boolean => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import Pianito from './components/Pianito.vue';
@@ -24,6 +24,8 @@ import { useSelectStore } from './store/selectStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
+import GroupElement from './components/GroupElement.vue';
+import { useSnapStore } from './store/snapStore';
 
 type Timeout = ReturnType<typeof setTimeout>;
 
@@ -41,7 +43,7 @@ const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.createInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
-
+const snaps = useSnapStore();
 provide('modalText', modalText);
 
 
@@ -121,6 +123,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
     }
     if (e.ctrlKey) {
+        snaps.resetSnapExplanation();
         tool.currentLeftHand = Tool.Select;
         const dectl = (e: KeyboardEvent) => {
             if (e.key == "Control") {
@@ -256,6 +259,8 @@ onUnmounted(() => {
     <div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
+            <GroupElement :group="project.mainGroup" />
+
             <g id="grid">
                 <TimeGrid />
                 <ToneGrid />

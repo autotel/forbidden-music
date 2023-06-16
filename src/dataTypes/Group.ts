@@ -1,6 +1,7 @@
 import { Ref, ref } from "vue";
 import { EditNote } from "./EditNote";
 import { NumberDictionary } from "./Dictionary";
+import { useThrottleFn } from "@vueuse/core";
 
 export class MaybeGroupedEditNote extends EditNote {
     group?: Group;
@@ -12,6 +13,8 @@ export class Group {
     _notes: MaybeGroupedEditNote[] = [];
     _groups: Group[] = [];
     memFlatNotes: MaybeGroupedEditNote[] | null = null;
+    memBounds = { start: 0, end: 0, octaveStart: 0, octaveEnd: 0, duration: 0, octaveRange: 0 };
+    selected: boolean = false;
 
     get notes(): EditNote[] {
         return this._notes;
@@ -34,14 +37,18 @@ export class Group {
         this.memFlatNotes = null;
     }
 
-    get bounds() {
+    recalculateBounds = useThrottleFn(() => {
+        let testCount = 0;
         const returnValue = {
             start: Infinity,
-            end: -Infinity,
-            octaveStart: 0,
-            octaveEnd: 12
+            end: 0,
+            octaveStart: Infinity,
+            octaveEnd: 0,
+            duration: 0,
+            octaveRange: 0
         };
         this._notes.forEach(note => {
+            testCount++;
             if (note.start < returnValue.start) {
                 returnValue.start = note.start;
             }
@@ -55,21 +62,23 @@ export class Group {
                 returnValue.octaveEnd = note.octave;
             }
         });
-        this._groups.forEach(({ bounds }) => {
-            if (bounds.start < returnValue.start) {
-                returnValue.start = bounds.start;
-            }
-            if (bounds.end > returnValue.end) {
-                returnValue.end = bounds.end;
-            }
-            if (bounds.octaveStart < returnValue.octaveStart) {
-                returnValue.octaveStart = bounds.octaveStart;
-            }
-            if (bounds.octaveEnd > returnValue.octaveEnd) {
-                returnValue.octaveEnd = bounds.octaveEnd;
-            }
-        });
-        return returnValue;
+        // this._groups.forEach(({ bounds }) => {
+        //     if (bounds.start < returnValue.start) {
+        //         returnValue.start = bounds.start;
+        //     }
+        //     if (bounds.end > returnValue.end) {
+        //         returnValue.end = bounds.end;
+        //     }
+        // });
+        returnValue.duration = returnValue.end - returnValue.start;
+        returnValue.octaveRange = returnValue.octaveEnd - returnValue.octaveStart;
+        this.memBounds = returnValue;
+        console.log("recalculateBounds", testCount);
+    }, 200)
+
+    get bounds() {
+        this.recalculateBounds();
+        return this.memBounds;
     }
 
     static list: NumberDictionary<Group> = {};
@@ -143,7 +152,6 @@ export class Group {
             }
         });
     }
-
 
     constructor(name?: string) {
         if (name) {
