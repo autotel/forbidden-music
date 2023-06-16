@@ -24,6 +24,7 @@ import { useSelectStore } from './store/selectStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
+import GroupElement from './components/GroupElement.vue';
 
 type Timeout = ReturnType<typeof setTimeout>;
 
@@ -93,7 +94,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     // delete selected notes
     if (e.key === 'Delete') {
-        project.deleteNote(... project.score(true).filter(note => note.selected))
+        project.score = project.score.filter(note => !note.selected)
         // minimalistic option:
         // tool.noteBeingHovered = false;
         // programmatic option:
@@ -262,6 +263,11 @@ onUnmounted(() => {
             </g>
             <g id="tone-relations">
                 <ToneRelation />
+            </g>
+            <g id="groups-container">
+                <g v-for="group in project.groups" :key="group.id">
+                    <GroupElement :group="group" />
+                </g>
             </g>
             <g id="note-would-be-created">
                 <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated"

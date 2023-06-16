@@ -1,6 +1,7 @@
 // represents a Note as displayed in the gui
 // adding properties such as drag offset, selected, position in screen.
 import { View } from "../store/viewStore";
+import { Group } from "./Group";
 import { Note, NoteDefa, NoteDefb } from "./Note";
 
 const makeRandomString = () => Math.random().toString(36).slice(2);
@@ -10,6 +11,8 @@ const makeRandomString = () => Math.random().toString(36).slice(2);
 export class EditNote extends Note {
     selected: boolean = false;
     udpateFlag: string;
+    // groupId: number | null = null;
+    group: Group | null = null;
     /** 
      * make a clone of editnote. only note properties are cloned    
      * TODO: clone could now clone all the props. To get a clone of the 

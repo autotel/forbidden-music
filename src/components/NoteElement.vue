@@ -53,7 +53,7 @@ onUnmounted(() => {
 </script>
 <template>
     <text class="texts" v-if="view.viewWidthTime < 10" :x="editNote.x" :y="editNote.y + 5" font-size="10">
-        (2^{{ editNote.octave.toFixed(3) }})n = {{ editNote.frequency.toFixed(3) }} hz {{ editNote.selected }}
+        (2^{{ editNote.octave.toFixed(3) }})n = {{ editNote.frequency.toFixed(3) }} hz {{ editNote.group?.name }}
     </text>
     <template v-if="editNote.duration">
         <rect class="body" :class="{

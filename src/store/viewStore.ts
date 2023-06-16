@@ -3,7 +3,6 @@ import { computed, ref, Ref, watchEffect } from "vue";
 import { EditNote } from "../dataTypes/EditNote.js";
 import { useProjectStore } from "./projectStore.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
-import { MaybeGroupedEditNote } from "../dataTypes/Group.js";
 
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
@@ -22,7 +21,7 @@ export const useViewStore = defineStore("view", () => {
     const project = useProjectStore();
 
     const visibleNotes = computed((): EditNote[] => {
-        return project.score(true).filter((editNote) => {
+        return project.score.filter((editNote) => {
             const note = editNote;
             return (
                 note.start < timeOffset.value + viewWidthTime.value &&

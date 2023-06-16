@@ -294,7 +294,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteThatWouldBeCreated.value as EditNote,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: project.score(),
+                otherNotes: project.score,
                 sideEffects: true,
             });
 

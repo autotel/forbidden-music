@@ -1,40 +1,88 @@
+import { useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote.js';
-import { Group, MaybeGroupedEditNote } from '../dataTypes/Group.js';
-import { Note, NoteDefa, NoteDefb } from '../dataTypes/Note.js';
+import { Group } from '../dataTypes/Group.js';
 import { LibraryItem } from './libraryStore.js';
 import { usePlaybackStore } from './playbackStore.js';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
+import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
+const getUnusedGroupId = (groups: Group[]): number => {
+    let ret = 0;
+    while (groups.find((group) => group.id === ret)) {
+        ret++;
+    }
+    return ret;
+}
+const getNewGroup = (groups: Group[], name = "new group"): Group => {
+    return {
+        name,
+        id: getUnusedGroupId(groups),
+        bounds: [[0, 0], [0, 0]],
+        selected: false,
+    }
+}
 
 export const useProjectStore = defineStore("current project", () => {
+
+
+
     const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
-    // TODO: later might use the main group names as a project name
-    // opening the door to mixing projects
-    const mainGroup = reactive(new Group("main"));
 
-    const score = (reutilize = false): MaybeGroupedEditNote[] => mainGroup.getFlatNotes(reutilize)
+    const groups = ref<Group[]>([
+        getNewGroup([]),
+    ]);
 
+    const score = ref<EditNote[]>([]);
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
     });
 
+    const getNotesInGroup = (group: Group): EditNote[] => {
+        return score.value.filter((note) => note.group === group);
+    }
+
+    const getOrCreateGroupById = (id: number, extraProps: any): Group => {
+        const groupList = groups.value;
+        const found = groupList.find((group) => group.id === id);
+        if (found) return found;
+        const newGroup = getNewGroup(groupList);
+        newGroup.id = id;
+        Object.assign(newGroup, extraProps);
+        groupList.push(newGroup);
+        return newGroup;
+    }
+
+    const updateGroupBounds = useThrottleFn((group: Group) => {
+        const notes = getNotesInGroup(group);
+        if (notes.length === 0) {
+            group.bounds = [[0, 0], [0, 0]];
+            return;
+        }
+        const start = Math.min(...notes.map((note) => note.start));
+        const end = Math.max(...notes.map((note) => note.end));
+        const octaveStart = Math.min(...notes.map((note) => note.octave));
+        const octaveEnd = Math.max(...notes.map((note) => note.octave));
+        group.bounds = [[start, end], [octaveStart, octaveEnd]];
+    }, 100);
+
+
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: score().map((editNote) => ({
+            notes: score.value.map((editNote) => ({
                 frequency: editNote.frequency,
                 start: editNote.start,
                 duration: editNote.duration,
                 mute: editNote.mute,
-                groupId: editNote.group?.id || null,
+                // groupId: editNote.group?.id || null,
             })),
             created: created.value,
             edited: edited.value,
@@ -53,16 +101,20 @@ export const useProjectStore = defineStore("current project", () => {
         return ret;
     }
 
-    const setScore = (newScore: (NoteDefa | NoteDefb | EditNote | Note)[]) => {
-        clearScore();
-        mainGroup.notes = newScore.map(note => new EditNote(note, view));
+
+    const setFromListOfNoteDefinitions = (notes: (NoteDefa | NoteDefb)[]) => {
+        score.value = notes.map((note) => new EditNote(note, view));
     }
 
     const setFromProjecDefinition = (pDef: LibraryItem) => {
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
-        setScore(pDef.notes);
+
+        setFromListOfNoteDefinitions(pDef.notes);
+        // const loadedGroups = score.value.map(({ group }) => group).filter((group) => group) as Group[];
+        // loadedGroups.map((g) => getOrCreateGroupById(g.id, g)) as Group[];
+
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
         console.log(pDef.notes.filter(note => note.mute))
@@ -90,36 +142,28 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const clearScore = () => {
-        mainGroup.notes = [];
-        mainGroup.groups = [];
+        score.value = [];
+        groups.value = [];
     }
 
-    const appendNote = (...notes: MaybeGroupedEditNote[]) => {
+    const appendNote = (...notes: EditNote[]) => {
+        score.value.push(...notes);
+        
+        
         notes.map((note) => {
-            let destinationGroup = mainGroup;
-            if (note.group) {
-                destinationGroup = note.group;
-            }
-            destinationGroup.notes.push(note);
-        });
-    }
-
-    const deleteNote = (...notes: MaybeGroupedEditNote[]) => {
-        notes.map((note) => {
-            let destinationGroup = mainGroup;
-            if (note.group) {
-                destinationGroup = note.group;
-            }
-            destinationGroup.notes = destinationGroup.notes.filter((n) => n !== note);
+            // TODO: remove, its for dev purposes
+            note.group = getOrCreateGroupById(0, { name: "test group" });
+            if (!note.group) return;
+            updateGroupBounds(note.group);
         })
     }
 
     return {
-        score, mainGroup,
+        score, groups,
         name, edited, created, snaps,
         getProjectDefintion,
-        setFromProjecDefinition,
-        clearScore, setScore, appendNote, deleteNote,
+        setFromProjecDefinition,setFromListOfNoteDefinitions,
+        clearScore, appendNote,
     }
 
 });

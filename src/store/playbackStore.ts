@@ -199,7 +199,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
 
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
-        const events = project.score(true).filter((editNote) => {
+        const events = project.score.filter((editNote) => {
             return editNote.start >= frameStartTime && editNote.start < frameEndTime;
         });
         // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);
