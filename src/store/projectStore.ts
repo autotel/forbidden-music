@@ -71,7 +71,7 @@ export const useProjectStore = defineStore("current project", () => {
         const octaveStart = Math.min(...notes.map((note) => note.octave));
         const octaveEnd = Math.max(...notes.map((note) => note.octave));
         group.bounds = [[start, end], [octaveStart, octaveEnd]];
-    }, 100);
+    }, 50,true);
 
 
     const getProjectDefintion = (): LibraryItem => {
@@ -148,8 +148,8 @@ export const useProjectStore = defineStore("current project", () => {
 
     const appendNote = (...notes: EditNote[]) => {
         score.value.push(...notes);
-        
-        
+
+
         notes.map((note) => {
             // TODO: remove, its for dev purposes
             note.group = getOrCreateGroupById(0, { name: "test group" });
@@ -162,7 +162,7 @@ export const useProjectStore = defineStore("current project", () => {
         score, groups,
         name, edited, created, snaps,
         getProjectDefintion,
-        setFromProjecDefinition,setFromListOfNoteDefinitions,
+        setFromProjecDefinition, setFromListOfNoteDefinitions, updateGroupBounds,
         clearScore, appendNote,
     }
 

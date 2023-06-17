@@ -19,39 +19,39 @@ const props = defineProps<{
 const groupBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 
-// const bodyMouseEnterListener = (e: MouseEvent) => {
-//     tool.groupMouseEnter(props.group);
-// }
-// const bodyMouseLeaveListener = (e: MouseEvent) => {
-//     tool.groupMouseLeave();
-// }
+const bodyMouseEnterListener = (e: MouseEvent) => {
+    tool.groupMouseEnter(props.group);
+}
+const bodyMouseLeaveListener = (e: MouseEvent) => {
+    tool.groupMouseLeave();
+}
 // const rightEdgeMOuseEnterListener = (e: MouseEvent) => {
 //     tool.groupRightEdgeMouseEnter(props.group);
 // }
 // const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
 //     tool.groupRightEdgeMouseLeave();
 // }
-// onMounted(() => {
-//     if (groupBody.value) {
-//         groupBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
-//         groupBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
-//     }
-//     if (rightEdge.value) {
-//         rightEdge.value.addEventListener('mouseenter', rightEdgeMOuseEnterListener);
-//         rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
-//     }
-// });
-// onUnmounted(() => {
-//     if (props.interactionDisabled) return;
-//     if (groupBody.value) {
-//         groupBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
-//         groupBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
-//     }
-//     if (rightEdge.value) {
-//         rightEdge.value.removeEventListener('mouseenter', rightEdgeMOuseEnterListener);
-//         rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
-//     }
-// });
+onMounted(() => {
+    if (groupBody.value) {
+        groupBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
+        groupBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
+    }
+    // if (rightEdge.value) {
+    //     rightEdge.value.addEventListener('mouseenter', rightEdgeMOuseEnterListener);
+    //     rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
+    // }
+});
+onUnmounted(() => {
+    if (props.interactionDisabled) return;
+    if (groupBody.value) {
+        groupBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
+        groupBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
+    }
+    // if (rightEdge.value) {
+    //     rightEdge.value.removeEventListener('mouseenter', rightEdgeMOuseEnterListener);
+    //     rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
+    // }
+});
 
 const _rect = () => {
     return {
@@ -72,8 +72,8 @@ const rect = computed(() => _rect());
             {{ group.name }}
         </text>
         <rect class="body" :class="{
-            selected: group.selected,
-            editable: tool.current == Tool.Edit,
+            selected: tool.currentlyActiveGroup == group,
+            editable: tool.currentlyActiveGroup == group,
             interactionDisabled: interactionDisabled,
             // muted: group.mute,
         }" :...=rect ref="groupBody" />
@@ -91,7 +91,8 @@ const rect = computed(() => _rect());
 
 .body {
     stroke: #999;
-    fill: rgba(24, 90, 102, 0.233);
+    stroke-dasharray: 4;
+    fill:none;
 }
 
 .veloline {
@@ -99,7 +100,8 @@ const rect = computed(() => _rect());
 }
 
 .body.selected {
-    fill: #f889;
+    fill: rgba(24, 90, 102, 0.37);
+    stroke-dasharray: none;
 }
 
 .veloline.selected {

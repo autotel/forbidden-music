@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
 import { useProjectStore } from './projectStore';
 import { throttledWatch } from '@vueuse/core';
+import { Group } from '../dataTypes/Group';
 
 const getNotesInRange = (
     notes: EditNote[],
@@ -17,10 +18,32 @@ const getNotesInRange = (
     const octaveEnd = Math.max(range.startOctave, range.endOctave);
     const timeStart = Math.min(range.startTime, range.endTime);
     const timeEnd = Math.max(range.startTime, range.endTime);
-    
+
     return notes.filter((editNote) => {
         const octaveInRange = editNote.octave >= octaveStart && editNote.octave <= octaveEnd;
         const timeInRange = editNote.end >= timeStart && editNote.start <= timeEnd;
+        return octaveInRange && timeInRange;
+    });
+};
+
+const getGroupsInRange = (
+    groups: Group[],
+    range: {
+        startTime: number,
+        endTime: number,
+        startOctave: number,
+        endOctave: number
+    }
+) => {
+    const octaveStart = Math.min(range.startOctave, range.endOctave);
+    const octaveEnd = Math.max(range.startOctave, range.endOctave);
+    const timeStart = Math.min(range.startTime, range.endTime);
+    const timeEnd = Math.max(range.startTime, range.endTime);
+
+    return groups.filter((group) => {
+        const octaveBound = group.bounds[1].sort();
+        const octaveInRange = octaveBound[0] >= octaveStart && octaveBound[1] <= octaveEnd;
+        const timeInRange = group.bounds[0][0] >= timeStart && group.bounds[0][1] <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };
@@ -39,12 +62,12 @@ export const useSelectStore = defineStore("select", () => {
     const get = () => {
         return [...selectedNotes.value];
     };
-    const select = (...project: EditNote[]) => {
+    const select = (...notes: EditNote[]) => {
         selectedNotes.value.clear();
-        selectedNotes.value = new Set(project);
+        selectedNotes.value = new Set(notes);
     };
-    const toggle = (...project: EditNote[]) => {
-        project.forEach((n) => {
+    const toggle = (...notes: EditNote[]) => {
+        notes.forEach((n) => {
             if (selectedNotes.value.has(n)) {
                 selectedNotes.value.delete(n);
             } else {
@@ -71,11 +94,28 @@ export const useSelectStore = defineStore("select", () => {
         endTime: number,
         startOctave: number,
         endOctave: number
-    }) => {
-        select(...getNotesInRange(
+    }, restrictToGroup: (Group | null | false) = false) => {
+        let notesInRange = getNotesInRange(
             project.score,
             range
-        ));
+        )
+        
+        if (restrictToGroup !== false) { // note that null is also a valid group restriction
+            notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
+        }
+
+        // let groupsInRange:Group[] = [];
+        // if (!restrictToGroup) { // null or false
+        //     const groupsInRange = getGroupsInRange(
+        //         project.groups,
+        //         range
+        //     )
+        // }
+
+        select(
+            ...notesInRange, 
+            // ...groupsInRange
+        );
     };
     const addRange = (range: {
         startTime: number,
@@ -95,7 +135,7 @@ export const useSelectStore = defineStore("select", () => {
     const selectAll = () => {
         select(...project.score);
     };
-    throttledWatch(()=>selectedNotes.value.size, refreshNoteSelectionState);
+    throttledWatch(() => selectedNotes.value.size, refreshNoteSelectionState);
 
     return {
         selectRange,
