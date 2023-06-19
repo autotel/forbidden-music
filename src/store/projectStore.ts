@@ -148,14 +148,26 @@ export const useProjectStore = defineStore("current project", () => {
 
     const appendNote = (...notes: EditNote[]) => {
         score.value.push(...notes);
-
-
+        let alreadyUpdatedGroups: Group[] = [];
         notes.map((note) => {
-            // TODO: remove, its for dev purposes
-            note.group = getOrCreateGroupById(0, { name: "test group" });
             if (!note.group) return;
+            if (alreadyUpdatedGroups.includes(note.group)) return;
+            alreadyUpdatedGroups.push(note.group);
             updateGroupBounds(note.group);
         })
+    }
+
+    const setNotesGroup = (notes: EditNote[], group: Group) => {
+        notes.map((note) => {
+            note.group = group;
+        })
+        updateGroupBounds(group);
+    }
+
+    const setNotesGroupToNewGroup = (notes: EditNote[]) => {
+        const newGroup = getNewGroup(groups.value);
+        groups.value.push(newGroup);
+        setNotesGroup(notes, newGroup);
     }
 
     return {
@@ -163,6 +175,7 @@ export const useProjectStore = defineStore("current project", () => {
         name, edited, created, snaps,
         getProjectDefintion,
         setFromProjecDefinition, setFromListOfNoteDefinitions, updateGroupBounds,
+        getOrCreateGroupById, getNotesInGroup, setNotesGroup, setNotesGroupToNewGroup,
         clearScore, appendNote,
     }
 

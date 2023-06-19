@@ -162,6 +162,14 @@ const keyDownListener = (e: KeyboardEvent) => {
         e.preventDefault();
         e.stopPropagation();
     }
+    // group 
+    if (e.ctrlKey && e.key === 'g') {
+        console.log("group");
+        project.setNotesGroupToNewGroup(select.get());
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
 
     if (e.key === 'Escape') {
         select.clear();

@@ -1,5 +1,22 @@
 import { SynthInstance, SynthParam } from "./SynthInterface";
 
+class PerformanceChronometer {
+    private startTime: number;
+    constructor() {
+        this.startTime = performance.now();
+    }
+    getElapsedTime = () => {
+        return performance.now() - this.startTime;
+    }
+    reset = () => {
+        this.startTime = performance.now();
+    }
+    logElapsedTime = (text:string) => {
+        console.log(text, this.getElapsedTime().toFixed(2),"ms");
+        this.reset();
+    }
+}
+
 interface SampleFileDefinition {
     name: string;
     frequency: number;
@@ -68,6 +85,7 @@ class SamplerVoice {
         relativeNoteStart: number,
         velocity: number
     ) => {
+        const chrono = new PerformanceChronometer();
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
         let catchup = relativeNoteStart < 0;
         let skipSample = 0;
@@ -80,7 +98,7 @@ class SamplerVoice {
         }
         const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
         const absoluteNoteEnd = absoluteNoteStart + duration;
-
+        chrono.logElapsedTime("triggerAttackRelease: pre");
         this.inUse = true;
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
         this.resetBufferSource(sampleSource);
@@ -92,7 +110,9 @@ class SamplerVoice {
         this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart);
         this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd);
         this.bufferSource.start(absoluteNoteStart, skipSample, duration);
+        chrono.logElapsedTime("start");
         this.bufferSource.addEventListener("ended", this.releaseVoice);
+        chrono.logElapsedTime("function end");
     };
 
     triggerPerc = (

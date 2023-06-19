@@ -168,29 +168,23 @@ export const useToolStore = defineStore("edit", () => {
                 ret = MouseDownActions.Lengthen;
                 currentMouseStringHelper.value = "⟷";
             } else if (noteBeingHovered.value) {
-                console.log("A");
                 ret = MouseDownActions.Move;
                 if(noteBeingHovered.value.group !== currentlyActiveGroup.value){
                     ret = MouseDownActions.SetActiveGroupAndDrag;
                     groupBeingHovered.value = noteBeingHovered.value.group;
                     currentMouseStringHelper.value = "⇱";
                 }else if (selection.isEditNoteSelected(noteBeingHovered.value as EditNote)) {
-                    console.log("C");
                     ret = MouseDownActions.Move;
                 } else {
-                    console.log("D");
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
             } else if (groupBeingHovered.value) {
-                console.log("E");
                 ret = MouseDownActions.SetActiveGroupAndDrag;
                 currentMouseStringHelper.value = "⇱";
             } else if (!groupBeingHovered.value && currentlyActiveGroup.value!==null) {
-                console.log("F");
                 ret = MouseDownActions.UnsetActiveGroup;
                 currentMouseStringHelper.value = "⇲";
             } else {
-                console.log("G");
                 ret = MouseDownActions.Create;
             }
         }
@@ -249,7 +243,6 @@ export const useToolStore = defineStore("edit", () => {
                 selectRange.value.timeSize = 0;
                 selectRange.value.octaveSize = 0;
                 selectRange.value.active = true;
-
                 break;
             }
             case MouseDownActions.DragVelocity:
@@ -469,6 +462,11 @@ export const useToolStore = defineStore("edit", () => {
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
             // store them to store
+            if(currentlyActiveGroup.value){
+                notesBeingCreated.value.forEach(note => {
+                    note.group = currentlyActiveGroup.value;
+                });
+            }
             project.appendNote(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
