@@ -32,12 +32,6 @@ const reservedEntryName = "forbidden-music";
 const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
     if (filename === reservedEntryName) throw new Error(`filename cannot be "${reservedEntryName}"`);
     const value: any = inValue as LibraryItem;
-    value.notes = inValue.notes.map((groupedNote) => ({
-        frequency: groupedNote.frequency,
-        start: groupedNote.start,
-        duration: groupedNote.duration,
-        mute: groupedNote.mute,
-    }));
     localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
 const retrieveFromLocalStorage = (filename: string) => {
