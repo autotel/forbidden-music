@@ -97,7 +97,10 @@ export class Note {
     this.duration = noteDef.duration;
     this.selected = false;
     this.mute = noteDef.mute || false;
-    this.velocity = noteDef.velocity || 0.7;
+    this.velocity = 0.7;
+    if('velocity' in noteDef){
+      this.velocity = noteDef.velocity as number;
+    }
     this.frequency =
       "frequency" in noteDef
         ? noteDef.frequency

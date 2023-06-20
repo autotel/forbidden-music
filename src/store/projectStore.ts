@@ -82,7 +82,8 @@ export const useProjectStore = defineStore("current project", () => {
                 start: editNote.start,
                 duration: editNote.duration,
                 mute: editNote.mute,
-                // groupId: editNote.group?.id || null,
+                velocity: editNote.velocity,
+                groupId: editNote.group?.id || null,
             })),
             created: created.value,
             edited: edited.value,
@@ -103,10 +104,14 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const setFromListOfNoteDefinitions = (notes: (NoteDefa | NoteDefb)[]) => {
-        score.value = notes.map((note) => new EditNote(note, view));
+        score.value = notes.map((note) => {
+            console.log(note);
+            return new EditNote(note, view)
+        });
     }
 
     const setFromProjecDefinition = (pDef: LibraryItem) => {
+        console.log("setFromProjecDefinition", pDef);
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;

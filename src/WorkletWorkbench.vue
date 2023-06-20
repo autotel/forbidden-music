@@ -94,7 +94,6 @@ const calcFt = () => {
         previousNoiseFft.splice(0, previousNoiseFft.length, ...outNoiseFtAverage);
 
         outputNoiseFft.value = outNoiseFtAverage;
-        // console.log("ft");
         ftCalcs.value++;
     } catch (e: any) {
         errors.value = [e + ""];
@@ -105,7 +104,6 @@ const calcFt = () => {
 
 onMounted(() => {
     if (ftTimeout.value) {
-        console.log("clear");
         clearTimeout(ftTimeout.value);
     }
     ftCalcs.value = 0;

@@ -107,7 +107,6 @@ export class EditNote extends Note {
 
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         super(noteDef);
-        
         if(noteDef instanceof EditNote){
             this.selected = noteDef.selected;
         }

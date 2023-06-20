@@ -7,7 +7,6 @@ const followMouse = false;
 let corner: "tl" | "tr" | "bl" | "br" = "tl";
 
 const mmm = (e: MouseEvent) => {
-    console.log(",,2");
     if (!fEl.value) return;
     if (!mEl.value) return;
 
