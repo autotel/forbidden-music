@@ -8,26 +8,9 @@ import { usePlaybackStore } from './playbackStore.js';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
-const getUnusedGroupId = (groups: Group[]): number => {
-    let ret = 0;
-    while (groups.find((group) => group.id === ret)) {
-        ret++;
-    }
-    return ret;
-}
-const getNewGroup = (groups: Group[], name = "new group"): Group => {
-    return {
-        name,
-        id: getUnusedGroupId(groups),
-        bounds: [[0, 0], [0, 0]],
-        selected: false,
-    }
-}
+
 
 export const useProjectStore = defineStore("current project", () => {
-
-
-
     const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
@@ -35,11 +18,22 @@ export const useProjectStore = defineStore("current project", () => {
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
 
-    const groups = ref<Group[]>([
-        getNewGroup([]),
-    ]);
-
+    const groups = ref<Group[]>([]);
     const score = ref<EditNote[]>([]);
+
+    const getUnusedGroupId = (): number => {
+        let ret = 0;
+        while (groups.value.find((group) => group.id === ret)) {
+            ret++;
+        }
+        return ret;
+    }
+    const getNewGroup = (name = "new group"): Group => {
+        // if groups array is a ref, it seems that group might be cloned into instead of being the same
+        const index = groups.value.push(new Group(name));
+        const newGroup = groups.value[index - 1];
+        return newGroup
+    }
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
@@ -53,7 +47,7 @@ export const useProjectStore = defineStore("current project", () => {
         const groupList = groups.value;
         const found = groupList.find((group) => group.id === id);
         if (found) return found;
-        const newGroup = getNewGroup(groupList);
+        const newGroup = getNewGroup();
         newGroup.id = id;
         Object.assign(newGroup, extraProps);
         groupList.push(newGroup);
@@ -63,15 +57,15 @@ export const useProjectStore = defineStore("current project", () => {
     const updateGroupBounds = useThrottleFn((group: Group) => {
         const notes = getNotesInGroup(group);
         if (notes.length === 0) {
-            group.bounds = [[0, 0], [0, 0]];
+            group.setBounds([0, 0], [0, 0]);
             return;
         }
-        const start = Math.min(...notes.map((note) => note.start));
-        const end = Math.max(...notes.map((note) => note.end));
+        const start = Math.min(...notes.map((note) => note.time));
+        const end = Math.max(...notes.map((note) => note.timeEnd));
         const octaveStart = Math.min(...notes.map((note) => note.octave));
         const octaveEnd = Math.max(...notes.map((note) => note.octave));
-        group.bounds = [[start, end], [octaveStart, octaveEnd]];
-    }, 50,true);
+        group.setBounds([start, end], [octaveStart, octaveEnd]);
+    }, 60, true, true);
 
 
     const getProjectDefintion = (): LibraryItem => {
@@ -79,7 +73,7 @@ export const useProjectStore = defineStore("current project", () => {
             name: name.value,
             notes: score.value.map((editNote) => ({
                 frequency: editNote.frequency,
-                start: editNote.start,
+                time: editNote.time,
                 duration: editNote.duration,
                 mute: editNote.mute,
                 velocity: editNote.velocity,
@@ -170,8 +164,7 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const setNotesGroupToNewGroup = (notes: EditNote[]) => {
-        const newGroup = getNewGroup(groups.value);
-        groups.value.push(newGroup);
+        const newGroup = getNewGroup();
         setNotesGroup(notes, newGroup);
     }
 

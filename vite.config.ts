@@ -12,7 +12,7 @@ export default defineConfig({
       cert: './certificates/cert.crt',
     },
     // disable hot module reload
-    hmr: { overlay: false }
+    hmr: false,
 
   },
   plugins: [

@@ -4,6 +4,9 @@ import { EditNote } from '../dataTypes/EditNote';
 import { useProjectStore } from './projectStore';
 import { throttledWatch } from '@vueuse/core';
 import { Group } from '../dataTypes/Group';
+import { TimelineItem } from '../dataTypes/TimelineItem';
+
+
 
 const getNotesInRange = (
     notes: EditNote[],
@@ -21,7 +24,7 @@ const getNotesInRange = (
 
     return notes.filter((editNote) => {
         const octaveInRange = editNote.octave >= octaveStart && editNote.octave <= octaveEnd;
-        const timeInRange = editNote.end >= timeStart && editNote.start <= timeEnd;
+        const timeInRange = editNote.timeEnd >= timeStart && editNote.time <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };
@@ -41,51 +44,64 @@ const getGroupsInRange = (
     const timeEnd = Math.max(range.startTime, range.endTime);
 
     return groups.filter((group) => {
-        const octaveBound = group.bounds[1].sort();
+        const octaveBound = [group.octave, group.octaveEnd];
         const octaveInRange = octaveBound[0] >= octaveStart && octaveBound[1] <= octaveEnd;
-        const timeInRange = group.bounds[0][0] >= timeStart && group.bounds[0][1] <= timeEnd;
+        const timeInRange = group.time >= timeStart && group.timeEnd <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };
 
 
-
 export const useSelectStore = defineStore("select", () => {
-    const selectedNotes = ref(new Set() as Set<EditNote>);
+    const selected = ref(new Set() as Set<TimelineItem>);
+
     const project = useProjectStore();
-    const isEditNoteSelected = (editNote: EditNote) => {
-        return selectedNotes.value.has(editNote);
+    
+    // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
+    const isSelected = (item: TimelineItem) => {
+        return selected.value.has(item);
     };
     const refreshNoteSelectionState = () => {
-        project.score.forEach(n => n.selected = isEditNoteSelected(n))
+        project.score.forEach(n => n.selected = isSelected(n))
     }
-    const get = () => {
-        return [...selectedNotes.value];
+    const refreshGroupSelectionState = () => {
+        project.groups.forEach(g => g.selected = isSelected(g))
+    }
+
+    const getNotes = ():EditNote[] => {
+        return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
     };
-    const select = (...notes: EditNote[]) => {
-        selectedNotes.value.clear();
-        selectedNotes.value = new Set(notes);
+    const getGroups = ():Group[] => {
+        return [...selected.value].filter((n) => n instanceof Group) as Group[];
     };
+
+    const select = (...items: TimelineItem[]) => {
+        selected.value.clear();
+        selected.value = new Set(items);
+        refreshNoteSelectionState();
+    };
+
     const toggle = (...notes: EditNote[]) => {
         notes.forEach((n) => {
-            if (selectedNotes.value.has(n)) {
-                selectedNotes.value.delete(n);
+            if (selected.value.has(n)) {
+                selected.value.delete(n);
             } else {
-                selectedNotes.value.add(n);
+                selected.value.add(n);
             }
         });
+        refreshNoteSelectionState();
     };
     const remove = (...project: (EditNote)[]) => {
         project.forEach((n) => {
             if (!n) return;
-            selectedNotes.value.delete(n);
+            selected.value.delete(n);
         });
         refreshNoteSelectionState();
     }
     const add = (...editNote: (EditNote)[]) => {
         editNote.forEach((n) => {
             if (!n) return;
-            selectedNotes.value.add(n);
+            selected.value.add(n);
         });
         refreshNoteSelectionState();
     };
@@ -130,21 +146,22 @@ export const useSelectStore = defineStore("select", () => {
         add(...newNotes);
     };
     const clear = () => {
-        selectedNotes.value.clear();
+        selected.value.clear();
     };
     const selectAll = () => {
         select(...project.score);
     };
-    throttledWatch(() => selectedNotes.value.size, refreshNoteSelectionState);
+    throttledWatch(() => selected.value.size, refreshNoteSelectionState);
 
     return {
         selectRange,
         selectAll,
         addRange,
-        add, select, toggle, get,
+        add, select, toggle, 
+        getNotes, getGroups,
         clear: clear, remove,
-        isEditNoteSelected,
-        selectedNotes,
+        isSelected,
+        selected,
     };
 
 });

@@ -24,8 +24,8 @@ export const useViewStore = defineStore("view", () => {
         return project.score.filter((editNote) => {
             const note = editNote;
             return (
-                note.start < timeOffset.value + viewWidthTime.value &&
-                note.end > timeOffset.value &&
+                note.time < timeOffset.value + viewWidthTime.value &&
+                note.timeEnd > timeOffset.value &&
                 note.octave > -octaveOffset.value &&
                 note.octave < -octaveOffset.value + viewHeightOctaves.value
             );

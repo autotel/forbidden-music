@@ -35,7 +35,7 @@ export class EditNote extends Note {
 
     getNoteDefa(): NoteDefa {
         return {
-            start: this.start,
+            time: this.time,
             duration: this.duration,
             octave: this.octave,
             mute: this.mute,
@@ -44,7 +44,7 @@ export class EditNote extends Note {
     }
     getNoteDefb(): NoteDefb {
         return {
-            start: this.start,
+            time: this.time,
             duration: this.duration,
             frequency: this.frequency,
             mute: this.mute,
@@ -55,7 +55,7 @@ export class EditNote extends Note {
     view: View;
 
     get x() {
-        return this.view.timeToPxWithOffset(this.start);
+        return this.view.timeToPxWithOffset(this.time);
     }
     get y() {
         return this.view.octaveToPxWithOffset(this.octave);
@@ -116,12 +116,12 @@ export class EditNote extends Note {
 
         this.dragStart = () => {
             this.dragStartedOctave = this.octave;
-            this.dragStartedTime = this.start;
+            this.dragStartedTime = this.time;
             this.dragStartedDuration = this.duration || 0;
             this.dragStartedVelocity = this.velocity;
         };
         this.dragMove = (dragDelta: { x: number; y: number }) => {
-            this.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
+            this.time = this.dragStartedTime + view.pxToTime(dragDelta.x);
             this.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
             this.forceUpdate();
         };
@@ -130,7 +130,7 @@ export class EditNote extends Note {
             this.forceUpdate();
         };
         this.dragMoveTimeStart = (timeDelta: number) => {
-            this.start = this.dragStartedTime + timeDelta;
+            this.time = this.dragStartedTime + timeDelta;
             this.forceUpdate();
         };
         this.dragLengthMove = (dragDelta: { x: number; y: number }) => {
@@ -151,7 +151,7 @@ export class EditNote extends Note {
             this.udpateFlag = makeRandomString();
         };
         this.dragCancel = () => {
-            this.start = this.dragStartedTime;
+            this.time = this.dragStartedTime;
             this.octave = this.dragStartedOctave;
             this.duration = this.dragStartedDuration;
         };

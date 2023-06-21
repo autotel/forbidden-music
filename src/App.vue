@@ -35,7 +35,7 @@ const timedEventsViewport = ref<SVGSVGElement>();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
-const select = useSelectStore();
+const selection = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
@@ -99,7 +99,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         // tool.noteBeingHovered = false;
         // programmatic option:
         tool.resetState();
-        select.clear();
+        selection.clear();
     }
     // alt activates tool copyOnDrag mode
     if (e.altKey) {
@@ -135,7 +135,7 @@ const keyDownListener = (e: KeyboardEvent) => {
 
     if (e.key === 'm') {
         if (e.ctrlKey) {
-            select.selectedNotes.forEach(eNote => eNote.mute = !eNote.mute);
+            selection.getNotes().forEach(eNote => eNote.mute = !eNote.mute);
         } else {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
         }
@@ -165,14 +165,20 @@ const keyDownListener = (e: KeyboardEvent) => {
     // group 
     if (e.ctrlKey && e.key === 'g') {
         console.log("group");
-        project.setNotesGroupToNewGroup(select.get());
+        project.setNotesGroupToNewGroup(selection.getNotes());
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // select all
+    if (e.ctrlKey && e.key === 'a') {
+        console.log("select all");
+        selection.selectAll();
         e.preventDefault();
         e.stopPropagation();
     }
 
-
     if (e.key === 'Escape') {
-        select.clear();
+        selection.clear();
         tool.resetState();
 
     }

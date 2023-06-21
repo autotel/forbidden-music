@@ -200,7 +200,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
         const events = project.score.filter((editNote) => {
-            return editNote.start >= frameStartTime && editNote.start < frameEndTime;
+            return editNote.time >= frameStartTime && editNote.time < frameEndTime;
         });
         // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);
         return events;
@@ -219,7 +219,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             if (editNote.mute) return;
             if (!synth.value) throw new Error("synth not created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
-            const noteStartFromNow = editNote.start - currentScoreTime.value;
+            const noteStartFromNow = editNote.time - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
             // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
             const relativeNoteStart = noteStartFromNow;

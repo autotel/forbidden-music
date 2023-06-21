@@ -55,10 +55,10 @@ onUnmounted(() => {
 
 const _rect = () => {
     return {
-        x: view.timeToPxWithOffset(props.group.bounds[0][0]),
-        y: view.octaveToPxWithOffset(props.group.bounds[1][1]),
-        width: view.timeToPx(props.group.bounds[0][1] - props.group.bounds[0][0]),
-        height: Math.abs(view.octaveToPx(props.group.bounds[1][1] - props.group.bounds[1][0])),
+        x: view.timeToPxWithOffset(props.group.time),
+        y: view.octaveToPxWithOffset(props.group.octaveEnd),
+        width: view.timeToPx(props.group.timeEnd - props.group.time),
+        height: Math.abs(view.octaveToPx(props.group.octaveEnd - props.group.octave)),
     }
 }
 

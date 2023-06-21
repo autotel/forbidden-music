@@ -1,18 +1,35 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
-import { EditNote } from '../dataTypes/EditNote.js';
-import { Note, NoteDefa, NoteDefb } from '../dataTypes/Note.js';
-import { SynthParam, SynthParamMinimum, SynthParamStored } from '../synth/SynthInterface.js';
+import { Note, NoteDefb } from '../dataTypes/Note.js';
+import { SynthParamStored } from '../synth/SynthInterface.js';
 import { useProjectStore } from './projectStore.js';
 import { useViewStore } from './viewStore.js';
-import { Group } from '../dataTypes/Group.js';
+
+
+const version = "0.1.0";
+
+const migrators = {
+    "0.0.0": (obj: any) => {
+        obj.version = version;
+        obj.notes = obj.notes.map((note: any) => {
+            note.time = note.start;
+            note.timeEnd = note.end;
+            console.log(note);
+            return note;
+        });
+        return obj;
+    },
+}
+
+
 
 export type GroupNoteDef = NoteDefb & {
     groupId: number;
 }
 
 export interface LibraryItem {
+    version: string;
     name: string;
     notes: Array<GroupNoteDef>;
     created: Number;
@@ -29,18 +46,32 @@ type PossibleImportObjects = LibraryItem | Array<Note>
 
 const reservedEntryName = "forbidden-music";
 
+const normalizeLibraryItem = (obj: any): LibraryItem => {
+    if (!obj.version) obj.version = "0.0.0";
+    if (obj.version in migrators) {
+        // @ts-ignore
+        const migrator = migrators[obj.version];
+        console.log("version " + obj.version + " detected, migrating");
+        console.log(migrator,obj.version);
+        obj = migrator(obj);
+    }
+    return obj;
+}
+
 const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
+    inValue.version = version;
     if (filename === reservedEntryName) throw new Error(`filename cannot be "${reservedEntryName}"`);
     const value: any = inValue as LibraryItem;
     localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
+
 const retrieveFromLocalStorage = (filename: string) => {
     const storageItem = localStorage.getItem(filename);
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
-    const retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
+    let retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
-    console.log("retrieved", retrieved.notes.filter((n: any) => n.mute !== false));
-    retrieved.notes = retrieved.notes.map((note: any) => new Note(note));
+    retrieved = normalizeLibraryItem(retrieved);
+    // retrieved.notes = retrieved.notes.map((note: any) => new Note(note));
     return retrieved as LibraryItem;
 }
 
@@ -153,7 +184,9 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const exportJSON = () => {
-        const json = JSON.stringify(project.getProjectDefintion());
+        const libraryItem = project.getProjectDefintion();
+        libraryItem.version = version;
+        const json = JSON.stringify(libraryItem);
         downloadString(json, "application/json", project.name + ".json");
     }
 
@@ -177,7 +210,7 @@ export const useLibraryStore = defineStore("library store", () => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             project.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
-            project.setScore(iobj);
+            project.setFromListOfNoteDefinitions(iobj);
         }
     }
 

@@ -105,9 +105,11 @@ class SamplerVoice {
                 if (!sampleSource.sampleInherentVelocity) return true;
                 return sampleSource.sampleInherentVelocity >= velocity;
             });
+
             if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
                 this.findSampleSourceClosestToFrequency(frequency);
             }
+            
             let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
             let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
             for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
@@ -119,7 +121,6 @@ class SamplerVoice {
                 }
             }
             closestSampleSource = closestSampleWithLeastVelocityDifference;
-
         }
 
         return closestSampleSource;
