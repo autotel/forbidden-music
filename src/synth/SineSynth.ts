@@ -109,7 +109,6 @@ export class SineSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            console.log("polyphony increased to", this.voices.length);
             voice.outputNode.connect(this.outputNode);
 
         }
@@ -123,7 +122,6 @@ export class SineSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            console.log("polyphony increased to", this.voices.length);
             voice.outputNode.connect(this.outputNode);
 
         }

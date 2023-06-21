@@ -1,4 +1,4 @@
-import { SynthInstance, SynthParam } from "./SynthInterface";
+import { ParamType, SynthInstance, SynthParam } from "./SynthInterface";
 
 class PerformanceChronometer {
     private startTime: number;
@@ -245,6 +245,26 @@ export class MagicSampler implements SynthInstance {
         }
         this.disable = () => {
         }
+
+        const parent = this;
+        this.params.push({
+            displayName: "Gain",
+            type: ParamType.number,
+            min:0, max: 4,
+            get value() {
+                if (!parent.outputNode) {
+                    console.warn("output node not set");
+                    return 1;
+                }
+                return parent.outputNode.gain.value;
+            },
+            set value(value: number) {
+                if (!parent.outputNode) return;
+                parent.outputNode.gain.value = value;
+            }
+        } as SynthParam);
+
+
     }
     triggerAttackRelease = (
         frequency: number,
