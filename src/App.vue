@@ -176,6 +176,20 @@ const keyDownListener = (e: KeyboardEvent) => {
         e.preventDefault();
         e.stopPropagation();
     }
+    // if ctrl + down, move selected notes down an octave
+    if (e.ctrlKey && e.key === 'ArrowDown') {
+        console.log("move down");
+        selection.getNotes().forEach(eNote => eNote.octave -= 1);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // if ctrl + up, move selected notes up an octave
+    if (e.ctrlKey && e.key === 'ArrowUp') {
+        console.log("move up");
+        selection.getNotes().forEach(eNote => eNote.octave += 1);
+        e.preventDefault();
+        e.stopPropagation();
+    }
 
     if (e.key === 'Escape') {
         selection.clear();
