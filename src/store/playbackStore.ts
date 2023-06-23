@@ -202,13 +202,14 @@ export const usePlaybackStore = defineStore("playback", () => {
     });
 
 
-    const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
+    const _getEventsBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
         const events = project.score.filter((editNote) => {
-            return editNote.time >= frameStartTime && editNote.time < frameEndTime;
+            return (catchUp?editNote.timeEnd:editNote.time) >= frameStartTime && editNote.time < frameEndTime;
         });
-        // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);
         return events;
     };
+
+    let isFirtClockAfterPlay = true;
     const _clockAction = () => {
         const rate = bpm.value / 60;
 
@@ -216,7 +217,10 @@ export const usePlaybackStore = defineStore("playback", () => {
         const now = audioContext.currentTime;
         const deltaTime = now - previousClockTime.value;
         currentScoreTime.value += deltaTime * rate;
-        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value)
+
+        let catchUp = isFirtClockAfterPlay;
+        isFirtClockAfterPlay = false;
+        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
 
 
         playNotes.forEach((editNote) => {
@@ -226,10 +230,9 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteStartFromNow = editNote.time - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
             // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
-            const relativeNoteStart = noteStartFromNow;
+            const relativeNoteStart = Math.max(0,noteStartFromNow);
 
             try {
-
                 if (editNote.duration) {
                     const noteDuration = editNote.duration / rate;
                     synth.value.triggerAttackRelease(
@@ -263,6 +266,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
         previousClockTime.value = audioContext.currentTime;
+        isFirtClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
     }
 
@@ -338,6 +342,12 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (newSynth) newSynth.enable();
         if (oldSynth) oldSynth.disable();
     });
+
+    // i.e. when user skips in timeline
+    watch(timeReturnPoint, ()=> {
+        isFirtClockAfterPlay = true;
+        // synth.value?.releaseAll();
+    })
 
     return {
         playing,
