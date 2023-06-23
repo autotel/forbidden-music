@@ -1,5 +1,5 @@
 [package]
-name = "test-tauri-app"
+name = "continuous-piano-roll"
 version = "0.0.0"
 description = "A Tauri App"
 authors = ["you"]

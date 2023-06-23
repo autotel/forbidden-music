@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "test-tauri-app",
+    "productName": "continuous-piano-roll",
     "version": "0.0.0"
   },
   "tauri": {
@@ -37,7 +37,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "test-tauri-app",
+        "title": "continuous-piano-roll",
         "width": 800,
         "height": 600
       }
