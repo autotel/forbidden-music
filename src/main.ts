@@ -4,10 +4,6 @@ import App from './App.vue'
 import WorkletWorkbench from './WorkletWorkbench.vue'
 import { createPinia } from 'pinia'
 
-if (import.meta.hot) {
-    import.meta.hot.accept(() => import.meta.hot!.invalidate())
-}
-
 if (window.location.hash.match("workbench")) {
     createApp(WorkletWorkbench).mount('#app')
 } else {

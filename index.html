@@ -1,29 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri + Vue + TS</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frequency roll - vue tryout</title>
-</head>
-
-<body>
-  <div id="app"></div>
-  <script type="module" src="src/main.ts"></script>
-  <script>
-
-    console.log("ensure ending with slash");
-    const locationWithoutHash = window.location.href.split('#')[0];
-    const hash = window.location.hash;
-    if (!locationWithoutHash.endsWith('/')) {
-      window.location.href = locationWithoutHash + '/' + hash?hash:'';
-    } else {
-      console.log("already ending with slash", window.location.href);
-    }
-
-
-  </script>
-</body>
-
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
