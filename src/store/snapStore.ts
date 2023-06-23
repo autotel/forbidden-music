@@ -476,9 +476,9 @@ export const useSnapStore = defineStore("snap", () => {
     }: TimeSnapParams) => {
 
         otherNotes = onlyMutedIfWanted(otherNotes);
-        const timeSnap = new SnapTracker(editNote.start);
+        const timeSnap = new SnapTracker(editNote.time);
         if (snapValues.timeQuarter.active === true) {
-            const relatedNumber = Math.round(editNote.start * 4);
+            const relatedNumber = Math.round(editNote.time * 4);
             timeSnap.addSnappedValue(relatedNumber / 4, {
                 text: "Quarter snap",
                 relatedNumber,
@@ -491,7 +491,7 @@ export const useSnapStore = defineStore("snap", () => {
                 });
             }
         } else if (snapValues.timeInteger.active === true) {
-            const relatedStart = Math.round(editNote.start);
+            const relatedStart = Math.round(editNote.time);
             timeSnap.addSnappedValue(relatedStart, {
                 text: "Integer snap",
                 relatedNumber: relatedStart,
@@ -508,7 +508,7 @@ export const useSnapStore = defineStore("snap", () => {
         if (snapValues.sameStart.active === true) {
             if (otherNotes) {
                 for (const otherNote of otherNotes) {
-                    timeSnap.addSnappedValue(otherNote.start, {
+                    timeSnap.addSnappedValue(otherNote.time, {
                         text: "Same start",
                         relatedNote: otherNote,
                     });
@@ -519,8 +519,8 @@ export const useSnapStore = defineStore("snap", () => {
         if (snapValues.timeIntegerRelationFraction.active === true) {
             if (otherNotes) {
                 for (const otherNote of otherNotes) {
-                    const otherStart = otherNote.start;
-                    const closestStartFraction = new Fraction(editNote.start).div(otherStart).simplify(simplify.value);
+                    const otherStart = otherNote.time;
+                    const closestStartFraction = new Fraction(editNote.time).div(otherStart).simplify(simplify.value);
                     const closeStartRatio = closestStartFraction.valueOf();
                     // reintegrate rounded proportion back to the other's start value
                     const myCandidateStart = closeStartRatio * otherStart;
@@ -569,7 +569,7 @@ export const useSnapStore = defineStore("snap", () => {
                 durationSnap,
                 snapValues
             });
-            editNote.start = timeSnap.getResult();
+            editNote.time = timeSnap.getResult();
             if (sideEffects) {
                 timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
             }

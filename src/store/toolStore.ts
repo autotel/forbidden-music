@@ -7,6 +7,7 @@ import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { useThrottleFn } from '@vueuse/core';
 import { EditNote } from '../dataTypes/EditNote';
+import { Group } from '../dataTypes/Group';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 
@@ -24,6 +25,8 @@ export enum MouseDownActions {
     Copy,
     AreaSelect,
     Move,
+    UnsetActiveGroup,
+    EnterIntoGroup,
 }
 
 
@@ -52,7 +55,7 @@ export const useToolStore = defineStore("edit", () => {
     const showReferenceKeyboard = ref(false)
     const disallowOctaveChange = ref(false);
     const disallowTimeChange = ref(false);
-
+    const currentlyActiveGroup = ref<Group | null>(null);
     const currentMouseStringHelper = ref("");
 
     let newNoteDragX = 0;
@@ -78,6 +81,12 @@ export const useToolStore = defineStore("edit", () => {
     let noteBeingDragged = ref<EditNote | false>(false);
     let noteBeingDraggedRightEdge = ref<EditNote | false>(false);
 
+    let groupBeingHovered = ref<Group | null>(null);
+    let groupBeingDragged = ref<Group | false>(false);
+
+    let notesBeingDragged: EditNote[] = [];
+    let groupsBeingDragged: Group[] = [];
+    let alreadyDuplicatedForThisDrag = false;
 
     const cursor = computed(() => {
         if (noteRightEdgeBeingHovered.value) return 'cursor-note-length';
@@ -88,11 +97,12 @@ export const useToolStore = defineStore("edit", () => {
     });
 
     const noteMouseEnter = (editNote: EditNote) => {
+        noteBeingHovered.value = editNote;
         noteThatWouldBeCreated.value = false;
         noteRightEdgeBeingHovered.value = false;
-        noteBeingHovered.value = editNote;
     }
     const noteRightEdgeMouseEnter = (editNote: EditNote) => {
+        if (editNote.group !== currentlyActiveGroup.value) return;
         noteThatWouldBeCreated.value = false;
         noteRightEdgeBeingHovered.value = editNote;
         noteBeingHovered.value = false;
@@ -105,18 +115,23 @@ export const useToolStore = defineStore("edit", () => {
         noteRightEdgeBeingHovered.value = false;
     }
 
-    let notesBeingDragged: EditNote[] = [];
-    let alreadyDuplicatedForThisDrag = false;
+    const groupMouseEnter = (group: Group) => {
+        groupBeingHovered.value = group;
+    }
+    const groupMouseLeave = () => {
+        groupBeingHovered.value = null;
+    }
 
     const whatWouldMouseDownDo = () => {
         let ret = MouseDownActions.None as MouseDownActions;
         currentMouseStringHelper.value = "";
+
         if (
             current.value === Tool.Select ||
             currentLeftHand.value === Tool.Select
         ) {
             if (noteBeingHovered.value) {
-                if (selection.isEditNoteSelected(noteBeingHovered.value as EditNote)) {
+                if (selection.isSelected(noteBeingHovered.value)) {
                     ret = MouseDownActions.RemoveFromSelection;
                     currentMouseStringHelper.value = "-";
                 } else {
@@ -126,6 +141,9 @@ export const useToolStore = defineStore("edit", () => {
                         ret = MouseDownActions.AddToSelectionAndDrag;
                     }
                 }
+            } else if (groupBeingHovered.value) {
+                ret = MouseDownActions.EnterIntoGroup;
+                currentMouseStringHelper.value = "⇱";
             } else {
                 ret = MouseDownActions.AreaSelect;
                 currentMouseStringHelper.value = "⃞";
@@ -133,7 +151,7 @@ export const useToolStore = defineStore("edit", () => {
 
         } else if (current.value === Tool.Modulation) {
             if (noteBeingHovered.value) {
-                if (selection.isEditNoteSelected(noteBeingHovered.value as EditNote)) {
+                if (selection.isSelected(noteBeingHovered.value)) {
                     ret = MouseDownActions.DragVelocity;
                 } else {
                     // thus far no distinction needed
@@ -142,16 +160,29 @@ export const useToolStore = defineStore("edit", () => {
             }
             currentMouseStringHelper.value = "⇅";
         } else if (current.value === Tool.Edit) {
-            if (noteRightEdgeBeingHovered.value) {
+            if (
+                noteRightEdgeBeingHovered.value 
+                && noteRightEdgeBeingHovered.value.group === currentlyActiveGroup.value
+            ) {
                 ret = MouseDownActions.Lengthen;
                 currentMouseStringHelper.value = "⟷";
             } else if (noteBeingHovered.value) {
                 ret = MouseDownActions.Move;
-                if (selection.isEditNoteSelected(noteBeingHovered.value as EditNote)) {
+                if(noteBeingHovered.value.group !== currentlyActiveGroup.value){
+                    ret = MouseDownActions.EnterIntoGroup;
+                    groupBeingHovered.value = noteBeingHovered.value.group;
+                    currentMouseStringHelper.value = "⇱";
+                }else if (selection.isSelected(noteBeingHovered.value)) {
                     ret = MouseDownActions.Move;
                 } else {
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
+            } else if (groupBeingHovered.value) {
+                ret = MouseDownActions.EnterIntoGroup;
+                currentMouseStringHelper.value = "⇱";
+            } else if (!groupBeingHovered.value && currentlyActiveGroup.value!==null) {
+                ret = MouseDownActions.UnsetActiveGroup;
+                currentMouseStringHelper.value = "⇲";
             } else {
                 ret = MouseDownActions.Create;
             }
@@ -163,7 +194,7 @@ export const useToolStore = defineStore("edit", () => {
         noteBeingDragged.value = noteBeingHovered.value;
         if (!noteBeingDragged.value) throw new Error('no noteBeingDragged');
 
-        notesBeingDragged = selection.get();
+        notesBeingDragged = selection.getNotes();
         notesBeingDragged.forEach(editNote => {
             editNote.dragStart(mouse);
         });
@@ -211,7 +242,6 @@ export const useToolStore = defineStore("edit", () => {
                 selectRange.value.timeSize = 0;
                 selectRange.value.octaveSize = 0;
                 selectRange.value.active = true;
-
                 break;
             }
             case MouseDownActions.DragVelocity:
@@ -222,21 +252,21 @@ export const useToolStore = defineStore("edit", () => {
                 break;
             case MouseDownActions.AddToSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.add(noteBeingHovered.value as EditNote);
+                selection.add(noteBeingHovered.value);
                 break;
             case MouseDownActions.AddToSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.add(noteBeingHovered.value as EditNote);
+                selection.add(noteBeingHovered.value);
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.SetSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.select(noteBeingHovered.value as EditNote);
+                selection.select(noteBeingHovered.value);
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.RemoveFromSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
-                selection.remove(noteBeingHovered.value as EditNote);
+                selection.remove(noteBeingHovered.value);
                 break;
             case MouseDownActions.Move:
                 _dragStartAction(mouse);
@@ -249,6 +279,14 @@ export const useToolStore = defineStore("edit", () => {
                 noteBeingDraggedRightEdge.value = cloned;
                 noteRightEdgeBeingHovered.value = cloned;
                 _lengthenDragStartAction(mouse);
+                break;
+            case MouseDownActions.EnterIntoGroup:
+                selection.clear();
+                currentlyActiveGroup.value = groupBeingHovered.value;
+                break;
+            case MouseDownActions.UnsetActiveGroup:
+                currentlyActiveGroup.value = null;
+                selection.clear();
                 break;
             case MouseDownActions.None:
                 break;
@@ -268,7 +306,7 @@ export const useToolStore = defineStore("edit", () => {
                 startOctave: selectRange.value.octaveStart,
                 endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
             }
-            selection.selectRange(range);
+            selection.selectRange(range, currentlyActiveGroup.value);
         }
     }, 25);
 
@@ -280,11 +318,11 @@ export const useToolStore = defineStore("edit", () => {
         } else if (whatWouldMouseDownDo() === MouseDownActions.Create) {
             if (!noteThatWouldBeCreated.value) {
                 noteThatWouldBeCreated.value = new EditNote({
-                    start: 0, duration: 0, frequency: 0
+                    time: 0, duration: 0, frequency: 0
                 }, view);
             }
 
-            noteThatWouldBeCreated.value.start = view.pxToTimeWithOffset(x);
+            noteThatWouldBeCreated.value.time = view.pxToTimeWithOffset(x);
             noteThatWouldBeCreated.value.duration = 0;
             noteThatWouldBeCreated.value.octave = view.pxToOctaveWithOffset(y);
 
@@ -333,7 +371,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: notesBeingCreated.value[0] as EditNote,
                 targetOctave: notesBeingCreated.value[0].octave,
-                otherNotes: project.score.filter(n => n.inViewRange && n !== notesBeingCreated.value[0])
+                otherNotes: view.visibleNotes.filter(n => n !== notesBeingCreated.value[0])
             });
             notesBeingCreated.value[0].apply(editNote);
         } else if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
@@ -358,15 +396,14 @@ export const useToolStore = defineStore("edit", () => {
                 noteBeingDragged.value = cloned[0];
                 snap.setFocusedNote(noteBeingDragged.value as EditNote);
             }
-        } else if (isDragging && noteBeingDragged.value && selection.isEditNoteSelected(noteBeingDragged.value as EditNote)) {
+        } else if (isDragging && noteBeingDragged.value && selection.isSelected(noteBeingDragged.value)) {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);
 
             const editNote = snap.snap({
                 inNote: noteBeingDragged.value as EditNote,
                 targetOctave: noteBeingDragged.value.octave,
-                otherNotes: project.score.filter(n => {
-                    if(!n.inViewRange) return false;
+                otherNotes: view.visibleNotes.filter(n => {
                     let ret = n !== noteBeingDragged.value
                     ret &&= !notesBeingDragged.includes(n);
                     return ret;
@@ -378,7 +415,7 @@ export const useToolStore = defineStore("edit", () => {
 
 
             const octaveDragDeltaAfterSnap = editNote.octave - noteBeingDragged.value.dragStartedOctave;
-            const timeDragAfterSnap = editNote.start - noteBeingDragged.value.dragStartedTime;
+            const timeDragAfterSnap = editNote.time - noteBeingDragged.value.dragStartedTime;
 
             noteBeingDragged.value.apply(editNote);
             notesBeingDragged.map(editNoteI => {
@@ -392,7 +429,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: noteBeingDraggedRightEdge.value as EditNote,
                 targetOctave: noteBeingDraggedRightEdge.value.octave,
-                otherNotes: project.score.filter(n => n.inViewRange && n !== noteBeingDraggedRightEdge.value),
+                otherNotes: view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value),
                 skipOctaveSnap: true,
             });
             noteBeingDraggedRightEdge.value.apply(editNote);
@@ -401,7 +438,9 @@ export const useToolStore = defineStore("edit", () => {
                 x: e.clientX,
                 y: e.clientY,
             });
-
+        }
+        if (noteBeingDragged.value && noteBeingDragged.value.group) {
+            project.updateGroupBounds(noteBeingDragged.value.group)
         }
     }
 
@@ -417,6 +456,11 @@ export const useToolStore = defineStore("edit", () => {
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
             // store them to store
+            if(currentlyActiveGroup.value){
+                notesBeingCreated.value.forEach(note => {
+                    note.group = currentlyActiveGroup.value;
+                });
+            }
             project.appendNote(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
@@ -468,5 +512,10 @@ export const useToolStore = defineStore("edit", () => {
         notesBeingCreated,
         notesBeingDragged,
         noteBeingHovered,
+
+        groupMouseEnter,
+        groupMouseLeave,
+
+        currentlyActiveGroup,
     }
 })

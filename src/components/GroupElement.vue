@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
 import { Tool } from '../dataTypes/Tool';
 import { useSelectStore } from '../store/selectStore';
 import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 import { Group } from '../dataTypes/Group';
+import { vi } from 'vitest';
 
 
 const view = useViewStore();
@@ -18,57 +19,51 @@ const props = defineProps<{
 const groupBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 
-// const bodyMouseEnterListener = (e: MouseEvent) => {
-//     tool.groupMouseEnter(props.group);
-// }
-// const bodyMouseLeaveListener = (e: MouseEvent) => {
-//     tool.groupMouseLeave();
-// }
+const bodyMouseEnterListener = (e: MouseEvent) => {
+    tool.groupMouseEnter(props.group);
+}
+const bodyMouseLeaveListener = (e: MouseEvent) => {
+    tool.groupMouseLeave();
+}
 // const rightEdgeMOuseEnterListener = (e: MouseEvent) => {
 //     tool.groupRightEdgeMouseEnter(props.group);
 // }
 // const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
 //     tool.groupRightEdgeMouseLeave();
 // }
-// onMounted(() => {
-//     if (groupBody.value) {
-//         groupBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
-//         groupBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
-//     }
-//     if (rightEdge.value) {
-//         rightEdge.value.addEventListener('mouseenter', rightEdgeMOuseEnterListener);
-//         rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
-//     }
-// });
-// onUnmounted(() => {
-//     if (props.interactionDisabled) return;
-//     if (groupBody.value) {
-//         groupBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
-//         groupBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
-//     }
-//     if (rightEdge.value) {
-//         rightEdge.value.removeEventListener('mouseenter', rightEdgeMOuseEnterListener);
-//         rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
-//     }
-// });
-
-const rect = ref<{ x: number, y: number, width: number, height: number }>({ x: 0, y: 0, width: 0, height: 0 })
-
-watch([view, () => props.group.bounds], () => {
-    const extraMarginH = 1 / 4;
-    const extraMarginV = 1 / 12;
-    const fromTo = [
-        view.octaveToPxWithOffset(props.group.bounds[1][0] - extraMarginV * 2),
-        view.octaveToPxWithOffset(props.group.bounds[1][1] + extraMarginV),
-    ].sort();
-    const duration = props.group.bounds[0][1] - props.group.bounds[0][0];
-    rect.value = {
-        x: view.timeToPxWithOffset(props.group.bounds[0][0] - extraMarginH),
-        y: fromTo[0] - 7,
-        width: view.timeToPx(duration + extraMarginH * 2),
-        height: fromTo[1] - fromTo[0],
+onMounted(() => {
+    if (groupBody.value) {
+        groupBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
+        groupBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
     }
-})
+    // if (rightEdge.value) {
+    //     rightEdge.value.addEventListener('mouseenter', rightEdgeMOuseEnterListener);
+    //     rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
+    // }
+});
+onUnmounted(() => {
+    if (props.interactionDisabled) return;
+    if (groupBody.value) {
+        groupBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
+        groupBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
+    }
+    // if (rightEdge.value) {
+    //     rightEdge.value.removeEventListener('mouseenter', rightEdgeMOuseEnterListener);
+    //     rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
+    // }
+});
+
+const _rect = () => {
+    return {
+        x: view.timeToPxWithOffset(props.group.time),
+        y: view.octaveToPxWithOffset(props.group.octaveEnd),
+        width: view.timeToPx(props.group.timeEnd - props.group.time),
+        height: Math.abs(view.octaveToPx(props.group.octaveEnd - props.group.octave)),
+    }
+}
+
+const rect = computed(() => _rect());
+
 
 </script>
 <template>
@@ -77,8 +72,8 @@ watch([view, () => props.group.bounds], () => {
             {{ group.name }}
         </text>
         <rect class="body" :class="{
-            selected: group.selected,
-            editable: tool.current == Tool.Edit,
+            selected: tool.currentlyActiveGroup == group,
+            editable: tool.currentlyActiveGroup == group,
             interactionDisabled: interactionDisabled,
             // muted: group.mute,
         }" :...=rect ref="groupBody" />
@@ -96,7 +91,8 @@ watch([view, () => props.group.bounds], () => {
 
 .body {
     stroke: #999;
-    fill: rgba(24, 90, 102, 0.233);
+    stroke-dasharray: 4;
+    fill:none;
 }
 
 .veloline {
@@ -104,7 +100,8 @@ watch([view, () => props.group.bounds], () => {
 }
 
 .body.selected {
-    fill: #f889;
+    fill: rgba(24, 90, 102, 0.37);
+    stroke-dasharray: none;
 }
 
 .veloline.selected {

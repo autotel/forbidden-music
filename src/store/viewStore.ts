@@ -1,9 +1,8 @@
 import { defineStore } from "pinia";
-import { ref, watch, watchEffect } from "vue";
+import { computed, ref, Ref, watchEffect } from "vue";
 import { EditNote } from "../dataTypes/EditNote.js";
-import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useProjectStore } from "./projectStore.js";
-import { useToolStore } from "./toolStore.js";
+import { frequencyToOctave } from "../functions/toneConverters.js";
 
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
@@ -20,19 +19,15 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
     const project = useProjectStore();
-    const tool = useToolStore();
 
-    watch([
-        viewWidthTime, viewHeightOctaves,
-        timeOffset, octaveOffset,
-    ],() => {
-        console.log("visibleNotes");
-        project.score.forEach((editNote:EditNote) => {
-            editNote.inViewRange = (
-                editNote.start < timeOffset.value + viewWidthTime.value &&
-                editNote.end > timeOffset.value &&
-                editNote.octave > -octaveOffset.value &&
-                editNote.octave < -octaveOffset.value + viewHeightOctaves.value
+    const visibleNotes = computed((): EditNote[] => {
+        return project.score.filter((editNote) => {
+            const note = editNote;
+            return (
+                note.time < timeOffset.value + viewWidthTime.value &&
+                note.timeEnd > timeOffset.value &&
+                note.octave > -octaveOffset.value &&
+                note.octave < -octaveOffset.value + viewHeightOctaves.value
             );
         });
     });
@@ -55,14 +50,10 @@ export const useViewStore = defineStore("view", () => {
     const pxToTime = (time: number): number => {
         return (time * viewWidthTime.value) / viewWidthPx.value;
     };
-    const timeToPx = (time: number): number => {
-        if (time === Infinity) return viewWidthPx.value + 2;
-        if (time === -Infinity) return -viewWidthPx.value - 2;
-        return (time * viewWidthPx.value) / viewWidthTime.value;
+    const timeToPx = (px: number): number => {
+        return (px * viewWidthPx.value) / viewWidthTime.value;
     };
     const timeToPxWithOffset = (time: number): number => {
-        if (time === Infinity) return viewWidthPx.value + 2;
-        if (time === -Infinity) return -viewWidthPx.value - 2;
         return timeToPx(time - timeOffset.value);
     };
     const pxToTimeWithOffset = (px: number): number => {
@@ -72,21 +63,15 @@ export const useViewStore = defineStore("view", () => {
         return (px * -viewHeightOctaves.value) / viewHeightPx.value;
     };
     const octaveToPx = (octave: number): number => {
-        if (octave === Infinity) return viewHeightPx.value + 2;
-        if (octave === -Infinity) return -viewHeightPx.value - 2;
         return (octave * viewHeightPx.value) / -viewHeightOctaves.value;
     };
     const pxToOctaveWithOffset = (px: number): number => {
         return pxToOctave(px - _offsetPxY.value) - octaveOffset.value;
     };
     const octaveToPxWithOffset = (octave: number): number => {
-        if (octave === Infinity) return viewHeightPx.value + 2;
-        if (octave === -Infinity) return -viewHeightPx.value - 2;
         return octaveToPx(octave + octaveOffset.value) + _offsetPxY.value;
     };
     const frequencyToPxWithOffset = (frequency: number): number => {
-        if (frequency === Infinity) return viewHeightPx.value + 2;
-        if (frequency === -Infinity) return -viewHeightPx.value - 2;
         return octaveToPxWithOffset(frequencyToOctave(frequency));
     };
     const isOctaveInView = (octave: number): boolean => {
@@ -143,6 +128,7 @@ export const useViewStore = defineStore("view", () => {
         scrollBound,
         _offsetPxX,
         _offsetPxY,
+        visibleNotes,
     };
 });
 

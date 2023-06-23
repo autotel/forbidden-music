@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import Pianito from './components/Pianito.vue';
@@ -25,7 +25,6 @@ import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
 import GroupElement from './components/GroupElement.vue';
-import { useSnapStore } from './store/snapStore';
 
 type Timeout = ReturnType<typeof setTimeout>;
 
@@ -36,14 +35,14 @@ const timedEventsViewport = ref<SVGSVGElement>();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
-const select = useSelectStore();
+const selection = useSelectStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.createInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
-const snaps = useSnapStore();
+
 provide('modalText', modalText);
 
 
@@ -100,7 +99,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         // tool.noteBeingHovered = false;
         // programmatic option:
         tool.resetState();
-        select.clear();
+        selection.clear();
     }
     // alt activates tool copyOnDrag mode
     if (e.altKey) {
@@ -123,7 +122,6 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
     }
     if (e.ctrlKey) {
-        snaps.resetSnapExplanation();
         tool.currentLeftHand = Tool.Select;
         const dectl = (e: KeyboardEvent) => {
             if (e.key == "Control") {
@@ -137,7 +135,7 @@ const keyDownListener = (e: KeyboardEvent) => {
 
     if (e.key === 'm') {
         if (e.ctrlKey) {
-            select.selectedNotes.forEach(eNote => eNote.mute = !eNote.mute);
+            selection.getNotes().forEach(eNote => eNote.mute = !eNote.mute);
         } else {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
         }
@@ -164,9 +162,37 @@ const keyDownListener = (e: KeyboardEvent) => {
         e.preventDefault();
         e.stopPropagation();
     }
+    // group 
+    if (e.ctrlKey && e.key === 'g') {
+        console.log("group");
+        project.setNotesGroupToNewGroup(selection.getNotes());
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // select all
+    if (e.ctrlKey && e.key === 'a') {
+        console.log("select all");
+        selection.selectAll();
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // if ctrl + down, move selected notes down an octave
+    if (e.ctrlKey && e.key === 'ArrowDown') {
+        console.log("move down");
+        selection.getNotes().forEach(eNote => eNote.octave -= 1);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // if ctrl + up, move selected notes up an octave
+    if (e.ctrlKey && e.key === 'ArrowUp') {
+        console.log("move up");
+        selection.getNotes().forEach(eNote => eNote.octave += 1);
+        e.preventDefault();
+        e.stopPropagation();
+    }
 
     if (e.key === 'Escape') {
-        select.clear();
+        selection.clear();
         tool.resetState();
 
     }
@@ -259,15 +285,17 @@ onUnmounted(() => {
     <div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
-            <g id="groups">
-                <GroupElement v-for="group in project.groups" :group="group" :key="group.id" />
-            </g>
             <g id="grid">
                 <TimeGrid />
                 <ToneGrid />
             </g>
             <g id="tone-relations">
                 <ToneRelation />
+            </g>
+            <g id="groups-container">
+                <g v-for="group in project.groups" :key="group.id">
+                    <GroupElement :group="group" />
+                </g>
             </g>
             <g id="note-would-be-created">
                 <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated"
@@ -276,9 +304,7 @@ onUnmounted(() => {
             <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
                 stroke-width="1" />
             <g id="edit-notes">
-                <template v-for="editNote in project.score.filter(e=>e.inViewRange)"  :key="editNote.udpateFlag">
-                    <NoteElement :editNote="editNote" />
-                </template>
+                <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
             </g>
             <g id="notes-being-created">
                 <NoteElement v-for="editNote in tool.notesBeingCreated" :editNote="editNote" />

@@ -12,7 +12,6 @@ let mouseDownPos = {
     x: 0, y: 0,
 };
 let currentValueOnDragStart = 0;
-console.log("creating slider for", props.param.displayName);
 const currentValue = ref(0);
 const dragging = ref(false);
 const valueDraggable = ref();

@@ -1,18 +1,18 @@
 // represents a Note as displayed in the gui
 // adding properties such as drag offset, selected, position in screen.
 import { View } from "../store/viewStore";
-import { Group, Groupable } from "./Group";
+import { Group } from "./Group";
 import { Note, NoteDefa, NoteDefb } from "./Note";
 
 const makeRandomString = () => Math.random().toString(36).slice(2);
 // TODO: memoize x, y ... rect ... etc
 // perhaps could change all note vars into getters and setters thus allowing me to 
 // register a "dirty" flag. needs a bit more thought.
-export class EditNote extends Note implements Groupable {
+export class EditNote extends Note {
     selected: boolean = false;
     udpateFlag: string;
-    group?: Group;
-    inViewRange?: boolean;
+    // groupId: number | null = null;
+    group: Group | null = null;
     /** 
      * make a clone of editnote. only note properties are cloned    
      * TODO: clone could now clone all the props. To get a clone of the 
@@ -22,9 +22,9 @@ export class EditNote extends Note implements Groupable {
         return new EditNote(this, this.view);
     }
 
-    override apply(noteDef: NoteDefa | NoteDefb | Note) {
+    override apply(noteDef: NoteDefa | NoteDefb | Note){
         super.apply(noteDef);
-        if (noteDef instanceof EditNote) {
+        if(noteDef instanceof EditNote){
             this.selected = noteDef.selected;
         }
     }
@@ -35,7 +35,7 @@ export class EditNote extends Note implements Groupable {
 
     getNoteDefa(): NoteDefa {
         return {
-            start: this.start,
+            time: this.time,
             duration: this.duration,
             octave: this.octave,
             mute: this.mute,
@@ -44,7 +44,7 @@ export class EditNote extends Note implements Groupable {
     }
     getNoteDefb(): NoteDefb {
         return {
-            start: this.start,
+            time: this.time,
             duration: this.duration,
             frequency: this.frequency,
             mute: this.mute,
@@ -54,6 +54,42 @@ export class EditNote extends Note implements Groupable {
 
     view: View;
 
+    get x() {
+        return this.view.timeToPxWithOffset(this.time);
+    }
+    get y() {
+        return this.view.octaveToPxWithOffset(this.octave);
+    }
+    get width() {
+        return this.duration ? this.view.timeToPx(this.duration) : 0;
+    }
+    get height() {
+        return Math.abs(this.view.octaveToPx(1 / 12));
+        // return 18;
+    }
+    get circle() {
+        return {
+            cx: this.x,
+            cy: this.y,
+            r: this.height / 2,
+        };
+    }
+    get rect() {
+        return {
+            x: this.x,
+            y: this.y - this.height / 2,
+            width: this.width,
+            height: this.height,
+        };
+    }
+    get rightEdge() {
+        return {
+            x: this.x + this.width - 5,
+            y: this.y - this.height / 2,
+            width: this.selected ? 10 : 5,
+            height: this.height,
+        };
+    }
 
     dragStart: (mouse: { x: number; y: number }) => void;
     dragMove: (dragDelta: { x: number; y: number }) => void;
@@ -71,8 +107,7 @@ export class EditNote extends Note implements Groupable {
 
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         super(noteDef);
-
-        if (noteDef instanceof EditNote) {
+        if(noteDef instanceof EditNote){
             this.selected = noteDef.selected;
         }
 
@@ -81,12 +116,12 @@ export class EditNote extends Note implements Groupable {
 
         this.dragStart = () => {
             this.dragStartedOctave = this.octave;
-            this.dragStartedTime = this.start;
+            this.dragStartedTime = this.time;
             this.dragStartedDuration = this.duration || 0;
             this.dragStartedVelocity = this.velocity;
         };
         this.dragMove = (dragDelta: { x: number; y: number }) => {
-            this.start = this.dragStartedTime + view.pxToTime(dragDelta.x);
+            this.time = this.dragStartedTime + view.pxToTime(dragDelta.x);
             this.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
             this.forceUpdate();
         };
@@ -95,7 +130,7 @@ export class EditNote extends Note implements Groupable {
             this.forceUpdate();
         };
         this.dragMoveTimeStart = (timeDelta: number) => {
-            this.start = this.dragStartedTime + timeDelta;
+            this.time = this.dragStartedTime + timeDelta;
             this.forceUpdate();
         };
         this.dragLengthMove = (dragDelta: { x: number; y: number }) => {
@@ -116,7 +151,7 @@ export class EditNote extends Note implements Groupable {
             this.udpateFlag = makeRandomString();
         };
         this.dragCancel = () => {
-            this.start = this.dragStartedTime;
+            this.time = this.dragStartedTime;
             this.octave = this.dragStartedOctave;
             this.duration = this.dragStartedDuration;
         };

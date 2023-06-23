@@ -1,11 +1,14 @@
 const readdir = require('fs').readdirSync;
 const writeFile = require('fs').writeFileSync;
+const readFileSync = require('fs').readFileSync;
 const path = require('path');
 const scriptDir = "./"
 
 const samplesRelativetoSrc = 'audio';
 const samplesDir = path.join(scriptDir, "/public", samplesRelativetoSrc);
 const samplePacks = readdir(samplesDir);
+
+
 
 /**
  * make sure that the script is being called from one dir up
@@ -32,10 +35,10 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
     const samples = readdir(path.join(samplesDir, samplePack));
 
     const readmesList = filterMap(samples, sample => {
-        if (!sample.match(/_readme\.txt$/)) {
+        if (!sample.match(/_?readme\.txt$/)) {
             return false;
         }
-        const contents = require('fs').readFileSync(path.join(samplesDir, samplePack, sample), 'utf8');
+        const contents = readFileSync(path.join(samplesDir, samplePack, sample), 'utf8');
         return contents;
     });
 
@@ -43,22 +46,44 @@ const samplePacksList = filterMap(samplePacks, samplePack => {
     const onlyLocal = samples.includes("_only_local")
 
     const samplesList = filterMap(samples, sample => {
-        if (!sample.match(/[\d\.]+\.wav$/)) {
+        if (!sample.match(/[\d\.]+\.(wav)$/)) {
             return false;
         }
-        const fq = parseFloat(path.basename(sample, '.wav'));
+
+        const baseName = sample.replace(/\.(wav|aiff)$/, '');
+        const parts = baseName.split(/[\_]/);
+        const frequency = parts.pop();
+        const velocity = parts.pop();
+
+        const fq = parseFloat(frequency);
+
         if (isNaN(fq)) {
             return false
         }
-        console.log("sample",samplePack, sample, fq);
-        return {
+
+        const returnValue = {
             name: sample,
             frequency: fq,
             path: path.join(samplesRelativetoSrc, samplePack, sample)
         };
+        
+        
+        /** @type {boolean | number} */
+        let vel = false;
+        if (velocity) {
+            vel = parseInt(velocity);
+            if (isNaN(vel)) {
+                vel = false;
+            }
+            returnValue.velocity = vel / 127;
+        }
+        console.log("sample", samplePack, sample, { fq, vel });
+
+        return returnValue;
+
     });
     const isComplexSampler = samplesList.find(sample => sample.frequency <= 0) !== undefined;
-    
+
     if (samplesList.length === 0) {
         return false;
     }

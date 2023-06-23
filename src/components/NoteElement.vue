@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
 import { Tool } from '../dataTypes/Tool';
 import { useSelectStore } from '../store/selectStore';
@@ -17,31 +17,6 @@ const props = defineProps<{
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 
-const heightInOctaves = 1 / 12;
-const halfHeightInOctaves = heightInOctaves / 2;
-
-const positions = reactive({
-    x: 0, y: 0, width: 0, height: 0, rightEdgeX: 0, rightEdgeWidth: 0
-});
-
-watch(() => props.editNote, () => {
-    const x = view.timeToPxWithOffset(props.editNote.start);
-    const width = props.editNote.duration ? view.timeToPx(props.editNote.duration) : 0;
-    Object.assign(positions, {
-        x,
-        y: view.octaveToPxWithOffset(props.editNote.octave - halfHeightInOctaves),
-        width,
-        height: Math.abs(view.octaveToPx(heightInOctaves)),
-        rightEdgeX: x + width - 5,
-        rightEdgeWidth: props.editNote.selected ? 10 : 5,
-    });
-}, { 
-    immediate: true,
-    // deep: true,
-    flush: 'post',
- });
-
-
 const bodyMouseEnterListener = (e: MouseEvent) => {
     tool.noteMouseEnter(props.editNote);
 }
@@ -54,8 +29,8 @@ const rightEdgeMOuseEnterListener = (e: MouseEvent) => {
 const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
     tool.noteRightEdgeMouseLeave();
 }
-
 onMounted(() => {
+    if (props.interactionDisabled) return;
     if (noteBody.value) {
         noteBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
@@ -67,6 +42,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     if (props.interactionDisabled) return;
+    if (props.interactionDisabled) return;
     if (noteBody.value) {
         noteBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
@@ -76,42 +52,45 @@ onUnmounted(() => {
         rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
     }
 });
+
+const isEditable = () => {
+    return tool.current == Tool.Edit && tool.currentlyActiveGroup === props.editNote.group;
+}
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 10" :x="positions.x" :y="positions.y + 5" font-size="10">
-        (2^{{ editNote.octave.toFixed(3) }})n = {{ editNote.frequency.toFixed(3) }} hz {{ editNote.udpateFlag }}
+    <text class="texts" v-if="view.viewWidthTime < 10" :x="editNote.x" :y="editNote.y + 5" font-size="10">
+        (2^{{ editNote.octave.toFixed(3) }})n = {{ editNote.frequency.toFixed(3) }} hz {{ editNote.group?.name }}
     </text>
     <template v-if="editNote.duration">
         <rect class="body" :class="{
             selected: editNote.selected,
-            editable: tool.current == Tool.Edit,
+            editable: isEditable(),
             interactionDisabled: interactionDisabled,
             muted: editNote.mute,
-        }" :x="positions.x" :y="positions.y" :width="positions.width" :height="positions.height" :data-key="editNote.udpateFlag"
-            :style="{ opacity: editNote.velocity + 0.5 }" ref="noteBody" />
+        }" :...=editNote.rect ref="noteBody" />
         <rect v-if="!interactionDisabled" class="rightEdge" :class="{
             selected: editNote.selected,
-            editable: tool.current == Tool.Edit,
+            editable: isEditable(),
             interactionDisabled: interactionDisabled,
-        }" ref="rightEdge" :x="positions.rightEdgeX" :y="positions.y" :width="positions.rightEdgeWidth" :height="positions.height"
-            :data-key="editNote.udpateFlag" :style="{ opacity: editNote.velocity }" />
+        }" ref="rightEdge" :...=editNote.rightEdge :data-key="editNote.udpateFlag"
+            :style="{ opacity: editNote.velocity }" />
     </template>
     <template v-else>
         <circle class="body" :class="{
             selected: editNote.selected,
-            editable: tool.current == Tool.Edit,
+            editable: isEditable(),
             muted: editNote.mute,
             interactionDisabled: interactionDisabled,
-        }" :cx="positions.x" :cy="positions.y" :r="positions.height / 2" ref="noteBody" />
+        }" ...=editNote.circle ref="noteBody" />
     </template>
     <template v-if="tool.current === Tool.Modulation">
-        <line :x1="positions.x" :y1="view.viewHeightPx - view.velocityToPx(editNote.velocity)" :x2="positions.x" :y2="view.viewHeightPx"
-            class="veloline" :class="{
+        <line :x1="editNote.x" :y1="view.viewHeightPx - view.velocityToPx(editNote.velocity)" :x2="editNote.x"
+            :y2="view.viewHeightPx" class="veloline" :class="{
                 selected: editNote.selected,
                 muted: editNote.mute,
                 interactionDisabled: interactionDisabled,
             }" />
-        <circle :cx="positions.x" :cy="view.viewHeightPx - view.velocityToPx(editNote.velocity)" r="3" fill="black" />
+        <circle :cx="editNote.x" :cy="view.viewHeightPx - view.velocityToPx(editNote.velocity)" r="3" fill="black" />
 
     </template>
 </template>
@@ -120,9 +99,11 @@ onUnmounted(() => {
     pointer-events: none;
 }
 
+
 .body {
     stroke: #999;
     fill: #0001;
+    opacity: 0.3;
 }
 
 .veloline {
@@ -131,24 +112,33 @@ onUnmounted(() => {
 
 .body.selected {
     fill: #f889;
+    stroke: #f889;
+    opacity: 1;
 }
 
 .veloline.selected {
     stroke: #f889;
+    stroke-width: 3px;
 }
 
 .body.editable {
     fill: #888a;
+    opacity: 0.6;
 }
 
-.body.selected.body.editable {
+.body.selected.editable {
     fill: rgba(255, 36, 36, 0.205);
 }
 
 
 .body.muted {
-    opacity: 0.4 !important;
     fill: rgba(81, 81, 158, 0.541);
+    stroke: #999;
+}
+
+.body.editable.muted.selected {
+    fill: rgba(255, 36, 182, 0.068);
+    stroke: #f889;
 }
 
 .rightEdge.editable {

@@ -1,14 +1,33 @@
-import { SynthInstance, SynthParam } from "./SynthInterface";
+import { ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+
+class PerformanceChronometer {
+    private startTime: number;
+    constructor() {
+        this.startTime = performance.now();
+    }
+    getElapsedTime = () => {
+        return performance.now() - this.startTime;
+    }
+    reset = () => {
+        this.startTime = performance.now();
+    }
+    logElapsedTime = (text: string) => {
+        console.log(text, this.getElapsedTime().toFixed(2), "ms");
+        this.reset();
+    }
+}
 
 interface SampleFileDefinition {
     name: string;
     frequency: number;
+    velocity?: number;
     path: string;
 }
 
 class SamplerVoice {
     inUse: boolean = false;
     sampleSoruces: SampleSource[] = [];
+
     private bufferSource?: AudioBufferSourceNode;
     outputNode: GainNode;
     audioContext: AudioContext;
@@ -17,6 +36,21 @@ class SamplerVoice {
         this.audioContext = audioContext;
         this.outputNode = this.audioContext.createGain();
         this.outputNode.gain.value = 0;
+        let countPerVelocityStep: { [key: number]: number } = {};
+        sampleSources.forEach((sampleSource) => {
+            if ('sampleInherentVelocity' in sampleSource) {
+                const velocity = sampleSource.sampleInherentVelocity as number;
+                if (!countPerVelocityStep[velocity]) {
+                    countPerVelocityStep[velocity] = 0;
+                }
+                countPerVelocityStep[velocity] += 1;
+            }
+        });
+        this.sampleSoruces.sort((a, b) => {
+            if (!a.sampleInherentVelocity) return -1;
+            if (!b.sampleInherentVelocity) return 1;
+            return a.sampleInherentVelocity - b.sampleInherentVelocity;
+        });
     }
 
     private cancelScheduledValues() {
@@ -48,17 +82,47 @@ class SamplerVoice {
         this.inUse = false;
     }
 
-    private findSampleSourceClosestToFrequency = (frequency: number) => {
+    private findSampleSourceClosestToFrequency = (frequency: number, velocity?: number) => {
         let closestSampleSource = this.sampleSoruces[0];
-        let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
-        for (let i = 1; i < this.sampleSoruces.length; i++) {
-            const sampleSource = this.sampleSoruces[i];
-            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-            if (difference < closestSampleSourceDifference) {
-                closestSampleSource = sampleSource;
-                closestSampleSourceDifference = difference;
+        if (this.sampleSoruces.length == 1) return closestSampleSource;
+
+        if (velocity == undefined) {
+
+
+            let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
+
+            for (let i = 1; i < this.sampleSoruces.length; i++) {
+                const sampleSource = this.sampleSoruces[i];
+                if (!sampleSource.isLoaded) continue;
+                const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
+                if (difference < closestSampleSourceDifference) {
+                    closestSampleSource = sampleSource;
+                    closestSampleSourceDifference = difference;
+                }
             }
+        } else {
+            const sampleSourcesWithVelocityAboveOrEqual = this.sampleSoruces.filter((sampleSource) => {
+                if (!sampleSource.sampleInherentVelocity) return true;
+                return sampleSource.sampleInherentVelocity >= velocity;
+            });
+
+            if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
+                this.findSampleSourceClosestToFrequency(frequency);
+            }
+            
+            let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
+            let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
+            for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
+                const sampleSource = sampleSourcesWithVelocityAboveOrEqual[i];
+                const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
+                if (difference < closestSampleWithLeastVelocityDifferenceDifference) {
+                    closestSampleWithLeastVelocityDifference = sampleSource;
+                    closestSampleWithLeastVelocityDifferenceDifference = difference;
+                }
+            }
+            closestSampleSource = closestSampleWithLeastVelocityDifference;
         }
+
         return closestSampleSource;
     }
 
@@ -80,17 +144,17 @@ class SamplerVoice {
         }
         const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
         const absoluteNoteEnd = absoluteNoteStart + duration;
-
         this.inUse = true;
-        const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
+        const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
         this.resetBufferSource(sampleSource);
 
         if (!this.bufferSource) throw new Error("bufferSource not created");
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
 
-        this.outputNode.gain.value = velocity;
-        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart);
-        this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd);
+        this.outputNode.gain.value = 0;
+        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + 0.001);
+        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteEnd);
+        this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd + 0.3);
         this.bufferSource.start(absoluteNoteStart, skipSample, duration);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };
@@ -100,7 +164,7 @@ class SamplerVoice {
         relativeNoteStart: number,
         velocity: number
     ) => {
-        const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
+        const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
         // TODO: duration might be innacurate bc. of play rate
         const duration = sampleSource.sampleBuffer!.duration;
         this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
@@ -117,9 +181,10 @@ class SampleSource {
     private audioContext: AudioContext;
     sampleBuffer?: AudioBuffer;
     sampleInherentFrequency: number;
-
-    private isLoaded: boolean = false;
+    sampleInherentVelocity?: number;
+    isLoaded: boolean = false;
     private isLoading: boolean = false;
+
     load = () => {
         console.error("samplesource constructed wrong");
     };
@@ -127,10 +192,13 @@ class SampleSource {
     constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition) {
         this.audioContext = audioContext;
         this.sampleInherentFrequency = sampleDefinition.frequency;
+        if ('velocity' in sampleDefinition) {
+            this.sampleInherentVelocity = sampleDefinition.velocity;
+        }
 
         this.load = () => {
 
-            if (this.isLoaded || this.isLoading) return console.log("redundant load call");
+            if (this.isLoaded || this.isLoading) return console.warn("redundant load call");
             this.isLoading = true;
 
             fetch(sampleDefinition.path).then(async (response) => {
@@ -152,8 +220,8 @@ export class MagicSampler implements SynthInstance {
     private outputNode: GainNode;
     credits: string = "";
     name: string = "unnamed";
-    enable:()=>void;
-    disable:()=>void;
+    enable: () => void;
+    disable: () => void;
     constructor(
         audioContext: AudioContext,
         sampleDefinitions: SampleFileDefinition[],
@@ -178,6 +246,26 @@ export class MagicSampler implements SynthInstance {
         }
         this.disable = () => {
         }
+
+        const parent = this;
+        this.params.push({
+            displayName: "Gain",
+            type: ParamType.number,
+            min:0, max: 4,
+            get value() {
+                if (!parent.outputNode) {
+                    console.warn("output node not set");
+                    return 1;
+                }
+                return parent.outputNode.gain.value;
+            },
+            set value(value: number) {
+                if (!parent.outputNode) return;
+                parent.outputNode.gain.value = value;
+            }
+        } as SynthParam);
+
+
     }
     triggerAttackRelease = (
         frequency: number,
@@ -192,7 +280,6 @@ export class MagicSampler implements SynthInstance {
             const sampleVoiceIndex = this.sampleVoices.length;
             this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            console.log("polyphony increased to", this.sampleVoices.length);
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
@@ -206,7 +293,6 @@ export class MagicSampler implements SynthInstance {
             const sampleVoiceIndex = this.sampleVoices.length;
             this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            console.log("polyphony increased to", this.sampleVoices.length);
             sampleVoice.outputNode.connect(this.outputNode);
 
         }

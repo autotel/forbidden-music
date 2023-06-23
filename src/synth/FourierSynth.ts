@@ -35,9 +35,13 @@ const getTemplate = (index: number): [number[], number[]] => {
     })
 
     // normalize levels
-    const maxLevel = Math.max(...real.map((value) => Math.abs(value)));
+    const maxLevel = Math.max(...real.map((value) => Math.abs(value || 0)));
     real.forEach((value, index) => {
-        real[index] = value / maxLevel;
+        if(value === null) {
+            real[index] = 0;
+        }else{
+            real[index] = value / maxLevel;
+        }
     })
 
 
