@@ -155,6 +155,7 @@ class SamplerVoice {
         this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + 0.001);
         this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteEnd);
         this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd + 0.3);
+        // note: offset start is not quite precise because it's missing the pitch shift component
         this.bufferSource.start(absoluteNoteStart, skipSample, duration);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };

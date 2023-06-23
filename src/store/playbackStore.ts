@@ -233,7 +233,6 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteStartFromNow = editNote.time - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
             // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
-            const relativeNoteStart = Math.max(0,noteStartFromNow);
 
             try {
                 if (editNote.duration) {
@@ -241,13 +240,13 @@ export const usePlaybackStore = defineStore("playback", () => {
                     synth.value.triggerAttackRelease(
                         editNote.frequency,
                         noteDuration,
-                        relativeNoteStart,
+                        noteStartFromNow,
                         editNote.velocity
                     );
                 } else {
                     synth.value.triggerPerc(
                         editNote.frequency,
-                        relativeNoteStart,
+                        noteStartFromNow,
                         editNote.velocity
                     );
 

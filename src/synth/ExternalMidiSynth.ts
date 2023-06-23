@@ -72,8 +72,10 @@ export class ExternalMidiSynth implements SynthInstance {
         const midiOutput = this.midiOutputs[this.selectedMidiOutputIndex];
         // if note end is in the past, return and warn
         if (relativeNoteStart + duration < 0) return console.warn("note end is in the past");
-
         if (!midiOutput) return;
+
+        if(relativeNoteStart < 0) relativeNoteStart = 0;
+
         const { note, cents } = frequencyToMidiNote(frequency);
         const channel = this.getChannelAssignation(note)
         console.log("triggering note", { note, cents, channel });

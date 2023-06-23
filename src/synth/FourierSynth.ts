@@ -88,6 +88,7 @@ class FourierVoice {
             velocity: number
         ) => {
             this.inUse = true;
+            if(relativeNoteStart < 0) relativeNoteStart = 0;
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.value = 0;
             gainNode.gain.linearRampToValueAtTime(velocity, audioContext.currentTime + duration / 4);
@@ -106,6 +107,7 @@ class FourierVoice {
             velocity: number
         ) => {
             this.inUse = true;
+            if(relativeNoteStart < 0) relativeNoteStart = 0;
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.value = velocity;
             gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);

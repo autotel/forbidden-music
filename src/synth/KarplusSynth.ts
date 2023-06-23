@@ -69,6 +69,7 @@ export class KarplusSynth implements SynthInstance {
     ) => {
         if (!this.audioContext) throw new Error("audio context not created");
         if (!this.engine) throw new Error("engine not created");
+        if(relativeNoteStart < 0) relativeNoteStart = 0;
         const startTime = this.audioContext.currentTime + relativeNoteStart;
 
         this.engine.port.postMessage({
@@ -81,6 +82,7 @@ export class KarplusSynth implements SynthInstance {
     triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
         if (!this.audioContext) throw new Error("audio context not created");
         if (!this.engine) throw new Error("engine not created");
+        if(relativeNoteStart < 0) relativeNoteStart = 0;
         const startTime = this.audioContext.currentTime + relativeNoteStart;
 
         this.engine.port.postMessage({

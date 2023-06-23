@@ -105,6 +105,7 @@ export class SineSynth implements SynthInstance {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
+        if(relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
@@ -118,6 +119,7 @@ export class SineSynth implements SynthInstance {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
+        if(relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
