@@ -173,6 +173,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             });
         }
     });
+
     // otherwise, wait for interaction
     window.addEventListener("mousedown", startContextListener);
 
@@ -309,7 +310,9 @@ export const usePlaybackStore = defineStore("playback", () => {
     })
 
     const synthParams = ref([] as SynthParam[]);
+
     watch(() => synth.value?.params, () => {
+        // selec which synth to choose
         const val = [
             {
                 type: ParamType.option,

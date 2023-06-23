@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { OptionSynthParam } from '../../synth/SynthInterface';
 
 const triangleLeft = '◀';
@@ -14,7 +14,6 @@ const props = defineProps({
 
 const currentValueName = ref("--");
 const dragging = ref(false);
-
 const minusButton = ref();
 const plusButton = ref();
 
@@ -64,6 +63,10 @@ const mouseDown = (e: MouseEvent) => {
 onMounted(() => {
     const selectedOption = props.param.value;
     currentValueName.value = props.param.options[selectedOption]?.displayName;
+});
+
+watch(() => props.param.value, (newValue) => {
+    currentValueName.value = props.param.options[newValue]?.displayName;
 });
 
 
