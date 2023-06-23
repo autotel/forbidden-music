@@ -101,10 +101,10 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     let synth = ref<SynthInstance | undefined>(undefined);
 
-    let alreadyStarted = false;
+    let audioContextListenerAlreadyStarted = false;
     const startContextListener = async () => {
-        if (alreadyStarted) return;
-        alreadyStarted = true;
+        if (audioContextListenerAlreadyStarted) return;
+        audioContextListenerAlreadyStarted = true;
         await audioContext.resume();
         const samplers = [] as (MagicSampler | ComplexSampler)[];
         const exclusiveSamplers = [] as (MagicSampler | ComplexSampler)[];
