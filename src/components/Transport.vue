@@ -12,6 +12,7 @@ const barSkip = (e: MouseEvent) => {
         const leftPx = e.offsetX;
         const time = view.pxToTimeWithOffset(leftPx);
         playback.currentScoreTime = time;
+        playback.previousScoreTime = time;
         playback.timeReturnPoint = time;
     }
 }
