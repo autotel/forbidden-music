@@ -167,6 +167,10 @@ export const usePlaybackStore = defineStore("playback", () => {
         });
         if (audioContext.state === "running") {
             console.log("audio context allowed without interaction");
+        }else{
+            window.addEventListener("mousedown", ()=>{
+                audioContext.resume();
+            });
         }
     });
     // otherwise, wait for interaction
