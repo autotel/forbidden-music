@@ -191,6 +191,23 @@ const keyDownListener = (e: KeyboardEvent) => {
         e.stopPropagation();
     }
 
+    // if ctrl + left, move selected notes start time decrease by 1
+    if (e.ctrlKey && e.key === 'ArrowLeft') {
+        console.log("move left");
+        selection.getNotes().forEach(eNote => eNote.time -= 1);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    // if ctrl + right, move selected notes start time increase by 1
+    if (e.ctrlKey && e.key === 'ArrowRight') {
+        console.log("move right");
+        selection.getNotes().forEach(eNote => eNote.time += 1);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+
+
     if (e.key === 'Escape') {
         selection.clear();
         tool.resetState();
