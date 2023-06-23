@@ -738,8 +738,8 @@ export default [
   {
     "name": "uni-iowa-piano",
     "isComplexSampler": false,
-    "exclusive": false,
-    "onlyLocal": true,
+    "exclusive": true,
+    "onlyLocal": false,
     "samples": [
       {
         "name": "127_104.53408012949754.wav",
@@ -979,12 +979,6 @@ export default [
         "name": "127_2980.1368956591646.wav",
         "frequency": 2980.1368956591646,
         "path": "audio/uni-iowa-piano/127_2980.1368956591646.wav",
-        "velocity": 1
-      },
-      {
-        "name": "127_31.07816796256576.wav",
-        "frequency": 31.07816796256576,
-        "path": "audio/uni-iowa-piano/127_31.07816796256576.wav",
         "velocity": 1
       },
       {

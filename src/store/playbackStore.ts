@@ -53,10 +53,14 @@ export const usePlaybackStore = defineStore("playback", () => {
     /** in musical time */
     const previousScoreTime = ref(0);
     const currentTimeout = ref(null as null | any);
+    /** where does the playback return to when playback stops */
+    const timeReturnPoint = ref(0);
     /** in seconds */
     const previousClockTime = ref(0);
     /** how long in advance to request the scheduling of events */
     const foresight = 1;
+
+
     let audioContext = new AudioContext();
 
     const view = useViewStore();
@@ -266,8 +270,8 @@ export const usePlaybackStore = defineStore("playback", () => {
         clearTimeout(currentTimeout.value);
         currentTimeout.value = null;
         playing.value = false;
-        currentScoreTime.value = 0;
-        previousScoreTime.value = 0;
+        currentScoreTime.value = timeReturnPoint.value;
+        previousScoreTime.value = timeReturnPoint.value;
         previousClockTime.value = 0;
         synth.value?.releaseAll();
     }
@@ -340,6 +344,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         bpm,
         availableSynths,
         currentScoreTime,
+        timeReturnPoint,
         previousScoreTime,
         currentTimeout,
         audioContext,

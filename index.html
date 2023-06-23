@@ -14,8 +14,10 @@
   <script>
 
     console.log("ensure ending with slash");
-    if (!window.location.href.endsWith('/')) {
-      window.location.href += '/';
+    const locationWithoutHash = window.location.href.split('#')[0];
+    const hash = window.location.hash;
+    if (!locationWithoutHash.endsWith('/')) {
+      window.location.href = locationWithoutHash + '/' + hash?hash:'';
     } else {
       console.log("already ending with slash", window.location.href);
     }

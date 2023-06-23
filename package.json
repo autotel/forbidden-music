@@ -9,7 +9,9 @@
     "check": "vue-tsc",
     "build-lazy": "vite build",
     "preview": "vite preview",
-    "update-samples": "node scripts/update-samples-list.cjs"
+    "update-samples": "node scripts/update-samples-list.cjs",
+    "tauri": "tauri",
+    "dev-tauri": "tauri dev"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
@@ -17,6 +19,7 @@
     "vue": "^3.2.45"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^1.4.0",
     "@vitejs/plugin-vue": "^4.0.0",
     "@vueuse/core": "^9.9.0",
     "adsr-envelope": "^1.0.0",
