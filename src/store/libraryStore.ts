@@ -54,6 +54,8 @@ const normalizeLibraryItem = (obj: any): LibraryItem => {
         console.log("version " + obj.version + " detected, migrating");
         console.log(migrator,obj.version);
         obj = migrator(obj);
+    } else {
+        console.log("no migration needed for version " + obj.version + " detected");
     }
     return obj;
 }
@@ -208,6 +210,7 @@ export const useLibraryStore = defineStore("library store", () => {
 
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
+            iobj = normalizeLibraryItem(iobj);
             project.setFromProjecDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             project.setFromListOfNoteDefinitions(iobj);

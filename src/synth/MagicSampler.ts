@@ -87,10 +87,7 @@ class SamplerVoice {
         if (this.sampleSoruces.length == 1) return closestSampleSource;
 
         if (velocity == undefined) {
-
-
             let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
-
             for (let i = 1; i < this.sampleSoruces.length; i++) {
                 const sampleSource = this.sampleSoruces[i];
                 if (!sampleSource.isLoaded) continue;
@@ -114,6 +111,7 @@ class SamplerVoice {
             let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
             for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
                 const sampleSource = sampleSourcesWithVelocityAboveOrEqual[i];
+                if (!sampleSource.isLoaded) continue;
                 const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
                 if (difference < closestSampleWithLeastVelocityDifferenceDifference) {
                     closestSampleWithLeastVelocityDifference = sampleSource;
