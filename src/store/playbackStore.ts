@@ -105,7 +105,9 @@ export const usePlaybackStore = defineStore("playback", () => {
     const startContextListener = async () => {
         if (audioContextListenerAlreadyStarted) return;
         audioContextListenerAlreadyStarted = true;
+        console.log("waiting for audio context permission");
         await audioContext.resume();
+        console.log("audio context permission granted");
         const samplers = [] as (MagicSampler | ComplexSampler)[];
         const exclusiveSamplers = [] as (MagicSampler | ComplexSampler)[];
         const localOnlySamplers = [] as (MagicSampler | ComplexSampler)[];
@@ -159,13 +161,14 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     // if context is allowed to start without interaction, start it now
-    (async () => {
-        await audioContext.resume();
+    const audioContextPromise = new Promise(async (resolve) => {
+        startContextListener().then(() => {
+            resolve(audioContext);
+        });
         if (audioContext.state === "running") {
             console.log("audio context allowed without interaction");
-            startContextListener();
         }
-    })();
+    });
     // otherwise, wait for interaction
     window.addEventListener("mousedown", startContextListener);
 
@@ -350,6 +353,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     })
 
     return {
+        audioContextPromise,
         playing,
         bpm,
         availableSynths,
