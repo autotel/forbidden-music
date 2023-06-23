@@ -116,23 +116,25 @@ export const useProjectStore = defineStore("current project", () => {
 
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
-        console.log(pDef.notes.filter(note => note.mute))
-        if (pDef.instrument) {
-            playbackStore.setSynthByName(pDef.instrument.type).then((synth) => {
-                pDef.instrument?.params.forEach((param, index) => {
-                    const foundNamedParam = synth.params.find((synthParam) => {
-                        return synthParam.displayName === param.displayName;
-                    })
-                    if (foundNamedParam) {
-                        foundNamedParam.value = param.value;
-                        console.log("import param", param.displayName, param.value);
-                    } else {
-                        console.warn(`ignoring imported param ${param.displayName} in synth ${synth.name}`);
-                    }
-                });
-            })
+        (async () => {
+            await playbackStore.audioContextPromise;
+            if (pDef.instrument) {
+                playbackStore.setSynthByName(pDef.instrument.type).then((synth) => {
+                    pDef.instrument?.params.forEach((param, index) => {
+                        const foundNamedParam = synth.params.find((synthParam) => {
+                            return synthParam.displayName === param.displayName;
+                        })
+                        if (foundNamedParam) {
+                            foundNamedParam.value = param.value;
+                            console.log("import param", param.displayName, param.value);
+                        } else {
+                            console.warn(`ignoring imported param ${param.displayName} in synth ${synth.name}`);
+                        }
+                    });
+                })
+            }
+        })();
 
-        }
 
         pDef.snaps.forEach(([name, activeState]) => {
             if (!snaps.values[name]) return;

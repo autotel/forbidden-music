@@ -101,11 +101,13 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     let synth = ref<SynthInstance | undefined>(undefined);
 
-    let alreadyStarted = false;
+    let audioContextListenerAlreadyStarted = false;
     const startContextListener = async () => {
-        if (alreadyStarted) return;
-        alreadyStarted = true;
+        if (audioContextListenerAlreadyStarted) return;
+        audioContextListenerAlreadyStarted = true;
+        console.log("waiting for audio context permission");
         await audioContext.resume();
+        console.log("audio context permission granted");
         const samplers = [] as (MagicSampler | ComplexSampler)[];
         const exclusiveSamplers = [] as (MagicSampler | ComplexSampler)[];
         const localOnlySamplers = [] as (MagicSampler | ComplexSampler)[];
@@ -159,13 +161,14 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     // if context is allowed to start without interaction, start it now
-    (async () => {
-        await audioContext.resume();
+    const audioContextPromise = new Promise(async (resolve) => {
+        startContextListener().then(() => {
+            resolve(audioContext);
+        });
         if (audioContext.state === "running") {
             console.log("audio context allowed without interaction");
-            startContextListener();
         }
-    })();
+    });
     // otherwise, wait for interaction
     window.addEventListener("mousedown", startContextListener);
 
@@ -202,13 +205,14 @@ export const usePlaybackStore = defineStore("playback", () => {
     });
 
 
-    const _getEventsBetween = (frameStartTime: number, frameEndTime: number) => {
+    const _getEventsBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
         const events = project.score.filter((editNote) => {
-            return editNote.time >= frameStartTime && editNote.time < frameEndTime;
+            return (catchUp?editNote.timeEnd:editNote.time) >= frameStartTime && editNote.time < frameEndTime;
         });
-        // if(events.length > 0) console.log("events between", frameStartTime, frameEndTime, events.length);
         return events;
     };
+
+    let isFirtClockAfterPlay = true;
     const _clockAction = () => {
         const rate = bpm.value / 60;
 
@@ -216,7 +220,10 @@ export const usePlaybackStore = defineStore("playback", () => {
         const now = audioContext.currentTime;
         const deltaTime = now - previousClockTime.value;
         currentScoreTime.value += deltaTime * rate;
-        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value)
+
+        let catchUp = isFirtClockAfterPlay;
+        isFirtClockAfterPlay = false;
+        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
 
 
         playNotes.forEach((editNote) => {
@@ -226,22 +233,20 @@ export const usePlaybackStore = defineStore("playback", () => {
             const noteStartFromNow = editNote.time - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
             // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
-            const relativeNoteStart = noteStartFromNow;
 
             try {
-
                 if (editNote.duration) {
                     const noteDuration = editNote.duration / rate;
                     synth.value.triggerAttackRelease(
                         editNote.frequency,
                         noteDuration,
-                        relativeNoteStart,
+                        noteStartFromNow,
                         editNote.velocity
                     );
                 } else {
                     synth.value.triggerPerc(
                         editNote.frequency,
-                        relativeNoteStart,
+                        noteStartFromNow,
                         editNote.velocity
                     );
 
@@ -263,6 +268,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
         previousClockTime.value = audioContext.currentTime;
+        isFirtClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
     }
 
@@ -339,7 +345,14 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (oldSynth) oldSynth.disable();
     });
 
+    // i.e. when user skips in timeline
+    watch(timeReturnPoint, ()=> {
+        isFirtClockAfterPlay = true;
+        // synth.value?.releaseAll();
+    })
+
     return {
+        audioContextPromise,
         playing,
         bpm,
         availableSynths,

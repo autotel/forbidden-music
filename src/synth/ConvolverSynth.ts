@@ -59,6 +59,7 @@ class ConvolverVoice {
             relativeNoteStart: number,
             velocity: number
         ) => {
+            if(relativeNoteStart < 0) relativeNoteStart = 0;
             this.inUse = true;
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.value = velocity;
