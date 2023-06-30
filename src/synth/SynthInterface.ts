@@ -22,6 +22,7 @@ export interface SynthInstance {
 
 export enum ParamType {
     number = "number",
+    progress = "progress",
     boolean = "boolean",
     option = "option",
     infoText = "info text",
@@ -42,6 +43,14 @@ export type SynthParamMinimum <T> = {
 
 export interface NumberSynthParam extends SynthParamMinimum<number> {
     type: ParamType.number;
+    value: number;
+    displayName: string;
+    min: number
+    max: number
+}
+
+export interface ProgressSynthParam extends SynthParamMinimum<number> {
+    type: ParamType.progress;
     value: number;
     displayName: string;
     min: number
@@ -86,5 +95,6 @@ export type SynthParam =
     BooleanSynthParam |
     OptionSynthParam |
     InfoTextSynthParam |
+    ProgressSynthParam |
     ArraySynthParam;
 

@@ -30,9 +30,7 @@ onMounted(() => {
 
         <div ref="sizer" class="drawer-container" :class="{ hide: !keepOn && !hovered }">
             <slot>
-
             </slot>
-
         </div>
         <Button :onClick="() => keepOn = !keepOn" tooltip="keep open">
             <span class="icon">

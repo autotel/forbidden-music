@@ -1,18 +1,19 @@
-export default function isDev() {
-    return process.env.NODE_ENV === "development";
+export default function isTauri() {
+    // @ts-ignore
+    return window.__TAURI__;
 }
-export function ifDev(callback: () => void) {
-    if (isDev()) {
+export function ifTauri(callback: () => void) {
+    if (isTauri()) {
         callback();
     }
     return {
         else: (callback: () => void) => {
-            if (!isDev()) {
+            if (!isTauri()) {
                 callback();
             }
         },
         elseLog: (message: string) => {
-            if (!isDev()) {
+            if (!isTauri()) {
                 console.log(message);
             }
         }

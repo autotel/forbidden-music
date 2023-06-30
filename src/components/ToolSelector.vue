@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../dataTypes/Tool';
+import { KeyActions, getKeyCombinationString } from '../keyBindings';
 import { MouseDownActions, useToolStore } from '../store/toolStore';
 import { useUndoStore } from '../store/undoStore';
 import Button from './Button.vue';
-import { useMonoModeInteraction } from '../store/monoModeInteraction';
-const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
 const {
   history, undo, redo, canUndo, canRedo, undoStack, redoStack
 } = useUndoStore();
-
+const k = (key: KeyActions) => getKeyCombinationString(key)[0] || '';
 const toggleOctaveConstrain = () => {
   tool.disallowTimeChange = !tool.disallowTimeChange;
   if (tool.disallowOctaveChange) {
@@ -44,27 +42,34 @@ const toggleSelectTool = () => {
     keybooard
   </Button>
 
-  <Button :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
+  <Button 
+    :tooltip="`undo [${k(KeyActions.Undo)}]`"
+    :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
     ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
   </Button>
-  <Button :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
+  <Button 
+    :tooltip="`redo`"
+    :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
     ↷
   </Button>
 
-  <Button :onClick="toggleSelectTool" :active="tool.current == Tool.Select" tooltip="Select mode [CTRL]">
+  <Button :onClick="toggleSelectTool" :active="tool.whatWouldMouseDownDo() === MouseDownActions.AreaSelect"
+    :tooltip="`Select [${k(KeyActions.ActivateAreaSelectionMode)}]`">
     Select
   </Button>
   <Button :onClick="(e) => {
     tool.current = Tool.Modulation
-  }" :active="tool.current == Tool.Modulation" tooltip="Modulation[M]">
+  }" :active="tool.current == Tool.Modulation" :tooltip="`Modulation mode [${k(KeyActions.ActivateModulationMode)}]`">
     Modulation
   </Button>
   <div class="group">
     <label>Constrain</label>
-    <Button :active="tool.disallowTimeChange" :onClick="toggleOctaveConstrain">
+    <Button :tooltip="`prevent horizontal movement [${k(KeyActions.OnlyAllowVerticalMovement)}]`"
+      :active="tool.disallowTimeChange" :onClick="toggleOctaveConstrain">
       ↕
     </Button>
-    <Button :active="tool.disallowOctaveChange" :onClick="toggleTimeConstrain">
+    <Button :tooltip="`prevent vertical movement [${k(KeyActions.OnlyAllowHorizontalMovement)}]`"
+      :active="tool.disallowOctaveChange" :onClick="toggleTimeConstrain">
       ↔
     </Button>
   </div>

@@ -1,13 +1,27 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { ifDev } from "../functions/isDev";
+import { ifTauri } from "../functions/isTauri";
 
 export const useExclusiveContentsStore = defineStore("exclusive contents store", () => {
-    const enabled = ref(true);
-    if(window.location.hash == "#exclusive") {
+    const enabled = ref(false);
+
+    ifTauri(() => {
+        console.log("tauri - exclusives mode on");
         enabled.value = true;
-        console.log("exclusives mode on");
-    }
-    return {
-        enabled
-    }
+    });
+
+    ifDev(() => {
+        console.log("dev - exclusives mode on");
+        enabled.value = true;
+    });
+
+    
+    // if(window.location.hash == "#exclusive") {
+    //     enabled.value = true;
+    //     console.log("exclusives mode on");
+    // }
+    // return {
+    //     enabled
+    // }
 });

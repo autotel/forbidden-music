@@ -25,8 +25,8 @@ import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
 import GroupElement from './components/GroupElement.vue';
-
-type Timeout = ReturnType<typeof setTimeout>;
+import { ifDev } from './functions/isDev';
+import { KeyActions, getActionForKeys, logKeys } from './keyBindings';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -87,130 +87,142 @@ const mouseMoveListener = (e: MouseEvent) => {
     }
 }
 
+const keyUpListener = (e: KeyboardEvent) => {
+    if (e.target instanceof HTMLInputElement) {
+        return;
+    }
+    const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
+    switch (keyAction) {
+        case KeyActions.ActivateCopyOnDrag: {
+            tool.copyOnDrag = false;
+        }
+        case KeyActions.ActivateAreaSelectionMode: {
+            tool.currentLeftHand = Tool.None;
+        }
+    }
+}
 
 const keyDownListener = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement) {
         return;
     }
-    // delete selected notes
-    if (e.key === 'Delete') {
-        project.score = project.score.filter(note => !note.selected)
-        // minimalistic option:
-        // tool.noteBeingHovered = false;
-        // programmatic option:
-        tool.resetState();
-        selection.clear();
-    }
-    // alt activates tool copyOnDrag mode
-    if (e.altKey) {
-        tool.copyOnDrag = true;
-        const dectl = (e: KeyboardEvent) => {
-            if (e.key == "Alt") {
-                tool.copyOnDrag = false;
-                window.removeEventListener('keyup', dectl);
+    const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
+    console.log(keyAction);
+    switch (keyAction) {
+        case KeyActions.Delete: {
+            project.score = project.score.filter(note => !note.selected)
+            // minimalistic option:
+            // tool.noteBeingHovered = false;
+            // programmatic option:
+            tool.resetState();
+            selection.clear();
+            break;
+        }
+        case KeyActions.ActivateCopyOnDrag: {
+            tool.copyOnDrag = true;
+            break;
+        }
+        case KeyActions.PlayPause: {
+            e.preventDefault();
+            if (playback.playing) {
+                playback.stop();
+            } else {
+                playback.play();
             }
+            break;
         }
-        window.addEventListener('keyup', dectl);
-    }
-    // space plays/stops
-    if (e.key === ' ') {
-        e.preventDefault();
-        if (playback.playing) {
-            playback.stop();
-        } else {
-            playback.play();
+        case KeyActions.ActivateAreaSelectionMode: {
+            tool.currentLeftHand = Tool.Select;
+            break;
         }
-    }
-    if (e.ctrlKey) {
-        tool.currentLeftHand = Tool.Select;
-        const dectl = (e: KeyboardEvent) => {
-            if (e.key == "Control") {
-                tool.currentLeftHand = Tool.None;
-                window.removeEventListener('keyup', dectl);
-            }
-        }
-        window.addEventListener('keyup', dectl);
-
-    }
-
-    if (e.key === 'm') {
-        if (e.ctrlKey) {
-            selection.getNotes().forEach(eNote => eNote.mute = !eNote.mute);
-        } else {
+        case KeyActions.ActivateModulationMode: {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
+            break;
         }
-    }
+        case KeyActions.MuteSelectedEvents: {
+            selection.getNotes().forEach(eNote => eNote.mute = !eNote.mute);
+            break;
+        }
+        case KeyActions.Save: {
+            console.log("save");
+            libraryStore.saveCurrent();
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.Undo: {
+            console.log("undo");
+            undoStore.undo();
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.Download: {
+            console.log("downloaded");
+            libraryStore.exportJSON();
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.SelectAll: {
+            console.log("select all");
+            selection.selectAll();
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.MoveDown: {
+            console.log("move down");
+            selection.getNotes().forEach(eNote => eNote.octave -= 1);
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.MoveUp: {
+            console.log("move up");
+            selection.getNotes().forEach(eNote => eNote.octave += 1);
+            e.preventDefault();
+            e.stopPropagation();
 
-    // save
-    if (e.ctrlKey && e.key === 's') {
-        console.log("saved");
-        libraryStore.saveCurrent();
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // undo
-    if (e.ctrlKey && e.key === 'z') {
-        console.log("undo");
-        undoStore.undo();
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // download 
-    if (e.ctrlKey && e.key === 'd') {
-        console.log("downloaded");
-        libraryStore.exportJSON();
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // group 
-    if (e.ctrlKey && e.key === 'g') {
-        console.log("group");
-        project.setNotesGroupToNewGroup(selection.getNotes());
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // select all
-    if (e.ctrlKey && e.key === 'a') {
-        console.log("select all");
-        selection.selectAll();
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // if ctrl + down, move selected notes down an octave
-    if (e.ctrlKey && e.key === 'ArrowDown') {
-        console.log("move down");
-        selection.getNotes().forEach(eNote => eNote.octave -= 1);
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // if ctrl + up, move selected notes up an octave
-    if (e.ctrlKey && e.key === 'ArrowUp') {
-        console.log("move up");
-        selection.getNotes().forEach(eNote => eNote.octave += 1);
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    // if ctrl + left, move selected notes start time decrease by 1
-    if (e.ctrlKey && e.key === 'ArrowLeft') {
-        console.log("move left");
-        selection.getNotes().forEach(eNote => eNote.time -= 1);
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // if ctrl + right, move selected notes start time increase by 1
-    if (e.ctrlKey && e.key === 'ArrowRight') {
-        console.log("move right");
-        selection.getNotes().forEach(eNote => eNote.time += 1);
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-
-
-    if (e.key === 'Escape') {
-        selection.clear();
-        tool.resetState();
+            break;
+        }
+        case KeyActions.MoveLeft: {
+            console.log("move left");
+            selection.getNotes().forEach(eNote => eNote.time -= 1);
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.MoveRight: {
+            console.log("move right");
+            selection.getNotes().forEach(eNote => eNote.time += 1);
+            e.preventDefault();
+            e.stopPropagation();
+            break;
+        }
+        case KeyActions.Exit: {
+            selection.clear();
+            tool.resetState();
+            break;
+        }
+        case KeyActions.OnlyAllowHorizontalMovement: {
+            tool.disallowOctaveChange = !tool.disallowOctaveChange;
+            break;
+        }
+        case KeyActions.OnlyAllowVerticalMovement: {
+            tool.disallowTimeChange = !tool.disallowTimeChange;
+            break;
+        }
+        case KeyActions.Group: {
+            // not ready
+            ifDev(() => {
+                console.log("group");
+                project.setNotesGroupToNewGroup(selection.getNotes());
+                e.preventDefault();
+                e.stopPropagation();
+            }).elseLog("group feature in development");
+            break;
+        }
 
     }
 }
@@ -279,7 +291,10 @@ onMounted(() => {
     window.addEventListener('mouseup', mouseUpListener);
 
     mainInteraction.addEventListener(window, 'keydown', keyDownListener);
+    mainInteraction.addEventListener(window, 'keyup', keyUpListener);
     mainInteraction.addEventListener(window, 'resize', resize);
+
+    console.log("Environment:", process.env.NODE_ENV);
 
 })
 onBeforeUnmount(() => {

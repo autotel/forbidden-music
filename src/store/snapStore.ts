@@ -164,12 +164,6 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Tone,
         active: false,
     },
-    hzEven: {
-        description: "frequencies which are multiple of 2",
-        icon: "2\u00d7",
-        type: SnapType.Tone,
-        active: false,
-    },
     hzFundamentalMultiple: {
         description: "frequencies which are multiple of the fundamental frequency.",
         icon: "FF\u00d7",
@@ -301,16 +295,6 @@ export const useSnapStore = defineStore("snap", () => {
                 });
             }
         }
-
-        if (snapValues.hzEven.active === true) {
-            const relatedNumber = Math.round(targetHz / 2) * 2;
-            toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
-                text: "hzEven",
-                relatedNumber,
-            });
-        };
-
-
 
         if (snapValues.hzFundamentalMultiple.active === true) {
             const relatedNumber = fundamental;

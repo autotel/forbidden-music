@@ -10,6 +10,7 @@ import HeartPulse from "../components/icons/HeartPulse.vue";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import NumberArrayEditor from "../components/paramEditors/NumberArrayEditor.vue";
 import { onMounted } from "vue";
+import PropLoadingProgress from "../components/paramEditors/PropLoadingProgress.vue";
 const playback = usePlaybackStore();
 const audioReady = ref(false);
 const infoTextModal = inject<Ref<string>>('modalText');
@@ -29,13 +30,13 @@ const showInfo = (info: string) => {
     monoModeInteraction.activate("credits modal");
 }
 
-onMounted(()=>{
+onMounted(() => {
     console.log('mounted synth edit', playback.synthParams);
-    playback.audioContextPromise.then(()=>{
+    playback.audioContextPromise.then(() => {
         audioReady.value = true;
     })
 })
-onUnmounted(()=>{
+onUnmounted(() => {
     audioReady.value = false;
 })
 
@@ -48,19 +49,19 @@ onUnmounted(()=>{
         </template>
         <h2>synth params</h2>
         <div style="height:4em">
-                <div v-if="audioReady">
-
-                    <template v-for="param in playback.synthParams">
-                        <PropOption v-if="param.type === ParamType.option" :param="param" />
-                        <PropSlider v-if="param.type === ParamType.number" :param="param" />
-                        <NumberArrayEditor v-if="param.type === ParamType.nArray" :param="param" />
-                        <Button v-if="param.type === ParamType.infoText"
-                            :on-click="()=>showInfo(param.value)">{{ param.displayName }}</Button>
-                    </template>
-                </div>
-                <div v-else>
-                    <Button :on-click="() => { }">Click to start audio engine</Button>
-                </div>
+            <div v-if="audioReady">
+                <template v-for="param in playback.synthParams">
+                    <PropOption v-if="param.type === ParamType.option" :param="param" />
+                    <PropSlider v-if="param.type === ParamType.number" :param="param" />
+                    <PropLoadingProgress v-if="param.type === ParamType.progress" :param="param" />
+                    <NumberArrayEditor v-if="param.type === ParamType.nArray" :param="param" />
+                    <Button v-if="param.type === ParamType.infoText" :on-click="() => showInfo(param.value)">{{
+                        param.displayName }}</Button>
+                </template>
+            </div>
+            <div v-else>
+                <Button :on-click="() => { }">Click to start audio engine</Button>
+            </div>
             <Button v-if="playback.synth?.credits" :on-click="showCurrentSynthCredits">Credits</Button>
         </div>
     </EdgeHidableWidget>

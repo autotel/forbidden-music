@@ -140,14 +140,14 @@ export const usePlaybackStore = defineStore("playback", () => {
 
         if (exclusives.enabled) {
             availableSynths.value.push(...exclusiveSamplers);
+            availableSynths.value.unshift(new FourierSynth(audioContext));
         } else {
             console.log("exclusives disabled");
         }
         if (isDev()) {
             // bc. unfinished
-            availableSynths.value.push(new KarplusSynth(audioContext));
             availableSynths.value.push(new FmSynth(audioContext));
-            availableSynths.value.unshift(new FourierSynth(audioContext));
+            availableSynths.value.push(new KarplusSynth(audioContext));
             // bc. pirate
             availableSynths.value.push(...localOnlySamplers);
         } else {

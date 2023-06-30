@@ -1,4 +1,4 @@
-import { ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+import { ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
 
 class PerformanceChronometer {
     private startTime: number;
@@ -106,7 +106,7 @@ class SamplerVoice {
             if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
                 this.findSampleSourceClosestToFrequency(frequency);
             }
-            
+
             let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
             let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
             for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
@@ -184,7 +184,7 @@ class SampleSource {
     isLoaded: boolean = false;
     private isLoading: boolean = false;
 
-    load = () => {
+    load = async () => {
         console.error("samplesource constructed wrong");
     };
 
@@ -195,19 +195,17 @@ class SampleSource {
             this.sampleInherentVelocity = sampleDefinition.velocity;
         }
 
-        this.load = () => {
+        this.load = async () => {
 
-            if (this.isLoaded || this.isLoading) return console.warn("redundant load call");
+            if (this.isLoaded || this.isLoading) throw new Error("redundant load call");
             this.isLoading = true;
 
-            fetch(sampleDefinition.path).then(async (response) => {
-                const arrayBuffer = await response.arrayBuffer();
-                this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            const response = await fetch(sampleDefinition.path)
 
-                console.log("loaded", sampleDefinition.name);
-                this.isLoaded = true;
-                this.isLoading = false;
-            });
+            const arrayBuffer = await response.arrayBuffer();
+            this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            this.isLoaded = true;
+            this.isLoading = false;
         }
     }
 }
@@ -217,6 +215,7 @@ export class MagicSampler implements SynthInstance {
     private sampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
     private outputNode: GainNode;
+    private loadingProgress = 0;
     credits: string = "";
     name: string = "unnamed";
     enable: () => void;
@@ -239,8 +238,9 @@ export class MagicSampler implements SynthInstance {
         if (credits) this.credits = credits;
         if (name) this.name = name;
         this.enable = () => {
-            this.sampleSources.forEach((sampleSource) => {
-                sampleSource.load();
+            this.sampleSources.forEach(async (sampleSource) => {
+                await sampleSource.load();
+                this.loadingProgress += 1;
             });
         }
         this.disable = () => {
@@ -248,9 +248,9 @@ export class MagicSampler implements SynthInstance {
 
         const parent = this;
         this.params.push({
-            displayName: "Gain",
+            displayName: "Level",
             type: ParamType.number,
-            min:0, max: 4,
+            min: 0, max: 4,
             get value() {
                 if (!parent.outputNode) {
                     console.warn("output node not set");
@@ -264,6 +264,14 @@ export class MagicSampler implements SynthInstance {
             }
         } as SynthParam);
 
+        this.params.push({
+            displayName: "Loading progress",
+            type: ParamType.progress,
+            min: 0, max: sampleDefinitions.length,
+            get value() {
+                return parent.loadingProgress;
+            }
+        } as ProgressSynthParam);
 
     }
     triggerAttackRelease = (

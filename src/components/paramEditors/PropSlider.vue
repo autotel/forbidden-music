@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:300px">
-        {{ props.param.displayName }}
+        
         <template v-if="props.param.max !== undefined && props.param.min !== undefined">
             <div class="prog-container">
                 <div class="prog-bar" :class="{ negative: currentValue < 0 }" :style="{
@@ -96,7 +96,7 @@ onBeforeUnmount(() => {
             </div>
         </template>
         <span style="{position: absolute; z-index: 2;}">
-            {{ currentValue?.toFixed(2) }}
+            {{ props.param.displayName }} &nbsp; {{ currentValue?.toFixed(2) }}
         </span>
     </div>
 
