@@ -21,7 +21,7 @@ export const useExclusiveContentsStore = defineStore("exclusive contents store",
     //     enabled.value = true;
     //     console.log("exclusives mode on");
     // }
-    // return {
-    //     enabled
-    // }
+    return {
+        enabled
+    }
 });

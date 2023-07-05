@@ -12,9 +12,7 @@ const props = defineProps({
 const displayProgress = ref(0);
 
 const updateDisplayProgress = () => {
-    console.log('updateDisplayProgress', props.param.value);
     displayProgress.value = props.param.value;
-    
 }
 
 watch(() => props.param.value, updateDisplayProgress);

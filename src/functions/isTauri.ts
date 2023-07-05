@@ -1,6 +1,6 @@
 export default function isTauri() {
     // @ts-ignore
-    return window.__TAURI__;
+    return window.__TAURI__?true:false;
 }
 export function ifTauri(callback: () => void) {
     if (isTauri()) {

@@ -70,14 +70,20 @@ const mouseUp = (e: MouseEvent) => {
 onMounted(() => {
     currentValue.value = props.param.value;
     const $valueDraggable = valueDraggable.value;
-    if (!$valueDraggable) throw new Error("valueDraggable ref is " + valueDraggable.value);
+    if (!$valueDraggable) {
+        console.error("valueDraggable ref is " + valueDraggable.value);
+        return;
+    }
     $valueDraggable.addEventListener('mousedown', mouseDown);
     window.addEventListener('mouseup', mouseUp);
     window.addEventListener('mousemove', windowMouseMove);
 });
 onBeforeUnmount(() => {
     const $valueDraggable = valueDraggable.value;
-    if (!$valueDraggable) throw new Error("valueDraggable ref is " + valueDraggable.value);
+    if (!$valueDraggable) {
+        console.error("valueDraggable ref is " + valueDraggable.value);
+        return;
+    }
     $valueDraggable.removeEventListener('mousedown', mouseDown);
     window.removeEventListener('mouseup', mouseUp);
     window.removeEventListener('mousemove', windowMouseMove);
