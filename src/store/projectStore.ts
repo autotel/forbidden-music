@@ -8,6 +8,7 @@ import { usePlaybackStore } from './playbackStore.js';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
+import { ParamType, SynthParam } from '../synth/SynthInterface.js';
 
 
 export const useProjectStore = defineStore("current project", () => {
@@ -87,7 +88,9 @@ export const useProjectStore = defineStore("current project", () => {
         if (playbackStore.synth) {
             ret.instrument = {
                 type: playbackStore.synth.name,
-                params: playbackStore.synth.params.map(param => ({
+                params: playbackStore.synth.params.filter((param:SynthParam) => {
+                    return param.type !== ParamType.progress;
+                }).map((param:SynthParam) => ({
                     displayName: param.displayName,
                     value: param.value,
                 }))
@@ -121,14 +124,18 @@ export const useProjectStore = defineStore("current project", () => {
             if (pDef.instrument) {
                 playbackStore.setSynthByName(pDef.instrument.type).then((synth) => {
                     pDef.instrument?.params.forEach((param, index) => {
-                        const foundNamedParam = synth.params.find((synthParam) => {
-                            return synthParam.displayName === param.displayName;
-                        })
-                        if (foundNamedParam) {
-                            foundNamedParam.value = param.value;
-                            console.log("import param", param.displayName, param.value);
-                        } else {
-                            console.warn(`ignoring imported param ${param.displayName} in synth ${synth.name}`);
+                        try{
+                            const foundNamedParam = synth.params.find((synthParam) => {
+                                return synthParam.displayName === param.displayName;
+                            })
+                            if (foundNamedParam) {
+                                foundNamedParam.value = param.value;
+                                console.log("import param", param.displayName, param.value);
+                            } else {
+                                console.warn(`ignoring imported param ${param.displayName} in synth ${synth.name}`);
+                            }
+                        } catch (e) {
+                            console.warn(`error importing param "${param.displayName}" in synth "${synth.name}"`, e);
                         }
                     });
                 })

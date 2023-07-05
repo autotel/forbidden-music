@@ -84,6 +84,9 @@ export const useToolStore = defineStore("edit", () => {
     let groupBeingHovered = ref<Group | null>(null);
     let groupBeingDragged = ref<Group | false>(false);
 
+    /** 
+     * only holds reference to notes in score 
+     */
     let notesBeingDragged: EditNote[] = [];
     let groupsBeingDragged: Group[] = [];
     let alreadyDuplicatedForThisDrag = false;
@@ -316,27 +319,25 @@ export const useToolStore = defineStore("edit", () => {
         if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
             noteThatWouldBeCreated.value = false;
         } else if (whatWouldMouseDownDo() === MouseDownActions.Create) {
-            if (!noteThatWouldBeCreated.value) {
-                noteThatWouldBeCreated.value = new EditNote({
-                    time: 0, duration: 0, frequency: 0
-                }, view);
-            }
+            const freeNote = new EditNote({
+                time: view.pxToTimeWithOffset(x),
+                duration: 0,
+                octave: view.pxToOctaveWithOffset(y),
+            },view);
 
-            noteThatWouldBeCreated.value.time = view.pxToTimeWithOffset(x);
-            noteThatWouldBeCreated.value.duration = 0;
-            noteThatWouldBeCreated.value.octave = view.pxToOctaveWithOffset(y);
+            snap.setFocusedNote(freeNote)
 
-            snap.setFocusedNote(noteThatWouldBeCreated.value as EditNote)
-            // snap.resetSnapExplanation();
-
-            const editNote = snap.snap({
-                inNote: noteThatWouldBeCreated.value as EditNote,
+            const snapNote = snap.snap({
+                inNote: freeNote,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: project.score,
+                otherNotes: view.visibleNotes,
                 sideEffects: true,
             });
 
-            noteThatWouldBeCreated.value = editNote;
+            noteThatWouldBeCreated.value = snapNote;
+
+            // so that it displays the lines towards the snapped pos and not the mouse pos
+            freeNote.apply(snapNote);
 
             return;
         } else {
@@ -346,7 +347,7 @@ export const useToolStore = defineStore("edit", () => {
     }
 
     const mouseMove = (e: MouseEvent) => {
-
+        let refresh = false;
         const mouseDelta = {
             x: e.clientX - mouseDragStart.x,
             y: e.clientY - mouseDragStart.y,
@@ -396,6 +397,7 @@ export const useToolStore = defineStore("edit", () => {
                 noteBeingDragged.value = cloned[0];
                 snap.setFocusedNote(noteBeingDragged.value as EditNote);
             }
+            refresh = true;
         } else if (isDragging && noteBeingDragged.value && selection.isSelected(noteBeingDragged.value)) {
             snap.resetSnapExplanation();
             noteBeingDragged.value.dragMove(mouseDelta);
@@ -423,6 +425,7 @@ export const useToolStore = defineStore("edit", () => {
                 editNoteI.dragMoveOctaves(octaveDragDeltaAfterSnap);
                 editNoteI.dragMoveTimeStart(timeDragAfterSnap);
             });
+            refresh = true;
         } else if (isDragging && noteBeingDraggedRightEdge.value) {
             snap.resetSnapExplanation();
             noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
@@ -433,6 +436,7 @@ export const useToolStore = defineStore("edit", () => {
                 skipOctaveSnap: true,
             });
             noteBeingDraggedRightEdge.value.apply(editNote);
+            refresh = true;
         } else {
             updateNoteThatWouldBeCreated({
                 x: e.clientX,
@@ -441,6 +445,9 @@ export const useToolStore = defineStore("edit", () => {
         }
         if (noteBeingDragged.value && noteBeingDragged.value.group) {
             project.updateGroupBounds(noteBeingDragged.value.group)
+        }
+        if (refresh) {
+            view.forceRefreshVisibleNotes();
         }
     }
 

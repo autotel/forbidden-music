@@ -1,34 +1,81 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useSnapStore } from '../store/snapStore';
-import Lock from './icons/Lock.vue';
+import { NoteRect, useViewStore } from '../store/viewStore';
 
 const snap = useSnapStore();
+const view = useViewStore();
+
+interface RelatedNoteRect extends NoteRect {
+    text: string,
+    relatedNumber?: number
+}
+
+const focusedNoteRect = computed(() => {
+    return snap.focusedNote ? view.rectOfNote(snap.focusedNote) : undefined;
+});
+
+const relatedNoteRects = computed<(RelatedNoteRect | undefined)[]>(() => {
+    return snap.toneSnapExplanation.map((relation) => {
+        return relation.relatedNote ? {
+            ...view.rectOfNote(relation.relatedNote),
+            text: relation.text, 
+            relatedNumber: relation.relatedNumber,
+        } as RelatedNoteRect: undefined;
+    });
+});
+
+
 
 </script>
 <template>
-    <template v-for="relation in snap.toneSnapExplanation">
-        <template v-if="relation.relatedNote && snap.focusedNote">
-            <line class="relation" :x1="snap.focusedNote.x" :y1="snap.focusedNote.y" :x2="snap.focusedNote.x"
-                :y2="relation.relatedNote.y" />
-            <line class="relation" :x1="snap.focusedNote.x" :y1="relation.relatedNote.y" :x2="relation.relatedNote.x"
-                :y2="relation.relatedNote.y" />
-            <text :x="5 + snap.focusedNote.x" :y="5 + (snap.focusedNote.y + relation.relatedNote.y) / 2" font-size="10">
-                {{ relation.text }}
+    <template v-for="relatedNoteRect in relatedNoteRects">
+        <template v-if="relatedNoteRect?.event && focusedNoteRect">
+            <line class="relation" 
+                :x1="focusedNoteRect.cx" 
+                :y1="focusedNoteRect.cy" 
+                :x2="focusedNoteRect.cx"
+                :y2="relatedNoteRect.cy"
+            />
+            <line class="relation" 
+                :x1="focusedNoteRect.cx" 
+                :y1="relatedNoteRect.cy" 
+                :x2="relatedNoteRect.cx"
+                :y2="relatedNoteRect.cy"
+            />
+            <text
+                :x="5 + focusedNoteRect.cx"
+                :y="5 + (focusedNoteRect.cy + relatedNoteRect.cy) / 2" 
+                font-size="10"
+            >
+                {{ relatedNoteRect.text }}
             </text>
         </template>
-        <template v-else-if="relation.relatedNumber && snap.focusedNote">
-            <text :x="5 + snap.focusedNote.x" :y="24 + snap.focusedNote.y" font-size="10">
-                {{ relation.text }}
+        <template v-else-if="relatedNoteRect?.relatedNumber && focusedNoteRect">
+            <text
+                :x="5 + focusedNoteRect.cx"
+                :y="24 + focusedNoteRect.cy"
+                font-size="10"
+            >
+                {{ relatedNoteRect.text }}
             </text>
         </template>
-        <template v-else-if="snap.focusedNote">
-            <text :x="5 + snap.focusedNote.x" :y="24 + snap.focusedNote.y" font-size="10">
-                {{ relation.text }}
+        <template v-else-if="focusedNoteRect">
+            <text
+                :x="5 + focusedNoteRect.cx"
+                :y="24 + focusedNoteRect.cy"
+                font-size="10"
+            >
+                {{ relatedNoteRect?.text }}
             </text>
         </template>
         <template v-else>
-            <text :x="100" :y="100" font-size="10">
-                []{{ relation.text }}{{ snap.focusedNote ? true : false }}
+            <text
+                :x="100"
+                :y="100" 
+                font-size="10"
+            >
+                []{{ relatedNoteRect?.text }}{{ focusedNoteRect ? true : false }}
             </text>
         </template>
     </template>

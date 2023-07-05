@@ -330,16 +330,16 @@ onUnmounted(() => {
                 </g>
             </g>
             <g id="note-would-be-created">
-                <NoteElement v-if="tool.noteThatWouldBeCreated" :editNote="tool.noteThatWouldBeCreated"
+                <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                     interactionDisabled />
             </g>
             <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
                 stroke-width="1" />
             <g id="edit-notes">
-                <NoteElement v-for="editNote in view.visibleNotes" :editNote="editNote" :key="editNote.udpateFlag" />
+                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect" />
             </g>
             <g id="notes-being-created">
-                <NoteElement v-for="editNote in tool.notesBeingCreated" :editNote="editNote" />
+                <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
             </g>
             <RangeSelection />
         </svg>

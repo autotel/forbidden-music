@@ -54,43 +54,6 @@ export class EditNote extends Note {
 
     view: View;
 
-    get x() {
-        return this.view.timeToPxWithOffset(this.time);
-    }
-    get y() {
-        return this.view.octaveToPxWithOffset(this.octave);
-    }
-    get width() {
-        return this.duration ? this.view.timeToPx(this.duration) : 0;
-    }
-    get height() {
-        return Math.abs(this.view.octaveToPx(1 / 12));
-        // return 18;
-    }
-    get circle() {
-        return {
-            cx: this.x,
-            cy: this.y,
-            r: this.height / 2,
-        };
-    }
-    get rect() {
-        return {
-            x: this.x,
-            y: this.y - this.height / 2,
-            width: this.width,
-            height: this.height,
-        };
-    }
-    get rightEdge() {
-        return {
-            x: this.x + this.width - 5,
-            y: this.y - this.height / 2,
-            width: this.selected ? 10 : 5,
-            height: this.height,
-        };
-    }
-
     dragStart: (mouse: { x: number; y: number }) => void;
     dragMove: (dragDelta: { x: number; y: number }) => void;
     dragMoveOctaves: (octaveDelta: number) => void;
@@ -103,7 +66,6 @@ export class EditNote extends Note {
     dragStartedOctave = 0;
     dragStartedDuration = 0;
     dragStartedVelocity = 0;
-    forceUpdate: () => void;
 
     constructor(noteDef: NoteDefa | NoteDefb | Note, view: View) {
         super(noteDef);
@@ -123,32 +85,24 @@ export class EditNote extends Note {
         this.dragMove = (dragDelta: { x: number; y: number }) => {
             this.time = this.dragStartedTime + view.pxToTime(dragDelta.x);
             this.octave = this.dragStartedOctave + view.pxToOctave(dragDelta.y);
-            this.forceUpdate();
         };
         this.dragMoveOctaves = (octaveDelta: number) => {
             this.octave = this.dragStartedOctave + octaveDelta;
-            this.forceUpdate();
         };
         this.dragMoveTimeStart = (timeDelta: number) => {
             this.time = this.dragStartedTime + timeDelta;
-            this.forceUpdate();
         };
         this.dragLengthMove = (dragDelta: { x: number; y: number }) => {
             this.duration = Math.max(
                 this.dragStartedDuration + view.pxToTime(dragDelta.x),
                 0
             );
-            this.forceUpdate();
         };
         this.dragMoveVelocity = (dragDelta: { x: number; y: number }) => {
             this.velocity =
                 this.dragStartedVelocity + view.pxToVelocity(-dragDelta.y);
             if (this.velocity < 0) this.velocity = 0;
             if (this.velocity > 1) this.velocity = 1;
-            this.forceUpdate();
-        };
-        this.forceUpdate = () => {
-            this.udpateFlag = makeRandomString();
         };
         this.dragCancel = () => {
             this.time = this.dragStartedTime;

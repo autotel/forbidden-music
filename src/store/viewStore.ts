@@ -3,6 +3,25 @@ import { computed, ref, Ref, watchEffect } from "vue";
 import { EditNote } from "../dataTypes/EditNote.js";
 import { useProjectStore } from "./projectStore.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
+import { Note } from "../dataTypes/Note.js";
+
+export interface NoteRect {
+    event: EditNote;
+
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+
+    radius: number;
+    cx: number;
+    cy: number;
+
+    rightEdge: {
+        x: number;
+        y: number;
+    };
+}
 
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
@@ -20,7 +39,10 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxY = ref(1080);
     const project = useProjectStore();
 
+    const visibleNotesRefreshKey = ref(0);
+
     const visibleNotes = computed((): EditNote[] => {
+        visibleNotesRefreshKey.value;
         return project.score.filter((editNote) => {
             const note = editNote;
             return (
@@ -31,6 +53,41 @@ export const useViewStore = defineStore("view", () => {
             );
         });
     });
+
+    const visibleNoteRects = computed((): NoteRect[] => {
+        return visibleNotes.value.map((note) => {
+            return rectOfNote(note);
+        });
+    });
+
+    const rectOfNote = (note: EditNote): NoteRect => {
+        let rect = {
+            x: timeToPxWithOffset(note.time) || 0,
+            y: octaveToPxWithOffset(note.octave) || 0,
+            width: timeToPx(note.duration) || 0,
+            height: Math.abs(octaveToPx(1 / 12)) || 0,
+            radius: 0,
+            event: note,
+        } as NoteRect
+
+        rect.radius = rect.height / 2;
+        rect.cx = rect.x;
+        rect.cy = rect.y;
+        rect.y -= rect.radius;
+
+        if (note.duration) {
+            if (!note.timeEnd) console.warn("note has duration but no timeEnd", note)
+            rect.rightEdge = {
+                x: rect.x + rect.width,
+                y: rect.y,
+            };
+        }
+        return rect;
+    };
+
+    const forceRefreshVisibleNotes = () => {
+        visibleNotesRefreshKey.value++;
+    };
 
     const setTimeOffset = (newTimeOffset: number) => {
         timeOffset.value = newTimeOffset;
@@ -117,6 +174,7 @@ export const useViewStore = defineStore("view", () => {
         isOctaveInView,
 
         updateSize,
+        forceRefreshVisibleNotes,
 
         octaveOffset,
         timeOffset,
@@ -129,6 +187,9 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxX,
         _offsetPxY,
         visibleNotes,
+
+        visibleNoteRects,
+        rectOfNote,
     };
 });
 

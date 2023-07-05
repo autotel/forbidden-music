@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../dataTypes/Tool';
-import { useSelectStore } from '../store/selectStore';
 import { useToolStore } from '../store/toolStore';
-import { useViewStore } from '../store/viewStore';
+import { useViewStore, NoteRect } from '../store/viewStore';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    editNote: EditNote
+    eventRect: NoteRect
     interactionDisabled?: boolean
 }>();
 
@@ -18,17 +16,18 @@ const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    tool.noteMouseEnter(props.editNote);
+    tool.noteMouseEnter(props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
     tool.noteMouseLeave();
 }
 const rightEdgeMOuseEnterListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseEnter(props.editNote);
+    tool.noteRightEdgeMouseEnter(props.eventRect.event);
 }
 const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
     tool.noteRightEdgeMouseLeave();
 }
+
 onMounted(() => {
     if (props.interactionDisabled) return;
     if (noteBody.value) {
@@ -54,43 +53,48 @@ onUnmounted(() => {
 });
 
 const isEditable = () => {
-    return tool.current == Tool.Edit && tool.currentlyActiveGroup === props.editNote.group;
+    return tool.current == Tool.Edit && tool.currentlyActiveGroup === props.eventRect.event.group;
 }
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 10" :x="editNote.x" :y="editNote.y + 5" font-size="10">
-        (2^{{ editNote.octave.toFixed(3) }})n = {{ editNote.frequency.toFixed(3) }} hz {{ editNote.group?.name }}
+    <text class="texts" v-if="view.viewWidthTime < 10" :x="eventRect.x" :y="eventRect.cy + 5" font-size="10">
+        (2^{{ 
+            eventRect.event.octave.toFixed(3)
+        }})n = {{ 
+            eventRect.event.frequency.toFixed(3) 
+        }} hz {{ 
+            eventRect.event.group?.name 
+        }}
     </text>
-    <template v-if="editNote.duration">
+    <template v-if="eventRect.event.duration > 0">
         <rect class="body" :class="{
-            selected: editNote.selected,
+            selected: eventRect.event.selected,
             editable: isEditable(),
             interactionDisabled: interactionDisabled,
-            muted: editNote.mute,
-        }" :...=editNote.rect ref="noteBody" />
-        <rect v-if="!interactionDisabled" class="rightEdge" :class="{
-            selected: editNote.selected,
+            muted: eventRect.event.mute,
+        }" :x="eventRect.x" :y="eventRect.y" :width="eventRect.width" :height="eventRect.height" ref="noteBody" />
+        <rect v-if="eventRect.rightEdge && !interactionDisabled" class="rightEdge" :class="{
+            selected: eventRect.event.selected,
             editable: isEditable(),
             interactionDisabled: interactionDisabled,
-        }" ref="rightEdge" :...=editNote.rightEdge :data-key="editNote.udpateFlag"
-            :style="{ opacity: editNote.velocity }" />
+        }" ref="rightEdge" :...=eventRect.rightEdge :width="eventRect.radius" :height="eventRect.height" />
     </template>
     <template v-else>
         <circle class="body" :class="{
-            selected: editNote.selected,
+            selected: eventRect.event.selected,
             editable: isEditable(),
-            muted: editNote.mute,
+            muted: eventRect.event.mute,
             interactionDisabled: interactionDisabled,
-        }" ...=editNote.circle ref="noteBody" />
+        }" :cx="eventRect.cx" :cy="eventRect.cy" :r="eventRect.radius" ref="noteBody" />
     </template>
     <template v-if="tool.current === Tool.Modulation">
-        <line :x1="editNote.x" :y1="view.viewHeightPx - view.velocityToPx(editNote.velocity)" :x2="editNote.x"
+        <line :x1="eventRect.x" :y1="view.viewHeightPx - view.velocityToPx(eventRect.event.velocity)" :x2="eventRect.x"
             :y2="view.viewHeightPx" class="veloline" :class="{
-                selected: editNote.selected,
-                muted: editNote.mute,
+                selected: eventRect.event.selected,
+                muted: eventRect.event.mute,
                 interactionDisabled: interactionDisabled,
             }" />
-        <circle :cx="editNote.x" :cy="view.viewHeightPx - view.velocityToPx(editNote.velocity)" r="3" fill="black" />
+        <circle :cx="eventRect.x" :cy="view.viewHeightPx - view.velocityToPx(eventRect.event.velocity)" r="3" fill="black" />
 
     </template>
 </template>

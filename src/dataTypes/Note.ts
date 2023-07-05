@@ -26,7 +26,7 @@ export class Note implements TimeRangeOctaveSelectable{
   /** time in score time */
   time: number;
   /** duration in score time */
-  duration?: number;
+  duration: number;
   selected: boolean;
   mute: boolean;
   velocity: number;
@@ -35,7 +35,7 @@ export class Note implements TimeRangeOctaveSelectable{
 
   apply(noteDef: NoteDefa | NoteDefb) {
     this.time = noteDef.time;
-    this.duration = noteDef.duration;
+    this.duration = noteDef.duration || 0;
     this.selected = false;
     this.mute = noteDef.mute || false;
     this.velocity = 0.7;
@@ -63,7 +63,7 @@ export class Note implements TimeRangeOctaveSelectable{
   }
   set timeEnd(value: number | undefined) {
     if (value === undefined) {
-      delete this.duration;
+      this.duration = 0;
       return;
     }
     this.duration = value - this.time;
