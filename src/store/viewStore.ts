@@ -8,6 +8,8 @@ import { Note } from "../dataTypes/Note.js";
 export interface NoteRect {
     event: EditNote;
 
+    key: number;
+
     x: number;
     y: number;
     width: number;
@@ -54,10 +56,14 @@ export const useViewStore = defineStore("view", () => {
         });
     });
 
+    let tkey = 0;
     const visibleNoteRects = computed((): NoteRect[] => {
         return visibleNotes.value.map((note) => {
             return rectOfNote(note);
         });
+        // return project.score.map((note) => {
+        //     return rectOfNote(note);
+        // });
     });
 
     const rectOfNote = (note: EditNote): NoteRect => {
@@ -68,6 +74,7 @@ export const useViewStore = defineStore("view", () => {
             height: Math.abs(octaveToPx(1 / 12)) || 0,
             radius: 0,
             event: note,
+            key: tkey++,
         } as NoteRect
 
         rect.radius = rect.height / 2;

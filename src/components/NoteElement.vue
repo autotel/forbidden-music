@@ -41,7 +41,6 @@ onMounted(() => {
 });
 onUnmounted(() => {
     if (props.interactionDisabled) return;
-    if (props.interactionDisabled) return;
     if (noteBody.value) {
         noteBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
