@@ -23,16 +23,16 @@ onMounted(()=>{
         isDragging = true;
         dragStartX = e.clientX;
         // dragStartOffset = view.timeOffset;
-        dragStartBounds = view.timeToBounds(view.timeOffset) * 20000;
+        dragStartBounds = view.timeToBounds(view.timeOffset);
     });
 
 
     window.addEventListener('mousemove', (e) => {
         e.preventDefault();
         if (isDragging) {
-            const delta = e.clientX - dragStartX;
+            const delta = (e.clientX - dragStartX);
             // view.timeOffset = dragStartOffset + view.timeToPx(delta);
-            view.setTimeOffsetBounds(dragStartBounds / 20000 + view.pxToBounds(delta));
+            view.setTimeOffsetBounds(dragStartBounds + view.pxToBounds(delta));
             // prevent timeOffset from going out of bounds
             if (view.timeOffset < 0) {
                 view.timeOffset = 0;
@@ -55,22 +55,20 @@ onMounted(()=>{
         class="scroll" 
         ref="hScrollBar"
         :style="{
-            width: -view.timeToPx(-32) + 'px',
+            width: 100 / view.timeToPx(0.1) + '%',
             // width: view.timeToBounds(view.viewWidthTime) * 100 + '%',
             left: view.timeToBounds(view.timeOffset) * 100 + '%'
         }"
-    
     > &nbsp; </div>
 </template>
 
 <style scoped>
 .scroll {
-  background-color: #888;
-  border:solid 1px #999;
+  background-color: #dfdfdf;
   height: 11px;
   padding: -1px;
   position: fixed;
-  bottom: 0;
+  bottom: 42px;
   cursor: grab;
 }
 </style>

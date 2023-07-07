@@ -236,8 +236,8 @@ const resize = () => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 
-    $viewPort.style.width = window.innerWidth - 2 + "px";
-    $viewPort.style.height = window.innerHeight - 2 + "px";
+    $viewPort.style.width = window.innerWidth - 35+ "px";
+    $viewPort.style.height = window.innerHeight - 50 + "px";
 
     view.updateSize(window.innerWidth, window.innerHeight);
 
@@ -403,6 +403,7 @@ svg#viewport {
     position: absolute;
     top: 0;
     left: 0;
+    border: 1px solid black;
 }
 
 g#notes-being-created rect.body {
