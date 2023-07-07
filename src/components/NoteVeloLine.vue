@@ -22,7 +22,7 @@ const getVeloLine = () => {
 
 const myVeloLine = ref(getVeloLine());
 
-const refreshLine = () => {
+const conditionalRefreshLine = () => {
     if (props.interactionDisabled) return;
     if(props.selected){
         myVeloLine.value = getVeloLine();
@@ -31,13 +31,16 @@ const refreshLine = () => {
 
 onMounted(() => {
     if (props.interactionDisabled) return;
-    window.addEventListener('mousemove', refreshLine);
-    window.addEventListener('scroll', refreshLine);
+    window.addEventListener('mousemove', conditionalRefreshLine);
+    window.addEventListener('scroll', conditionalRefreshLine);
+    setTimeout(() => {
+        myVeloLine.value = getVeloLine();
+    },0);
 });
 onUnmounted(() => {
     if (props.interactionDisabled) return;
-    window.removeEventListener('mousemove', refreshLine);
-    window.addEventListener('scroll', refreshLine);
+    window.removeEventListener('mousemove', conditionalRefreshLine);
+    window.addEventListener('scroll', conditionalRefreshLine);
 });
 
 </script>
