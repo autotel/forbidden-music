@@ -322,7 +322,7 @@ onUnmounted(() => {
             <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
                 stroke-width="1" />
             <g id="edit-notes">
-                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect" :key="rect.key" />
+                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect"  />
             </g>
             <g id="notes-being-created">
                 <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />

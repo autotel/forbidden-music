@@ -4,11 +4,12 @@ import { EditNote } from "../dataTypes/EditNote.js";
 import { useProjectStore } from "./projectStore.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { Note } from "../dataTypes/Note.js";
+import { usePlaybackStore } from "./playbackStore.js";
 
 export interface NoteRect {
     event: EditNote;
 
-    key: number;
+    // key: number;
 
     x: number;
     y: number;
@@ -19,7 +20,7 @@ export interface NoteRect {
     cx: number;
     cy: number;
 
-    rightEdge: {
+    rightEdge?: {
         x: number;
         y: number;
     };
@@ -40,8 +41,11 @@ export const useViewStore = defineStore("view", () => {
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
     const project = useProjectStore();
-
+    const followPlayback = ref(false);
+    const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
+
+    const memoizedRects:NoteRect[] = [];
 
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
@@ -56,10 +60,12 @@ export const useViewStore = defineStore("view", () => {
         });
     });
 
-    let tkey = 0;
+    // let tkey = 0;
     const visibleNoteRects = computed((): NoteRect[] => {
         return visibleNotes.value.map((note) => {
-            return rectOfNote(note);
+            let r = rectOfNote(note);
+            memoizedRects.push(r);
+            return r;
         });
         // return project.score.map((note) => {
         //     return rectOfNote(note);
@@ -74,7 +80,7 @@ export const useViewStore = defineStore("view", () => {
             height: Math.abs(octaveToPx(1 / 12)) || 0,
             radius: 0,
             event: note,
-            key: tkey++,
+            // key: tkey++,
         } as NoteRect
 
         rect.radius = rect.height / 2;
@@ -94,6 +100,7 @@ export const useViewStore = defineStore("view", () => {
 
     const forceRefreshVisibleNotes = () => {
         visibleNotesRefreshKey.value++;
+        memoizedRects.length = 0;
     };
 
     const setTimeOffset = (newTimeOffset: number) => {
@@ -159,7 +166,12 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxX.value = width / 2;
         _offsetPxY.value = height;
     };
-    let isDragging = false;
+    
+    watchEffect(() => {
+        if (followPlayback.value) {
+            setTimeOffset(playback.currentScoreTime - viewWidthTime.value / 2)
+        }
+    })
 
     return {
         setTimeOffset,
@@ -197,6 +209,8 @@ export const useViewStore = defineStore("view", () => {
 
         visibleNoteRects,
         rectOfNote,
+
+        followPlayback,
     };
 });
 
