@@ -5,25 +5,36 @@ import { useProjectStore } from './projectStore';
 import { throttledWatch } from '@vueuse/core';
 import { Group } from '../dataTypes/Group';
 import { TimelineItem } from '../dataTypes/TimelineItem';
+import { useToolStore } from './toolStore';
+import { Tool } from '../dataTypes/Tool';
+import { useViewStore } from './viewStore';
 
+interface RangeA {
+    startTime: number,
+    endTime: number,
+    startOctave: number,
+    endOctave: number
+}
+
+interface RangeB {
+    startTime: number,
+    endTime: number,
+}
 
 
 const getNotesInRange = (
     notes: EditNote[],
-    range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }
+    range: RangeA | RangeB
 ) => {
-    const octaveStart = Math.min(range.startOctave, range.endOctave);
-    const octaveEnd = Math.max(range.startOctave, range.endOctave);
     const timeStart = Math.min(range.startTime, range.endTime);
     const timeEnd = Math.max(range.startTime, range.endTime);
+    const octaveStart = 'startOctave' in range ? Math.min(range.startOctave, range.endOctave) : undefined;
+    const octaveEnd = 'startOctave' in range ? Math.max(range.startOctave, range.endOctave) : undefined;
 
     return notes.filter((editNote) => {
-        const octaveInRange = editNote.octave >= octaveStart && editNote.octave <= octaveEnd;
+        // deemed as in octave range if said restriction is not set
+        const octaveInRange = (octaveStart === undefined)
+            || (editNote.octave >= octaveStart && editNote.octave <= octaveEnd!);
         const timeInRange = editNote.timeEnd >= timeStart && editNote.time <= timeEnd;
         return octaveInRange && timeInRange;
     });
@@ -54,9 +65,10 @@ const getGroupsInRange = (
 
 export const useSelectStore = defineStore("select", () => {
     const selected = ref(new Set() as Set<TimelineItem>);
-
+    const tool = useToolStore();
     const project = useProjectStore();
-    
+    const view = useViewStore();
+
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
     const isSelected = (item: TimelineItem) => {
         return selected.value.has(item);
@@ -68,10 +80,10 @@ export const useSelectStore = defineStore("select", () => {
         project.groups.forEach(g => g.selected = isSelected(g))
     }
 
-    const getNotes = ():EditNote[] => {
+    const getNotes = (): EditNote[] => {
         return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
     };
-    const getGroups = ():Group[] => {
+    const getGroups = (): Group[] => {
         return [...selected.value].filter((n) => n instanceof Group) as Group[];
     };
 
@@ -111,11 +123,28 @@ export const useSelectStore = defineStore("select", () => {
         startOctave: number,
         endOctave: number
     }, restrictToGroup: (Group | null | false) = false) => {
+
         let notesInRange = getNotesInRange(
             project.score,
             range
-        )
-        
+        );
+
+        // if in modulation mode, then  also select according to "velolines"
+        if (tool.current === Tool.Modulation) {
+            const notesVeloLinesInRange = getNotesInRange(
+                project.score, {
+                    startTime: range.startTime,
+                    endTime: range.endTime,
+                } as RangeB
+            ).filter(n =>
+                view.velocityToPxWithOffset(n.velocity) > view.octaveToPxWithOffset(range.startOctave)
+                &&
+                view.velocityToPxWithOffset(n.velocity) < view.octaveToPxWithOffset(range.endOctave)
+            )
+            notesInRange.push(...notesVeloLinesInRange)
+
+        }
+
         if (restrictToGroup !== false) { // note that null is also a valid group restriction
             notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
         }
@@ -128,8 +157,9 @@ export const useSelectStore = defineStore("select", () => {
         //     )
         // }
 
+
         select(
-            ...notesInRange, 
+            ...notesInRange,
             // ...groupsInRange
         );
     };
@@ -157,7 +187,7 @@ export const useSelectStore = defineStore("select", () => {
         selectRange,
         selectAll,
         addRange,
-        add, select, toggle, 
+        add, select, toggle,
         getNotes, getGroups,
         clear: clear, remove,
         isSelected,

@@ -45,7 +45,7 @@ export const useViewStore = defineStore("view", () => {
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
 
-    const memoizedRects:NoteRect[] = [];
+    const memoizedRects: NoteRect[] = [];
 
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
@@ -159,6 +159,12 @@ export const useViewStore = defineStore("view", () => {
     const pxToVelocity = (px: number): number => {
         return (px * veloPXK) / viewHeightPx.value;
     };
+    const velocityToPxWithOffset = (velocity: number): number => {
+        return viewHeightPx.value - velocityToPx(velocity);
+    };
+    const pxToVelocityWithOffset = (px: number): number => {
+        return pxToVelocity(viewHeightPx.value - px);
+    };
 
     const updateSize = (width: number, height: number) => {
         viewWidthPx.value = width;
@@ -166,7 +172,7 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxX.value = width / 2;
         _offsetPxY.value = height;
     };
-    
+
     watchEffect(() => {
         if (followPlayback.value) {
             setTimeOffset(playback.currentScoreTime - viewWidthTime.value / 2)
@@ -191,6 +197,8 @@ export const useViewStore = defineStore("view", () => {
         velocityToPx,
         pxToVelocity,
         isOctaveInView,
+        velocityToPxWithOffset,
+        pxToVelocityWithOffset,
 
         updateSize,
         forceRefreshVisibleNotes,

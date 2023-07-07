@@ -17,12 +17,12 @@ const props = defineProps<{
 
 const getVeloLine = () => {
     if (props.event.velocity === 0) return view.viewHeightPx;
-    return view.viewHeightPx - view.velocityToPx(props.event.velocity);
+    return view.velocityToPxWithOffset(props.event.velocity);
 }
 
 const myVeloLine = ref(getVeloLine());
 
-const mouseMoveListener = (e: MouseEvent) => {
+const refreshLine = () => {
     if (props.interactionDisabled) return;
     if(props.selected){
         myVeloLine.value = getVeloLine();
@@ -31,32 +31,37 @@ const mouseMoveListener = (e: MouseEvent) => {
 
 onMounted(() => {
     if (props.interactionDisabled) return;
-    window.addEventListener('mousemove', mouseMoveListener);
+    window.addEventListener('mousemove', refreshLine);
+    window.addEventListener('scroll', refreshLine);
 });
 onUnmounted(() => {
     if (props.interactionDisabled) return;
-    window.removeEventListener('mousemove', mouseMoveListener);
+    window.removeEventListener('mousemove', refreshLine);
+    window.addEventListener('scroll', refreshLine);
 });
 
 </script>
 <template>
     <template v-if="tool.current === Tool.Modulation">
-        <line :x1="x" :y1="myVeloLine" :x2="x" :y2="view.viewHeightPx" class="veloline" :class="{
+        <line :x1="x" :y1="myVeloLine + 9" :x2="x" :y2="view.viewHeightPx" class="veloline" :class="{
             selected: event.selected,
-            // muted: eventRect.event.mute,
             interactionDisabled: interactionDisabled,
         }" />
-        <circle :cx="x" :cy="myVeloLine" r="3" fill="black" />
+        <circle :cx="x" :cy="myVeloLine" r="7" :class="{
+            selected: event.selected,
+            interactionDisabled: interactionDisabled,
+        }" />
     </template>
 </template>
 <style scoped>
 
-.veloline {
-    stroke: #0001;
+line, circle {
+    stroke: rgba(0, 0, 0, 0.404);
+    fill: #0000;
 }
 
 
-.veloline.selected {
+line.selected, circle.selected {
     stroke: #f889;
     stroke-width: 3px;
 }
