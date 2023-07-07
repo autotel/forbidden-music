@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
 import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
+import GroupElement from './components/GroupElement.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
 import Pianito from './components/Pianito.vue';
@@ -11,6 +12,8 @@ import ToneRelation from './components/ToneRelation.vue';
 import ToolSelector from './components/ToolSelector.vue';
 import Transport from './components/Transport.vue';
 import { Tool } from './dataTypes/Tool';
+import { ifDev } from './functions/isDev';
+import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
 import LibraryManager from './modals/LibraryManager.vue';
 import MidiInputConfig from './modals/MidiInputConfig.vue';
@@ -25,9 +28,6 @@ import { useSelectStore } from './store/selectStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-import GroupElement from './components/GroupElement.vue';
-import { ifDev } from './functions/isDev';
-import { KeyActions, getActionForKeys, logKeys } from './keyBindings';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -237,7 +237,7 @@ const resize = () => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 
-    $viewPort.style.width = window.innerWidth - 35+ "px";
+    $viewPort.style.width = window.innerWidth - 35 + "px";
     $viewPort.style.height = window.innerHeight - 50 + "px";
 
     view.updateSize(window.innerWidth, window.innerHeight);
@@ -329,7 +329,7 @@ onUnmounted(() => {
             <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
                 stroke-width="1" />
             <g id="edit-notes">
-                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect"  />
+                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect" />
             </g>
             <g id="notes-being-created">
                 <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
@@ -410,7 +410,7 @@ svg#viewport {
     position: absolute;
     top: 0;
     left: 0;
-    border: 1px solid black;
+    border: 1px solid rgb(230, 223, 215);
 }
 
 g#notes-being-created rect.body {
