@@ -12,6 +12,12 @@ const props = defineProps<{
     interactionDisabled?: boolean
 }>();
 
+
+// TODO: there are two possible destinations for noteBody, this causes the problem that 
+// id there are some circle and some rectanble notes, when coming out of view  and then back
+// the ref might stop being towards the correct element and thus become unhoverable
+// I had to add an ungly "key" that counts till infinite to force the component to rerender
+// a better solution perhaps would be to dereference on mount
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
 
