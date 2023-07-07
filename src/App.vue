@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { invoke } from "@tauri-apps/api/tauri";
 import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
@@ -244,6 +245,12 @@ const resize = () => {
 };
 
 
+async function testBeep() {
+        // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+        await invoke("beep", {  });
+        console.log("beeped");
+}
+
 onMounted(() => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
@@ -280,7 +287,7 @@ onMounted(() => {
     mainInteraction.addEventListener(window, 'keyup', keyUpListener);
     mainInteraction.addEventListener(window, 'resize', resize);
 
-    console.log("Environment:", process.env.NODE_ENV);
+    setInterval(()=>testBeep(), 4000);
 
 })
 onBeforeUnmount(() => {
