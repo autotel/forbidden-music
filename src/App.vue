@@ -143,23 +143,9 @@ const keyDownListener = (e: KeyboardEvent) => {
             selection.getNotes().forEach(eNote => eNote.mute = !eNote.mute);
             break;
         }
-        case KeyActions.Save: {
-            console.log("save");
-            libraryStore.saveCurrent();
-            e.preventDefault();
-            e.stopPropagation();
-            break;
-        }
         case KeyActions.Undo: {
             console.log("undo");
             undoStore.undo();
-            e.preventDefault();
-            e.stopPropagation();
-            break;
-        }
-        case KeyActions.Download: {
-            console.log("downloaded");
-            libraryStore.exportJSON();
             e.preventDefault();
             e.stopPropagation();
             break;

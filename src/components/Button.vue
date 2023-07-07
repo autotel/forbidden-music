@@ -2,7 +2,8 @@
 import { clear } from 'console';
 import { ref } from 'vue';
 import Tooltip from './Tooltip.vue';
-
+import { useSlots } from 'vue'
+const slots = useSlots()
 
 const props = defineProps<{
     onClick: ((payload: MouseEvent) => void)
@@ -15,12 +16,11 @@ const showTooltip = ref(false);
 const showTimeout = ref<false | NodeJS.Timeout>(false);
 
 const mouseEnter = (e: MouseEvent) => {
-    if (props.tooltip) {
-        if (showTimeout.value) return;
-        showTimeout.value = setTimeout(() => {
-            showTooltip.value = true;
-        }, 500);
-    }
+    if (!(props.tooltip || slots.tooltip)) return;
+    if (showTimeout.value) return;
+    showTimeout.value = setTimeout(() => {
+        showTooltip.value = true;
+    }, 500);
 }
 
 const mouseLeave = (e: MouseEvent) => {
@@ -29,13 +29,17 @@ const mouseLeave = (e: MouseEvent) => {
     showTooltip.value = false;
 }
 
+
 </script>
 
 <template>
-    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{active, danger}">
+    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger }">
         <slot></slot>
-        <Tooltip v-if="showTooltip">{{ tooltip }}</Tooltip>
-
+        <Tooltip v-if="tooltip && showTooltip">
+            <slot name="tooltip" v-if="showTooltip">
+                {{ tooltip }}
+            </slot>
+        </Tooltip>
     </button>
 </template>
 
