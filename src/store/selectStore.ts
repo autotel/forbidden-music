@@ -9,27 +9,38 @@ import { useToolStore } from './toolStore';
 import { Tool } from '../dataTypes/Tool';
 import { useViewStore } from './viewStore';
 
-interface RangeA {
-    startTime: number,
-    endTime: number,
-    startOctave: number,
-    endOctave: number
+export interface TimeRange {
+    time: number,
+    timeEnd: number,
 }
 
-interface RangeB {
-    startTime: number,
-    endTime: number,
+export interface OctaveRange {
+    octave: number,
+    octaveEnd: number,
 }
+
+export interface VelocityRange {
+    velocity: number,
+    velocityEnd: number,
+}
+
+export interface RangeA extends TimeRange, OctaveRange {}
+export interface RangeC extends TimeRange, VelocityRange {}
+export interface RangeD extends TimeRange, OctaveRange, VelocityRange {}
+
+
+export type SelectableRange = TimeRange | RangeA | RangeC | RangeD;
 
 
 const getNotesInRange = (
     notes: EditNote[],
-    range: RangeA | RangeB
+    range: SelectableRange
 ) => {
-    const timeStart = Math.min(range.startTime, range.endTime);
-    const timeEnd = Math.max(range.startTime, range.endTime);
-    const octaveStart = 'startOctave' in range ? Math.min(range.startOctave, range.endOctave) : undefined;
-    const octaveEnd = 'startOctave' in range ? Math.max(range.startOctave, range.endOctave) : undefined;
+    // range is expected to come in positive ranges
+    const timeStart = range.time;
+    const timeEnd = range.timeEnd;
+    const octaveStart = 'octave' in range ? range.octave : undefined;
+    const octaveEnd = 'octaveEnd' in range ? range.octaveEnd : undefined;
 
     return notes.filter((editNote) => {
         // deemed as in octave range if said restriction is not set
@@ -44,15 +55,16 @@ const getGroupsInRange = (
     groups: Group[],
     range: {
         startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
+        timeEnd: number,
+        octave: number,
+        octaveEnd: number
     }
 ) => {
-    const octaveStart = Math.min(range.startOctave, range.endOctave);
-    const octaveEnd = Math.max(range.startOctave, range.endOctave);
-    const timeStart = Math.min(range.startTime, range.endTime);
-    const timeEnd = Math.max(range.startTime, range.endTime);
+    // range is expected to come in positive ranges
+    const timeStart = range.startTime;
+    const timeEnd = range.timeEnd;
+    const octaveStart = range.octave;
+    const octaveEnd = range.octaveEnd;
 
     return groups.filter((group) => {
         const octaveBound = [group.octave, group.octaveEnd];
@@ -117,12 +129,7 @@ export const useSelectStore = defineStore("select", () => {
         });
         refreshNoteSelectionState();
     };
-    const selectRange = (range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }, restrictToGroup: (Group | null | false) = false) => {
+    const selectRange = (range: SelectableRange, restrictToGroup: (Group | null | false) = false) => {
 
         let notesInRange = getNotesInRange(
             project.score,
@@ -130,19 +137,23 @@ export const useSelectStore = defineStore("select", () => {
         );
 
         // if in modulation mode, then  also select according to "velolines"
-        if (tool.current === Tool.Modulation) {
+        if (
+            // tool.current === Tool.Modulation
+            'velocity' in range && 'velocityEnd' in range
+        ) {
             const notesVeloLinesInRange = getNotesInRange(
                 project.score, {
-                    startTime: range.startTime,
-                    endTime: range.endTime,
-                } as RangeB
-            ).filter(n =>
-                view.velocityToPxWithOffset(n.velocity) > view.octaveToPxWithOffset(range.startOctave)
-                &&
-                view.velocityToPxWithOffset(n.velocity) < view.octaveToPxWithOffset(range.endOctave)
+                    time: range.time,
+                    timeEnd: range.timeEnd,
+                } as SelectableRange
+            ).filter(event =>
+                'velocity' in range ? (
+                    event.velocity < range.velocityEnd
+                    &&
+                    event.velocity > range.velocity
+                ) : false
             )
             notesInRange.push(...notesVeloLinesInRange)
-
         }
 
         if (restrictToGroup !== false) { // note that null is also a valid group restriction
@@ -163,12 +174,7 @@ export const useSelectStore = defineStore("select", () => {
             // ...groupsInRange
         );
     };
-    const addRange = (range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }) => {
+    const addRange = (range: SelectableRange) => {
         const newNotes = getNotesInRange(
             project.score,
             range

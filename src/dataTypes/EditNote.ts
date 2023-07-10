@@ -57,7 +57,7 @@ export class EditNote extends Note {
     dragStart: (mouse: { x: number; y: number }) => void;
     dragMove: (dragDelta: { x: number; y: number }) => void;
     dragMoveOctaves: (octaveDelta: number) => void;
-    dragMoveTimeStart: (dragDelta: number) => void;
+    dragMoveTime: (dragDelta: number) => void;
     dragMoveVelocity: (mouse: { x: number; y: number }) => void;
     dragLengthMove: (mouse: { x: number; y: number }) => void;
     dragEnd: (mouse: { x: number; y: number }) => void;
@@ -89,7 +89,7 @@ export class EditNote extends Note {
         this.dragMoveOctaves = (octaveDelta: number) => {
             this.octave = this.dragStartedOctave + octaveDelta;
         };
-        this.dragMoveTimeStart = (timeDelta: number) => {
+        this.dragMoveTime = (timeDelta: number) => {
             this.time = this.dragStartedTime + timeDelta;
         };
         this.dragLengthMove = (dragDelta: { x: number; y: number }) => {

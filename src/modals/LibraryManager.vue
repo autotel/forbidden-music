@@ -28,7 +28,6 @@ const keyDownListener = (e: KeyboardEvent) => {
         return;
     }
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
-    console.log(keyAction);
     switch (keyAction) {
         case KeyActions.Save: {
             console.log("save");

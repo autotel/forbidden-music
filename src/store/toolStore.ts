@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { Tool } from '../dataTypes/Tool';
 import { useProjectStore } from './projectStore';
-import { useSelectStore } from './selectStore';
+import { OctaveRange, RangeA, RangeD, SelectableRange, TimeRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { useThrottleFn } from '@vueuse/core';
@@ -45,11 +45,14 @@ export const useToolStore = defineStore("edit", () => {
     const currentLeftHand = ref(Tool.None);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
-    const selectRange = ref({
-        timeStart: 0,
-        timeSize: 0,
-        octaveStart: 0,
-        octaveSize: 0,
+
+    type ToolRange = SelectableRange & OctaveRange & TimeRange & { active: boolean };
+
+    const selectRange = ref<ToolRange>({
+        time: 0,
+        timeEnd: 0,
+        octave: 0,
+        octaveEnd: 0,
         active: false
     });
     const showReferenceKeyboard = ref(false)
@@ -171,11 +174,11 @@ export const useToolStore = defineStore("edit", () => {
                 currentMouseStringHelper.value = "⟷";
             } else if (noteBeingHovered.value) {
                 ret = MouseDownActions.Move;
-                if(noteBeingHovered.value.group !== currentlyActiveGroup.value){
+                if (noteBeingHovered.value.group !== currentlyActiveGroup.value) {
                     ret = MouseDownActions.EnterIntoGroup;
                     groupBeingHovered.value = noteBeingHovered.value.group;
                     currentMouseStringHelper.value = "⇱";
-                }else if (selection.isSelected(noteBeingHovered.value)) {
+                } else if (selection.isSelected(noteBeingHovered.value)) {
                     ret = MouseDownActions.Move;
                 } else {
                     ret = MouseDownActions.SetSelectionAndDrag;
@@ -183,7 +186,7 @@ export const useToolStore = defineStore("edit", () => {
             } else if (groupBeingHovered.value) {
                 ret = MouseDownActions.EnterIntoGroup;
                 currentMouseStringHelper.value = "⇱";
-            } else if (!groupBeingHovered.value && currentlyActiveGroup.value!==null) {
+            } else if (!groupBeingHovered.value && currentlyActiveGroup.value !== null) {
                 ret = MouseDownActions.UnsetActiveGroup;
                 currentMouseStringHelper.value = "⇲";
             } else {
@@ -240,11 +243,27 @@ export const useToolStore = defineStore("edit", () => {
                 selection.clear();
                 const x = e.clientX;
                 const y = e.clientY;
-                selectRange.value.timeStart = view.pxToTimeWithOffset(x);
-                selectRange.value.octaveStart = view.pxToOctaveWithOffset(y);
-                selectRange.value.timeSize = 0;
-                selectRange.value.octaveSize = 0;
-                selectRange.value.active = true;
+
+                const clickTime = view.pxToTimeWithOffset(x);
+                const clickOctave = view.pxToOctaveWithOffset(y);
+
+                const zeroedRange = {
+                    time: clickTime,
+                    timeEnd: clickTime,
+                    octave: clickOctave,
+                    octaveEnd: clickOctave,
+                    active: true,
+                } as ToolRange;
+
+                if (current.value === Tool.Modulation) {
+                    const clickVelocity = view.pxToVelocityWithOffset(y);
+                    Object.assign(zeroedRange, {
+                        velocity: clickVelocity,
+                        velocityEnd: clickVelocity,
+                    });
+                }
+
+                selectRange.value = zeroedRange;
                 break;
             }
             case MouseDownActions.DragVelocity:
@@ -296,20 +315,32 @@ export const useToolStore = defineStore("edit", () => {
         }
     }
 
-    const applyRangeSelection = useThrottleFn((e: MouseEvent) => {
+    const refreshAndApplyRangeSelection = useThrottleFn((e: MouseEvent) => {
         if (selectRange.value.active) {
             const x = e.clientX;
             const y = e.clientY;
-            selectRange.value.timeSize = view.pxToTimeWithOffset(x) - selectRange.value.timeStart;
-            selectRange.value.octaveSize = view.pxToOctaveWithOffset(y) - selectRange.value.octaveStart;
 
-            const range = {
-                startTime: selectRange.value.timeStart,
-                endTime: selectRange.value.timeStart + selectRange.value.timeSize,
-                startOctave: selectRange.value.octaveStart,
-                endOctave: selectRange.value.octaveStart + selectRange.value.octaveSize
+            selectRange.value.timeEnd = view.pxToTimeWithOffset(x);
+            selectRange.value.octaveEnd = view.pxToOctaveWithOffset(y);
+
+            const timesInOrder = [selectRange.value.time, selectRange.value.timeEnd].sort((a, b) => a - b);
+            const octavesInOrder = [selectRange.value.octave, selectRange.value.octaveEnd].sort((a, b) => a - b);
+
+            const sortedRange = {
+                time: timesInOrder[0],
+                timeEnd: timesInOrder[1],
+                octave: octavesInOrder[0],
+                octaveEnd: octavesInOrder[1],
+            } as any;
+
+            if ('velocity' in selectRange.value) {
+                selectRange.value.velocityEnd = view.pxToVelocityWithOffset(y);
+                const velocitiesInOrder = [selectRange.value.velocity, selectRange.value.velocityEnd].sort((a, b) => a - b);
+                sortedRange.velocity = velocitiesInOrder[0];
+                sortedRange.velocityEnd = velocitiesInOrder[1];
             }
-            selection.selectRange(range, currentlyActiveGroup.value);
+
+            selection.selectRange(sortedRange, currentlyActiveGroup.value);
         }
     }, 25);
 
@@ -323,7 +354,7 @@ export const useToolStore = defineStore("edit", () => {
                 time: view.pxToTimeWithOffset(x),
                 duration: 0,
                 octave: view.pxToOctaveWithOffset(y),
-            },view);
+            }, view);
 
             snap.setFocusedNote(freeNote)
 
@@ -362,7 +393,7 @@ export const useToolStore = defineStore("edit", () => {
             current.value === Tool.Select ||
             currentLeftHand.value === Tool.Select
         ) && selectRange.value.active) {
-            applyRangeSelection(e);
+            refreshAndApplyRangeSelection(e);
         } else if (isDragging && current.value === Tool.Modulation) {
             notesBeingDragged.forEach((n) => n.dragMoveVelocity(mouseDelta));
         } else if (notesBeingCreated.value.length === 1) {
@@ -423,7 +454,7 @@ export const useToolStore = defineStore("edit", () => {
             notesBeingDragged.map(editNoteI => {
                 if (editNoteI === noteBeingDragged.value) return;
                 editNoteI.dragMoveOctaves(octaveDragDeltaAfterSnap);
-                editNoteI.dragMoveTimeStart(timeDragAfterSnap);
+                editNoteI.dragMoveTime(timeDragAfterSnap);
             });
             refresh = true;
         } else if (isDragging && noteBeingDraggedRightEdge.value) {
@@ -463,7 +494,7 @@ export const useToolStore = defineStore("edit", () => {
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
             // store them to store
-            if(currentlyActiveGroup.value){
+            if (currentlyActiveGroup.value) {
                 notesBeingCreated.value.forEach(note => {
                     note.group = currentlyActiveGroup.value;
                 });
@@ -475,10 +506,6 @@ export const useToolStore = defineStore("edit", () => {
             noteBeingDraggedRightEdge.value = false;
         }
         if (selectRange.value.active) {
-            const x = e.clientX;
-            const y = e.clientY;
-            selectRange.value.timeSize = view.pxToTime(x) - selectRange.value.timeStart;
-            selectRange.value.octaveSize = view.pxToOctave(y) - selectRange.value.octaveStart;
             selectRange.value.active = false;
         }
         noteBeingDragged.value = false;
