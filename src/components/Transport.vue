@@ -63,6 +63,17 @@ onUnmounted(() => {
         </Button>
         <!-- input that sets the bpm -->
         <input id="bpm" type="number" v-model="playback.bpm" ref="bpmSetter" />
+        <Button 
+            :active="view.followPlayback"
+            :onClick="()=>view.followPlayback=!view.followPlayback" 
+            tooltip="Follow playback: Keep moving the view to keep the current score time at the center"
+            
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <text x="0" y="15" font-size="24px" baseline-shift="-5" >></text>
+            </svg>
+        </Button>
+
     </div>
 </template>
 <style scoped>

@@ -7,6 +7,7 @@ export enum KeyActions {
     ActivateModulationMode,
     MuteSelectedEvents,
     Save,
+    SaveAs,
     Undo,
     Download,
     SelectAll,
@@ -30,6 +31,7 @@ const keyBindings: KeyActionTuple[] = [
     [KeyActions.ActivateModulationMode, 'm', false, false, false],
     [KeyActions.MuteSelectedEvents, 'm', true, false, false],
     [KeyActions.Save, 's', true, false, false],
+    [KeyActions.SaveAs, 's', true, false, false],
     [KeyActions.Undo, 'z', true, false, false],
     [KeyActions.Download, 'd', true, false, false],
     [KeyActions.SelectAll, 'a', true, false, false],
@@ -57,18 +59,18 @@ export const getActionForKeys = (key: string, ctrlKey = false, shiftKey = false,
     const keyActionTuples = keyBindings.filter((keyActionTuple) => {
         const [_action, key_, ctrlKey_, shiftKey_, altKey_] = keyActionTuple;
         let result = key_ === key;
-        if(ctrlKey_) result = result && ctrlKey;
-        if(shiftKey_) result = result && shiftKey;
-        if(altKey_) result = result && altKey;
+        if (ctrlKey_) result = result && ctrlKey;
+        if (shiftKey_) result = result && shiftKey;
+        if (altKey_) result = result && altKey;
         return result;
     });
     if (!keyActionTuples.length) return KeyActions.None;
 
     const mostSpecific = keyActionTuples.sort((a, b) => (
-            (b[2] ? 1 : 0) +
-            (b[3] ? 1 : 0) +
-            (b[4] ? 1 : 0)
-        ) - (
+        (b[2] ? 1 : 0) +
+        (b[3] ? 1 : 0) +
+        (b[4] ? 1 : 0)
+    ) - (
             (a[2] ? 1 : 0) +
             (a[3] ? 1 : 0) +
             (a[4] ? 1 : 0)
@@ -89,7 +91,7 @@ export const getKeysForAction = (action: KeyActions): {
     if (!keyActionTuples) return [];
     return keyActionTuples.map(([_, key, ctrl, shift, alt]) => ({ key, ctrl, shift, alt }));
 }
-export const getKeyCombinationString = (action: KeyActions): string[] => {
+export const getKeyCombinationString = (action: KeyActions, enclose = true): string[] => {
     const keys = getKeysForAction(action);
     return keys.map(({ key, ctrl, shift, alt }) => {
         const modifiers = [];
@@ -97,6 +99,8 @@ export const getKeyCombinationString = (action: KeyActions): string[] => {
         if (alt) modifiers.push('Alt');
         if (shift) modifiers.push('Shift');
         if (!modifiers.length) return key;
-        return `${modifiers.join('+')}+${key}`;
+        const basic = `${modifiers.join('+')}+${key}`;
+        if (!enclose) return basic;
+        return `[${basic}]`;
     });
 }

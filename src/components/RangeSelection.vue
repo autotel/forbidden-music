@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Tool } from '../dataTypes/Tool';
-import { useSelectStore } from '../store/selectStore'
-import { MouseDownActions, useToolStore } from '../store/toolStore';
+import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
-const selection = useSelectStore();
+
 const view = useViewStore();
 const tool = useToolStore();
 
@@ -13,19 +10,21 @@ const getRangePx = () => {
     const ret = {
         x:0,y:0,width:0,height:0
     }
-    const rangeTime = selectRange.timeSize;
-    const rangeOctave = selectRange.octaveSize;
+    
+    const rangeTime = selectRange.timeEnd - selectRange.time;
+    const rangeOctave = selectRange.octaveEnd - selectRange.octave;
+
     if(rangeTime < 0) {
-        ret.x = view.timeToPxWithOffset(selectRange.timeStart + rangeTime);
+        ret.x = view.timeToPxWithOffset(selectRange.time + rangeTime);
     } else {
-        ret.x = view.timeToPxWithOffset(selectRange.timeStart);
+        ret.x = view.timeToPxWithOffset(selectRange.time);
     }
     ret.width = Math.abs(view.timeToPx(rangeTime));
     // remember down is negative on octave axis
     if(rangeOctave < 0) {
-        ret.y = view.octaveToPxWithOffset(selectRange.octaveStart);
+        ret.y = view.octaveToPxWithOffset(selectRange.octave);
     } else {
-        ret.y = view.octaveToPxWithOffset(selectRange.octaveStart + rangeOctave);
+        ret.y = view.octaveToPxWithOffset(selectRange.octave + rangeOctave);
     }
     ret.height = Math.abs(view.octaveToPx(rangeOctave));
 

@@ -5,43 +5,48 @@ import { useProjectStore } from './projectStore';
 import { throttledWatch } from '@vueuse/core';
 import { Group } from '../dataTypes/Group';
 import { TimelineItem } from '../dataTypes/TimelineItem';
+import { useToolStore } from './toolStore';
+import { Tool } from '../dataTypes/Tool';
+import { useViewStore } from './viewStore';
+import { getNotesInRange } from '../functions/getNotesInRange';
+
+export interface TimeRange {
+    time: number,
+    timeEnd: number,
+}
+
+export interface OctaveRange {
+    octave: number,
+    octaveEnd: number,
+}
+
+export interface VelocityRange {
+    velocity: number,
+    velocityEnd: number,
+}
+
+export interface RangeA extends TimeRange, OctaveRange {}
+export interface RangeC extends TimeRange, VelocityRange {}
+export interface RangeD extends TimeRange, OctaveRange, VelocityRange {}
 
 
+export type SelectableRange = TimeRange | RangeA | RangeC | RangeD;
 
-const getNotesInRange = (
-    notes: EditNote[],
-    range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }
-) => {
-    const octaveStart = Math.min(range.startOctave, range.endOctave);
-    const octaveEnd = Math.max(range.startOctave, range.endOctave);
-    const timeStart = Math.min(range.startTime, range.endTime);
-    const timeEnd = Math.max(range.startTime, range.endTime);
-
-    return notes.filter((editNote) => {
-        const octaveInRange = editNote.octave >= octaveStart && editNote.octave <= octaveEnd;
-        const timeInRange = editNote.timeEnd >= timeStart && editNote.time <= timeEnd;
-        return octaveInRange && timeInRange;
-    });
-};
 
 const getGroupsInRange = (
     groups: Group[],
     range: {
         startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
+        timeEnd: number,
+        octave: number,
+        octaveEnd: number
     }
 ) => {
-    const octaveStart = Math.min(range.startOctave, range.endOctave);
-    const octaveEnd = Math.max(range.startOctave, range.endOctave);
-    const timeStart = Math.min(range.startTime, range.endTime);
-    const timeEnd = Math.max(range.startTime, range.endTime);
+    // range is expected to come in positive ranges
+    const timeStart = range.startTime;
+    const timeEnd = range.timeEnd;
+    const octaveStart = range.octave;
+    const octaveEnd = range.octaveEnd;
 
     return groups.filter((group) => {
         const octaveBound = [group.octave, group.octaveEnd];
@@ -54,9 +59,10 @@ const getGroupsInRange = (
 
 export const useSelectStore = defineStore("select", () => {
     const selected = ref(new Set() as Set<TimelineItem>);
-
+    const tool = useToolStore();
     const project = useProjectStore();
-    
+    const view = useViewStore();
+
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
     const isSelected = (item: TimelineItem) => {
         return selected.value.has(item);
@@ -68,10 +74,10 @@ export const useSelectStore = defineStore("select", () => {
         project.groups.forEach(g => g.selected = isSelected(g))
     }
 
-    const getNotes = ():EditNote[] => {
+    const getNotes = (): EditNote[] => {
         return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
     };
-    const getGroups = ():Group[] => {
+    const getGroups = (): Group[] => {
         return [...selected.value].filter((n) => n instanceof Group) as Group[];
     };
 
@@ -105,17 +111,33 @@ export const useSelectStore = defineStore("select", () => {
         });
         refreshNoteSelectionState();
     };
-    const selectRange = (range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }, restrictToGroup: (Group | null | false) = false) => {
+    const selectRange = (range: SelectableRange, restrictToGroup: (Group | null | false) = false) => {
+
         let notesInRange = getNotesInRange(
             project.score,
             range
-        )
-        
+        );
+
+        // if in modulation mode, then  also select according to "velolines"
+        if (
+            // tool.current === Tool.Modulation
+            'velocity' in range && 'velocityEnd' in range
+        ) {
+            const notesVeloLinesInRange = getNotesInRange(
+                project.score, {
+                    time: range.time,
+                    timeEnd: range.timeEnd,
+                } as SelectableRange
+            ).filter(event =>
+                'velocity' in range ? (
+                    event.velocity < range.velocityEnd
+                    &&
+                    event.velocity > range.velocity
+                ) : false
+            )
+            notesInRange.push(...notesVeloLinesInRange)
+        }
+
         if (restrictToGroup !== false) { // note that null is also a valid group restriction
             notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
         }
@@ -128,17 +150,13 @@ export const useSelectStore = defineStore("select", () => {
         //     )
         // }
 
+
         select(
-            ...notesInRange, 
+            ...notesInRange,
             // ...groupsInRange
         );
     };
-    const addRange = (range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }) => {
+    const addRange = (range: SelectableRange) => {
         const newNotes = getNotesInRange(
             project.score,
             range
@@ -157,7 +175,7 @@ export const useSelectStore = defineStore("select", () => {
         selectRange,
         selectAll,
         addRange,
-        add, select, toggle, 
+        add, select, toggle,
         getNotes, getGroups,
         clear: clear, remove,
         isSelected,

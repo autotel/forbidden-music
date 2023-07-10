@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia'
-import { Tool } from '../dataTypes/Tool.js';
 import Fraction from 'fraction.js';
-import { EditNote } from '../dataTypes/EditNote.js';
+import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import colundi from '../scales/colundi.js';
-import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters.js';
+import { EditNote } from '../dataTypes/EditNote';
+import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
+import colundi from '../scales/colundi';
+import { getNotesInRange } from '../functions/getNotesInRange';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -242,6 +242,7 @@ export const useSnapStore = defineStore("snap", () => {
     const toneSnapExplanation = ref([] as SnapExplanation[]);
     const customOctavesTable = ref(colundi as number[]);
     const onlyWithMutednotes = ref(false);
+    const onlyWithSimultaneousNotes = ref(true);
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -259,19 +260,28 @@ export const useSnapStore = defineStore("snap", () => {
         snapValues: { [key: string]: SnapDefinition },
     }
 
-    const EDOSsnap = (edo:number, targetOctave:number, toneSnap: SnapTracker)=>{
+    const EDOSsnap = (edo: number, targetOctave: number, toneSnap: SnapTracker) => {
         const relatedNumber = Math.round(targetOctave * edo) / edo;
         toneSnap.addSnappedValue(relatedNumber, {
-            text: "equal"+edo,
+            text: "equal" + edo,
             relatedNumber,
         });
     }
 
-    const onlyMutedIfWanted = (otherNotes: EditNote[] | undefined) => {
-        if(otherNotes === undefined) return;
-        if(!onlyWithMutednotes.value) return otherNotes;
-        return otherNotes.filter((editNote) => editNote.mute);
-    } 
+    const filterSnapNotes = (otherNotes: EditNote[] | undefined) => {
+        if (otherNotes === undefined) return;
+        let returnValue = otherNotes
+        if (onlyWithMutednotes.value) {
+            returnValue = otherNotes.filter((editNote) => editNote.mute);
+        }
+        if (onlyWithSimultaneousNotes.value && focusedNote.value) {
+            returnValue = getNotesInRange(returnValue, {
+                time: focusedNote.value.time,
+                timeEnd: focusedNote.value.timeEnd,
+            });
+        }
+        return returnValue;
+    }
 
 
     const octaveSnaps = ({
@@ -280,7 +290,7 @@ export const useSnapStore = defineStore("snap", () => {
         targetHz,
         snapValues,
     }: OctaveSnapParams) => {
-        otherNotes = onlyMutedIfWanted(otherNotes);
+        otherNotes = filterSnapNotes(otherNotes);
         const toneSnap = new SnapTracker(targetOctave);
 
         if (snapValues.customFrequencyTable.active === true) {
@@ -328,8 +338,8 @@ export const useSnapStore = defineStore("snap", () => {
         if (snapValues.equal48.active === true) {
             EDOSsnap(48, targetOctave, toneSnap);
         }
-        
-        
+
+
 
         /** 
          * target / other = other * 1 / target
@@ -356,16 +366,16 @@ export const useSnapStore = defineStore("snap", () => {
                 if (snapValues.hzMult.active === true) {
                     for (const otherNote of otherNotes) {
                         const relatedNumber = Math.round(targetHz / otherNote.frequency) * otherNote.frequency;
-                        if(relatedNumber > 0) {
+                        if (relatedNumber > 0) {
                             toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
-                                text: "multiple of "+otherNote.frequency.toPrecision(3),
+                                text: "multiple of " + otherNote.frequency.toPrecision(3),
                                 relatedNumber,
                                 relatedNote: otherNote,
                             });
                         }
                     }
                 };
-                
+
                 if (snapValues.hzHalfOrDouble.active === true) {
                     for (const otherNote of otherNotes) {
                         const myCandidateHzDouble = otherNote.frequency * 2
@@ -459,7 +469,7 @@ export const useSnapStore = defineStore("snap", () => {
         snapValues,
     }: TimeSnapParams) => {
 
-        otherNotes = onlyMutedIfWanted(otherNotes);
+        otherNotes = filterSnapNotes(otherNotes);
         const timeSnap = new SnapTracker(editNote.time);
         if (snapValues.timeQuarter.active === true) {
             const relatedNumber = Math.round(editNote.time * 4);
@@ -535,7 +545,7 @@ export const useSnapStore = defineStore("snap", () => {
         skipOctaveSnap = false,
         skipTimeSnap = false,
     }: SnapParams) => {
-        otherNotes = onlyMutedIfWanted(otherNotes);
+        otherNotes = filterSnapNotes(otherNotes);
         /** outNote */
         const editNote = inNote.clone();
         const targetHz = octaveToFrequency(targetOctave);
@@ -588,6 +598,7 @@ export const useSnapStore = defineStore("snap", () => {
         toneSnapExplanation,
         customOctavesTable,
         onlyWithMutednotes,
+        onlyWithSimultaneousNotes,
         setFocusedNote,
         resetSnapExplanation,
         snap,

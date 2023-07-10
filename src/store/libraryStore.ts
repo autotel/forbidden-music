@@ -175,27 +175,10 @@ export const useLibraryStore = defineStore("library store", () => {
     });
 
 
-    const downloadString = (text: string, fileType: string, fileName: string) => {
-        const blob = new Blob([text], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-
-        a.href = url;
-        a.download = project.name + ".json";
-        a.click();
-    }
-
-    const exportJSON = () => {
-        const libraryItem = project.getProjectDefintion();
-        libraryItem.version = version;
-        const json = JSON.stringify(libraryItem);
-        downloadString(json, "application/json", project.name + ".json");
-    }
-
     const exportMIDIPitchBend = () => {
     }
 
-    const importJSON = (files: FileList) => {
+    const importJSONFileList = (files: FileList) => {
         const file = files[0];
         const filename = file.name.replace(/.json\b/i, "");
         project.name = filename;
@@ -227,11 +210,11 @@ export const useLibraryStore = defineStore("library store", () => {
         saveCurrent,
         deleteItemNamed,
 
-        exportJSON,
-        importJSON,
+        importJSONFileList,
         exportMIDIPitchBend,
         importObject,
-
+        
+        version,
         filenamesList,
         errorMessage,
         inSyncWithStorage,
