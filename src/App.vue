@@ -27,6 +27,7 @@ import { useSelectStore } from './store/selectStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
+import UserDisclaimer from './components/UserDisclaimer.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
