@@ -27,6 +27,7 @@ import { useViewStore } from './store/viewStore';
 import GroupElement from './components/GroupElement.vue';
 import { ifDev } from './functions/isDev';
 import { KeyActions, getActionForKeys, logKeys } from './keyBindings';
+import UserDisclaimer from './components/UserDisclaimer.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -367,6 +368,7 @@ onUnmounted(() => {
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
     </Modal>
+    <UserDisclaimer />
 </template>
 <style scoped>
 .drawers-container {

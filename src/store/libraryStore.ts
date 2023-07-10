@@ -1,11 +1,11 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
-import { Note, NoteDefb } from '../dataTypes/Note.js';
-import { SynthParamStored } from '../synth/SynthInterface.js';
-import { useProjectStore } from './projectStore.js';
-import { useViewStore } from './viewStore.js';
-
+import { Note, NoteDefb } from '../dataTypes/Note';
+import { SynthParamStored } from '../synth/SynthInterface';
+import { useProjectStore } from './projectStore';
+import { useViewStore } from './viewStore';
+import {userShownDisclaimerLocalStorageKey} from '../userDisclaimer';
 
 const version = "0.1.0";
 
@@ -44,7 +44,7 @@ export interface LibraryItem {
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 
-const reservedEntryName = "forbidden-music";
+const reservedEntryNames = ["forbidden-music", userShownDisclaimerLocalStorageKey];
 
 const normalizeLibraryItem = (obj: any): LibraryItem => {
     if (!obj.version) obj.version = "0.0.0";
@@ -52,7 +52,7 @@ const normalizeLibraryItem = (obj: any): LibraryItem => {
         // @ts-ignore
         const migrator = migrators[obj.version];
         console.log("version " + obj.version + " detected, migrating");
-        console.log(migrator,obj.version);
+        console.log(migrator, obj.version);
         obj = migrator(obj);
     } else {
         console.log("no migration needed for version " + obj.version + " detected");
@@ -62,7 +62,7 @@ const normalizeLibraryItem = (obj: any): LibraryItem => {
 
 const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
     inValue.version = version;
-    if (filename === reservedEntryName) throw new Error(`filename cannot be "${reservedEntryName}"`);
+    if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
     localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
@@ -78,7 +78,7 @@ const retrieveFromLocalStorage = (filename: string) => {
 }
 
 const listLocalStorageFiles = () => {
-    return Object.keys(localStorage).filter(n => n !== reservedEntryName);
+    return Object.keys(localStorage).filter(n => !reservedEntryNames.includes(n));
 }
 
 const exists = (filename: string) => {

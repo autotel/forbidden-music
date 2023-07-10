@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import { useMonoModeInteraction } from '../store/monoModeInteraction'
-
+import Button from '../components/Button.vue'
 const props = defineProps<{
     name: string
     onClose?: () => void
+    activateOnMount?: boolean
+    closeButton?: string | boolean
 }>()
 
 const monoModeInteraction = ref(useMonoModeInteraction().createInteractionModal(props.name))
-
-const stopPP = (e: Event) => {
-    e.stopPropagation()
-    e.stopImmediatePropagation()
-}
 
 const close = (e: Event) => {
     console.log('close')
@@ -22,13 +19,22 @@ const close = (e: Event) => {
 
 const showing = computed(() => monoModeInteraction.value.isActive())
 
+onMounted(() => {
+    if (props.activateOnMount) monoModeInteraction.value.activate()
+})
+
+
+
 </script>
 <template  >
     <div v-if="showing" class="main-modal">
         <div class="click-outside-catcher" ref="clickOutsideCatcher" @click=close></div>
         <div class="modal-text-display">
             <slot></slot>
+            <br><br>
+            <Button :onClick="close" v-if="closeButton">{{ closeButton === true ? "close" : closeButton }}</Button>
         </div>
+
     </div>
 </template>
 <style scoped>

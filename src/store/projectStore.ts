@@ -10,7 +10,6 @@ import { useViewStore } from './viewStore.js';
 import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
 import { ParamType, SynthParam } from '../synth/SynthInterface.js';
 
-
 export const useProjectStore = defineStore("current project", () => {
     const view = useViewStore();
     const snaps = useSnapStore();
