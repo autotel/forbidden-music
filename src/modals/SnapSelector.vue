@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Tool } from '../dataTypes/Tool';
-import { useSnapStore, SnapType } from '../store/snapStore';
-import { useToolStore } from '../store/toolStore';
-import Pen from "../components/icons/Pen.vue";
-import Magnet from "../components/icons/Magnet.vue";
 import Button from '../components/Button.vue';
+import Magnet from "../components/icons/Magnet.vue";
+import Pen from "../components/icons/Pen.vue";
+import { SnapType, useSnapStore } from '../store/snapStore';
 import EdgeHidableWidget from './EdgeHidableWidget.vue';
 
 import { useMonoModeInteraction } from '../store/monoModeInteraction';
-const tool = useToolStore();
 const snap = useSnapStore();
 const monoModeInteraction = useMonoModeInteraction();
 
@@ -42,6 +38,10 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
     <Button :onClick="()=>snap.onlyWithMutednotes = !snap.onlyWithMutednotes"
       :class="{active: snap.onlyWithMutednotes}" :tooltip="snap.onlyWithMutednotes ? 'only with muted notes. Use CTRL+M to mute a note' : 'all notes'">
       Monly
+    </Button>
+    <Button :onClick="()=>snap.onlyWithSimultaneousNotes = !snap.onlyWithSimultaneousNotes"
+      :class="{active: snap.onlyWithSimultaneousNotes}" :tooltip="snap.onlyWithSimultaneousNotes ? 'only with notes which overap in time' : 'all notes'">
+      Simultaneous
     </Button>
   </EdgeHidableWidget>
 </template>
