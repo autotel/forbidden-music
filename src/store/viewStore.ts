@@ -55,12 +55,12 @@ export const useViewStore = defineStore("view", () => {
 
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
-        return probe(getNotesInRange(project.score, {
+        return getNotesInRange(project.score, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
-            octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
-        }));
+            octaveEnd:-octaveOffset.value + viewHeightOctaves.value,
+        });
     });
 
     // let tkey = 0;
