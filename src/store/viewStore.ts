@@ -5,6 +5,7 @@ import { useProjectStore } from "./projectStore.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { Note } from "../dataTypes/Note.js";
 import { usePlaybackStore } from "./playbackStore.js";
+import { getNotesInRange } from "../functions/getNotesInRange.js";
 
 export interface NoteRect {
     event: EditNote;
@@ -24,6 +25,11 @@ export interface NoteRect {
         x: number;
         y: number;
     };
+}
+
+const probe = (v:any) => {
+    console.log(v);
+    return v;
 }
 
 export const useViewStore = defineStore("view", () => {
@@ -49,15 +55,12 @@ export const useViewStore = defineStore("view", () => {
 
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
-        return project.score.filter((editNote) => {
-            const note = editNote;
-            return (
-                note.time < timeOffset.value + viewWidthTime.value &&
-                note.timeEnd > timeOffset.value &&
-                note.octave > -octaveOffset.value &&
-                note.octave < -octaveOffset.value + viewHeightOctaves.value
-            );
-        });
+        return probe(getNotesInRange(project.score, {
+            time: timeOffset.value,
+            timeEnd: timeOffset.value + viewWidthTime.value,
+            octave: -octaveOffset.value,
+            octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
+        }));
     });
 
     // let tkey = 0;

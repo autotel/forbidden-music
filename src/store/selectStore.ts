@@ -8,6 +8,7 @@ import { TimelineItem } from '../dataTypes/TimelineItem';
 import { useToolStore } from './toolStore';
 import { Tool } from '../dataTypes/Tool';
 import { useViewStore } from './viewStore';
+import { getNotesInRange } from '../functions/getNotesInRange';
 
 export interface TimeRange {
     time: number,
