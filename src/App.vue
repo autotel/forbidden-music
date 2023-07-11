@@ -53,9 +53,23 @@ let viewDragStartY = 0;
 let viewDragStartOctave = 0;
 
 const mouseWheelListener = (e: WheelEvent) => {
+    const viewMousePositionBefore = {
+        time: view.pxToTimeWithOffset(e.clientX),
+        octave: -view.pxToOctaveWithOffset(e.clientY),
+    }
+
     view.viewWidthTime **= 1 + e.deltaY / 1000;
     view.viewHeightOctaves **= 1 + e.deltaY / 1000;
-    // prevent viewWidthTime from going out of bounds
+
+    const viewMousePositionAfter = {
+        time: view.pxToTimeWithOffset(e.clientX),
+        octave: -view.pxToOctaveWithOffset(e.clientY),
+    }
+
+    view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
+    view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
+    console.log(viewMousePositionBefore.octave.toFixed(2), viewMousePositionAfter.octave.toFixed(2), view.octaveOffset.toFixed(2));
+
     if (view.viewWidthTime < 0.1) {
         view.viewWidthTime = 0.1;
     }
@@ -288,7 +302,7 @@ const resize = () => {
     view.updateSize(viewportSize.value.width, viewportSize.value.height);
 };
 
-const viewportSize = ref({width:0, height:0});
+const viewportSize = ref({ width: 0, height: 0 });
 
 watch(paneWidth, () => {
     resize();
@@ -298,8 +312,7 @@ watch(paneWidth, () => {
     <div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <div ref="viewport"
-            :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }"
-        >
+            :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewport :width="viewportSize.width" :height="viewportSize.height" />
         </div>
         <TimeScrollBar />
@@ -343,6 +356,7 @@ watch(paneWidth, () => {
     width: 100%;
     box-sizing: border-box;
 }
+
 * {
     user-select: none;
 }
