@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
-import LibraryManager from './LibraryManager.vue';
+import FileManager from './FileManager.vue';
+import WorkingMemory from './WorkingMemory.vue';
 import MidiInputConfig from './MidiInputConfig.vue';
 import SnapSelector from './SnapSelector.vue';
 import SynthEdit from './SynthEdit.vue';
@@ -12,7 +13,8 @@ const props = defineProps<{
 </script>
 <template>
     <div class="drawers-container" :style="{ width: paneWidth + 'px' }">
-        <LibraryManager />
+        <WorkingMemory />
+        <FileManager/>
         <SynthEdit />
         <SnapSelector />
         <!-- <MidiInputConfig v-if="playback.midiInputs.length" /> -->

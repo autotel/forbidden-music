@@ -227,6 +227,11 @@ const keyDownListener = (e: KeyboardEvent) => {
             }).elseLog("group feature in development");
             break;
         }
+        case KeyActions.Reboot: {
+            window.location.reload();
+            // lol
+            break;
+        }
 
     }
 }
@@ -335,6 +340,10 @@ const viewportSize = computed(() => {
 
 
 <style>
+.full-width {
+    width: 100%;
+    box-sizing: border-box;
+}
 * {
     user-select: none;
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onUnmounted, reactive, Ref, ref, watch } from "vue";
+import { inject, onBeforeUnmount, onUnmounted, reactive, Ref, ref, watch } from "vue";
 import { usePlaybackStore } from "../store/playbackStore";
 import { ParamType } from "../synth/SynthInterface";
 import Button from "../components/Button.vue";
@@ -35,7 +35,7 @@ onMounted(() => {
         audioReady.value = true;
     })
 })
-onUnmounted(() => {
+onBeforeUnmount(() => {
     audioReady.value = false;
 })
 
@@ -48,7 +48,7 @@ onUnmounted(() => {
             synth params
         </template>
         <div>
-            <div v-if="audioReady">
+            <div v-if="audioReady" class="controls-container">
                 <template v-for="param in playback.synthParams">
                     <PropOption v-if="param.type === ParamType.option" :param="param" />
                     <PropSlider v-if="param.type === ParamType.number" :param="param" />
@@ -65,3 +65,9 @@ onUnmounted(() => {
         </div>
     </Collapsible>
 </template>
+<style scoped>
+.controls-container {
+    width: 100%;
+    box-sizing: border-box;
+}
+</style>

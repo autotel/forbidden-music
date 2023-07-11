@@ -154,46 +154,8 @@ const download = () => {
     <Collapsible pulltip="save and load" title="file">
         <template #icon>
             <Folder />
-            Working memory
+            Save and load
         </template>
-        <input type="text" v-model="project.name" @keydown="e => e.stopPropagation()" />
-        <p v-if="libraryStore.errorMessage">{{ libraryStore.errorMessage }}</p>
-        <template v-for="filename in libraryStore.filenamesList" :key="filename">
-            <div style="display:block">
-                <Button :onClick="() => libraryStore.loadFromLibraryItem(filename)" :active="project.name === filename">
-                    {{ filename }}
-                </Button>
-                <Button v-if="filename === project.name" :onClick="() => libraryStore.deleteItemNamed(filename)"
-                    :danger="true">
-                    ×
-                </Button>
-            </div>
-        </template>
-        <Button :onClick="() => libraryStore.saveCurrent()" v-if="!libraryStore.inSyncWithStorage"
-            :tooltip="`Save to selected working memory slot ${getKeyCombinationString(KeyActions.SaveAs)}`"
-        >
-            <Archive />
-            <sup>
-            <CheckBoxBlank />
-            </sup>
-        </Button>
-        <Button 
-            v-else
-            :active="false" 
-            :onClick="()=>{}" 
-            :tooltip="`Already saved ${getKeyCombinationString(KeyActions.SaveAs)}`"
-        >
-            <Archive />
-            <sup>
-            <CheckBoxChecked />
-            </sup>
-        </Button>
-
-        <Button :onClick="clear" danger :tooltip="`Clear current composition`">
-            clear
-        </Button>
-
-        <h2>Save to computer</h2>
         <small>{{ isTauri() ? workingDirectory : '' }}/{{ project.name }}.json</small>
         <br>
         <Button :onClick="() => download()" v-if="project.name"

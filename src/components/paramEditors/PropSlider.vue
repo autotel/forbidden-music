@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:300px">
+    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:100%">
         
         <template v-if="props.param.max !== undefined && props.param.min !== undefined">
             <div class="prog-container">

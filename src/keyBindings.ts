@@ -19,6 +19,7 @@ export enum KeyActions {
     Group,
     OnlyAllowHorizontalMovement,
     OnlyAllowVerticalMovement,
+    Reboot,
 }
 
 type KeyActionTuple = [KeyActions, string, boolean, boolean, boolean];
@@ -43,6 +44,7 @@ const keyBindings: KeyActionTuple[] = [
     [KeyActions.Group, 'g', true, false, false],
     [KeyActions.OnlyAllowHorizontalMovement, 'h', false, false, false],
     [KeyActions.OnlyAllowVerticalMovement, 'v', false, false, false],
+    [KeyActions.Reboot, 'r', true, false, false],
 ];
 
 export const logKeys = (e: KeyboardEvent) => {
