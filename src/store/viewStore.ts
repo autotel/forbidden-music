@@ -109,15 +109,19 @@ export const useViewStore = defineStore("view", () => {
         Object.keys(obj).forEach(key => obj[key] === null && delete obj[key]);
         return obj;
     }
-
+    const nOrNullSort = (a: number | null, b: number | null) => {
+        if (a === null) return 1;
+        if (b === null) return -1;
+        return a - b;
+    }
     const pxRangeOf = (range: {
         time?: number,
         octave?: number,
         timeEnd?: number,
         octaveEnd?: number,
-    }): { x: number, y: number, x2: number, y2: number } => {
-        const xf = [castIfDefined(timeToPxWithOffset, range.time), castIfDefined(timeToPxWithOffset, range.timeEnd)].sort();
-        const yf = [castIfDefined(octaveToPxWithOffset, range.octave), castIfDefined(octaveToPxWithOffset, range.octaveEnd)].sort();
+    }): { x?: number, y?: number, x2?: number, y2?: number } => {
+        const xf = [castIfDefined(timeToPxWithOffset, range.time), castIfDefined(timeToPxWithOffset, range.timeEnd)].sort(nOrNullSort);
+        const yf = [castIfDefined(octaveToPxWithOffset, range.octave), castIfDefined(octaveToPxWithOffset, range.octaveEnd)].sort(nOrNullSort);
         return deleteNullVals({
             x: xf[0],
             y: yf[0],
@@ -133,11 +137,13 @@ export const useViewStore = defineStore("view", () => {
         octaveEnd?: number,
     }): { x: number, y: number, width: number, height: number } => {
         const pxRange = pxRangeOf(range);
+        const x = pxRange.x || 0;
+        const y = pxRange.y || 0;
         return {
-            x: pxRange.x,
-            y: pxRange.y,
-            width: pxRange.x2 - pxRange.x,
-            height: pxRange.y2 - pxRange.y,
+            x,
+            y,
+            width: (pxRange.x2 || 0) - x,
+            height: (pxRange.y2 || 0) - y,
         }
     }
 
@@ -148,9 +154,9 @@ export const useViewStore = defineStore("view", () => {
             const noteRect = noteRects[i];
             const effxWidth = noteRect.width || noteRect.radius * 2;
             if (
-                noteRect.x <= x && 
-                noteRect.x + effxWidth >= x && 
-                noteRect.y <= y && 
+                noteRect.x <= x &&
+                noteRect.x + effxWidth >= x &&
+                noteRect.y <= y &&
                 noteRect.y + noteRect.height >= y
             ) {
                 items.push(noteRect);
@@ -243,7 +249,7 @@ export const useViewStore = defineStore("view", () => {
     return {
         setTimeOffset,
         setTimeOffsetBounds,
-        
+
         pxToTime,
         timeToPx,
         timeToPxWithOffset,
@@ -257,17 +263,17 @@ export const useViewStore = defineStore("view", () => {
         pxToVelocity,
         velocityToPxWithOffset,
         pxToVelocityWithOffset,
-        
+
         pxToBounds,
         boundsToTime,
         timeToBounds,
-        
+
         pxRangeOf,
         pxRectOf,
         rectOfNote,
-        
+
         isOctaveInView,
-        
+
         updateSize,
         forceRefreshVisibleNotes,
 

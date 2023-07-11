@@ -156,7 +156,7 @@ const refreshView = () => {
     if (tool.selectRange.active) {
         const selRange = view.pxRectOf(tool.selectRange);
         // ctx.fillRect(selRange.x, selRange.y, selRange.width, selRange.height);
-        graphics.beginFill(0x000000, 0.2);
+        graphics.beginFill(0x000044, 0.5);
         graphics.drawRect(selRange.x, selRange.y, selRange.width, selRange.height);
         graphics.endFill();
     }
