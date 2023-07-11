@@ -25,6 +25,8 @@ import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
 
 import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
+import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
+import Toggle from './components/inputs/Toggle.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -42,6 +44,9 @@ const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const tauriMidiInput = useTauriMidiInputStore();
 const paneWidth = ref(0);
 const viewport = ref<SVGSVGElement>();
+
+const useNewView = ref(true);
+
 provide('modalText', modalText);
 
 
@@ -68,7 +73,6 @@ const mouseWheelListener = (e: WheelEvent) => {
 
     view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
     view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
-    console.log(viewMousePositionBefore.octave.toFixed(2), viewMousePositionAfter.octave.toFixed(2), view.octaveOffset.toFixed(2));
 
     if (view.viewWidthTime < 0.1) {
         view.viewWidthTime = 0.1;
@@ -310,10 +314,10 @@ watch(paneWidth, () => {
 </script>
 <template>
     <div>
-        <Pianito v-if="tool.showReferenceKeyboard" />
         <div ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
-            <ScoreViewport :width="viewportSize.width" :height="viewportSize.height" />
+            <ScoreViewport v-if="useNewView" :width="viewportSize.width" :height="viewportSize.height" />
+            <ScoreViewportOld v-else :width="viewportSize.width" :height="viewportSize.height" />
         </div>
         <TimeScrollBar />
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
@@ -327,6 +331,10 @@ watch(paneWidth, () => {
                 <AnglesRight v-if="paneWidth" />
                 <AnglesLeft v-else />
             </Button>
+        </div>
+        <Pianito v-if="tool.showReferenceKeyboard" />
+        <div style="position: fixed; bottom:0; right: 50vw; height: 50px; display:flex; align-items: center;">
+            <Toggle v-model="useNewView" /> <p> &nbsp; &Tab; Use canvas view</p>
         </div>
         <div style="position: fixed; bottom:0; right: 0;">
             <ToolSelector />

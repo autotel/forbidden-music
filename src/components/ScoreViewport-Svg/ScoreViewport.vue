@@ -9,7 +9,7 @@ import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
 import { useViewStore } from '../../store/viewStore';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 const project = useProjectStore();
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -27,7 +27,7 @@ onMounted(() => {
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 });
