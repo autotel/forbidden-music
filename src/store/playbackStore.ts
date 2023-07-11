@@ -14,6 +14,7 @@ import { useViewStore } from './viewStore';
 import reaperMidiInputHandler from '../functions/reaperMidiInputHandler';
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import isDev from '../functions/isDev';
+import isTauri from '../functions/isTauri';
 
 
 
@@ -23,6 +24,9 @@ interface MidiConnectionMode {
 }
 
 const getMidiInputsArray = async () => {
+    if(isTauri()){
+        return;
+    }
     //@ts-ignore
     if (!navigator.requestMIDIAccess) return console.warn("no midi access possible");
     //@ts-ignore

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useToolStore } from '../store/toolStore';
-import { useViewStore } from '../store/viewStore';
+import { useToolStore } from '../../store/toolStore';
+import { useViewStore } from '../../store/viewStore';
 
 const view = useViewStore();
 const tool = useToolStore();

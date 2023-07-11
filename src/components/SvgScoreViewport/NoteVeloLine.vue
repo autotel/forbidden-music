@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Tool } from '../dataTypes/Tool';
-import { useToolStore } from '../store/toolStore';
-import { useViewStore, NoteRect } from '../store/viewStore';
-import { EditNote } from '../dataTypes/EditNote';
+import { Tool } from '../../dataTypes/Tool';
+import { useToolStore } from '../../store/toolStore';
+import { useViewStore, NoteRect } from '../../store/viewStore';
+import { EditNote } from '../../dataTypes/EditNote';
 
 
 const view = useViewStore();

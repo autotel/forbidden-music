@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useViewStore } from '../store/viewStore';
+import { useViewStore } from '../../store/viewStore';
 import { onMounted, Ref, ref, watchEffect, computed } from 'vue';
-import { usePlaybackStore } from '../store/playbackStore';
+import { usePlaybackStore } from '../../store/playbackStore';
 
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;

@@ -31,7 +31,6 @@ const showInfo = (info: string) => {
 }
 
 onMounted(() => {
-    console.log('mounted synth edit', playback.synthParams);
     playback.audioContextPromise.then(() => {
         audioReady.value = true;
     })
@@ -43,7 +42,7 @@ onUnmounted(() => {
 
 </script>
 <template>
-    <Collapsible id="synthParamsWindow">
+    <Collapsible>
         <template #icon>
             <HeartPulse />
             synth params

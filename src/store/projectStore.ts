@@ -100,8 +100,8 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const setFromListOfNoteDefinitions = (notes: (NoteDefa | NoteDefb)[]) => {
+        console.log("setFromListOfNoteDefinitions", notes);
         score.value = notes.map((note) => {
-            console.log(note);
             return new EditNote(note, view)
         });
     }

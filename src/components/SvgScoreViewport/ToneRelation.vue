@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useSnapStore } from '../store/snapStore';
-import { NoteRect, useViewStore } from '../store/viewStore';
+import { useSnapStore } from '../../store/snapStore';
+import { NoteRect, useViewStore } from '../../store/viewStore';
 
 const snap = useSnapStore();
 const view = useViewStore();

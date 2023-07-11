@@ -20,7 +20,7 @@ const project = useProjectStore();
 const libraryStore = useLibraryStore();
 const workingDirectory = ref<string>("Downloads");
 
-const mainInteraction = monoModeInteraction.createInteractionModal("default");
+const mainInteraction = monoModeInteraction.getInteractionModal("default");
 
 const keyDownListener = (e: KeyboardEvent) => {
 

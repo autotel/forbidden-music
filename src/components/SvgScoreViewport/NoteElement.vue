@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Tool } from '../dataTypes/Tool';
-import { useToolStore } from '../store/toolStore';
-import { useViewStore, NoteRect } from '../store/viewStore';
-import NoteVeloLine from './NoteVeloLine.vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { Tool } from '../../dataTypes/Tool';
+import { useToolStore } from '../../store/toolStore';
+import { NoteRect, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
+import NoteVeloLine from './NoteVeloLine.vue';
 
 
 const view = useViewStore();

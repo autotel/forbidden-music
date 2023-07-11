@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
-import { Tool } from '../dataTypes/Tool';
-import { useSelectStore } from '../store/selectStore';
-import { useToolStore } from '../store/toolStore';
-import { useViewStore } from '../store/viewStore';
-import { Group } from '../dataTypes/Group';
+import { EditNote } from '../../dataTypes/EditNote';
+import { Tool } from '../../dataTypes/Tool';
+import { useSelectStore } from '../../store/selectStore';
+import { useToolStore } from '../../store/toolStore';
+import { useViewStore } from '../../store/viewStore';
+import { Group } from '../../dataTypes/Group';
 import { vi } from 'vitest';
 
 

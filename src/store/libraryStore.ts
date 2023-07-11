@@ -55,7 +55,6 @@ const normalizeLibraryItem = (obj: any): LibraryItem => {
         console.log(migrator, obj.version);
         obj = migrator(obj);
     } else {
-        console.log("no migration needed for version " + obj.version + " detected");
     }
     return obj;
 }

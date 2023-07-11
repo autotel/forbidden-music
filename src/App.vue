@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch } from 'vue';
-import GroupElement from './components/GroupElement.vue';
-import TimeGrid from './components/MusicTimeGrid.vue';
-import NoteElement from './components/NoteElement.vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch } from 'vue';
+import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
-import RangeSelection from './components/RangeSelection.vue';
+import SvgScoreViewport from './components/SvgScoreViewport/SvgScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
-import ToneGrid from './components/ToneGrid.vue';
-import ToneRelation from './components/ToneRelation.vue';
 import ToolSelector from './components/ToolSelector.vue';
+import Transport from './components/Transport.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
-import Transport from './components/Transport.vue';
 import { Tool } from './dataTypes/Tool';
 import { ifDev } from './functions/isDev';
 import { KeyActions, getActionForKeys } from './keyBindings';
@@ -28,12 +24,10 @@ import { useTauriMidiInputStore } from './store/tauriMidiInputStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-import Button from './components/Button.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
-const timedEventsViewport = ref<SVGSVGElement>();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
@@ -42,11 +36,11 @@ const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
-const mainInteraction = monoModeInteraction.createInteractionModal("default");
+const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const tauriMidiInput = useTauriMidiInputStore();
 const paneWidth = ref(0);
-
+const viewport = ref<SVGSVGElement>();
 provide('modalText', modalText);
 
 
@@ -88,6 +82,26 @@ const mouseMoveListener = (e: MouseEvent) => {
     } else {
 
         tool.mouseMove(e);
+    }
+}
+
+const mouseUpListener = (e: MouseEvent) => {
+    tool.mouseUp(e);
+    // stop panning view, if it were
+    draggingView = false;
+}
+const mouseDownListener = (e: MouseEvent) => {
+    // middle wheel
+    if (e.button === 1) {
+        e.stopPropagation();
+        draggingView = true;
+        viewDragStartX = e.clientX;
+        viewDragStartTime = view.timeOffset;
+        viewDragStartY = e.clientY;
+        viewDragStartOctave = view.octaveOffset;
+    } else {
+        // left button
+        tool.mouseDown(e);
     }
 }
 
@@ -216,42 +230,12 @@ const keyDownListener = (e: KeyboardEvent) => {
 
     }
 }
-const mouseUpListener = (e: MouseEvent) => {
-    tool.mouseUp(e);
-    // stop panning view, if it were
-    draggingView = false;
-}
-const mouseDownListener = (e: MouseEvent) => {
-    // middle wheel
-    if (e.button === 1) {
-        e.stopPropagation();
-        draggingView = true;
-        viewDragStartX = e.clientX;
-        viewDragStartTime = view.timeOffset;
-        viewDragStartY = e.clientY;
-        viewDragStartOctave = view.octaveOffset;
-    } else {
-        // left button
-        tool.mouseDown(e);
-    }
-}
 
 const resize = () => {
-    const $viewPort = timedEventsViewport.value;
-    if (!$viewPort) throw new Error("timedEventsViewport not found");
-
-    $viewPort.style.width = window.innerWidth - paneWidth.value + "px";
-    $viewPort.style.height = window.innerHeight - 50 + "px";
-
     view.updateSize(window.innerWidth, window.innerHeight);
 };
 
-watch(paneWidth, resize);
-
 onMounted(() => {
-    const $viewPort = timedEventsViewport.value;
-    if (!$viewPort) throw new Error("timedEventsViewport not found");
-
     if (clickOutsideCatcher.value) {
         window.addEventListener('wheel', (e) => {
             if (e.target === clickOutsideCatcher.value) {
@@ -271,8 +255,11 @@ onMounted(() => {
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
     autosaveTimeout.value = setInterval(autosaveCall, 1000);
 
+    mainInteraction.addEventListener(window, 'keydown', keyDownListener);
+    mainInteraction.addEventListener(window, 'keyup', keyUpListener);
 
-    resize();
+    const $viewPort = viewport.value;
+    if (!$viewPort?.addEventListener) throw new Error("viewport not found");
 
     mainInteraction.addEventListener($viewPort, 'mousedown', mouseDownListener);
     mainInteraction.addEventListener($viewPort, 'mousemove', mouseMoveListener);
@@ -280,59 +267,37 @@ onMounted(() => {
 
     window.addEventListener('mouseup', mouseUpListener);
 
-    mainInteraction.addEventListener(window, 'keydown', keyDownListener);
-    mainInteraction.addEventListener(window, 'keyup', keyUpListener);
-    mainInteraction.addEventListener(window, 'resize', resize);
-
-    console.log("Environment:", process.env.NODE_ENV);
+    window.addEventListener('resize', resize);
+    resize();
 
 })
 onBeforeUnmount(() => {
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
     libraryStore.clear();
-});
-
-onUnmounted(() => {
-
-    const $viewPort = timedEventsViewport.value;
-    if (!$viewPort) throw new Error("timedEventsViewport not found");
 
     window.removeEventListener('mouseup', mouseUpListener);
     mainInteraction.removeAllEventListeners();
 });
 
+onUnmounted(() => {
+});
+
+const viewportSize = computed(() => {
+    return {
+        width: view.viewWidthPx - paneWidth.value,
+        height: view.viewHeightPx - 50,
+    }
+});
 
 </script>
 <template>
     <div>
         <Pianito v-if="tool.showReferenceKeyboard" />
-        <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
-            <g id="grid">
-                <TimeGrid />
-                <ToneGrid />
-            </g>
-            <g id="tone-relations">
-                <ToneRelation />
-            </g>
-            <g id="groups-container">
-                <g v-for="group in project.groups" :key="group.id">
-                    <GroupElement :group="group" />
-                </g>
-            </g>
-            <g id="note-would-be-created">
-                <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
-                    interactionDisabled />
-            </g>
-            <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
-                stroke-width="1" />
-            <g id="edit-notes">
-                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect" />
-            </g>
-            <g id="notes-being-created">
-                <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
-            </g>
-            <RangeSelection />
-        </svg>
+        <div ref="viewport"
+            :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }"
+        >
+            <SvgScoreViewport :width="viewportSize.width" :height="viewportSize.height" />
+        </div>
         <TimeScrollBar />
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}
@@ -365,43 +330,6 @@ onUnmounted(() => {
 .unclickable {
     pointer-events: none;
 
-}
-
-
-svg#viewport.cursor-note-length {
-    cursor: col-resize;
-    cursor: ew-resize;
-}
-
-svg #playbar {
-    stroke: rgb(95, 0, 0);
-}
-
-svg#viewport.cursor-draw {
-    cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
-}
-
-svg#viewport.cursor-move {
-    cursor: move;
-}
-
-svg#viewport.cursor-grab {
-    cursor: grab;
-}
-
-svg#viewport.cursor-grabbing {
-    cursor: grabbing;
-}
-
-svg#viewport {
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: 1px solid rgb(230, 223, 215);
-}
-
-g#notes-being-created rect.body {
-    fill: transparent;
 }
 </style>
 

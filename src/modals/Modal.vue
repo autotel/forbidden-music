@@ -9,7 +9,7 @@ const props = defineProps<{
     closeButton?: string | boolean
 }>()
 
-const monoModeInteraction = ref(useMonoModeInteraction().createInteractionModal(props.name))
+const monoModeInteraction = ref(useMonoModeInteraction().getInteractionModal(props.name))
 
 const close = (e: Event) => {
     console.log('close')

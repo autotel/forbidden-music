@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { useToolStore } from '../store/toolStore';
-import { NoteRect, useViewStore } from '../store/viewStore';
+import { useToolStore } from '../../store/toolStore';
+import { NoteRect, useViewStore } from '../../store/viewStore';
 
 
 const view = useViewStore();
