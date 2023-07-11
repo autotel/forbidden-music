@@ -2,12 +2,13 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { Tool } from '../dataTypes/Tool';
 import { useProjectStore } from './projectStore';
-import { OctaveRange, RangeA, RangeD, SelectableRange, TimeRange, useSelectStore } from './selectStore';
+import { OctaveRange, TimeRange } from '../dataTypes/TimelineItem';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { useThrottleFn } from '@vueuse/core';
 import { EditNote } from '../dataTypes/EditNote';
 import { Group } from '../dataTypes/Group';
+import { SelectableRange, useSelectStore } from './selectStore';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 

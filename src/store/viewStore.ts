@@ -6,6 +6,7 @@ import { frequencyToOctave } from "../functions/toneConverters.js";
 import { Note } from "../dataTypes/Note.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { getNotesInRange } from "../functions/getNotesInRange.js";
+import { TimelineItem, TimelineSelectableItem } from "../dataTypes/TimelineItem.js";
 
 export interface NoteRect {
     event: EditNote;
@@ -27,7 +28,7 @@ export interface NoteRect {
     };
 }
 
-const probe = (v:any) => {
+const probe = (v: any) => {
     console.log(v);
     return v;
 }
@@ -59,7 +60,7 @@ export const useViewStore = defineStore("view", () => {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
-            octaveEnd:-octaveOffset.value + viewHeightOctaves.value,
+            octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
         });
     });
 
@@ -100,6 +101,63 @@ export const useViewStore = defineStore("view", () => {
         }
         return rect;
     };
+
+    const castIfDefined = (castFn = (v: number) => v, v: number | undefined, otherwise: null | number = null) => {
+        return v === undefined ? otherwise : castFn(v);
+    }
+    const deleteNullVals = (obj: any) => {
+        Object.keys(obj).forEach(key => obj[key] === null && delete obj[key]);
+        return obj;
+    }
+
+    const pxRangeOf = (range: {
+        time?: number,
+        octave?: number,
+        timeEnd?: number,
+        octaveEnd?: number,
+    }): { x: number, y: number, x2: number, y2: number } => {
+        const xf = [castIfDefined(timeToPxWithOffset, range.time), castIfDefined(timeToPxWithOffset, range.timeEnd)].sort();
+        const yf = [castIfDefined(octaveToPxWithOffset, range.octave), castIfDefined(octaveToPxWithOffset, range.octaveEnd)].sort();
+        return deleteNullVals({
+            x: xf[0],
+            y: yf[0],
+            x2: xf[1],
+            y2: yf[1],
+        })
+    }
+
+    const pxRectOf = (range: {
+        time?: number,
+        octave?: number,
+        timeEnd?: number,
+        octaveEnd?: number,
+    }): { x: number, y: number, width: number, height: number } => {
+        const pxRange = pxRangeOf(range);
+        return {
+            x: pxRange.x,
+            y: pxRange.y,
+            width: pxRange.x2 - pxRange.x,
+            height: pxRange.y2 - pxRange.y,
+        }
+    }
+
+    const everyNoteRectAtCoordinates = (x: number, y: number): NoteRect[] => {
+        const items: NoteRect[] = [];
+        const noteRects = visibleNoteRects.value;
+        for (let i = 0; i < noteRects.length; i++) {
+            const noteRect = noteRects[i];
+            const effxWidth = noteRect.width || noteRect.radius * 2;
+            if (
+                noteRect.x <= x && 
+                noteRect.x + effxWidth >= x && 
+                noteRect.y <= y && 
+                noteRect.y + noteRect.height >= y
+            ) {
+                items.push(noteRect);
+            }
+        }
+        return items;
+    }
 
     const forceRefreshVisibleNotes = () => {
         visibleNotesRefreshKey.value++;
@@ -185,9 +243,7 @@ export const useViewStore = defineStore("view", () => {
     return {
         setTimeOffset,
         setTimeOffsetBounds,
-        pxToBounds,
-        timeToBounds,
-        boundsToTime,
+        
         pxToTime,
         timeToPx,
         timeToPxWithOffset,
@@ -199,10 +255,19 @@ export const useViewStore = defineStore("view", () => {
         frequencyToPxWithOffset,
         velocityToPx,
         pxToVelocity,
-        isOctaveInView,
         velocityToPxWithOffset,
         pxToVelocityWithOffset,
-
+        
+        pxToBounds,
+        boundsToTime,
+        timeToBounds,
+        
+        pxRangeOf,
+        pxRectOf,
+        rectOfNote,
+        
+        isOctaveInView,
+        
         updateSize,
         forceRefreshVisibleNotes,
 
@@ -219,7 +284,7 @@ export const useViewStore = defineStore("view", () => {
         visibleNotes,
 
         visibleNoteRects,
-        rectOfNote,
+        everyNoteRectAtCoordinates,
 
         followPlayback,
     };

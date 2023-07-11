@@ -168,10 +168,17 @@ export class FourierSynth implements SynthInstance {
         this.disable = () => { }
 
         this.periodicWaveRef = {
-            value: audioContext.createPeriodicWave(
-                new Float32Array(this.periodicWaveContents[0]),
-                new Float32Array(this.periodicWaveContents[1])
-            )
+            value: null
+        }
+        try {
+            this.periodicWaveRef = {
+                value: audioContext.createPeriodicWave(
+                    new Float32Array(this.periodicWaveContents[0]),
+                    new Float32Array(this.periodicWaveContents[1])
+                )
+            }
+        } catch (e) {
+            console.warn("error creating periodic wave", e);
         }
 
 

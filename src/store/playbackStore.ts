@@ -184,13 +184,15 @@ export const usePlaybackStore = defineStore("playback", () => {
     //@ts-ignore
     const currentMidiInput = ref<MIDIInput | null>(null);
 
-    getMidiInputsArray().then((inputs) => {
-        if (!inputs) throw new Error("Midi inputs suceeded with null value");
-        midiInputs.value = inputs;
-        currentMidiInput.value = midiInputs.value[midiInputs.value.length - 1];
-    }).catch((e) => {
-        console.error("Could not access midi inputs", e);
-    });
+    if(!isTauri()){
+        getMidiInputsArray().then((inputs) => {
+            if (!inputs) throw new Error("Midi inputs suceeded with null value");
+            midiInputs.value = inputs;
+            currentMidiInput.value = midiInputs.value[midiInputs.value.length - 1];
+        }).catch((e) => {
+            console.error("Could not access midi inputs", e);
+        });
+    }
 
     const onmidimessage = (event: { data: Uint8Array[], timeStamp: number }) => {
         if ('data' in event) {

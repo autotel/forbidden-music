@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch, watchEffect } from 'vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
-import SvgScoreViewport from './components/SvgScoreViewport/SvgScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import Transport from './components/Transport.vue';
@@ -24,6 +23,8 @@ import { useTauriMidiInputStore } from './store/tauriMidiInputStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
+
+import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -125,7 +126,6 @@ const keyDownListener = (e: KeyboardEvent) => {
         return;
     }
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
-    console.log(keyAction);
     switch (keyAction) {
         case KeyActions.Delete: {
             project.score = project.score.filter(note => !note.selected)
@@ -236,9 +236,6 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
 }
 
-const resize = () => {
-    view.updateSize(window.innerWidth, window.innerHeight);
-};
 
 onMounted(() => {
     if (clickOutsideCatcher.value) {
@@ -267,10 +264,9 @@ onMounted(() => {
     if (!$viewPort?.addEventListener) throw new Error("viewport not found");
 
     mainInteraction.addEventListener($viewPort, 'mousedown', mouseDownListener);
+    mainInteraction.addEventListener(window, 'mouseup', mouseUpListener);
     mainInteraction.addEventListener($viewPort, 'mousemove', mouseMoveListener);
     mainInteraction.addEventListener($viewPort, 'wheel', mouseWheelListener);
-
-    window.addEventListener('mouseup', mouseUpListener);
 
     window.addEventListener('resize', resize);
     resize();
@@ -284,16 +280,19 @@ onBeforeUnmount(() => {
     mainInteraction.removeAllEventListeners();
 });
 
-onUnmounted(() => {
-});
+const resize = () => {
+    viewportSize.value = {
+        width: window.innerWidth - paneWidth.value,
+        height: window.innerHeight - 50,
+    };
+    view.updateSize(viewportSize.value.width, viewportSize.value.height);
+};
 
-const viewportSize = computed(() => {
-    return {
-        width: view.viewWidthPx - paneWidth.value,
-        height: view.viewHeightPx - 50,
-    }
-});
+const viewportSize = ref({width:0, height:0});
 
+watch(paneWidth, () => {
+    resize();
+})
 </script>
 <template>
     <div>
@@ -301,7 +300,7 @@ const viewportSize = computed(() => {
         <div ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }"
         >
-            <SvgScoreViewport :width="viewportSize.width" :height="viewportSize.height" />
+            <ScoreViewport :width="viewportSize.width" :height="viewportSize.height" />
         </div>
         <TimeScrollBar />
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">

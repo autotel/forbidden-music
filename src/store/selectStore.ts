@@ -1,36 +1,16 @@
-import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
-import { useProjectStore } from './projectStore';
 import { throttledWatch } from '@vueuse/core';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { EditNote } from '../dataTypes/EditNote';
 import { Group } from '../dataTypes/Group';
-import { TimelineItem } from '../dataTypes/TimelineItem';
-import { useToolStore } from './toolStore';
-import { Tool } from '../dataTypes/Tool';
-import { useViewStore } from './viewStore';
+import { TimeRange, TimeRangeOctaveRange, TimeRangeOctaveRangeVelocityRange, TimeRangeVelocityRange, TimelineSelectableItem } from '../dataTypes/TimelineItem';
 import { getNotesInRange } from '../functions/getNotesInRange';
-
-export interface TimeRange {
-    time: number,
-    timeEnd: number,
-}
-
-export interface OctaveRange {
-    octave: number,
-    octaveEnd: number,
-}
-
-export interface VelocityRange {
-    velocity: number,
-    velocityEnd: number,
-}
-
-export interface RangeA extends TimeRange, OctaveRange {}
-export interface RangeC extends TimeRange, VelocityRange {}
-export interface RangeD extends TimeRange, OctaveRange, VelocityRange {}
+import { useProjectStore } from './projectStore';
+import { useToolStore } from './toolStore';
+import { useViewStore } from './viewStore';
 
 
-export type SelectableRange = TimeRange | RangeA | RangeC | RangeD;
+export type SelectableRange = TimeRange | TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange;
 
 
 const getGroupsInRange = (
@@ -58,13 +38,13 @@ const getGroupsInRange = (
 
 
 export const useSelectStore = defineStore("select", () => {
-    const selected = ref(new Set() as Set<TimelineItem>);
+    const selected = ref(new Set() as Set<TimelineSelectableItem>);
     const tool = useToolStore();
     const project = useProjectStore();
     const view = useViewStore();
 
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
-    const isSelected = (item: TimelineItem) => {
+    const isSelected = (item: TimelineSelectableItem) => {
         return selected.value.has(item);
     };
     const refreshNoteSelectionState = () => {
@@ -81,7 +61,7 @@ export const useSelectStore = defineStore("select", () => {
         return [...selected.value].filter((n) => n instanceof Group) as Group[];
     };
 
-    const select = (...items: TimelineItem[]) => {
+    const select = (...items: TimelineSelectableItem[]) => {
         selected.value.clear();
         selected.value = new Set(items);
         refreshNoteSelectionState();

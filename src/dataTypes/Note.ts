@@ -2,7 +2,7 @@ import {
   frequencyToOctave,
   octaveToFrequency,
 } from "../functions/toneConverters";
-import { TimeRangeOctaveSelectable } from "./TimelineItem";
+import { SelectableType, TimeRangeOctaveSelectable } from "./TimelineItem";
 
 
 export interface NoteDefa {
@@ -23,6 +23,7 @@ export interface NoteDefb {
 export const frequencyConstant = 11;
 
 export class Note implements TimeRangeOctaveSelectable{
+  type = SelectableType.Note;
   /** time in score time */
   time: number;
   /** duration in score time */

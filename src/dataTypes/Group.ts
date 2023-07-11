@@ -1,5 +1,5 @@
 
-import { TimelineItem, TimeRangeOctaveRangeSelectable } from "./TimelineItem";
+import { TimelineSelectableItem, TimeRangeOctaveRangeSelectable } from "./TimelineItem";
 
 export class Group implements TimeRangeOctaveRangeSelectable {
     name: string;
@@ -12,7 +12,7 @@ export class Group implements TimeRangeOctaveRangeSelectable {
     octave: number;
     octaveEnd: number;
 
-    constructor(name?: string, id?: number, position?: TimelineItem) {
+    constructor(name?: string, id?: number, position?: TimelineSelectableItem) {
         this.name = name || "unnamed group";
         this.id = id || 0;
         this.selected = false;
