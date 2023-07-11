@@ -60,7 +60,7 @@ onMounted(() => {
     }
 
     fEl.value.className = `${vClass} ${hClass} floating-text-box`;
-    mEl.value.style.opacity = "0.8";
+    mEl.value.style.opacity = "0.9";
 
 });
 
@@ -86,7 +86,7 @@ onUnmounted(() => {
 </template>
 <style>
 .container {
-    position: relative;
+    position: fixed;
     z-index: 4;
     width: 0;
     height: 0;

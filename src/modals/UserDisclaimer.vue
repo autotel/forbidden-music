@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Modal from '../modals/Modal.vue';
-import {userShownDisclaimerLocalStorageKey, disclaimer} from '../userDisclaimer'
+import {userShownDisclaimerLocalStorageKey, disclaimer} from '../texts/userDisclaimer'
 const disclaimerShown = ref(localStorage.getItem(userShownDisclaimerLocalStorageKey) === 'true')
 
 const disclaimerOkButtonPressed = () => {

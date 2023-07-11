@@ -3,7 +3,7 @@ import Button from '../components/Button.vue';
 import Magnet from "../components/icons/Magnet.vue";
 import Pen from "../components/icons/Pen.vue";
 import { SnapType, useSnapStore } from '../store/snapStore';
-import EdgeHidableWidget from './EdgeHidableWidget.vue';
+import Collapsible from './Collapsible.vue';
 
 import { useMonoModeInteraction } from '../store/monoModeInteraction';
 const snap = useSnapStore();
@@ -17,11 +17,11 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
 </script>
 
 <template>
-  <EdgeHidableWidget style="" pulltip="open snaps">
+  <Collapsible pulltip="open snaps">
     <template v-slot:icon>
       <Magnet/>
+      Constraints
     </template>
-    <h2>Snap control</h2>
     <Button v-for="(isnap, snapName) in snap.values" :onClick="() => isnap.active = !isnap.active" :class="{
       active: isnap.active,
       time: isnap.type === SnapType.Time,
@@ -43,7 +43,7 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
       :class="{active: snap.onlyWithSimultaneousNotes}" :tooltip="snap.onlyWithSimultaneousNotes ? 'only with notes which overap in time' : 'all notes'">
       Simultaneous
     </Button>
-  </EdgeHidableWidget>
+  </Collapsible>
 </template>
 
 <style scoped>

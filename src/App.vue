@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import GroupElement from './components/GroupElement.vue';
 import TimeGrid from './components/MusicTimeGrid.vue';
 import NoteElement from './components/NoteElement.vue';
@@ -9,25 +9,26 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToneGrid from './components/ToneGrid.vue';
 import ToneRelation from './components/ToneRelation.vue';
 import ToolSelector from './components/ToolSelector.vue';
+import AnglesLeft from './components/icons/AnglesLeft.vue';
+import AnglesRight from './components/icons/AnglesRight.vue';
 import Transport from './components/Transport.vue';
 import { Tool } from './dataTypes/Tool';
 import { ifDev } from './functions/isDev';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
-import LibraryManager from './modals/LibraryManager.vue';
-import MidiInputConfig from './modals/MidiInputConfig.vue';
 import Modal from './modals/Modal.vue';
-import SnapSelector from './modals/SnapSelector.vue';
-import SynthEdit from './modals/SynthEdit.vue';
+import UserDisclaimer from './modals/UserDisclaimer.vue';
+import Pane from './pane/Pane.vue';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
+import { useTauriMidiInputStore } from './store/tauriMidiInputStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-import UserDisclaimer from './components/UserDisclaimer.vue';
+import Button from './components/Button.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -43,6 +44,8 @@ const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.createInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
+const tauriMidiInput = useTauriMidiInputStore();
+const paneWidth = ref(0);
 
 provide('modalText', modalText);
 
@@ -237,13 +240,13 @@ const resize = () => {
     const $viewPort = timedEventsViewport.value;
     if (!$viewPort) throw new Error("timedEventsViewport not found");
 
-    $viewPort.style.width = window.innerWidth - 35 + "px";
+    $viewPort.style.width = window.innerWidth - paneWidth.value + "px";
     $viewPort.style.height = window.innerHeight - 50 + "px";
 
     view.updateSize(window.innerWidth, window.innerHeight);
-
 };
 
+watch(paneWidth, resize);
 
 onMounted(() => {
     const $viewPort = timedEventsViewport.value;
@@ -334,18 +337,20 @@ onUnmounted(() => {
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}
         </div>
+        <div style="position:absolute; right:0px; top:30px">
+            <Pane :paneWidth="paneWidth" />
+            <Button :onClick="() => paneWidth = paneWidth ? 0 : 300" style="position:absolute"
+                :style="{ right: paneWidth + 'px' }">
 
+                <AnglesRight v-if="paneWidth" />
+                <AnglesLeft v-else />
+            </Button>
+        </div>
         <div style="position: fixed; bottom:0; right: 0;">
             <ToolSelector />
         </div>
         <div style="position: fixed; bottom: 0;">
             <Transport />
-        </div>
-        <div class="drawers-container">
-            <LibraryManager />
-            <SynthEdit />
-            <SnapSelector />
-            <MidiInputConfig v-if="playback.midiInputs.length" />
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
@@ -357,19 +362,6 @@ onUnmounted(() => {
     <UserDisclaimer />
 </template>
 <style scoped>
-.drawers-container {
-    /* position: fixed; */
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    display: inline-block;
-    /*display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: auto; */
-}
-
 .unclickable {
     pointer-events: none;
 

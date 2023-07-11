@@ -3,7 +3,7 @@ import { inject, onUnmounted, reactive, Ref, ref, watch } from "vue";
 import { usePlaybackStore } from "../store/playbackStore";
 import { ParamType } from "../synth/SynthInterface";
 import Button from "../components/Button.vue";
-import EdgeHidableWidget from "./EdgeHidableWidget.vue";
+import Collapsible from "./Collapsible.vue";
 import PropOption from "../components/paramEditors/PropOption.vue";
 import PropSlider from '../components/paramEditors/PropSlider.vue';
 import HeartPulse from "../components/icons/HeartPulse.vue";
@@ -43,12 +43,12 @@ onUnmounted(() => {
 
 </script>
 <template>
-    <EdgeHidableWidget id="synthParamsWindow">
+    <Collapsible id="synthParamsWindow">
         <template #icon>
             <HeartPulse />
+            synth params
         </template>
-        <h2>synth params</h2>
-        <div style="height:4em">
+        <div>
             <div v-if="audioReady">
                 <template v-for="param in playback.synthParams">
                     <PropOption v-if="param.type === ParamType.option" :param="param" />
@@ -64,5 +64,5 @@ onUnmounted(() => {
             </div>
             <Button v-if="playback.synth?.credits" :on-click="showCurrentSynthCredits">Credits</Button>
         </div>
-    </EdgeHidableWidget>
+    </Collapsible>
 </template>

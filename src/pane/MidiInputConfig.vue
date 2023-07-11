@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import EdgeHidableWidget from './EdgeHidableWidget.vue';
+import Collapsible from './Collapsible.vue';
 
 import { usePlaybackStore } from '../store/playbackStore';
 import Link from "../components/icons/Link.vue";
@@ -9,11 +9,11 @@ const playback = usePlaybackStore();
 </script>
 
 <template>
-  <EdgeHidableWidget style="" pulltip="open snaps">
+  <Collapsible pulltip="open snaps">
     <template v-slot:icon>
       <Link />
+      Midi Sync
     </template>
-    <h2>Midi Sync</h2>
     <div>
       <select v-model="playback.currentMidiInput">
         <option :value="null">none</option>
@@ -24,7 +24,7 @@ const playback = usePlaybackStore();
         <option v-for="(mode, k) in playback.midiConectionModes" :value="mode">{{ mode.name }}</option>
       </select>
     </div>
-  </EdgeHidableWidget>
+  </Collapsible>
 </template>
 
 <style scoped>

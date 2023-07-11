@@ -12,7 +12,7 @@ import { KeyActions, getActionForKeys, getKeyCombinationString } from "../keyBin
 import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { useProjectStore } from "../store/projectStore";
-import EdgeHidableWidget from "./EdgeHidableWidget.vue";
+import Collapsible from "./Collapsible.vue";
 import { ref } from "vue";
 
 const monoModeInteraction = useMonoModeInteraction();
@@ -151,11 +151,11 @@ const download = () => {
 
 </script>
 <template>
-    <EdgeHidableWidget pulltip="save and load" title="file">
+    <Collapsible pulltip="save and load" title="file">
         <template #icon>
             <Folder />
+            Working memory
         </template>
-        <h2>Working memory</h2>
         <input type="text" v-model="project.name" @keydown="e => e.stopPropagation()" />
         <p v-if="libraryStore.errorMessage">{{ libraryStore.errorMessage }}</p>
         <template v-for="filename in libraryStore.filenamesList" :key="filename">
@@ -210,7 +210,7 @@ const download = () => {
             <FileOpen />
         </Button>
 
-    </EdgeHidableWidget>
+    </Collapsible>
 </template>
 
     

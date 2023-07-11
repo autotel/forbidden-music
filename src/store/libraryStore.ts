@@ -5,7 +5,7 @@ import { Note, NoteDefb } from '../dataTypes/Note';
 import { SynthParamStored } from '../synth/SynthInterface';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
-import {userShownDisclaimerLocalStorageKey} from '../userDisclaimer';
+import {userShownDisclaimerLocalStorageKey} from '../texts/userDisclaimer';
 
 const version = "0.1.0";
 

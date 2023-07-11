@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { clear } from 'console';
-import { ref } from 'vue';
+import { ref, useSlots } from 'vue';
 import Tooltip from './Tooltip.vue';
-import { useSlots } from 'vue'
 const slots = useSlots()
 
 const props = defineProps<{
