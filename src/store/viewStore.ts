@@ -147,17 +147,27 @@ export const useViewStore = defineStore("view", () => {
         }
     }
 
-    const everyNoteRectAtCoordinates = (x: number, y: number): NoteRect[] => {
+    const everyNoteRectAtCoordinates = (x: number, y: number, considerVeloLines: boolean): NoteRect[] => {
         const items: NoteRect[] = [];
         const noteRects = visibleNoteRects.value;
         for (let i = 0; i < noteRects.length; i++) {
             const noteRect = noteRects[i];
             const effxWidth = noteRect.width || noteRect.radius * 2;
+            const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
             if (
-                noteRect.x <= x &&
-                noteRect.x + effxWidth >= x &&
-                noteRect.y <= y &&
-                noteRect.y + noteRect.height >= y
+                (
+                    noteRect.x <= x &&
+                    noteRect.x + effxWidth >= x &&
+                    noteRect.y <= y &&
+                    noteRect.y + noteRect.height >= y
+                ) || (
+                    considerVeloLines &&
+                    noteRect.x - 7 <= x &&
+                    noteRect.x + 7 >= x &&
+                    veloPy - 7 <= y &&
+                    veloPy + 7 >= y
+                )
+
             ) {
                 items.push(noteRect);
             }

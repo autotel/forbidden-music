@@ -18,13 +18,14 @@ const playback = usePlaybackStore();
 const view = useViewStore();
 const canvasContainer = ref<HTMLDivElement>();
 const mainInteraction = useMonoModeInteraction().getInteractionModal("default");
-const gridsStore= useGridsStore();
+const gridsStore = useGridsStore();
 const selection = useSelectStore();
 const rightEdgeWidth = 10;
 
 const pixiApp = new PIXI.Application({
     background: '#fff',
     resizeTo: window,
+    antialias: true,
 });
 
 
@@ -36,7 +37,7 @@ const props = defineProps<{
 let noteBeingRightEdgeHovered: EditNote | null = null;
 
 const mouseMoveListener = (e: MouseEvent) => {
-    const stuffAtCoordinates = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY);
+    const stuffAtCoordinates = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current===Tool.Modulation);
     const firstThing = stuffAtCoordinates[0];
     // couold be a bit more elegant
     if (firstThing) {
@@ -112,20 +113,19 @@ const refreshView = () => {
     const playbackPxPosition = playback.playbarPxPosition;
     graphics.clear();
     // draw playbar
-    graphics.lineStyle(1, 0x000000, 1);
 
     const path = [
         playbackPxPosition, 0,
         playbackPxPosition, props.height
     ];
 
-    graphics.lineStyle(1, 0x000000, 0.5);
+    graphics.lineStyle(3, 0x000000, 1);
     graphics.drawPolygon(path);
     graphics.endFill();
 
     // could redraw lines only on view change, perhaps on an overlayed canvas
-    // draw lines
-    graphics.lineStyle(1, 0x000000, 0.2);
+    // draw grid lines
+    graphics.lineStyle(1, 0xCCCCCC, 1);
     const { linePositionsPx, linePositionsPy } = gridsStore;
     for (const linePositionPx of linePositionsPx) {
         graphics.moveTo(linePositionPx, 0);
@@ -135,13 +135,14 @@ const refreshView = () => {
         graphics.moveTo(0, linePositionPy);
         graphics.lineTo(props.width, linePositionPy);
     }
+    // draw notes & velolines if 
 
-
+    graphics.lineStyle(1, 0xAAAAAA, 0.5);
     for (const note of visibleNotes) {
         if (note.event.selected) {
-            graphics.beginFill(0x000000, 0.4);
+            graphics.beginFill(0xFCCCCC, 1);
         } else {
-            graphics.beginFill(0x000000, 0.1);
+            graphics.beginFill(0xDDDDDD, 1);
         }
         if (note.width) {
             // ctx.fillRect(note.x, note.y, note.width, note.height);
@@ -150,21 +151,21 @@ const refreshView = () => {
             // ctx.arc(note.cx, note.cy, note.radius, 0, 2 * Math.PI);
             graphics.drawCircle(note.cx, note.cy, note.radius);
         }
-        if(tool.current===Tool.Modulation){
+        if (tool.current === Tool.Modulation) {
             const veloLinePositionY = view.velocityToPxWithOffset(note.event.velocity);
-            graphics.lineStyle(1, 0x000000, 0.5);
+            graphics.lineStyle(2, 0x000000, 2);
             graphics.moveTo(note.x, veloLinePositionY + 7);
             graphics.lineTo(note.x, view.viewHeightPx);
             graphics.drawCircle(note.cx, veloLinePositionY, note.radius);
-
         }
+        graphics.endFill();
     }
-    graphics.endFill();
 
     if (tool.selectRange.active) {
         const selRange = view.pxRectOf(tool.selectRange);
         // ctx.fillRect(selRange.x, selRange.y, selRange.width, selRange.height);
         graphics.beginFill(0x000044, 0.5);
+        graphics.lineStyle(1, 0xDDDDDD, 0.1);
         graphics.drawRect(selRange.x, selRange.y, selRange.width, selRange.height);
         graphics.endFill();
     }
