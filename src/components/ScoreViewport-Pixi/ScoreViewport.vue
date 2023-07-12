@@ -11,6 +11,8 @@ import { EditNote } from '../../dataTypes/EditNote';
 import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { useGridsStore } from '../../store/gridsStore';
 import { useSelectStore } from '../../store/selectStore';
+import { useSnapStore } from '../../store/snapStore';
+import { text } from 'stream/consumers';
 
 const project = useProjectStore();
 const tool = useToolStore();
@@ -21,6 +23,7 @@ const mainInteraction = useMonoModeInteraction().getInteractionModal("default");
 const gridsStore = useGridsStore();
 const selection = useSelectStore();
 const rightEdgeWidth = 10;
+const snap = useSnapStore();
 
 const pixiApp = new PIXI.Application({
     background: '#fff',
@@ -37,7 +40,7 @@ const props = defineProps<{
 let noteBeingRightEdgeHovered: EditNote | null = null;
 
 const mouseMoveListener = (e: MouseEvent) => {
-    const stuffAtCoordinates = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current===Tool.Modulation);
+    const stuffAtCoordinates = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current === Tool.Modulation);
     const firstThing = stuffAtCoordinates[0];
     // couold be a bit more elegant
     if (firstThing) {
@@ -99,6 +102,8 @@ onBeforeUnmount(() => {
     stop();
 });
 
+const texts: PIXI.Text[]= [];
+
 const refreshView = () => {
 
     const visibleNotes = [
@@ -125,7 +130,7 @@ const refreshView = () => {
 
     // could redraw lines only on view change, perhaps on an overlayed canvas
     // draw grid lines
-    graphics.lineStyle(1, 0xCCCCCC, 1);
+    graphics.lineStyle(1, 0xCCCCCC, 0.5);
     const { linePositionsPx, linePositionsPy } = gridsStore;
     for (const linePositionPx of linePositionsPx) {
         graphics.moveTo(linePositionPx, 0);
@@ -135,12 +140,61 @@ const refreshView = () => {
         graphics.moveTo(0, linePositionPy);
         graphics.lineTo(props.width, linePositionPy);
     }
-    // draw notes & velolines if 
 
+
+    // snap explanations
+    let textToUse = 0;
+    const snapFocusedNoteRect = snap.focusedNote ? view.rectOfNote(
+        snap.focusedNote
+    ) : null;
+    if (snapFocusedNoteRect) {
+        graphics.lineStyle(1, 0xCCCCCC, 0.5);
+        textToUse = 0;
+        for (const snapExplanation of snap.toneSnapExplanation) {
+            const relatedNoteRect = snapExplanation.relatedNote ? view.rectOfNote(
+                snapExplanation.relatedNote
+            ) : null;
+            if (relatedNoteRect) {
+                graphics.moveTo(snapFocusedNoteRect.cx, snapFocusedNoteRect.cy);
+                graphics.lineTo(relatedNoteRect.cx, relatedNoteRect.cy);
+                graphics.beginFill(0x000000, 1);
+                graphics.drawCircle(relatedNoteRect.cx, relatedNoteRect.cy, 3);
+                graphics.endFill();
+                graphics.beginFill(0x000000, 1);
+                let text = null;
+                if(!texts[textToUse]){
+                    texts[textToUse] = new PIXI.Text('',{
+                        fontSize: 18,
+                        fill: 0x000000,
+                    });
+                    pixiApp.stage.addChild(texts[textToUse]);
+                    text = texts[textToUse];
+                    textToUse++;
+                }else{
+                    text = texts[textToUse];
+                    textToUse++;
+                }
+                if(!text) throw new Error("failed to instantiate text");
+                text.text = snapExplanation.text;
+                text.x = relatedNoteRect.cx + 5;
+                text.y = relatedNoteRect.cy + 5;
+            }
+        }
+        // hide all the unused texts
+        for(let i = textToUse; i < texts.length; i++){
+            texts[i].text = "";
+        }
+
+    }
+
+
+
+
+    // draw notes & velolines if 
     graphics.lineStyle(1, 0xAAAAAA, 0.5);
     for (const note of visibleNotes) {
         if (note.event.selected) {
-            graphics.beginFill(0xFCCCCC, 1);
+            graphics.beginFill(0xFCCCCC, 0.6);
         } else {
             graphics.beginFill(0xDDDDDD, 1);
         }
