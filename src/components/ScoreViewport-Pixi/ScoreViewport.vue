@@ -139,9 +139,9 @@ const refreshView = () => {
 
     for (const note of visibleNotes) {
         if (note.event.selected) {
-            graphics.beginFill(0x000000, 0.8);
+            graphics.beginFill(0x000000, 0.4);
         } else {
-            graphics.beginFill(0x000000, 0.5);
+            graphics.beginFill(0x000000, 0.1);
         }
         if (note.width) {
             // ctx.fillRect(note.x, note.y, note.width, note.height);
@@ -149,6 +149,14 @@ const refreshView = () => {
         } else {
             // ctx.arc(note.cx, note.cy, note.radius, 0, 2 * Math.PI);
             graphics.drawCircle(note.cx, note.cy, note.radius);
+        }
+        if(tool.current===Tool.Modulation){
+            const veloLinePositionY = view.velocityToPxWithOffset(note.event.velocity);
+            graphics.lineStyle(1, 0x000000, 0.5);
+            graphics.moveTo(note.x, veloLinePositionY + 7);
+            graphics.lineTo(note.x, view.viewHeightPx);
+            graphics.drawCircle(note.cx, veloLinePositionY, note.radius);
+
         }
     }
     graphics.endFill();
