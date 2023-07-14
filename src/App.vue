@@ -64,8 +64,15 @@ const mouseWheelListener = (e: WheelEvent) => {
         octave: -view.pxToOctaveWithOffset(e.clientY),
     }
 
-    view.viewWidthTime **= 1 + e.deltaY / 1000;
-    view.viewHeightOctaves **= 1 + e.deltaY / 1000;
+
+    const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
+    const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
+
+    if(wouldViewWidthTime < 400 && wouldViewHeightOctaves > 0.1){
+        view.viewWidthTime = wouldViewWidthTime;
+        view.viewHeightOctaves = wouldViewHeightOctaves;
+    }
+
 
     const viewMousePositionAfter = {
         time: view.pxToTimeWithOffset(e.clientX),
@@ -75,9 +82,10 @@ const mouseWheelListener = (e: WheelEvent) => {
     view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
     view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
 
-    if (view.viewWidthTime < 0.1) {
-        view.viewWidthTime = 0.1;
+    if(view.timeOffset<0){
+        view.timeOffset = 0;
     }
+
 }
 
 const mouseMoveListener = (e: MouseEvent) => {

@@ -21,16 +21,20 @@ export const useGridsStore = defineStore('grids', () => {
         linePositionsPx.value = [];
         linePositionsPy.value = [];
         lineLabels.value = [];
+        let prevX = 0;
         for (let i = 0; i < view.viewWidthTime + 1; i++) {
             const px = view.timeToPx(i - view.timeOffset % 1);
             linePositionsPx.value.push(
                 px
             );
-            lineLabels.value.push({
-                text: `${Math.floor(i + view.timeOffset)}`,
-                x: px,
-                y: null,
-            });
+            if(prevX ===0 || px - prevX > 40) {
+                lineLabels.value.push({
+                    text: `${Math.floor(i + view.timeOffset)}`,
+                    x: px,
+                    y: null,
+                });
+                prevX = px;
+            }
         }
         
         if (snap.values['customFrequencyTable']?.active) {

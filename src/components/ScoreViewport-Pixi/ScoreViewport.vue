@@ -142,7 +142,6 @@ let textToUse = 0;
 const getText = (): PIXI.Text => {
     let retValue = null;
     if (!texts[textToUse]) {
-        console.log("creating text"+textToUse);
         texts[textToUse] = new PIXI.Text();
         pixiApp.stage.addChild(texts[textToUse]);
     }
@@ -293,8 +292,8 @@ const refreshView = (time: number) => {
     if (tool.selectRange.active) {
         const selRange = view.pxRectOf(tool.selectRange);
         // ctx.fillRect(selRange.x, selRange.y, selRange.width, selRange.height);
-        graphics.beginFill(0x000044, 0.5);
-        graphics.lineStyle(1, 0xDDDDDD, 0.1);
+        graphics.beginFill(0xffffff, 0.1);
+        graphics.lineStyle(1, 0x555555, 1);
         graphics.drawRect(selRange.x, selRange.y, selRange.width, selRange.height);
         graphics.endFill();
     }
