@@ -20,8 +20,11 @@ struct MidiMessage {
 
 #[tauri::command]
 fn greet(name: &str) -> String {
+    println!("Hello, {}!", name);
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+
+
 
 #[tauri::command]
 fn list_midi_connections() -> HashMap<usize, String> {
@@ -106,6 +109,14 @@ fn main() {
         ])
         .manage(MidiState {
             ..Default::default()
+        }).setup(|app| {
+            #[cfg(debug_assertions)] // only include this code on debug builds
+            {
+              let window = app.get_window("main").unwrap();
+              window.open_devtools();
+              window.close_devtools();
+            }
+            Ok(())
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

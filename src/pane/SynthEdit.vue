@@ -59,7 +59,7 @@ onBeforeUnmount(() => {
                 </template>
             </div>
             <div v-else>
-                <Button :on-click="() => { }">Click to start audio engine</Button>
+                <Button :on-click="() => { playback.retryAudioContext() }">Click to start audio engine</Button>
             </div>
             <Button v-if="playback.synth?.credits" :on-click="showCurrentSynthCredits">Credits</Button>
         </div>

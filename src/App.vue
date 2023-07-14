@@ -19,7 +19,6 @@ import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
-import { useTauriMidiInputStore } from './store/tauriMidiInputStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
@@ -42,7 +41,6 @@ const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
-const tauriMidiInput = useTauriMidiInputStore();
 const paneWidth = ref(300);
 const viewport = ref<SVGSVGElement>();
 const userSettings = useCustomSettingsStore();
@@ -68,7 +66,7 @@ const mouseWheelListener = (e: WheelEvent) => {
     const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
     const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
 
-    if(wouldViewWidthTime < 400 && wouldViewHeightOctaves > 0.1){
+    if (wouldViewWidthTime < 400 && wouldViewHeightOctaves > 0.1) {
         view.viewWidthTime = wouldViewWidthTime;
         view.viewHeightOctaves = wouldViewHeightOctaves;
     }
@@ -82,7 +80,7 @@ const mouseWheelListener = (e: WheelEvent) => {
     view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
     view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
 
-    if(view.timeOffset<0){
+    if (view.timeOffset < 0) {
         view.timeOffset = 0;
     }
 
@@ -328,8 +326,8 @@ watch(paneWidth, () => {
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewport v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
                 :height="viewportSize.height" />
-            <ScoreViewportRawCanvas v-else-if="userSettings.viewportTech === ViewportTech.Canvas" :width="viewportSize.width"
-                :height="viewportSize.height" />
+            <ScoreViewportRawCanvas v-else-if="userSettings.viewportTech === ViewportTech.Canvas"
+                :width="viewportSize.width" :height="viewportSize.height" />
             <ScoreViewportOld v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
                 :height="viewportSize.height" />
         </div>

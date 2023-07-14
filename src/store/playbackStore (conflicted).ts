@@ -16,24 +16,16 @@ import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import isDev from '../functions/isDev';
 import isTauri from '../functions/isTauri';
 import { invoke } from "@tauri-apps/api";
-import { EventCallback, listen } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 
 
 interface MidiInputInterface {
     displayName: string;
     start: () => Promise<void>;
     stop: () => void;
-    onmidimessage: (data: number[], timeStamp: number) => void;
+    onmidimessage: (data: number[] | Uint8Array, timeStamp: number) => void;
 }
 
-interface MidiMessageEvent {
-    event: "midi_message",
-    windowLabel: string,
-    payload: {
-        message: number[]
-    },
-    id: number
-}
 
 
 interface MidiConnectionMode {
@@ -46,27 +38,23 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
     if (isTauri()) {
         const devices = await invoke('list_midi_connections')
         const devicesObject = devices as { [key: string]: string }
-        console.log("midi devs from rust", devices);
 
         const midiConnectionKeys = Object.keys(devicesObject as {})
         midiConnectionKeys.forEach((ck) => {
-            const asInt = parseInt(ck);
             const newObject = {
-                displayName: devicesObject[ck] ?? ck ?? 'unknown',
+                displayName: devicesObject[ck]??ck??'unknown',
                 start: async () => {
+                    await invoke('open_midi_connection', { inputIdx: ck });
+                    listen('midi_message', event => {
+                        console.log(event)
+                        this.onmidimessage(event.data, event.timeStamp)
+                    })
                 },
                 stop: () => {
-                    console.warn("close function not implemented");
-                    // invoke('close_midi_connection', { inputIdx: asInt });
+                    console.warn("close function not fully implemented");
+                    invoke('close_midi_connection', { inputIdx: ck });
                 }
             } as MidiInputInterface;
-            newObject.start = async () => {
-                listen('midi_message', (event) => {
-                    const eventTyped = event as MidiMessageEvent;
-                    newObject.onmidimessage(eventTyped.payload.message, 0)
-                })
-                await invoke('open_midi_connection', { inputIdx: asInt });
-            }
             returnValues.push(newObject);
         })
 
@@ -91,6 +79,7 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
                     input.close();
                 },
                 onmidimessage: (data: number[] | Uint8Array, timeStamp: number) => {
+                    console.log("midi message", data, timeStamp);
                 }
             } as MidiInputInterface;
             returnValues.push(inputObject);
@@ -136,10 +125,11 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const availableSynths = ref([] as SynthInstance[]);
     //@ts-ignore
-    const midiInputs = ref([] as MidiInputInterface[]);
+    const midiInputs = ref([] as MIDIInput[]);
 
     const clockTicker = () => {
         if (playing.value) {
+            // console.log("clock tick")
             // _clockAction();
         }
     }
@@ -247,39 +237,36 @@ export const usePlaybackStore = defineStore("playback", () => {
     window.addEventListener("mousedown", startContextListener);
 
     //@ts-ignore
-    const currentMidiInput = ref<MidiInputInterface | null>(null);
+    const currentMidiInput = ref<MIDIInput | null>(null);
 
-    // if (!isTauri()) {
-    getMidiInputsArray().then((inputs) => {
-        if (!inputs) throw new Error("Midi inputs suceeded with null value");
-        midiInputs.value = inputs;
-        currentMidiInput.value = midiInputs.value[midiInputs.value.length - 1];
-    }).catch((e) => {
-        console.error("Could not access midi inputs", e);
-    });
-    // }
+    if (!isTauri()) {
+        getMidiInputsArray().then((inputs) => {
+            if (!inputs) throw new Error("Midi inputs suceeded with null value");
+            midiInputs.value = inputs;
+            currentMidiInput.value = midiInputs.value[midiInputs.value.length - 1];
+        }).catch((e) => {
+            console.error("Could not access midi inputs", e);
+        });
+    }
 
-    const onmidimessage = (data: number[], timeStamp: number) => {
-        if (data) {
-            currentMidiConnectionMode.value.inputAction(data, timeStamp);
+    const onmidimessage = (event: { data: Uint8Array[], timeStamp: number }) => {
+        if ('data' in event) {
+            const midi = [].slice.call(event.data)
+            currentMidiConnectionMode.value.inputAction(midi, event.timeStamp);
         } else {
-            console.warn("unexpected midi event shape", data, timeStamp)
+            console.warn("unexpected midi event shape", event)
         }
     }
 
     watch(currentMidiInput, (newMidiInput, oldMidiInput) => {
         if (newMidiInput) {
             console.log("activating midi input");
-            newMidiInput.onmidimessage = (data: number[], timeStamp: number) => {
-                onmidimessage(data, timeStamp);
-            };
-            newMidiInput.start();
+            newMidiInput.addEventListener("midimessage", (e: any) => onmidimessage(e));
         }
 
         if (oldMidiInput) {
             console.log("deactivating midi input");
-            oldMidiInput.onmidimessage = () => { };
-            oldMidiInput.stop();
+            oldMidiInput.removeEventListener("midimessage", (e: any) => onmidimessage(e));
         }
     });
 
@@ -311,6 +298,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = editNote.time - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
+            // console.log(`${noteStart} = ${now} + ${noteStartFromNow}`);
 
             try {
                 if (editNote.duration) {
@@ -453,5 +441,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         setSynthByName,
         midiInputs, currentMidiInput,
         midiConectionModes, currentMidiConnectionMode,
-    }
+    };
 });
+

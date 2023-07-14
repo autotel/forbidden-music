@@ -6,7 +6,9 @@ import MidiInputConfig from './MidiInputConfig.vue';
 import SnapSelector from './SnapSelector.vue';
 import SynthEdit from './SynthEdit.vue';
 import PerformanceSettings from './PerformanceSettings.vue';
+import { usePlaybackStore } from '../store/playbackStore';
 
+const playback = usePlaybackStore();
 const props = defineProps<{
     paneWidth: number
 }>()
@@ -19,7 +21,7 @@ const props = defineProps<{
         <SynthEdit />
         <SnapSelector startExpanded/>
         <PerformanceSettings />
-        <!-- <MidiInputConfig v-if="playback.midiInputs.length" /> -->
+        <MidiInputConfig/>
     </div>
 </template>
 

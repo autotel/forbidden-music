@@ -17,7 +17,7 @@ const playback = usePlaybackStore();
     <div>
       <select v-model="playback.currentMidiInput">
         <option :value="null">none</option>
-        <option v-for="(input, k) in playback.midiInputs" :value="input">{{ input.name }}</option>
+        <option v-for="(input, k) in playback.midiInputs" :value="input">{{ input.displayName }}</option>
       </select>
       <select v-model="playback.currentMidiConnectionMode">
         <option :value="null">none</option>
