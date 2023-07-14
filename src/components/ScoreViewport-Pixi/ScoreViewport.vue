@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import * as PIXI from 'pixi.js';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { EditNote } from '../../dataTypes/EditNote';
 import { Tool } from '../../dataTypes/Tool';
+import { useGridsStore } from '../../store/gridsStore';
+import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
-import { useToolStore } from '../../store/toolStore';
-import { useViewStore } from '../../store/viewStore';
-import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
-import * as PIXI from 'pixi.js';
-import { SelectableType } from '../../dataTypes/TimelineItem';
-import { EditNote } from '../../dataTypes/EditNote';
-import { useMonoModeInteraction } from '../../store/monoModeInteraction';
-import { useGridsStore } from '../../store/gridsStore';
 import { useSelectStore } from '../../store/selectStore';
 import { useSnapStore } from '../../store/snapStore';
+import { useToolStore } from '../../store/toolStore';
+import { useViewStore } from '../../store/viewStore';
+import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { text } from 'stream/consumers';
 
 const project = useProjectStore();
@@ -24,6 +24,9 @@ const gridsStore = useGridsStore();
 const selection = useSelectStore();
 const rightEdgeWidth = 10;
 const snap = useSnapStore();
+const userSettings = useCustomSettingsStore();
+
+const measureSteps = 0;
 
 const pixiApp = new PIXI.Application({
     background: '#fff',
@@ -66,14 +69,32 @@ const mouseMoveListener = (e: MouseEvent) => {
     }
 }
 
-
+let deltaTime = 0;
+let frameStartTime = 0;
+let fpsString = "";
+let avgFps = 0;
 const start = () => {
     if (requestedAnimationFrame.value) {
         cancelAnimationFrame(requestedAnimationFrame.value);
     }
-    const frame = () => {
-        refreshView();
+    let prevTime = performance.now();
+    const frame = (time: number) => {
         requestedAnimationFrame.value = requestAnimationFrame(frame);
+        if (userSettings.showFPS) {
+            deltaTime = time - prevTime;
+            frameStartTime = performance.now();
+        }
+        refreshView(time);
+        if (userSettings.showFPS) {
+            const endTime = performance.now();
+            prevTime = time;
+            const fps = 1000 / deltaTime;
+            const fpsCapacity = 1000 / (endTime - frameStartTime);
+            if (!avgFps) avgFps = fps;
+            avgFps = avgFps * 0.9 + fps * 0.1;
+            fpsString = `fps: ${fps.toFixed(2)}\n avg:${avgFps}\n fpsCapacity: ${fpsCapacity.toFixed(2)}`;
+        }
+
     };
     requestedAnimationFrame.value = requestAnimationFrame(frame);
 }
@@ -102,10 +123,46 @@ onBeforeUnmount(() => {
     stop();
 });
 
-const texts: PIXI.Text[]= [];
+const texts: PIXI.Text[] = [];
 
-const refreshView = () => {
+let currentTaskName = "";
+let startTime = performance.now();
+let previousTime = startTime;
+const stepsToLog: { taskName: string, time: number }[] = [];
+const taskMark = (taskName: string) => {
+    const now = performance.now();
+    stepsToLog.push({
+        taskName,
+        time: now - previousTime,
+    });
+    previousTime = performance.now();
+}
 
+let textToUse = 0;
+const getText = (): PIXI.Text => {
+    let retValue = null;
+    if (!texts[textToUse]) {
+        console.log("creating text"+textToUse);
+        texts[textToUse] = new PIXI.Text();
+        pixiApp.stage.addChild(texts[textToUse]);
+    }
+    retValue = texts[textToUse];
+    retValue.style.fontSize = userSettings.fontSize;
+    textToUse++;
+    if (textToUse > 1000) throw new Error("too many texts. Are you calling resetGetText?");
+    return retValue;
+}
+const resetGetText = () => {
+    // hide all the unused texts
+    for (let i = textToUse; i < texts.length; i++) {
+        texts[i].text = "";
+    }
+    textToUse = 0;
+}
+
+const refreshView = (time: number) => {
+
+    if (measureSteps) taskMark("1. gather facts")
     const visibleNotes = [
         ...view.visibleNoteRects,
         ...tool.notesBeingCreated.map(view.rectOfNote),
@@ -114,11 +171,16 @@ const refreshView = () => {
         view.rectOfNote(tool.noteThatWouldBeCreated)
     );
 
-
     const playbackPxPosition = playback.playbarPxPosition;
+    if (measureSteps) taskMark("2. clear canvas");
     graphics.clear();
-    // draw playbar
 
+
+
+
+
+    if (measureSteps) taskMark("3. draw playbar");
+    // draw playbar
     const path = [
         playbackPxPosition, 0,
         playbackPxPosition, props.height
@@ -129,6 +191,7 @@ const refreshView = () => {
     graphics.endFill();
 
     // could redraw lines only on view change, perhaps on an overlayed canvas
+    if (measureSteps) taskMark("4. draw grids");
     // draw grid lines
     graphics.lineStyle(1, 0xCCCCCC, 0.5);
     const { linePositionsPx, linePositionsPy } = gridsStore;
@@ -140,56 +203,65 @@ const refreshView = () => {
         graphics.moveTo(0, linePositionPy);
         graphics.lineTo(props.width, linePositionPy);
     }
+    // draw grid line labels
+    graphics.beginFill(0x000000, 1);
+    const fallbackX = 5;
+    const fallbackY = 5;
+    for (const label of gridsStore.lineLabels) {
+        let { x, y, text } = label;
+        if (x === null) x = fallbackX;
+        if (y === null) y = fallbackY;
+        const textSprite = getText();
+        textSprite.text = text;
+        textSprite.x = x;
+        textSprite.y = y;
+    }
+    graphics.endFill();
+
+    if (measureSteps) taskMark("5. draw snapexpl");
+    const relationcolor = 0x7525dd;
 
 
-    // snap explanations
-    let textToUse = 0;
+    let snapExplTextsStart = textToUse - 1;
     const snapFocusedNoteRect = snap.focusedNote ? view.rectOfNote(
         snap.focusedNote
     ) : null;
     if (snapFocusedNoteRect) {
-        graphics.lineStyle(1, 0xCCCCCC, 0.5);
-        textToUse = 0;
+        graphics.lineStyle(1, relationcolor, 0.5);
         for (const snapExplanation of snap.toneSnapExplanation) {
             const relatedNoteRect = snapExplanation.relatedNote ? view.rectOfNote(
                 snapExplanation.relatedNote
             ) : null;
             if (relatedNoteRect) {
-                graphics.moveTo(snapFocusedNoteRect.cx, snapFocusedNoteRect.cy);
-                graphics.lineTo(relatedNoteRect.cx, relatedNoteRect.cy);
-                graphics.beginFill(0x000000, 1);
-                graphics.drawCircle(relatedNoteRect.cx, relatedNoteRect.cy, 3);
+                const middleX = (snapFocusedNoteRect.cx + relatedNoteRect.cx) / 2;
+                const middleY = (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
+                const leftX = Math.max(relatedNoteRect.cx, 5);
+                graphics.moveTo(leftX, relatedNoteRect.cy);
+                graphics.lineTo(leftX, snapFocusedNoteRect.cy);
+                graphics.lineTo(snapFocusedNoteRect.cx, snapFocusedNoteRect.cy);
+                graphics.beginFill(relationcolor, 1);
+                graphics.drawCircle(leftX, relatedNoteRect.cy, 3);
                 graphics.endFill();
-                graphics.beginFill(0x000000, 1);
-                let text = null;
-                if(!texts[textToUse]){
-                    texts[textToUse] = new PIXI.Text('',{
-                        fontSize: 18,
-                        fill: 0x000000,
-                    });
-                    pixiApp.stage.addChild(texts[textToUse]);
-                    text = texts[textToUse];
-                    textToUse++;
-                }else{
-                    text = texts[textToUse];
-                    textToUse++;
-                }
-                if(!text) throw new Error("failed to instantiate text");
+                graphics.beginFill(relationcolor, 1);
+                let text = getText();
                 text.text = snapExplanation.text;
-                text.x = relatedNoteRect.cx + 5;
-                text.y = relatedNoteRect.cy + 5;
+                text.x = leftX + 5;
+                text.y = middleY - 9;
+                graphics.endFill();
             }
         }
-        // hide all the unused texts
-        for(let i = textToUse; i < texts.length; i++){
-            texts[i].text = "";
+        // prevent texts overlapping 
+        for (let i = snapExplTextsStart; i < textToUse; i++) {
+            for (let j = i + 1; j < texts.length; j++) {
+                if (texts[i].y === texts[j].y) {
+                    texts[j].y += 20;
+                }
+            }
         }
 
     }
 
-
-
-
+    if (measureSteps) taskMark("6. draw notes");
     // draw notes & velolines if 
     graphics.lineStyle(1, 0xAAAAAA, 0.5);
     for (const note of visibleNotes) {
@@ -215,6 +287,9 @@ const refreshView = () => {
         graphics.endFill();
     }
 
+    if (measureSteps) taskMark("7. draw selection");
+
+    // draw select range
     if (tool.selectRange.active) {
         const selRange = view.pxRectOf(tool.selectRange);
         // ctx.fillRect(selRange.x, selRange.y, selRange.width, selRange.height);
@@ -223,6 +298,29 @@ const refreshView = () => {
         graphics.drawRect(selRange.x, selRange.y, selRange.width, selRange.height);
         graphics.endFill();
     }
+    if (userSettings.showFPS) {
+        let text = getText();
+        text.text = fpsString;
+        text.x = 5;
+        text.y = 5;
+        graphics.endFill();
+    } else if (measureSteps) {
+        // draw task timings text
+        stepsToLog.sort((a, b) => b.time - a.time);
+        const totalTime = performance.now() - startTime;
+        const log = `${totalTime} \n${stepsToLog.map(step => `${step.taskName}: ${step.time.toFixed(2)}ms`).join("\n")}`;
+        // console.log(log);
+        {
+            let text = getText();
+            text.text = log;
+            text.x = 5;
+            text.y = 5;
+            graphics.endFill();
+        }
+        stepsToLog.length = 0
+    };
+
+    resetGetText();
 }
 
 const requestedAnimationFrame = ref<number>(0);
@@ -230,6 +328,10 @@ const requestedAnimationFrame = ref<number>(0);
 
 </script>
 <template>
-    <div ref="canvasContainer" :width="view.viewWidthPx" :height="view.viewHeightPx" :class="tool.cursor">
+    <div ref="canvasContainer" :style="{
+        width: view.viewWidthPx + 'px',
+        height: view.viewHeightPx + 'px',
+        overflow: 'hidden',
+    }" :class="tool.cursor">
     </div>
 </template>

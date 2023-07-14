@@ -72,7 +72,7 @@ watch(() => props.param.value, (newValue) => {
 
 </script>
 <template>
-    <div class="option-container" ref="valueDraggable" :class="{ active: dragging }" style="width:300px">
+    <div class="option-container" ref="valueDraggable" :class="{ active: dragging }">
         <div class="sw-button" ref="minusButton" @click="minusButtonClicked">
             {{ triangleLeft }}
         </div>
@@ -122,6 +122,8 @@ watch(() => props.param.value, (newValue) => {
     user-select: none;
     display: inline-flex;
     position: relative;
+    width:100%;
+    box-sizing: border-box;
     border: solid 1px rgb(166, 172, 172);
     background-color: rgb(1, 22, 15);
     color: white;

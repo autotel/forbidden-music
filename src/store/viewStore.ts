@@ -1,12 +1,26 @@
 import { defineStore } from "pinia";
-import { computed, ref, Ref, watchEffect } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 import { EditNote } from "../dataTypes/EditNote.js";
-import { useProjectStore } from "./projectStore.js";
-import { frequencyToOctave } from "../functions/toneConverters.js";
-import { Note } from "../dataTypes/Note.js";
-import { usePlaybackStore } from "./playbackStore.js";
 import { getNotesInRange } from "../functions/getNotesInRange.js";
-import { TimelineItem, TimelineSelectableItem } from "../dataTypes/TimelineItem.js";
+import { frequencyToOctave } from "../functions/toneConverters.js";
+import { usePlaybackStore } from "./playbackStore.js";
+import { useProjectStore } from "./projectStore.js";
+
+// const measureCallTime = (name:string, fn:Function)=>{
+//     const wrappedFn = (...p:any[])=>{
+//         const start = performance.now();
+//         const result = fn(...p);
+//         const end = performance.now();
+//         console.log("call time", name, end-start);
+//         return result;
+//     }
+//     return wrappedFn;
+// }
+
+// Function.prototype.measureTime = function (name:string) {
+//     return measureCallTime(this.name, this);
+// }
+
 
 export interface NoteRect {
     event: EditNote;
@@ -33,6 +47,7 @@ const probe = (v: any) => {
     return v;
 }
 
+
 export const useViewStore = defineStore("view", () => {
     // const view: Ref<View> = ref(new View(1920, 1080, 1024, 3));
     const octaveOffset = ref(-3);
@@ -53,7 +68,11 @@ export const useViewStore = defineStore("view", () => {
     const visibleNotesRefreshKey = ref(0);
 
     const memoizedRects: NoteRect[] = [];
-
+    // TODO: maybe doesn't need to be a computed, 
+    // we don't need to recalc every note when one note is dragged
+    // for example. Especially since the new canvas frame 
+    // is going to ask for the coords anyways. 
+    // they could be calculated only when asked, memoized too.
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
         return getNotesInRange(project.score, {
@@ -63,18 +82,22 @@ export const useViewStore = defineStore("view", () => {
             octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
         });
     });
-
-    // let tkey = 0;
+    // TODO: Same here.
     const visibleNoteRects = computed((): NoteRect[] => {
+        memoizedRects.length = 0;
         return visibleNotes.value.map((note) => {
             let r = rectOfNote(note);
             memoizedRects.push(r);
             return r;
         });
-        // return project.score.map((note) => {
-        //     return rectOfNote(note);
-        // });
     });
+
+    // watch(visibleNotes,() => {
+    //     console.log("visibleNotes mutated",visibleNotes);
+    // })
+    // watch(visibleNoteRects,() => {
+    //     console.log("visibleNoteRects mutated",visibleNoteRects);
+    // })
 
     const rectOfNote = (note: EditNote): NoteRect => {
         let rect = {
@@ -173,7 +196,7 @@ export const useViewStore = defineStore("view", () => {
             }
         }
         return items;
-    }
+    };
 
     const forceRefreshVisibleNotes = () => {
         visibleNotesRefreshKey.value++;
@@ -252,7 +275,9 @@ export const useViewStore = defineStore("view", () => {
 
     watchEffect(() => {
         if (followPlayback.value) {
-            setTimeOffset(playback.currentScoreTime - viewWidthTime.value / 2)
+            setTimeOffset(
+                Math.max(0, playback.currentScoreTime - viewWidthTime.value / 2)
+            )
         }
     })
 

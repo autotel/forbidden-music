@@ -34,9 +34,6 @@ const stop = () => {
     requestedAnimationFrame.value = 0;
 }
 
-
-
-
 onMounted(() => {
     start();
 })

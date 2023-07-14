@@ -142,5 +142,6 @@ onBeforeUnmount(() => {
     align-items: center;
     text-align: center;
     justify-content: center;
+    box-sizing: border-box;
 }
 </style>

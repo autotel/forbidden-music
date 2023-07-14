@@ -366,13 +366,13 @@ export const useSnapStore = defineStore("snap", () => {
                 if (snapValues.hzMult.active === true) {
                     for (const otherNote of otherNotes) {
                         const relatedNumber = Math.round(targetHz / otherNote.frequency) * otherNote.frequency;
-                        if (relatedNumber > 0) {
-                            toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
-                                text: "multiple of " + otherNote.frequency.toPrecision(3),
-                                relatedNumber,
-                                relatedNote: otherNote,
-                            });
-                        }
+                        let txt = "multiple of ";
+                        if(relatedNumber === otherNote.frequency) txt = "equal to ";
+                        toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
+                            text: txt + otherNote.frequency.toPrecision(3),
+                            relatedNumber,
+                            relatedNote: otherNote,
+                        });
                     }
                 };
 

@@ -5,6 +5,7 @@ import WorkingMemory from './WorkingMemory.vue';
 import MidiInputConfig from './MidiInputConfig.vue';
 import SnapSelector from './SnapSelector.vue';
 import SynthEdit from './SynthEdit.vue';
+import PerformanceSettings from './PerformanceSettings.vue';
 
 const props = defineProps<{
     paneWidth: number
@@ -13,10 +14,11 @@ const props = defineProps<{
 </script>
 <template>
     <div class="drawers-container" :style="{ width: paneWidth + 'px' }">
-        <WorkingMemory />
+        <WorkingMemory startExpanded/>
         <FileManager/>
         <SynthEdit />
-        <SnapSelector />
+        <SnapSelector startExpanded/>
+        <PerformanceSettings />
         <!-- <MidiInputConfig v-if="playback.midiInputs.length" /> -->
     </div>
 </template>

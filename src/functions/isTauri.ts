@@ -1,4 +1,9 @@
-import { readTextFile, BaseDirectory, writeFile, writeTextFile } from '@tauri-apps/api/fs';
+import { 
+    readTextFile, 
+    BaseDirectory, 
+    writeFile, 
+    writeTextFile 
+} from '@tauri-apps/api/fs';
 import {
     appCacheDir,
     appConfigDir,

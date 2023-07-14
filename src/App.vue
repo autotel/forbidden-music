@@ -26,7 +26,8 @@ import { useViewStore } from './store/viewStore';
 
 import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
-import Toggle from './components/inputs/Toggle.vue';
+import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
+import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -42,9 +43,9 @@ const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const tauriMidiInput = useTauriMidiInputStore();
-const paneWidth = ref(0);
+const paneWidth = ref(300);
 const viewport = ref<SVGSVGElement>();
-
+const userSettings = useCustomSettingsStore();
 const useNewView = ref(true);
 
 provide('modalText', modalText);
@@ -81,6 +82,7 @@ const mouseWheelListener = (e: WheelEvent) => {
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
+        // TODO: Use a cursor instead, this is unnecessarily expensive
         mouseWidget.value.style.left = e.clientX + 10 + "px";
         mouseWidget.value.style.top = e.clientY + 10 + "px";
     }
@@ -316,8 +318,12 @@ watch(paneWidth, () => {
     <div>
         <div ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
-            <ScoreViewport v-if="useNewView" :width="viewportSize.width" :height="viewportSize.height" />
-            <ScoreViewportOld v-else :width="viewportSize.width" :height="viewportSize.height" />
+            <ScoreViewport v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
+                :height="viewportSize.height" />
+            <ScoreViewportRawCanvas v-else-if="userSettings.viewportTech === ViewportTech.Canvas" :width="viewportSize.width"
+                :height="viewportSize.height" />
+            <ScoreViewportOld v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
+                :height="viewportSize.height" />
         </div>
         <TimeScrollBar />
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
@@ -333,9 +339,6 @@ watch(paneWidth, () => {
             </Button>
         </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
-        <div style="position: fixed; bottom:0; right: 50vw; height: 50px; display:flex; align-items: center;">
-            <Toggle v-model="useNewView" /> <p> &nbsp; &Tab; Use canvas view</p>
-        </div>
         <div style="position: fixed; bottom:0; right: 0;">
             <ToolSelector />
         </div>

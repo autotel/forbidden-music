@@ -19,7 +19,7 @@ const expanded = ref(props.startExpanded ?? true);
 </script>
 
 <template>
-    <Button :onClick="() => expanded = !expanded" style="width:100%">
+    <Button :onClick="() => expanded = !expanded" class="full-width" >
         <span class="icon">
             <slot name="icon">
             </slot>
@@ -27,7 +27,7 @@ const expanded = ref(props.startExpanded ?? true);
             <AnglesRight v-else />
         </span>
     </Button>
-    <div class="content-container" :class="{ expanded }">
+    <div class="content-container full-width" :class="{ expanded }">
         <slot>
         </slot>
     </div>
