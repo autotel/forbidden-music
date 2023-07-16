@@ -1,3 +1,5 @@
+import { MidiInputHandlerFactory } from "./inputHandlerTypes";
+
 const midiLog = (...p: (string | number)[]) => {
     const transformedLog = p.map((p) => {
         if (typeof p === "number") {
@@ -13,8 +15,12 @@ const midiTickIntervalToBpm = (tickInterval: number) => {
     return ticksPerSecond * 60000 / 24;
 }
 
-const reaperMidiInputHandler = (tick: () => void, play:()=>void, stop:()=>void, skip:(to:number)=>void) => ({
+const reaperMidiInputHandler:MidiInputHandlerFactory = (tick: () => void, play:()=>void, stop:()=>void, skip:(to:number)=>void) => ({
     name: "reaper",
+    notes: [
+        'follows playback, jumps and stops within a range',
+        'does not sync to clock',
+    ],
     messageState: 0,
     lastClockReceived: null as number | null,
     measuredBpm: null as number | null,
@@ -35,20 +41,6 @@ const reaperMidiInputHandler = (tick: () => void, play:()=>void, stop:()=>void, 
         // }
         // this.lastClockReceived = timestamp;
         tick()
-    },
-    nibbleAction(midi: number[], ts: number) {
-        const [status, b1, b2] = midi;
-        const head = status & 0xf0
-        switch (head) {
-            case 0x9:
-                // midiLog("note on", b1, b2);
-                return true;
-            case 0x8:
-                // midiLog("note off", b1, b2);
-                return true;
-        }
-        return false;
-
     },
     caseAction(midi: number[], ts: number) {
         if (!this.messageState) return false;
@@ -84,9 +76,6 @@ const reaperMidiInputHandler = (tick: () => void, play:()=>void, stop:()=>void, 
     },
     inputAction(midi: number[], timeStamp: number) {
         if (this.caseAction(midi, timeStamp)) {
-            return;
-        }
-        if (this.nibbleAction(midi, timeStamp)) {
             return;
         }
         if (this.headAction(midi, timeStamp)) {

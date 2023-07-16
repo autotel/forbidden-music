@@ -23,11 +23,21 @@ const playback = usePlaybackStore();
         <option :value="null">none</option>
         <option v-for="(mode, k) in playback.midiConectionModes" :value="mode">{{ mode.name }}</option>
       </select>
+      <div v-if="playback.currentMidiConnectionMode">
+        <ul>
+          <li v-for="note in playback.currentMidiConnectionMode.notes" :key="note">
+            - {{ note }}  
+          </li>
+        </ul>
+      </div>
     </div>
   </Collapsible>
 </template>
 
 <style scoped>
+ul {
+  margin-top: 1em;
+}
 Button {
   position: relative;
   /* color: rgb(107, 107, 107); */
