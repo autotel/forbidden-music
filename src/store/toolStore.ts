@@ -46,7 +46,7 @@ export const useToolStore = defineStore("edit", () => {
     const currentLeftHand = ref(Tool.None);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
-
+    let lastVelocitySet = 0.7;
     type ToolRange = SelectableRange & OctaveRange & TimeRange & { active: boolean };
 
     const selectRange = ref<ToolRange>({
@@ -355,6 +355,7 @@ export const useToolStore = defineStore("edit", () => {
                 time: view.pxToTimeWithOffset(x),
                 duration: 0,
                 octave: view.pxToOctaveWithOffset(y),
+                velocity: lastVelocitySet,
             }, view);
 
             snap.setFocusedNote(freeNote)
@@ -397,6 +398,7 @@ export const useToolStore = defineStore("edit", () => {
             refreshAndApplyRangeSelection(e);
         } else if (isDragging && current.value === Tool.Modulation) {
             notesBeingDragged.forEach((n) => n.dragMoveVelocity(mouseDelta));
+            lastVelocitySet = notesBeingDragged.reduce((acc, n) => acc + n.velocity, 0) / notesBeingDragged.length;
         } else if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
             const deltaX = e.clientX - newNoteDragX;
