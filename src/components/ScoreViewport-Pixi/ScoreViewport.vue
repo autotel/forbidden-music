@@ -10,7 +10,7 @@ import { useProjectStore } from '../../store/projectStore';
 import { useSelectStore } from '../../store/selectStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { useViewStore } from '../../store/viewStore';
+import { layerNoteColors, useViewStore } from '../../store/viewStore';
 import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { text } from 'stream/consumers';
 import { SelectableType } from '../../dataTypes/TimelineItem';
@@ -226,7 +226,7 @@ const refreshView = (time: number) => {
     if (measureSteps) taskMark("5. draw snapexpl");
     const relationcolor = 0x7525dd;
 
-
+    // draw snap explanations
     let snapExplTextsStart = textToUse - 1;
     const snapFocusedNoteRect = snap.focusedNote ? view.rectOfNote(
         snap.focusedNote
@@ -269,25 +269,27 @@ const refreshView = (time: number) => {
     if (measureSteps) taskMark("6. draw notes");
     // draw notes & velolines if 
     graphics.lineStyle(1, 0xAAAAAA, 0.5);
-    for (const note of visibleNotes) {
-        if (note.event.selected) {
-            graphics.beginFill(0xFCCCCC, 0.6);
+
+    for (const nRect of visibleNotes) {
+        const lcolor = layerNoteColors[nRect.event.layer];
+        if (nRect.event.selected) {
+            graphics.beginFill(lcolor, 1);
         } else {
-            graphics.beginFill(0xDDDDDD, 1);
+            graphics.beginFill(lcolor, 0.5);
         }
-        if (note.width) {
-            // ctx.fillRect(note.x, note.y, note.width, note.height);
-            graphics.drawRect(note.x, note.y, note.width, note.height);
+        if (nRect.width) {
+            // ctx.fillRect(nRect.x, nRect.y, nRect.width, nRect.height);
+            graphics.drawRect(nRect.x, nRect.y, nRect.width, nRect.height);
         } else {
-            // ctx.arc(note.cx, note.cy, note.radius, 0, 2 * Math.PI);
-            graphics.drawCircle(note.cx, note.cy, note.radius);
+            // ctx.arc(nRect.cx, nRect.cy, nRect.radius, 0, 2 * Math.PI);
+            graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius);
         }
         if (tool.current === Tool.Modulation) {
-            const veloLinePositionY = view.velocityToPxWithOffset(note.event.velocity);
+            const veloLinePositionY = view.velocityToPxWithOffset(nRect.event.velocity);
             graphics.lineStyle(2, 0x000000, 2);
-            graphics.moveTo(note.x, veloLinePositionY + 7);
-            graphics.lineTo(note.x, view.viewHeightPx);
-            graphics.drawCircle(note.cx, veloLinePositionY, note.radius);
+            graphics.moveTo(nRect.x, veloLinePositionY + 7);
+            graphics.lineTo(nRect.x, view.viewHeightPx);
+            graphics.drawCircle(nRect.cx, veloLinePositionY, nRect.radius);
         }
         graphics.endFill();
     }

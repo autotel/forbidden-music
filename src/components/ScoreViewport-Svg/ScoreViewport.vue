@@ -8,13 +8,15 @@ import ToneRelation from './ToneRelation.vue';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { useViewStore } from '../../store/viewStore';
+import { layerNoteColors, useViewStore } from '../../store/viewStore';
 import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+
 const project = useProjectStore();
 const tool = useToolStore();
 const playback = usePlaybackStore();
 const view = useViewStore();
 const timedEventsViewport = ref<SVGSVGElement>();
+
 
 const props = defineProps<{
     width: number,
@@ -49,7 +51,9 @@ onBeforeUnmount(() => {
             </g>
         </g>
         <g id="note-would-be-created">
-            <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
+            <NoteElement 
+                v-if="tool.noteThatWouldBeCreated" 
+                :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
         <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"

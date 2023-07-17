@@ -13,6 +13,7 @@ export class EditNote extends Note {
     udpateFlag: string;
     // groupId: number | null = null;
     group: Group | null = null;
+    layer: number = 0;
     /** 
      * make a clone of editnote. only note properties are cloned    
      * TODO: clone could now clone all the props. To get a clone of the 
@@ -40,6 +41,7 @@ export class EditNote extends Note {
             octave: this.octave,
             mute: this.mute,
             velocity: this.velocity,
+            layer: this.layer
         };
     }
     getNoteDefb(): NoteDefb {
@@ -49,6 +51,7 @@ export class EditNote extends Note {
             frequency: this.frequency,
             mute: this.mute,
             velocity: this.velocity,
+            layer: this.layer
         };
     }
 
@@ -75,6 +78,10 @@ export class EditNote extends Note {
 
         this.view = view;
         this.udpateFlag = makeRandomString();
+
+        if(noteDef.layer !== undefined){
+            this.layer = noteDef.layer;
+        }
 
         this.dragStart = () => {
             this.dragStartedOctave = this.octave;

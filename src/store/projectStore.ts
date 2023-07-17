@@ -78,6 +78,7 @@ export const useProjectStore = defineStore("current project", () => {
                 mute: editNote.mute,
                 velocity: editNote.velocity,
                 groupId: editNote.group?.id || null,
+                layer: editNote.layer,
             })),
             created: created.value,
             edited: edited.value,
@@ -102,6 +103,10 @@ export const useProjectStore = defineStore("current project", () => {
     const setFromListOfNoteDefinitions = (notes: (NoteDefa | NoteDefb)[]) => {
         console.log("setFromListOfNoteDefinitions", notes);
         score.value = notes.map((note) => {
+            const noteLayer = note.layer || 0;
+            if(view.layerVisibility[noteLayer] === undefined) {
+                view.layerVisibility[noteLayer] = true;
+            };
             return new EditNote(note, view)
         });
     }

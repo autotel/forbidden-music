@@ -45,7 +45,8 @@ onUnmounted(() => {
         }}
     </text>
     <rect
-        class="body" 
+        class="body"
+        v-bind="$attrs"
         :class="{
             selected: eventRect.event.selected,
             editable: isEditable,
@@ -69,7 +70,7 @@ onUnmounted(() => {
 
 .body {
     stroke: #999;
-    fill: #0001;
+    /* fill: #0001; */
     opacity: 0.3;
 }
 
@@ -81,7 +82,7 @@ onUnmounted(() => {
 
 
 .body.editable {
-    fill: #888a;
+    /* fill: #888a; */
     opacity: 0.6;
 }
 

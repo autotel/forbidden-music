@@ -2,12 +2,13 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, useViewStore } from '../../store/viewStore';
+import { NoteRect, layerNoteColors, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
 
 
+const layerNoteColorStrings  = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
@@ -22,6 +23,10 @@ const props = defineProps<{
 // a better solution perhaps would be to dereference on mount
 const noteBody = ref<SVGRectElement>();
 const rightEdge = ref<SVGRectElement>();
+const myColor = computed(() => {
+    const color = layerNoteColorStrings[props.eventRect.event.layer];
+    return color;
+});
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
     tool.noteMouseEnter(props.eventRect.event);
@@ -78,17 +83,20 @@ const isEditable = computed(() => {
             v-if="eventRect.event.duration > 0"
             :eventRect="eventRect" 
             :isEditable="isEditable"
+            :fill="myColor"
         />
         <NoteElementCircle 
             v-else
             :eventRect="eventRect" 
             :isEditable="isEditable"
+            :fill="myColor"
         />
         <NoteVeloLine 
             :event="eventRect.event" 
             :interactionDisabled="interactionDisabled" 
             :x="eventRect.cx" 
             :selected="eventRect.event.selected"
+            :fill="myColor"
         />
     </g>
 </template>

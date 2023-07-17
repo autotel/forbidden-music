@@ -6,6 +6,14 @@ import { frequencyToOctave } from "../functions/toneConverters.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
 
+export const layerNoteColors = [
+    0xCBCDD2,
+    0x738B95,
+    0xCBB691,
+    0xC48892,
+    0x809F7F,
+];
+
 // const measureCallTime = (name:string, fn:Function)=>{
 //     const wrappedFn = (...p:any[])=>{
 //         const start = performance.now();
@@ -66,7 +74,7 @@ export const useViewStore = defineStore("view", () => {
     const followPlayback = ref(false);
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
-
+    const layerVisibility = ref<boolean[]>([true]);
     const memoizedRects: NoteRect[] = [];
     // TODO: maybe doesn't need to be a computed, 
     // we don't need to recalc every note when one note is dragged
@@ -75,7 +83,8 @@ export const useViewStore = defineStore("view", () => {
     // they could be calculated only when asked, memoized too.
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
-        return getNotesInRange(project.score, {
+        const layerVisibleNotes = project.score.filter(({ layer }) =>  layerVisibility.value[layer] == true );
+        return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
@@ -336,6 +345,8 @@ export const useViewStore = defineStore("view", () => {
 
         visibleNoteRects,
         everyNoteRectAtCoordinates,
+
+        layerVisibility,
 
         followPlayback,
     };

@@ -11,6 +11,7 @@ export interface NoteDefa {
   octave: number;
   mute?: boolean;
   velocity?: number;
+  layer?: number;
 }
 export interface NoteDefb {
   time: number;
@@ -18,6 +19,7 @@ export interface NoteDefb {
   frequency: number;
   mute?: boolean;
   velocity?: number;
+  layer?: number;
 }
 
 export const frequencyConstant = 11;
@@ -31,6 +33,7 @@ export class Note implements TimeRangeOctaveSelectable{
   selected: boolean;
   mute: boolean;
   velocity: number;
+  layer: number | undefined;
   _octave: number | null;
   _frequency: number | null;
 

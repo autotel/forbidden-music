@@ -21,7 +21,10 @@ const props = defineProps<{
             eventRect.event.group?.name
         }}
     </text>
-    <circle class="body" :class="{
+    <circle 
+        class="body" 
+        v-bind="$attrs"
+        :class="{
             selected: eventRect.event.selected,
             editable: isEditable,
             muted: eventRect.event.mute,

@@ -92,9 +92,9 @@ export const useSelectStore = defineStore("select", () => {
         refreshNoteSelectionState();
     };
     const selectRange = (range: SelectableRange, restrictToGroup: (Group | null | false) = false) => {
-
+        const visibleLayersNotes = project.score.filter(n => view.layerVisibility[n.layer])
         let notesInRange = getNotesInRange(
-            project.score,
+            visibleLayersNotes,
             range
         );
 

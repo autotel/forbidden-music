@@ -49,6 +49,8 @@ export const useToolStore = defineStore("edit", () => {
     let lastVelocitySet = 0.7;
     type ToolRange = SelectableRange & OctaveRange & TimeRange & { active: boolean };
 
+    const currentLayerNumber = ref(0);
+
     const selectRange = ref<ToolRange>({
         time: 0,
         timeEnd: 0,
@@ -362,6 +364,7 @@ export const useToolStore = defineStore("edit", () => {
                 duration: 0,
                 octave: view.pxToOctaveWithOffset(y),
                 velocity: lastVelocitySet,
+                layer: currentLayerNumber.value,
             }, view);
 
             snap.setFocusedNote(freeNote)
@@ -430,6 +433,7 @@ export const useToolStore = defineStore("edit", () => {
                     project.appendNote(newNote);
                     cloned.push(newNote);
                     newNote.dragStart(mouseDragStart);
+                    newNote.layer = currentLayerNumber.value;
                     editNote.dragCancel();
                 });
                 selection.select(...cloned);
@@ -562,6 +566,8 @@ export const useToolStore = defineStore("edit", () => {
 
         groupMouseEnter,
         groupMouseLeave,
+        
+        currentLayerNumber,
 
         currentlyActiveGroup,
     }

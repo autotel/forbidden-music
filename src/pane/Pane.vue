@@ -7,6 +7,7 @@ import SnapSelector from './SnapSelector.vue';
 import SynthEdit from './SynthEdit.vue';
 import PerformanceSettings from './PerformanceSettings.vue';
 import { usePlaybackStore } from '../store/playbackStore';
+import LayersManager from './LayersManager.vue';
 
 const playback = usePlaybackStore();
 const props = defineProps<{
@@ -19,6 +20,7 @@ const props = defineProps<{
         <WorkingMemory startExpanded/>
         <FileManager/>
         <SynthEdit />
+        <LayersManager />
         <SnapSelector startExpanded/>
         <PerformanceSettings />
         <MidiInputConfig/>
