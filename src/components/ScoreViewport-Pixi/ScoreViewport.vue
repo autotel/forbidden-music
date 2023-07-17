@@ -13,6 +13,7 @@ import { useToolStore } from '../../store/toolStore';
 import { useViewStore } from '../../store/viewStore';
 import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { text } from 'stream/consumers';
+import { SelectableType } from '../../dataTypes/TimelineItem';
 
 const project = useProjectStore();
 const tool = useToolStore();
@@ -43,24 +44,29 @@ const props = defineProps<{
 let noteBeingRightEdgeHovered: EditNote | null = null;
 
 const mouseMoveListener = (e: MouseEvent) => {
-    const stuffAtCoordinates = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current === Tool.Modulation);
-    const firstThing = stuffAtCoordinates[0];
-    // couold be a bit more elegant
-    if (firstThing) {
-        const isRightEdge = firstThing.rightEdge ? (e.offsetX > firstThing.rightEdge?.x - rightEdgeWidth) : false;
+    const notesAtCoords = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current === Tool.Modulation);
+    const firstNoteRect = notesAtCoords[0];
+    // ok, this bit needs refactor 
+    if (firstNoteRect) {
+        const isRightEdge = firstNoteRect.rightEdge ? (
+            (e.offsetX > firstNoteRect.rightEdge?.x - rightEdgeWidth)
+        ) : false;
         if (isRightEdge) {
-            if (noteBeingRightEdgeHovered !== firstThing.event) {
-                tool.noteRightEdgeMouseEnter(firstThing.event as EditNote);
-                noteBeingRightEdgeHovered = firstThing.event as EditNote;
+            if (noteBeingRightEdgeHovered !== firstNoteRect.event) {
+                tool.noteRightEdgeMouseEnter(firstNoteRect.event as EditNote);
+                noteBeingRightEdgeHovered = firstNoteRect.event as EditNote;
             }
         } else if (noteBeingRightEdgeHovered) {
             tool.noteRightEdgeMouseLeave();
             noteBeingRightEdgeHovered = null;
-            tool.noteMouseEnter(firstThing.event as EditNote);
+            tool.noteMouseEnter(firstNoteRect.event as EditNote);
         } else {
-            tool.noteMouseEnter(firstThing.event as EditNote);
+            tool.noteMouseEnter(firstNoteRect.event as EditNote);
         }
-    } else if (!firstThing && tool.noteBeingHovered) {
+    } else if(noteBeingRightEdgeHovered){
+        tool.noteRightEdgeMouseLeave();
+        noteBeingRightEdgeHovered = null;
+    } else if (!firstNoteRect && tool.noteBeingHovered) {
         tool.noteMouseLeave();
         if (noteBeingRightEdgeHovered) {
             tool.noteRightEdgeMouseLeave();
@@ -290,7 +296,7 @@ const refreshView = (time: number) => {
 
     // draw select range
     if (tool.selectRange.active) {
-        const selRange = view.pxRectOf(tool.selectRange);
+        const selRange = view.rangeToStrictRect(tool.selectRange);
         // ctx.fillRect(selRange.x, selRange.y, selRange.width, selRange.height);
         graphics.beginFill(0xffffff, 0.1);
         graphics.lineStyle(1, 0x555555, 1);
@@ -334,3 +340,25 @@ const requestedAnimationFrame = ref<number>(0);
     }" :class="tool.cursor">
     </div>
 </template>
+
+<style scoped>
+
+.cursor-draw {
+    cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
+}
+
+.cursor-move {
+    cursor: move;
+}
+
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grabbing {
+    cursor: grabbing;
+}
+
+ 
+
+</style>

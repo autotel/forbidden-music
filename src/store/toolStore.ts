@@ -92,6 +92,7 @@ export const useToolStore = defineStore("edit", () => {
      * only holds reference to notes in score 
      */
     let notesBeingDragged: EditNote[] = [];
+    let notesBeingDraggedRightEdge: EditNote[] = [];
     let groupsBeingDragged: Group[] = [];
     let alreadyDuplicatedForThisDrag = false;
 
@@ -213,8 +214,12 @@ export const useToolStore = defineStore("edit", () => {
 
     const _lengthenDragStartAction = (mouse: { x: number, y: number }) => {
         noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
+        notesBeingDraggedRightEdge = selection.getNotes();
         if (!noteBeingDraggedRightEdge.value) throw new Error('no noteBeingDraggedRightEdge');
         noteBeingDraggedRightEdge.value.dragStart(mouse);
+        notesBeingDraggedRightEdge.forEach(editNote => {
+            editNote.dragStart(mouse);
+        });
         snap.setFocusedNote(noteBeingDraggedRightEdge.value as EditNote);
 
         mouseDragStart = mouse;
@@ -227,6 +232,7 @@ export const useToolStore = defineStore("edit", () => {
         noteBeingHovered.value = false;
         noteRightEdgeBeingHovered.value = false;
         notesBeingDragged = [];
+        notesBeingDraggedRightEdge = [];
         isDragging = false;
         alreadyDuplicatedForThisDrag = false;
         notesBeingCreated.value = [];
@@ -463,6 +469,9 @@ export const useToolStore = defineStore("edit", () => {
         } else if (isDragging && noteBeingDraggedRightEdge.value) {
             snap.resetSnapExplanation();
             noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
+            notesBeingDraggedRightEdge.forEach(editNote => {
+                editNote.dragLengthMove(mouseDelta);
+            });
             const editNote = snap.snap({
                 inNote: noteBeingDraggedRightEdge.value as EditNote,
                 targetOctave: noteBeingDraggedRightEdge.value.octave,
@@ -514,6 +523,7 @@ export const useToolStore = defineStore("edit", () => {
         noteBeingDragged.value = false;
         noteBeingDraggedRightEdge.value = false;
         noteRightEdgeBeingHovered.value = false;
+        notesBeingDraggedRightEdge = [];
     }
 
     watch(() => current, () => {

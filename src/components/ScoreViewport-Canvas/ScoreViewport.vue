@@ -64,7 +64,7 @@ const refreshView = () => {
         }
     }
     if (tool.selectRange.active) {
-        const selRange = view.pxRectOf(tool.selectRange);
+        const selRange = view.rangeToStrictRect(tool.selectRange);
         ctx.fillRect(selRange.x, selRange.y, selRange.width, selRange.height);
     }
 }

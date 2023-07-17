@@ -40,6 +40,7 @@ interface MidiMessageEvent {
 
 interface MidiConnectionMode {
     name: string;
+    notes: string[];
     inputAction: (midi: number[], timeStamp?: number) => void;
 }
 

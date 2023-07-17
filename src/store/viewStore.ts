@@ -153,7 +153,7 @@ export const useViewStore = defineStore("view", () => {
         })
     }
 
-    const pxRectOf = (range: {
+    const rangeToStrictRect = (range: {
         time?: number,
         octave?: number,
         timeEnd?: number,
@@ -171,18 +171,28 @@ export const useViewStore = defineStore("view", () => {
     }
 
     const everyNoteRectAtCoordinates = (x: number, y: number, considerVeloLines: boolean): NoteRect[] => {
-        const items: NoteRect[] = [];
         const noteRects = visibleNoteRects.value;
-        for (let i = 0; i < noteRects.length; i++) {
-            const noteRect = noteRects[i];
-            const effxWidth = noteRect.width || noteRect.radius * 2;
+        const items = noteRects.filter((noteRect) => {
             const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
-            if (
+            const isThin = noteRect.width === 0;
+
+            if (isThin && (
+                // noteRect.x - noteRect.radius <= x &&
+                // noteRect.x + noteRect.radius >= x &&
+                // noteRect.y - noteRect.radius <= y &&
+                // noteRect.y + noteRect.radius >= y
+                x >= noteRect.x - noteRect.radius &&
+                x <= noteRect.x + noteRect.radius &&
+                y >= noteRect.y - noteRect.radius &&
+                y <= noteRect.y + noteRect.radius
+            )) {
+                return true;
+            } else if (
                 (
-                    noteRect.x <= x &&
-                    noteRect.x + effxWidth >= x &&
-                    noteRect.y <= y &&
-                    noteRect.y + noteRect.height >= y
+                    x >= noteRect.x &&
+                    x <= noteRect.x + noteRect.width &&
+                    y >= noteRect.y &&
+                    y <= noteRect.y + noteRect.height
                 ) || (
                     considerVeloLines &&
                     noteRect.x - 7 <= x &&
@@ -190,11 +200,11 @@ export const useViewStore = defineStore("view", () => {
                     veloPy - 7 <= y &&
                     veloPy + 7 >= y
                 )
-
             ) {
-                items.push(noteRect);
+                return true;
             }
-        }
+            return false;
+        });
         return items;
     };
 
@@ -304,7 +314,7 @@ export const useViewStore = defineStore("view", () => {
         timeToBounds,
 
         pxRangeOf,
-        pxRectOf,
+        rangeToStrictRect,
         rectOfNote,
 
         isOctaveInView,

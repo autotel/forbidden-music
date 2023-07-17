@@ -6,6 +6,7 @@ import { SynthParamStored } from '../synth/SynthInterface';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
 import {userShownDisclaimerLocalStorageKey} from '../texts/userDisclaimer';
+import { userCustomPerformanceSettings } from './customSettingsStore';
 
 const version = "0.1.0";
 
@@ -44,7 +45,11 @@ export interface LibraryItem {
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 
-const reservedEntryNames = ["forbidden-music", userShownDisclaimerLocalStorageKey];
+const reservedEntryNames = [
+    "forbidden-music", 
+    userShownDisclaimerLocalStorageKey,
+    userCustomPerformanceSettings,
+];
 
 const normalizeLibraryItem = (obj: any): LibraryItem => {
     if (!obj.version) obj.version = "0.0.0";

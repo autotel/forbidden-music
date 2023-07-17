@@ -5,6 +5,7 @@ import { useCustomSettingsStore } from '../store/customSettingsStore';
 import Cog from '../components/icons/Cog.vue';
 import Collapsible from './Collapsible.vue';
 import Toggle from '../components/inputs/Toggle.vue';
+import Button from '../components/Button.vue';
 
 const userSettings = useCustomSettingsStore();
 
@@ -38,6 +39,7 @@ const viewportTechs = [
                 <input v-model="userSettings.fontSize" type="number"/>
                 <label>Font Size</label>
             </div>
+            <Button @click="userSettings.deleteSettings" tooltip="Delete locally stored settings and use default values">Reset settings</Button>
         </div>
     </Collapsible>
 </template>
