@@ -58,8 +58,8 @@ const clear = () => {
                 <Button :onClick="() => libraryStore.loadFromLibraryItem(filename)" :active="project.name === filename">
                     {{ filename }}
                 </Button>
-                <Button v-if="filename === project.name" :onClick="() => libraryStore.deleteItemNamed(filename)"
-                    :danger="true">
+                <Button :onClick="() => libraryStore.deleteItemNamed(filename)"
+                    :danger="true" tooltip="Delete this item (!)">
                     ×
                 </Button>
             </div>

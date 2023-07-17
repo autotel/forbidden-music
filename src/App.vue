@@ -27,6 +27,7 @@ import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
+import Tooltip from './components/Tooltip.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -359,6 +360,8 @@ watch(paneWidth, () => {
         <CustomOctaveTableTextEditor />
     </Modal>
     <UserDisclaimer />
+
+    <Tooltip/>
 </template>
 <style scoped>
 .unclickable {

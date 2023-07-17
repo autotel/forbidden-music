@@ -5,15 +5,64 @@ import { getNotesInRange } from "../functions/getNotesInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
+const rgbToHex = (r:number, g:number, b:number) => {
+    r = r & 0xff;
+    g = g & 0xff;
+    b = b & 0xff;
+    return ((r << 16) | (g << 8) | b);
+};
+
+const averageColors = (...colors:number[]) => {
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    colors.forEach((c) => {
+        r += (c >> 16) & 0xff;
+        g += (c >> 8) & 0xff;
+        b += c & 0xff;
+    });
+    r = Math.round(r / colors.length);
+    g = Math.round(g / colors.length);
+    b = Math.round(b / colors.length);
+    return rgbToHex(r, g, b);
+};
+
+const desaturate = (color:number, amount:number) => {
+    const r = (color >> 16) & 0xff;
+    const g = (color >> 8) & 0xff;
+    const b = color & 0xff;
+
+    const avg = (r + g + b) / 3;
+    const dr = r - avg;
+    const dg = g - avg;
+    const db = b - avg;
+
+    const newR = Math.round(avg + dr * amount);
+    const newG = Math.round(avg + dg * amount);
+    const newB = Math.round(avg + db * amount);
+
+    return rgbToHex(newR, newG, newB);
+};
+
+const gray = rgbToHex(200, 200, 200);
+
+const preparation = (r:number,g:number,b:number)=>desaturate(averageColors(rgbToHex(r,g,b),0xFFFFFF),0.6);
 
 export const layerNoteColors = [
-    0xCBCDD2,
-    0x738B95,
-    0xCBB691,
-    0xC48892,
-    0x809F7F,
+    gray,
+    preparation(84, 125, 251),
+    preparation(217, 59, 59),
+    preparation(240, 197, 28),
+    preparation(247, 119, 227),
+    preparation(38, 107, 134),
+    preparation(173, 215, 80),
+    preparation(183, 96, 255),
+    preparation(82, 148, 187),
+    preparation(227, 38, 163),
+    preparation(223, 141, 100),
 ];
 
+export const layerNoteColorStrings  = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
 // const measureCallTime = (name:string, fn:Function)=>{
 //     const wrappedFn = (...p:any[])=>{
 //         const start = performance.now();

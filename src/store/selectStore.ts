@@ -53,7 +53,9 @@ export const useSelectStore = defineStore("select", () => {
     const refreshGroupSelectionState = () => {
         project.groups.forEach(g => g.selected = isSelected(g))
     }
-
+    /**
+     * get selected notes
+     */
     const getNotes = (): EditNote[] => {
         return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
     };

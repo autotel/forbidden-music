@@ -1,43 +1,37 @@
 <script setup lang="ts">
 import { ref, useSlots } from 'vue';
 import Tooltip from './Tooltip.vue';
+import { useToolStore } from '../store/toolStore';
 const slots = useSlots()
+const tool = useToolStore();
 
 const props = defineProps<{
     onClick: ((payload: MouseEvent) => void)
     active?: boolean | undefined
     danger?: boolean | undefined
     tooltip?: string
+    inline?: boolean
 }>()
 
-const showTooltip = ref(false);
-const showTimeout = ref<false | NodeJS.Timeout>(false);
 
 const mouseEnter = (e: MouseEvent) => {
-    if (!(props.tooltip || slots.tooltip)) return;
-    if (showTimeout.value) return;
-    showTimeout.value = setTimeout(() => {
-        showTooltip.value = true;
-    }, 500);
+    let tooltip = props.tooltip || slots.tooltip?.toString();
+    if (!tooltip) return;
+    tool.tooltip = tooltip;
+    tool.tooltipOwner = e.target as HTMLElement;
 }
 
 const mouseLeave = (e: MouseEvent) => {
-    if (showTimeout.value) clearTimeout(showTimeout.value);
-    showTimeout.value = false;
-    showTooltip.value = false;
+    tool.tooltip = '';
+    tool.tooltipOwner = null;
 }
 
 
 </script>
 
 <template>
-    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger }">
+    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger, inline }">
         <slot></slot>
-        <Tooltip v-if="tooltip && showTooltip">
-            <slot name="tooltip" v-if="showTooltip">
-                {{ tooltip }}
-            </slot>
-        </Tooltip>
     </button>
 </template>
 
@@ -65,5 +59,13 @@ button.active:hover {
 
 button.danger:hover {
     background-color: rgb(255, 90, 49);
+}
+
+button.inline {
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    display: inline-block;
+    position: relative;
 }
 </style>

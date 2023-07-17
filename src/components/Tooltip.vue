@@ -1,122 +1,95 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
+import { useToolStore } from '../store/toolStore';
+const tool = useToolStore();
+const container = ref<HTMLDivElement>();
+const currentShowTimeout = ref<NodeJS.Timeout | null>(null);
+const show = ref(false);
 
-const fEl = ref<HTMLDivElement>();
-const mEl = ref<HTMLDivElement>();
-const followMouse = false;
-let corner: "tl" | "tr" | "bl" | "br" = "tl";
+const followMouse = true;
 
-const mmm = (e: MouseEvent) => {
-    if (!fEl.value) return;
-    if (!mEl.value) return;
+const mousepos = (e: MouseEvent) => {
 
-    const rect = mEl.value.getBoundingClientRect();
-    
-    if(corner[1] == 'l'){
-        fEl.value.style.left = e.offsetX + "px";
-    }else{
-        fEl.value.style.right = rect.width - e.offsetX + "px";
+    if (!container.value) return;
+
+    const rect = container.value.getBoundingClientRect();
+    const left = e.clientX < window.innerWidth / 2;
+    const top = e.clientY < window.innerHeight / 2;
+
+    if (left) {
+        container.value.style.left = e.clientX + "px";
+    } else {
+        container.value.style.left = e.clientX - rect.width + "px";
     }
-    if(corner[0] == 't'){
-        fEl.value.style.top = e.offsetY + "px";
-    }else{
-        fEl.value.style.bottom = rect.height - e.offsetY + "px";
+    if (top) {
+        container.value.style.top = e.clientY + "px";
+    } else {
+        container.value.style.top = e.clientY - rect.height + "px";
     }
-    
+
 }
 
 onMounted(() => {
-    if (!fEl.value) return;
-    if (!mEl.value) return;
+    if (!container.value) throw new Error("Container not found");
 
     const clWidthH = window.innerWidth / 2;
     const clHeightH = window.innerHeight / 2;
 
-    const rect = mEl.value.getBoundingClientRect();
-    const hClass = rect.left < clWidthH ? "left" : "right";
-    const vClass = rect.top < clHeightH ? "top" : "bottom";
-
-    if (vClass == "top" && hClass == "left") {
-        corner = "tl";
-    } else if (vClass == "top" && hClass == "right") {
-        corner = "tr";
-    } else if (vClass == "bottom" && hClass == "left") {
-        corner = "bl";
-    } else if (vClass == "bottom" && hClass == "right") {
-        corner = "br";
-    }
 
 
     if (followMouse) {
-        mEl.value.style.position = "absolute";
-        mEl.value.style.left = "0";
-        mEl.value.style.top = "0";
-        mEl.value.style.width = "100%";
-        mEl.value.style.height = "100%";
-        // mEl.value.style.backgroundColor = "red";
-
-        mEl.value.addEventListener('mousemove', mmm);
-        mEl.value.addEventListener('mouseenter', mmm);
+        document.addEventListener('mousemove', mousepos);
+        document.addEventListener('mouseenter', mousepos);
     }
-
-    fEl.value.className = `${vClass} ${hClass} floating-text-box`;
-    mEl.value.style.opacity = "0.9";
 
 });
 
 
-onUnmounted(() => {
-    if (!fEl.value) return;
-    if (!mEl.value) return;
-    fEl.value.style.opacity = "0";
+onBeforeUnmount(() => {
+    if (!container.value) return;
     if (followMouse) {
-        mEl.value.removeEventListener('mousemove', mmm);
-        mEl.value.removeEventListener('mouseenter', mmm);
+        document.removeEventListener('mousemove', mousepos);
+        document.removeEventListener('mouseenter', mousepos);
     }
 });
+
+watch(() => tool.tooltipOwner, () => {
+    if (currentShowTimeout.value) {
+        clearTimeout(currentShowTimeout.value);
+    }
+    if (tool.tooltipOwner) {
+        currentShowTimeout.value = setTimeout(() => {
+            show.value = true;
+        }, 500);
+    } else {
+        show.value = false;
+    }
+})
 
 </script>
 
 <template>
-    <div class="container" ref="mEl">
-        <div class="floating-text-box" ref="fEl">
-            <slot></slot>
-        </div>
+    <div class="container" ref="container" :class="{ hidden: !show }">
+        {{ tool.tooltip }}
     </div>
 </template>
 <style>
 .container {
     position: fixed;
     z-index: 4;
-    width: 0;
-    height: 0;
-    opacity: 0;
-    transition: 0.5s opacity;
-}
-
-.floating-text-box {
+    /* transition: 0.5s opacity; */
     pointer-events: none;
-    position: absolute;
-    display: block;
-    padding: 1em;
-    background-color: white;
-    border: solid 1px;
-    border-radius: 0.3rem;
-}
-
-.floating-text-box.bottom {
-    bottom: 0;
-}
-
-.floating-text-box.top {
-    top: 0;
-}
-
-.floating-text-box.right {
-    right: 0;
-}
-
-.floating-text-box.left {
+    background-color: rgba(255, 255, 255, 0.9);
+    opacity: 1;
     left: 0;
+    top: 0;
+
+    padding:  0.5em 1em;
+    border: solid 1px;
+    border-radius: 5px;
+}
+
+.container.hidden {
+    opacity: 0;
 }
 </style>

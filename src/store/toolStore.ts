@@ -39,6 +39,9 @@ export const useToolStore = defineStore("edit", () => {
     const project = useProjectStore();
     const snap = useSnapStore();
 
+    const tooltip = ref("");
+    const tooltipOwner = ref<HTMLElement | null>(null);
+
     // TODO: probably not all these need to be refs
     /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
@@ -284,15 +287,18 @@ export const useToolStore = defineStore("edit", () => {
             case MouseDownActions.AddToSelection:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.add(noteBeingHovered.value);
+                currentLayerNumber.value = noteBeingHovered.value.layer;
                 break;
             case MouseDownActions.AddToSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.add(noteBeingHovered.value);
+                currentLayerNumber.value = noteBeingHovered.value.layer;
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.SetSelectionAndDrag:
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.select(noteBeingHovered.value);
+                currentLayerNumber.value = noteBeingHovered.value.layer;
                 _dragStartAction(mouse);
                 break;
             case MouseDownActions.RemoveFromSelection:
@@ -570,5 +576,7 @@ export const useToolStore = defineStore("edit", () => {
         currentLayerNumber,
 
         currentlyActiveGroup,
+        tooltip,
+        tooltipOwner,
     }
 })

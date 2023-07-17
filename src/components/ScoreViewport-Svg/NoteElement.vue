@@ -2,13 +2,12 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, layerNoteColors, useViewStore } from '../../store/viewStore';
+import { NoteRect, layerNoteColorStrings, layerNoteColors, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
 
 
-const layerNoteColorStrings  = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{

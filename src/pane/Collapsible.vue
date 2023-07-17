@@ -1,11 +1,7 @@
 <script setup lang="ts">
 
-import { computed, onMounted, ref, watchEffect } from "vue";
+import { ref } from "vue";
 import Button from "../components/Button.vue";
-import Lock from "../components/icons/Lock.vue";
-import LockOpen from "../components/icons/LockOpen.vue";
-import AnglesLeft from "../components/icons/AnglesLeft.vue";
-import AnglesRight from "../components/icons/AnglesRight.vue";
 
 const props = defineProps<{
     pulltip?: string,
@@ -13,13 +9,24 @@ const props = defineProps<{
     title?: string,
     startExpanded?: boolean,
 }>();
-
+const content = ref<HTMLElement | null>(null);
 const expanded = ref(props.startExpanded ?? true);
+// const measureContentHeight = () => {
+//     if (content.value) {
+//         content.value.style.height = "auto";
+//         // content.value.style.transition = "none";
+//         const height = content.value.clientHeight;
+//         content.value.style.height = "0";
+//         // content.value.style.transition = '';
+//         return height;
+//     }
+//     return 0;
+// }
 
 </script>
 
 <template>
-    <Button :onClick="() => expanded = !expanded" class="full-width" >
+    <Button :onClick="() => expanded = !expanded" class="full-width">
         <span class="icon">
             <slot name="icon">
             </slot>
@@ -28,11 +35,12 @@ const expanded = ref(props.startExpanded ?? true);
             <div></div>
         </span>
     </Button>
-    <div class="content-container full-width" :class="{ expanded }">
+    <div ref="content" class="content-container full-width" :class="{ expanded }">
         <slot>
         </slot>
     </div>
 </template>
+
 <style scoped>
 .icon {
     display: flex;
@@ -52,6 +60,5 @@ const expanded = ref(props.startExpanded ?? true);
 
 .content-container.expanded {
     height: auto;
-    padding: 0.5em;
 }
 </style>

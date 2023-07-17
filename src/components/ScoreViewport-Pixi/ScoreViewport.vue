@@ -268,14 +268,15 @@ const refreshView = (time: number) => {
 
     if (measureSteps) taskMark("6. draw notes");
     // draw notes & velolines if 
-    graphics.lineStyle(1, 0xAAAAAA, 0.5);
 
     for (const nRect of visibleNotes) {
         const lcolor = layerNoteColors[nRect.event.layer];
         if (nRect.event.selected) {
             graphics.beginFill(lcolor, 1);
+            graphics.lineStyle(1, 0x555555, 0.9);
         } else {
             graphics.beginFill(lcolor, 0.5);
+            graphics.lineStyle(1, 0xAAAAAA, 0.5);
         }
         if (nRect.width) {
             // ctx.fillRect(nRect.x, nRect.y, nRect.width, nRect.height);

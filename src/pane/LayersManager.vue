@@ -15,19 +15,32 @@ import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { useProjectStore } from "../store/projectStore";
 import Collapsible from "./Collapsible.vue";
 import { ref } from "vue";
-import { useViewStore } from "../store/viewStore";
+import { useViewStore, layerNoteColorStrings } from "../store/viewStore";
 import { useToolStore } from "../store/toolStore";
-
+import { useSelectStore } from "../store/selectStore";
+import SquarePlus from "../components/icons/SquarePlus.vue";
+import Tooltip from "../components/Tooltip.vue";
 
 const project = useProjectStore();
 const view = useViewStore();
 const tool = useToolStore();
+const selection = useSelectStore();
+
 
 const switchLayerVisibility = (layerNo: number) => {
     view.layerVisibility[layerNo] = !view.layerVisibility[layerNo];
 }
 const addLayer = () => {
     view.layerVisibility.push(true);
+}
+const setSelectedNotesLayerToCurrent = () => {
+    const selectedNotes = selection.getNotes();
+    if (selectedNotes.length) {
+        const layer = tool.currentLayerNumber;
+        for (const note of selectedNotes) {
+            note.layer = layer;
+        }
+    }
 }
 </script>
 <template>
@@ -44,6 +57,10 @@ const addLayer = () => {
                 :onClick="()=>tool.currentLayerNumber = layerNo"
             >
                 {{ layerNo?`Layer ${layerNo}`:'Base' }}
+                <div v-if="layerNo" class="layer-color" :style="{ backgroundColor: layerNoteColorStrings[layerNo] }"></div>
+                    <Button inline tooltip="Set selection's layer to this layer" :onClick="setSelectedNotesLayerToCurrent">
+                        <SquarePlus />
+                    </Button>
                 <span v-on:click="switchLayerVisibility(layerNo)">
                     <Eye v-if="visible" />
                     <EyeNot v-else />
@@ -59,5 +76,11 @@ const addLayer = () => {
 <style>
 input[type="file"] {
     display: none;
+}
+.layer-color {
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
 }
 </style>
