@@ -39,3 +39,11 @@ const props = defineProps<{
     overflow-x: hidden;
 }
 </style>
+<style>
+.icon svg {
+    font-size: 30px;
+}
+.icon {
+    font-size: 20px;
+}
+</style>

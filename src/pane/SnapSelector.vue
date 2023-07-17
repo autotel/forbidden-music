@@ -19,7 +19,7 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
 <template>
   <Collapsible pulltip="open snaps">
     <template v-slot:icon>
-      <Magnet/>
+      <Magnet clas="icon"/>
       Constraints
     </template>
     <Button v-for="(isnap, snapName) in snap.values" :onClick="() => isnap.active = !isnap.active" :class="{

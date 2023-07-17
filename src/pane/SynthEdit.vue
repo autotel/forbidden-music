@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
 <template>
     <Collapsible>
         <template #icon>
-            <HeartPulse />
+            <HeartPulse  clas="icon"/>
             synth params
         </template>
         <div>

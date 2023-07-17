@@ -11,7 +11,7 @@ const playback = usePlaybackStore();
 <template>
   <Collapsible pulltip="open snaps">
     <template v-slot:icon>
-      <Link />
+      <Link clas="icon"/>
       Midi Sync
     </template>
     <div>

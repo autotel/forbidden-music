@@ -153,7 +153,7 @@ const download = () => {
 <template>
     <Collapsible pulltip="save and load" title="file">
         <template #icon>
-            <Folder />
+            <Folder clas="icon"/>
             Save and load
         </template>
         <small>{{ isTauri() ? workingDirectory : '' }}/{{ project.name }}.json</small>

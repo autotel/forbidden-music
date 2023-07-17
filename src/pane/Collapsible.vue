@@ -23,8 +23,9 @@ const expanded = ref(props.startExpanded ?? true);
         <span class="icon">
             <slot name="icon">
             </slot>
-            <AnglesLeft v-if="expanded" />
-            <AnglesRight v-else />
+            <!-- <AnglesLeft v-if="expanded" />
+            <AnglesRight v-else /> -->
+            <div></div>
         </span>
     </Button>
     <div class="content-container full-width" :class="{ expanded }">
@@ -34,10 +35,6 @@ const expanded = ref(props.startExpanded ?? true);
 </template>
 <style scoped>
 .icon {
-    /* font-size: 1.5em; */
-    /* text-align: center; */
-    /* fill: rgb(218, 62, 0);
-     */
     display: flex;
     justify-content: space-between;
     align-items: center;

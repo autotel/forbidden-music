@@ -2,7 +2,7 @@
 import Button from "../components/Button.vue";
 import Archive from "../components/icons/Archive.vue";
 import Folder from "../components/icons/Folder.vue";
-import Save from "../components/icons/Save.vue";
+import Layers from "../components/icons/Layers.vue";
 import Eye from "../components/icons/Eye.vue";
 import EyeNot from "../components/icons/EyeNot.vue";
 import CheckBoxChecked from "../components/icons/CheckBoxChecked.vue";
@@ -33,7 +33,7 @@ const addLayer = () => {
 <template>
     <Collapsible pulltip="save and load" title="file">
         <template #icon>
-            <Folder />
+            <Layers  clas="icon"/>
             Layers
         </template>
         <br>
