@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { ArraySynthParam } from '../../synth/SynthInterface';
-import NumberKnob from '../NumberKnob.vue';
+import NumberKnob from './NumberKnob.vue';
 const props = defineProps({
     param: {
         type: Object as () => ArraySynthParam,

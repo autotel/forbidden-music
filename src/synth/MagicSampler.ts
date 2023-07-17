@@ -1,4 +1,6 @@
-import { ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
+import { time } from "console";
+import { NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
+import { set } from "@vueuse/core";
 
 class PerformanceChronometer {
     private startTime: number;
@@ -128,7 +130,8 @@ class SamplerVoice {
         frequency: number,
         duration: number,
         relativeNoteStart: number,
-        velocity: number
+        velocity: number,
+        adsr: number[]
     ) => {
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
         let catchup = relativeNoteStart < 0;
@@ -141,7 +144,9 @@ class SamplerVoice {
             relativeNoteStart = 0;
         }
         const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
-        const absoluteNoteEnd = absoluteNoteStart + duration;
+        const scoreNoteEnd = absoluteNoteStart + duration;
+        const durationWithRelease = duration + adsr[3];
+
         this.inUse = true;
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
         this.resetBufferSource(sampleSource);
@@ -150,23 +155,31 @@ class SamplerVoice {
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
 
         this.outputNode.gain.value = 0;
-        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + 0.001);
-        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteEnd);
-        this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd + 0.3);
-        // note: offset start is not quite precise because it's missing the pitch shift component
-        this.bufferSource.start(absoluteNoteStart, skipSample, duration);
+        let timeAccumulator = absoluteNoteStart;
+        this.outputNode.gain.setValueAtTime(0, timeAccumulator);
+        timeAccumulator += adsr[0];
+        this.outputNode.gain.linearRampToValueAtTime(velocity, timeAccumulator);
+        timeAccumulator += adsr[1];
+        this.outputNode.gain.linearRampToValueAtTime(/**value!*/adsr[2], timeAccumulator);
+        timeAccumulator = scoreNoteEnd;
+        // this.outputNode.gain.cancelAndHoldAtTime(timeAccumulator);
+        timeAccumulator += adsr[3];
+        this.outputNode.gain.linearRampToValueAtTime(0, timeAccumulator);
+
+        this.bufferSource.start(absoluteNoteStart, skipSample, durationWithRelease);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };
 
     triggerPerc = (
         frequency: number,
         relativeNoteStart: number,
-        velocity: number
+        velocity: number,
+        adsr: number[]
     ) => {
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
         // TODO: duration might be innacurate bc. of play rate
         const duration = sampleSource.sampleBuffer!.duration;
-        this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity, adsr);
     }
 
     stop = () => {
@@ -216,6 +229,7 @@ export class MagicSampler implements SynthInstance {
     private sampleVoices: SamplerVoice[] = [];
     private outputNode: GainNode;
     private loadingProgress = 0;
+    private adsr = [0.01, 10, 0, 0.2];
     credits: string = "";
     name: string = "unnamed";
     enable: () => void;
@@ -273,6 +287,22 @@ export class MagicSampler implements SynthInstance {
             }
         } as ProgressSynthParam);
 
+        this.adsr.forEach((v, i) => {
+            this.params.push({
+                displayName: ['attack', 'decay', 'sustain', 'release'][i],
+                type: ParamType.number,
+                min: 0, max: 10,
+                get value() {
+                    return parent.adsr[i];
+                },
+                set value(value: number) {
+                    console.log("set",['attack', 'decay', 'sustain', 'release'][i], value);
+                    parent.adsr[i] = value;
+                },
+                curve: 'log'
+            } as NumberSynthParam);
+        });
+
     }
     triggerAttackRelease = (
         frequency: number,
@@ -290,7 +320,7 @@ export class MagicSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
-        sampleVoice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        sampleVoice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity, this.adsr);
     };
     triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
         let sampleVoice = this.sampleVoices.find((sampleVoice) => {
@@ -303,7 +333,7 @@ export class MagicSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
-        sampleVoice.triggerPerc(frequency, relativeNoteStart, velocity);
+        sampleVoice.triggerPerc(frequency, relativeNoteStart, velocity, this.adsr);
 
     };
     releaseAll = () => {
