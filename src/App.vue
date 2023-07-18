@@ -22,7 +22,6 @@ import { useSelectStore } from './store/selectStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-
 import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
@@ -262,7 +261,6 @@ const keyDownListener = (e: KeyboardEvent) => {
 
     }
 }
-
 
 onMounted(() => {
     if (clickOutsideCatcher.value) {
