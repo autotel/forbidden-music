@@ -15,7 +15,7 @@ import { FourierSynth } from '../synth/FourierSynth';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { MagicSampler } from '../synth/MagicSampler';
 import { SineSynth } from '../synth/SineSynth';
-import { ParamType, SynthInstance, SynthParam } from "../synth/SynthInterface";
+import { OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinimum } from "../synth/SynthInterface";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
@@ -138,8 +138,19 @@ export const usePlaybackStore = defineStore("playback", () => {
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
     const availableSynths = ref([] as SynthInstance[]);
-    //@ts-ignore
     const midiInputs = ref([] as MidiInputInterface[]);
+    const currentMidiInput = ref<MidiInputInterface | null>(null);
+
+    // const synthParams = ref([] as SynthParam[]);
+    // const synth = ref<SynthInstance | undefined>(undefined);
+
+    interface SynthChannel {
+        synth: SynthInstance;
+        params: SynthParam[];
+        layer: number;
+    }
+
+    const synths = ref([] as SynthChannel[]);
 
     const clockTicker = () => {
         if (playing.value) {
@@ -156,11 +167,21 @@ export const usePlaybackStore = defineStore("playback", () => {
         reaperMidiInputHandler(...inputHandlerParams),
         devMidiInputHandler(...inputHandlerParams),
     ] as MidiConnectionMode[];
+
     const currentMidiConnectionMode = ref(midiConectionModes[0]);
 
-    let synth = ref<SynthInstance | undefined>(undefined);
+    const addSynth = () => {
+        const newSynth = {
+            synth: availableSynths.value[0],
+            params: availableSynths.value[0].params,
+            layer: 0
+        };
+        synths.value.push(newSynth);
+        return newSynth;
+    }
 
     let audioContextListenerAlreadyStarted = false;
+
     const startContextListener = async () => {
         if (audioContextListenerAlreadyStarted) return;
         audioContextListenerAlreadyStarted = true;
@@ -213,7 +234,11 @@ export const usePlaybackStore = defineStore("playback", () => {
             console.log("local only samples disabled");
         }
         console.log("available synths", availableSynths.value.map(s => s.name));
-        synth.value = availableSynths.value[0];
+        synths.value = [{
+            synth: availableSynths.value[0],
+            params: [],
+            layer: 0
+        }];
 
         console.log("audio is ready");
         if (audioContext.state === "running") {
@@ -243,8 +268,6 @@ export const usePlaybackStore = defineStore("playback", () => {
     // otherwise, wait for interaction
     window.addEventListener("mousedown", startContextListener);
 
-    //@ts-ignore
-    const currentMidiInput = ref<MidiInputInterface | null>(null);
 
     // if (!isTauri()) {
     getMidiInputsArray().then((inputs) => {
@@ -301,25 +324,31 @@ export const usePlaybackStore = defineStore("playback", () => {
         isFirtClockAfterPlay = false;
         const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
 
+        const layerChan: SynthChannel[] = [];
+        synths.value.forEach((synthChannel) => {
+            if (!layerChan[synthChannel.layer]) layerChan[synthChannel.layer] = synthChannel;
+        });
 
         playNotes.forEach((editNote) => {
             if (editNote.mute) return;
-            if (!synth.value) throw new Error("synth not created");
+            if (!synths.value.length) throw new Error("no synth created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = editNote.time - currentScoreTime.value;
             // const noteStart = now + noteStartFromNow;
 
+            const synth = layerChan[editNote.layer]?.synth || synths.value[0].synth;
+
             try {
                 if (editNote.duration) {
                     const noteDuration = editNote.duration / rate;
-                    synth.value.triggerAttackRelease(
+                    synth.triggerAttackRelease(
                         editNote.frequency,
                         noteDuration,
                         noteStartFromNow,
                         editNote.velocity
                     );
                 } else {
-                    synth.value.triggerPerc(
+                    synth.triggerPerc(
                         editNote.frequency,
                         noteStartFromNow,
                         editNote.velocity
@@ -354,7 +383,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         currentScoreTime.value = timeReturnPoint.value;
         previousScoreTime.value = timeReturnPoint.value;
         previousClockTime.value = 0;
-        synth.value?.releaseAll();
+        synths.value.forEach(({ synth }) => synth.releaseAll());
     }
 
     const pause = () => {
@@ -366,50 +395,86 @@ export const usePlaybackStore = defineStore("playback", () => {
     const setSynthByName = (synthName: string) => new Promise<SynthInstance>((resolve, reject) => {
         const foundSynth = availableSynths.value.find((s) => s.name === synthName);
         if (foundSynth) {
-            // change synth but with workaround 
-            // to force update synthParams.
-            synth.value = undefined;
-            setTimeout(() => {
-                synth.value = foundSynth;
-                resolve(foundSynth);
-            }, 0);
+            //     // change synth but with workaround 
+            //     // to force update synthParams.
+            //     synths.value[0] = undefined;
+            //     setTimeout(() => {
+            //         resolve(foundSynth);
+            //     }, 0);
+            synths.value[0] = {
+                synth: foundSynth,
+                params: foundSynth.params,
+                layer: 0
+            };
         } else {
             console.error("synth not found", synthName);
             reject();
         }
     })
 
-    const synthParams = ref([] as SynthParam[]);
 
-    watch(() => synth.value?.params, () => {
-        // selec which synth to choose
-        const val = [
-            {
-                type: ParamType.option,
-                displayName: "Synth",
-                get value() {
-                    const ret = synth.value ? availableSynths.value.indexOf(
-                        synth.value
-                    ) : 0;
-                    if (ret === -1) {
-                        console.error("synth not found");
-                        return 0;
-                    }
-                    return ret;
-                },
-                set value(choiceNo: number) {
-                    synth.value = availableSynths.value[choiceNo];
-                },
-                options: availableSynths.value.map((s, index) => ({
-                    value: index,
-                    displayName: s.name,
-                })),
-            },
-        ] as SynthParam[];
-        if (synth.value?.params) val.push(...synth.value.params);
-        synthParams.value = val;
-        console.log("params", synth.value);
-    });
+    // watch(() => synth.value?.params, () => {
+    //     // selec which synth to choose
+    //     const val = [
+    //         {
+    //             type: ParamType.option,
+    //             displayName: "Synth",
+    //             get value() {
+    //                 const ret = synth.value ? availableSynths.value.indexOf(
+    //                     synth.value
+    //                 ) : 0;
+    //                 if (ret === -1) {
+    //                     console.error("synth not found");
+    //                     return 0;
+    //                 }
+    //                 return ret;
+    //             },
+    //             set value(choiceNo: number) {
+    //                 synth.value = availableSynths.value[choiceNo];
+    //             },
+    //             options: availableSynths.value.map((s, index) => ({
+    //                 value: index,
+    //                 displayName: s.name,
+    //             })),
+    //         },
+    //     ] as SynthParam[];
+    //     if (synth.value?.params) val.push(...synth.value.params);
+    //     synthParams.value = val;
+    //     console.log("params", synth.value);
+    // });
+
+    const synthSelector = (synthChannel: SynthChannel):OptionSynthParam => ({
+        type: ParamType.option,
+        displayName: "Synth",
+        getValue(synthChannel: SynthChannel) {
+            const ret = synthChannel.synth ? availableSynths.value.indexOf(
+                synthChannel.synth
+            ) : 0;
+            if (ret === -1) {
+                console.error("synth not found");
+                return 0;
+            }
+            return ret;
+        },
+        setValue(synthChannel: SynthChannel, choiceNo: number) {
+            const oldSynth = synthChannel.synth;
+            synthChannel.synth = availableSynths.value[choiceNo];
+            synthChannel.params = synthChannel.synth.params;
+            console.log("disabling old synth", oldSynth.name, "enabling", synthChannel.synth.name);
+            oldSynth.disable();
+            synthChannel.synth.enable();
+        },
+        get value() {
+            return this.getValue(synthChannel);
+        },
+        set value(choiceNo: number) {
+            this.setValue(synthChannel, choiceNo);
+        },
+        options: availableSynths.value.map((s, index) => ({
+            value: index,
+            displayName: s.name,
+        })),
+    })
 
 
     watchEffect(() => {
@@ -417,9 +482,17 @@ export const usePlaybackStore = defineStore("playback", () => {
         playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
     });
 
-    watch(synth, (newSynth, oldSynth) => {
-        if (newSynth) newSynth.enable();
-        if (oldSynth) oldSynth.disable();
+    watch(synths, (newSynth, oldSynth) => {
+        const deletedSynths = oldSynth.filter((oldSynth) => !newSynth.find((newSynth) => newSynth.synth === oldSynth.synth));
+        deletedSynths.forEach((deletedSynth) => {
+            console.log("disable synth", deletedSynth.synth.name);
+            deletedSynth.synth.disable();
+        })
+        const createdSynths = newSynth.filter((newSynth) => !oldSynth.find((oldSynth) => newSynth.synth === oldSynth.synth));
+        createdSynths.forEach((createdSynth) => {
+            console.log("enable synth", createdSynth.synth.name);
+            createdSynth.synth.enable();
+        });
     });
 
     // i.e. when user skips in timeline
@@ -442,16 +515,15 @@ export const usePlaybackStore = defineStore("playback", () => {
         playbarPxPosition,
         paused,
         stopped,
-        synth,
+        synths,
         play,
         stop,
         pause,
-        synthParams,
         setSynthByName,
         midiInputs, currentMidiInput,
         midiConectionModes, currentMidiConnectionMode,
-
-
+        synthSelector,
+        addSynth,
         testBeep: async () => {
             await invoke("beep", {});
             console.log("beeped");
