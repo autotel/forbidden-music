@@ -8,6 +8,7 @@ import SynthEdit from './SynthEdit.vue';
 import PerformanceSettings from './PerformanceSettings.vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import LayersManager from './LayersManager.vue';
+import Physical from './Physical.vue';
 
 const playback = usePlaybackStore();
 const props = defineProps<{
@@ -24,6 +25,7 @@ const props = defineProps<{
         <SnapSelector startExpanded/>
         <PerformanceSettings />
         <MidiInputConfig/>
+        <Physical/>
     </div>
 </template>
 

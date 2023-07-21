@@ -56,11 +56,11 @@ const viewportTechs = [
                 <Toggle v-model="userSettings.polyphonyEnabled" />
                 <label>Polyphony</label>
             </div>
-
+            <!-- 
             <div class="form-row">
                 <Toggle v-model="userSettings.performanceSettingsEnabled" />
                 <label>Performance Settings (!)</label>
-            </div>
+            </div> -->
 
             <Button @click="userSettings.deleteSettings" tooltip="Delete locally stored settings and use default values">Unsave settings</Button>
             <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>

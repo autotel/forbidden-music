@@ -122,44 +122,50 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Tone,
         active: true,
     },
+    equal7: {
+        description: "Equal temperament, 7 tones",
+        icon: "7EDO",
+        type: SnapType.Tone,
+        active: true,
+    },
     equal10: {
-        description: "Equal temperament, 10 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 10 tones",
         icon: "10EDO",
         type: SnapType.Tone,
         active: false,
     },
     equal12: {
-        description: "Equal temperament, 12 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 12 tones",
         icon: "12EDO",
         type: SnapType.Tone,
         active: false,
     },
     equal19: {
-        description: "Equal temperament, 19 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 19 tones",
         icon: "19EDO",
         type: SnapType.Tone,
         active: false,
     },
     equal22: {
-        description: "Equal temperament, 22 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 22 tones",
         icon: "22EDO",
         type: SnapType.Tone,
         active: false,
     },
     equal24: {
-        description: "Equal temperament, 24 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 24 tones",
         icon: "24EDO",
         type: SnapType.Tone,
         active: false,
     },
     equal31: {
-        description: "Equal temperament, 31 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 31 tones",
         icon: "31EDO",
         type: SnapType.Tone,
         active: false,
     },
     equal48: {
-        description: "Equal temperament, 48 tones. Tone is divided equally into 12 tones per octave",
+        description: "Equal temperament, 48 tones",
         icon: "48EDO",
         type: SnapType.Tone,
         active: false,
@@ -316,6 +322,9 @@ export const useSnapStore = defineStore("snap", () => {
         }
         if (snapValues.equal1.active === true) {
             toneSnap.addSnappedValue(Math.round(targetOctave));
+        }
+        if (snapValues.equal7.active === true) {
+            EDOSsnap(7, targetOctave, toneSnap);
         }
         if (snapValues.equal10.active === true) {
             EDOSsnap(10, targetOctave, toneSnap);

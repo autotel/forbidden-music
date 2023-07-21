@@ -3,26 +3,20 @@ import * as PIXI from 'pixi.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { EditNote } from '../../dataTypes/EditNote';
 import { Tool } from '../../dataTypes/Tool';
+import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { useGridsStore } from '../../store/gridsStore';
 import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
-import { useProjectStore } from '../../store/projectStore';
-import { useSelectStore } from '../../store/selectStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
 import { layerNoteColors, useViewStore } from '../../store/viewStore';
-import { useCustomSettingsStore } from '../../store/customSettingsStore';
-import { text } from 'stream/consumers';
-import { SelectableType } from '../../dataTypes/TimelineItem';
 
-const project = useProjectStore();
 const tool = useToolStore();
 const playback = usePlaybackStore();
 const view = useViewStore();
 const canvasContainer = ref<HTMLDivElement>();
 const mainInteraction = useMonoModeInteraction().getInteractionModal("default");
 const gridsStore = useGridsStore();
-const selection = useSelectStore();
 const rightEdgeWidth = 10;
 const snap = useSnapStore();
 const userSettings = useCustomSettingsStore();
@@ -42,6 +36,7 @@ const props = defineProps<{
 }>();
 
 let noteBeingRightEdgeHovered: EditNote | null = null;
+
 
 const mouseMoveListener = (e: MouseEvent) => {
     const notesAtCoords = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current === Tool.Modulation);
@@ -63,7 +58,7 @@ const mouseMoveListener = (e: MouseEvent) => {
         } else {
             tool.noteMouseEnter(firstNoteRect.event as EditNote);
         }
-    } else if(noteBeingRightEdgeHovered){
+    } else if (noteBeingRightEdgeHovered) {
         tool.noteRightEdgeMouseLeave();
         noteBeingRightEdgeHovered = null;
     } else if (!firstNoteRect && tool.noteBeingHovered) {
@@ -345,7 +340,6 @@ const requestedAnimationFrame = ref<number>(0);
 </template>
 
 <style scoped>
-
 .cursor-draw {
     cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
 }
@@ -361,7 +355,4 @@ const requestedAnimationFrame = ref<number>(0);
 .cursor-grabbing {
     cursor: grabbing;
 }
-
- 
-
 </style>

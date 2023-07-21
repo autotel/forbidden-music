@@ -4,6 +4,7 @@ import Archive from "../components/icons/Archive.vue";
 import CheckBoxBlank from "../components/icons/CheckBoxBlank.vue";
 import CheckBoxChecked from "../components/icons/CheckBoxChecked.vue";
 import Folder from "../components/icons/Folder.vue";
+import { userConfirm } from "../functions/userConfirm";
 import { KeyActions, getActionForKeys, getKeyCombinationString } from "../keyBindings";
 import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
@@ -58,7 +59,10 @@ const clear = () => {
                 <Button :onClick="() => libraryStore.loadFromLibraryItem(filename)" :active="project.name === filename">
                     {{ filename }}
                 </Button>
-                <Button :onClick="() => libraryStore.deleteItemNamed(filename)"
+                <Button :onClick="() => {
+                        userConfirm(`Are you sure you want to delete ${filename}?`)
+                            .accepted(()=>libraryStore.deleteItemNamed(filename))
+                    }"
                     :danger="true" tooltip="Delete this item (!)">
                     ×
                 </Button>

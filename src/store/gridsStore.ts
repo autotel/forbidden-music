@@ -9,6 +9,15 @@ export interface GridLabel {
     y: number | null;
 }
 
+
+const shaveNumber = (n: number, maxLength: number = 5) => {
+    const s = "" + n;
+    // note that this is a kind of "floor" function; 0.99999 becomes 0.9 
+    if (s.length > maxLength) {
+        return "~" + s.slice(0, maxLength);
+    }
+    return s;
+}
 export const useGridsStore = defineStore('grids', () => {
 
     const snap = useSnapStore();
@@ -16,6 +25,7 @@ export const useGridsStore = defineStore('grids', () => {
     const linePositionsPx = ref([]) as Ref<number[]>;
     const linePositionsPy = ref([]) as Ref<number[]>;
     const lineLabels = ref([]) as Ref<GridLabel[]>;
+
 
     watchEffect(() => {
         linePositionsPx.value = [];
@@ -27,7 +37,7 @@ export const useGridsStore = defineStore('grids', () => {
             linePositionsPx.value.push(
                 px
             );
-            if(prevX ===0 || px - prevX > 40) {
+            if (prevX === 0 || px - prevX > 40) {
                 lineLabels.value.push({
                     text: `${Math.floor(i + view.timeOffset)}`,
                     x: px,
@@ -36,7 +46,7 @@ export const useGridsStore = defineStore('grids', () => {
                 prevX = px;
             }
         }
-        
+
         if (snap.values['customFrequencyTable']?.active) {
             // display one line per frequency in the tableä
             const octaves = snap.customOctavesTable;
@@ -48,7 +58,7 @@ export const useGridsStore = defineStore('grids', () => {
                     py
                 );
                 lineLabels.value.push({
-                    text: `${octave}`,
+                    text: shaveNumber(octave),
                     x: null,
                     y: py,
                 });

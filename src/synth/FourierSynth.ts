@@ -75,7 +75,9 @@ class FourierVoice {
         oscillator.start();
         this.periodicWaveRef = periodicWaveRef;
         const releaseVoice = () => {
-            gainNode.gain.cancelScheduledValues(0);
+            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+            // firefox has a bit of a hard time with this stuff
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
             gainNode.gain.value = 0;
             this.inUse = false;
 
@@ -88,11 +90,15 @@ class FourierVoice {
             velocity: number
         ) => {
             this.inUse = true;
-            if (relativeNoteStart < 0) relativeNoteStart = 0;
-            gainNode.gain.cancelScheduledValues(0);
-            gainNode.gain.value = 0;
-            gainNode.gain.linearRampToValueAtTime(velocity, audioContext.currentTime + duration / 4);
-            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+            if (relativeNoteStart < 0) {
+                duration += relativeNoteStart;
+                relativeNoteStart = 0;
+            }
+            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
+            gainNode.gain.cancelScheduledValues(absoluteStartTime);
+            gainNode.gain.setValueAtTime(0, absoluteStartTime);
+            gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
+            gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
             oscillator.frequency.value = frequency * frequencyMultiplier;
             oscillator.setPeriodicWave(this.periodicWaveRef.value);
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
@@ -107,13 +113,18 @@ class FourierVoice {
             velocity: number
         ) => {
             this.inUse = true;
-            if (relativeNoteStart < 0) relativeNoteStart = 0;
-            gainNode.gain.cancelScheduledValues(0);
-            gainNode.gain.value = velocity;
-            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
+            let duration = velocity * 2.8;
+            if (relativeNoteStart < 0) {
+                duration += relativeNoteStart;
+                relativeNoteStart = 0;
+            }
+            const absoluteNoteStart = audioContext.currentTime + relativeNoteStart;
+            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
+            gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
+            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
             oscillator.frequency.value = frequency * frequencyMultiplier;
             oscillator.setPeriodicWave(this.periodicWaveRef.value);
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
+            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
             setTimeout(() => {
                 releaseVoice();
             }, 3000);

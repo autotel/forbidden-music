@@ -1,7 +1,7 @@
 import { SynthInstance, SynthParam } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 
-class SineVoice {
+export class SineVoice {
     inUse: boolean = false;
     triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
@@ -15,10 +15,11 @@ class SineVoice {
         oscillator.start();
 
         const releaseVoice = () => {
-            gainNode.gain.cancelScheduledValues(0);
+            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+            // firefox has a bit of a hard time with this stuff
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
             gainNode.gain.value = 0;
             this.inUse = false;
-
         }
 
         this.triggerAttackRelease = (
@@ -28,10 +29,15 @@ class SineVoice {
             velocity: number
         ) => {
             this.inUse = true;
-            gainNode.gain.cancelScheduledValues(0);
-            gainNode.gain.value = 0;
-            gainNode.gain.linearRampToValueAtTime(velocity, audioContext.currentTime + duration / 4);
-            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+            if (relativeNoteStart < 0) {
+                duration += relativeNoteStart;
+                relativeNoteStart = 0;
+            }
+            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
+            gainNode.gain.cancelScheduledValues(absoluteStartTime);
+            gainNode.gain.setValueAtTime(0, absoluteStartTime);
+            gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
+            gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
             oscillator.frequency.value = frequency;
             oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
             setTimeout(() => {
@@ -39,21 +45,26 @@ class SineVoice {
             }, duration * 1000);
         };
 
+
         this.triggerPerc = (
             frequency: number,
             relativeNoteStart: number,
             velocity: number
         ) => {
             this.inUse = true;
-            gainNode.gain.cancelScheduledValues(0);
-            gainNode.gain.value = velocity;
-            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 3);
-            oscillator.frequency.value = frequency;
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
+            let duration = velocity * 2.8;
+            if (relativeNoteStart < 0) {
+                duration += relativeNoteStart;
+                relativeNoteStart = 0;
+            }
+            const absoluteNoteStart = audioContext.currentTime + relativeNoteStart;
+            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
+            gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
+            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
+            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
             setTimeout(() => {
                 releaseVoice();
             }, 3000);
-
         }
 
         this.stop = () => {
