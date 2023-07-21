@@ -9,7 +9,7 @@ const playback = usePlaybackStore();
 </script>
 
 <template>
-  <Collapsible pulltip="open snaps">
+  <Collapsible tooltip="Link to a midi device to allow this device to control the transport">
     <template v-slot:icon>
       <Link clas="icon"/>
       Midi Sync

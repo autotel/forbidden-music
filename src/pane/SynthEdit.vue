@@ -13,6 +13,7 @@ import { onMounted } from "vue";
 import PropLoadingProgress from "../components/paramEditors/PropLoadingProgress.vue";
 import { useToolStore } from "../store/toolStore";
 import { useLayerStore } from "../store/layerStore";
+import { nextTick } from "process";
 const playback = usePlaybackStore();
 const audioReady = ref(false);
 const infoTextModal = inject<Ref<string>>('modalText');
@@ -41,30 +42,46 @@ onBeforeUnmount(() => {
 })
 
 
-const activeLayerChan = computed<SynthChannel | null>(() => {
+
+const activeLayerChan = ref<SynthChannel | null>();
+
+const setActiveLayerChanToCurrentLayerTarget = () => {
     const activeLayer = tool.currentLayerNumber;
     const channel = layers.getLayerChannel(activeLayer);
     if (channel) {
-        return channel;
+        activeLayerChan.value = channel;
     } else {
-        return null;
+        activeLayerChan.value = null;
     }
-});
+};
+
+watch([
+    // () => tool.currentLayerNumber, 
+    ()=>layers.layers[tool.currentLayerNumber]?.channelSlot
+], setActiveLayerChanToCurrentLayerTarget);
+
+onMounted(()=>playback.audioContextPromise.then(() => {
+    setActiveLayerChanToCurrentLayerTarget();
+}))
 
 </script>
 <template>
-    <Collapsible>
+    <Collapsible tooltip="Change some parameters of the sound">
         <template #icon>
             <HeartPulse clas="icon" />
-            synth params
+            Sounds
         </template>
         <div>
-            <div v-if="audioReady && activeLayerChan" class="controls-container">
-                <!-- <template v-for="(synthChan, chanNo) in playback.channels"> -->
-                    <!-- <h1 v-if="chanNo === 0">Default channel</h1>
-                    <h1 v-else>Channel {{ chanNo }}</h1> -->
-                    <h1 v-if="activeLayerChan === playback.channels[0]">Default channel</h1>
-                    <h1 v-else>Channel {{ playback.channels.indexOf(activeLayerChan) }}</h1>
+            <div v-if="audioReady" class="controls-container">
+                <template v-for="(synthChan, chanNo) in playback.channels">
+
+                    <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan===activeLayerChan">
+                        {{ chanNo === 0 ? 'Default slot' : ('Slot ' + chanNo) }}
+                        ( {{ synthChan.synth.name }} )
+                    </Button>
+                </template>
+
+                <template v-if="activeLayerChan">
                     <PropOption :param="playback.synthSelector(activeLayerChan)" />
                     <template v-for="param in activeLayerChan.params">
                         <PropOption v-if="param.type === ParamType.option" :param="param" />
@@ -75,8 +92,10 @@ const activeLayerChan = computed<SynthChannel | null>(() => {
                             param.displayName }}</Button>
                     </template>
                     <Button v-if="activeLayerChan.synth.credits"
-                        :on-click="() => showCredits(activeLayerChan.synth.credits!)">Credits</Button>
-                <!-- </template> -->
+                        :on-click="() => activeLayerChan ? showCredits(activeLayerChan.synth.credits!) : null">
+                        Credits
+                    </Button>
+                </template>
                 <br><br>
                 <Button :on-click="() => { playback.addChannel() }"> Add synth </Button>
             </div>

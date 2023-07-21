@@ -4,10 +4,10 @@ import { ref } from "vue";
 import Button from "../components/Button.vue";
 
 const props = defineProps<{
-    pulltip?: string,
     side?: "top" | "bottom" | "left" | "right",
     title?: string,
     startExpanded?: boolean,
+    tooltip?: string,
 }>();
 const content = ref<HTMLElement | null>(null);
 const expanded = ref(props.startExpanded ?? true);
@@ -26,7 +26,7 @@ const expanded = ref(props.startExpanded ?? true);
 </script>
 
 <template>
-    <Button :onClick="() => expanded = !expanded" class="full-width">
+    <Button :onClick="() => expanded = !expanded" class="full-width" :tooltip="tooltip">
         <span class="icon">
             <slot name="icon">
             </slot>

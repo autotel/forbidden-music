@@ -1,34 +1,19 @@
 <script setup lang="ts">
 import Button from "../components/Button.vue";
-import Archive from "../components/icons/Archive.vue";
-import Folder from "../components/icons/Folder.vue";
-import Layers from "../components/icons/Layers.vue";
+import Tooltip from "../components/Tooltip.vue";
 import Eye from "../components/icons/Eye.vue";
 import EyeNot from "../components/icons/EyeNot.vue";
-import CheckBoxChecked from "../components/icons/CheckBoxChecked.vue";
-import CheckBoxBlank from "../components/icons/CheckBoxBlank.vue";
-import SaveAs from "../components/icons/SaveAs.vue";
-import isTauri, { ifTauri } from "../functions/isTauri";
-import { KeyActions, getActionForKeys, getKeyCombinationString } from "../keyBindings";
-import { useLibraryStore } from "../store/libraryStore";
-import { useMonoModeInteraction } from "../store/monoModeInteraction";
-import { useProjectStore } from "../store/projectStore";
-import Collapsible from "./Collapsible.vue";
-import { ref } from "vue";
-import { useViewStore, layerNoteColorStrings } from "../store/viewStore";
-import { useToolStore } from "../store/toolStore";
-import { useSelectStore } from "../store/selectStore";
+import Layers from "../components/icons/Layers.vue";
 import SquarePlus from "../components/icons/SquarePlus.vue";
-import Tooltip from "../components/Tooltip.vue";
 import { useLayerStore } from "../store/layerStore";
-import { usePlaybackStore } from "../store/playbackStore";
+import { useSelectStore } from "../store/selectStore";
+import { useToolStore } from "../store/toolStore";
+import { layerNoteColorStrings } from "../store/viewStore";
+import Collapsible from "./Collapsible.vue";
 
-const project = useProjectStore();
-const view = useViewStore();
 const tool = useToolStore();
 const selection = useSelectStore();
 const layers = useLayerStore();
-const playback = usePlaybackStore();
 
 const switchLayerVisibility = (layerNo: number) => {
     const layer = layers.layers[layerNo];
@@ -48,7 +33,7 @@ const setSelectedNotesLayerToCurrent = () => {
 }
 </script>
 <template>
-    <Collapsible pulltip="save and load" title="file">
+    <Collapsible tooltip="Distribute the notes into different layers if that makes editing easier">
         <template #icon>
             <Layers clas="icon" />
             Layers

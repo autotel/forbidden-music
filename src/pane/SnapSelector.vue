@@ -17,7 +17,7 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
 </script>
 
 <template>
-  <Collapsible pulltip="open snaps">
+  <Collapsible tooltip="Select which constraints to enforce when adding new notes. Hover each button for a small explanation">
     <template v-slot:icon>
       <Magnet clas="icon"/>
       Constraints

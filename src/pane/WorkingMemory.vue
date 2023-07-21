@@ -46,7 +46,7 @@ const clear = () => {
 
 </script>
 <template>
-    <Collapsible pulltip="save and load program memory" title="working memory">
+    <Collapsible tooltip="Manage the projects that are stored in your browser's 'local storage'">
         <template #icon>
             <Folder />
             Working memory

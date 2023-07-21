@@ -151,7 +151,7 @@ const download = () => {
 
 </script>
 <template>
-    <Collapsible pulltip="save and load" title="file">
+    <Collapsible tooltip="Save to and load from your files, in text format">
         <template #icon>
             <Folder clas="icon"/>
             Save and load

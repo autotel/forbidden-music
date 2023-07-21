@@ -20,7 +20,7 @@ const viewportTechs = [
 
 </script>
 <template>
-    <Collapsible pulltip="Performance and dev settings">
+    <Collapsible tooltip="Technical settings. Some tweaks may fix problems or make them worse 😅">
         <template v-slot:icon>
             <Cog clas="icon"/>
             Performance Settings
