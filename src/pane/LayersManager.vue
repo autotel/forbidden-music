@@ -5,6 +5,7 @@ import Eye from "../components/icons/Eye.vue";
 import EyeNot from "../components/icons/EyeNot.vue";
 import Layers from "../components/icons/Layers.vue";
 import SquarePlus from "../components/icons/SquarePlus.vue";
+import { useCustomSettingsStore } from "../store/customSettingsStore";
 import { useLayerStore } from "../store/layerStore";
 import { useSelectStore } from "../store/selectStore";
 import { useToolStore } from "../store/toolStore";
@@ -14,7 +15,7 @@ import Collapsible from "./Collapsible.vue";
 const tool = useToolStore();
 const selection = useSelectStore();
 const layers = useLayerStore();
-
+const settings = useCustomSettingsStore();
 const switchLayerVisibility = (layerNo: number) => {
     const layer = layers.layers[layerNo];
     layer.visible = !layer.visible;
@@ -33,7 +34,7 @@ const setSelectedNotesLayerToCurrent = () => {
 }
 </script>
 <template>
-    <Collapsible tooltip="Distribute the notes into different layers if that makes editing easier">
+    <Collapsible v-if="settings.layersEnabled" tooltip="Distribute the notes into different layers if that makes editing easier">
         <template #icon>
             <Layers clas="icon" />
             Layers
@@ -47,7 +48,7 @@ const setSelectedNotesLayerToCurrent = () => {
                 <Button inline tooltip="Set selection's layer to this layer" :onClick="setSelectedNotesLayerToCurrent">
                     <SquarePlus />
                 </Button>
-                <Tooltip tooltip="Assign a synth channel to this layer.">
+                <Tooltip tooltip="Assign a synth channel to this layer." v-if="settings.polyphonyEnabled">
                     <input type="number" step="1" style="width: 2em; overflow: hidden;" v-model="layer.channelSlot"/>
                 </Tooltip>
                 <span v-on:click="switchLayerVisibility(layerNo)">

@@ -375,7 +375,7 @@ watch(paneWidth, () => {
     box-sizing: border-box;
 }
 
-* {
+#viewport {
     user-select: none;
 }
 </style>

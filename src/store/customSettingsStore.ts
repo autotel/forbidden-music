@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { onMounted, ref, watchEffect } from "vue";
+import { computed, onMounted, ref, watchEffect, WritableComputedRef } from "vue";
 
 export const userCustomPerformanceSettings = 'RbftAFPvQd-zGucC2xGaS-performance-settings';
 
@@ -12,6 +12,20 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
     const viewportTech = ref(ViewportTech.Svg);
     const showFPS = ref(false);
     const fontSize = ref(12);
+    // polyphony cannot be undertood or used without layers thus far
+    const _polyphonyEnabled = ref(false);
+    const polyphonyEnabled = computed<boolean>({
+        get() {
+            return _polyphonyEnabled.value && layersEnabled.value;
+        },
+        set(value) {
+            _polyphonyEnabled.value = value;
+        }
+    });
+
+    const layersEnabled = ref(false);
+    const midiInputEnabled = ref(false);
+    const performanceSettingsEnabled = ref(true);
 
     const deleteSettings = () => {
         localStorage.removeItem(userCustomPerformanceSettings);
@@ -28,6 +42,10 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 viewportTech.value = parsed.viewportTech;
                 showFPS.value = parsed.showFPS;
                 fontSize.value = parsed.fontSize;
+                polyphonyEnabled.value = parsed.polyphonyEnabled;
+                layersEnabled.value = parsed.layersEnabled;
+                midiInputEnabled.value = parsed.midiInputEnabled;
+                performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
             }
         } catch (e) {
             console.error('could not recall user performance settings', e);
@@ -40,6 +58,10 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 viewportTech: viewportTech.value,
                 showFPS: showFPS.value,
                 fontSize: fontSize.value,
+                polyphonyEnabled: polyphonyEnabled.value,
+                layersEnabled: layersEnabled.value,
+                midiInputEnabled: midiInputEnabled.value,
+                performanceSettingsEnabled: performanceSettingsEnabled.value,
             }));
             console.log('saved user performance settings');
         });
@@ -51,5 +73,9 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         viewportTech,
         showFPS,
         fontSize,
+        polyphonyEnabled,
+        layersEnabled,
+        midiInputEnabled,
+        performanceSettingsEnabled,
     }
 });

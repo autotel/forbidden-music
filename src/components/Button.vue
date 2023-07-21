@@ -10,6 +10,7 @@ const props = defineProps<{
     danger?: boolean | undefined
     tooltip?: string
     inline?: boolean
+    activeColor?: string
 }>()
 
 
@@ -29,7 +30,13 @@ const mouseLeave = (e: MouseEvent) => {
 </script>
 
 <template>
-    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger, inline }">
+    <button 
+        @mouseenter="mouseEnter" 
+        @mouseleave="mouseLeave" 
+        @click="onClick" 
+        :class="{ active, danger, inline }"
+        :style="{ backgroundColor: active ? activeColor : '' }"    
+    >
         <slot></slot>
     </button>
 </template>

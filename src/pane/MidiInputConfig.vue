@@ -4,12 +4,14 @@ import Collapsible from './Collapsible.vue';
 
 import { usePlaybackStore } from '../store/playbackStore';
 import Link from "../components/icons/Link.vue";
+import { useCustomSettingsStore } from '../store/customSettingsStore';
 
 const playback = usePlaybackStore();
+const settings = useCustomSettingsStore();
 </script>
 
 <template>
-  <Collapsible tooltip="Link to a midi device to allow this device to control the transport">
+  <Collapsible v-if="settings.midiInputEnabled" tooltip="Link to a midi device to allow this device to control the transport">
     <template v-slot:icon>
       <Link clas="icon"/>
       Midi Sync

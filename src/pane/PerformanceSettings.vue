@@ -8,6 +8,7 @@ import Toggle from '../components/inputs/Toggle.vue';
 import Button from '../components/Button.vue';
 import isDev from '../functions/isDev';
 import { usePlaybackStore } from '../store/playbackStore';
+import isTauri from '../functions/isTauri';
 
 const userSettings = useCustomSettingsStore();
 
@@ -20,7 +21,7 @@ const viewportTechs = [
 
 </script>
 <template>
-    <Collapsible tooltip="Technical settings. Some tweaks may fix problems or make them worse 😅">
+    <Collapsible v-if="userSettings.performanceSettingsEnabled" tooltip="To tweak some technical settings">
         <template v-slot:icon>
             <Cog clas="icon"/>
             Performance Settings
@@ -41,8 +42,32 @@ const viewportTechs = [
                 <input v-model="userSettings.fontSize" type="number"/>
                 <label>Font Size</label>
             </div>
-            <Button @click="userSettings.deleteSettings" tooltip="Delete locally stored settings and use default values">Reset settings</Button>
-            <Button @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>
+            <div class="form-row">
+                <Toggle v-model="userSettings.midiInputEnabled" />
+                <label>MIDI Input</label>
+            </div>
+
+            <div class="form-row">
+                <Toggle v-model="userSettings.layersEnabled" />
+                <label>Multi-layer</label>
+            </div>
+
+            <div class="form-row" :class="{disabled: !userSettings.layersEnabled}">
+                <Toggle v-model="userSettings.polyphonyEnabled" />
+                <label>Polyphony</label>
+            </div>
+
+            <div class="form-row">
+                <Toggle v-model="userSettings.performanceSettingsEnabled" />
+                <label>Performance Settings (!)</label>
+            </div>
+
+            <Button @click="userSettings.deleteSettings" tooltip="Delete locally stored settings and use default values">Unsave settings</Button>
+            <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>
+
+
+
+
         </div>
     </Collapsible>
 </template>
@@ -50,6 +75,10 @@ const viewportTechs = [
 .form-row {
     display: flex;
     justify-content: space-between;
-    margin-top: 1em;
+    margin: 1em;
+}
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 </style>

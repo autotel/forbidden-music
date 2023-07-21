@@ -14,10 +14,13 @@ import PropLoadingProgress from "../components/paramEditors/PropLoadingProgress.
 import { useToolStore } from "../store/toolStore";
 import { useLayerStore } from "../store/layerStore";
 import { nextTick } from "process";
+import { layerNoteColorStrings } from "../store/viewStore";
+import { useCustomSettingsStore } from "../store/customSettingsStore";
 const playback = usePlaybackStore();
 const audioReady = ref(false);
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
+const userSettings = useCustomSettingsStore();
 const tool = useToolStore();
 const layers = useLayerStore();
 const showCredits = (credits: string) => {
@@ -73,11 +76,21 @@ onMounted(()=>playback.audioContextPromise.then(() => {
         </template>
         <div>
             <div v-if="audioReady" class="controls-container">
-                <template v-for="(synthChan, chanNo) in playback.channels">
+                <template v-if="userSettings.polyphonyEnabled" v-for="(synthChan, chanNo) in playback.channels">
 
-                    <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan===activeLayerChan">
-                        {{ chanNo === 0 ? 'Default slot' : ('Slot ' + chanNo) }}
-                        ( {{ synthChan.synth.name }} )
+                    <Button 
+                        :onClick="() => activeLayerChan = synthChan" 
+                        :active="synthChan===activeLayerChan" 
+                        style="width:100%; text-align:left; margin-left: 2em"
+                        :active-color="layerNoteColorStrings[1]"
+                        >
+                            <template v-if="chanNo === 0">
+                                default - 
+                            </template>
+                            <template v-else>
+                                <span class="encircled">{{ chanNo }}</span>
+                            </template>
+                            {{ synthChan.synth.name }}
                     </Button>
                 </template>
 
@@ -97,7 +110,7 @@ onMounted(()=>playback.audioContextPromise.then(() => {
                     </Button>
                 </template>
                 <br><br>
-                <Button :on-click="() => { playback.addChannel() }"> Add synth </Button>
+                <Button v-if="userSettings.polyphonyEnabled" :on-click="() => { playback.addChannel() }"> Add synth </Button>
             </div>
             <div v-else>
                 <Button :on-click="() => { playback.retryAudioContext() }">Click to start audio engine</Button>
@@ -109,5 +122,20 @@ onMounted(()=>playback.audioContextPromise.then(() => {
 .controls-container {
     width: 100%;
     box-sizing: border-box;
+}
+.encircled {
+    display: inline-flex;
+    border-radius: 50%;
+    background-color: rgb(31, 4, 95);
+    color: white;
+    /* border:solid 1.2px white; */
+    font-weight: 800;
+    justify-content: center;
+    align-items: center;
+    width: 1.5em;
+    height: 1.5em;
+
+    position:relative;
+    left: -1.5em;
 }
 </style>
