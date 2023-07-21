@@ -21,13 +21,14 @@ import { useSelectStore } from "../store/selectStore";
 import SquarePlus from "../components/icons/SquarePlus.vue";
 import Tooltip from "../components/Tooltip.vue";
 import { useLayerStore } from "../store/layerStore";
+import { usePlaybackStore } from "../store/playbackStore";
 
 const project = useProjectStore();
 const view = useViewStore();
 const tool = useToolStore();
 const selection = useSelectStore();
 const layers = useLayerStore();
-
+const playback = usePlaybackStore();
 
 const switchLayerVisibility = (layerNo: number) => {
     const layer = layers.layers[layerNo];
@@ -61,7 +62,7 @@ const setSelectedNotesLayerToCurrent = () => {
                 <Button inline tooltip="Set selection's layer to this layer" :onClick="setSelectedNotesLayerToCurrent">
                     <SquarePlus />
                 </Button>
-                <Tooltip tooltip="Assign a synth channel to this layer">
+                <Tooltip tooltip="Assign a synth channel to this layer.">
                     <input type="number" step="1" style="width: 2em; overflow: hidden;" v-model="layer.channelSlot"/>
                 </Tooltip>
                 <span v-on:click="switchLayerVisibility(layerNo)">

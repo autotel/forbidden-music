@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { inject, onBeforeUnmount, onUnmounted, reactive, Ref, ref, watch } from "vue";
-import { usePlaybackStore } from "../store/playbackStore";
-import { ParamType } from "../synth/SynthInterface";
+import { computed, inject, onBeforeUnmount, onUnmounted, reactive, Ref, ref, watch } from "vue";
+import { SynthChannel, usePlaybackStore } from "../store/playbackStore";
+import { ParamType, SynthInstance } from "../synth/SynthInterface";
 import Button from "../components/Button.vue";
 import Collapsible from "./Collapsible.vue";
 import PropOption from "../components/paramEditors/PropOption.vue";
@@ -11,11 +11,14 @@ import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import NumberArrayEditor from "../components/paramEditors/NumberArrayEditor.vue";
 import { onMounted } from "vue";
 import PropLoadingProgress from "../components/paramEditors/PropLoadingProgress.vue";
+import { useToolStore } from "../store/toolStore";
+import { useLayerStore } from "../store/layerStore";
 const playback = usePlaybackStore();
 const audioReady = ref(false);
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
-
+const tool = useToolStore();
+const layers = useLayerStore();
 const showCredits = (credits: string) => {
     if (!infoTextModal) throw new Error('infoTextModal not injected');
     infoTextModal.value = credits;
@@ -38,6 +41,16 @@ onBeforeUnmount(() => {
 })
 
 
+const activeLayerChan = computed<SynthChannel | null>(() => {
+    const activeLayer = tool.currentLayerNumber;
+    const channel = layers.getLayerChannel(activeLayer);
+    if (channel) {
+        return channel;
+    } else {
+        return null;
+    }
+});
+
 </script>
 <template>
     <Collapsible>
@@ -46,12 +59,14 @@ onBeforeUnmount(() => {
             synth params
         </template>
         <div>
-            <div v-if="audioReady" class="controls-container">
-                <template v-for="(synthChan, chanNo) in playback.channels">
-                    <h1 v-if="chanNo === 0">Default channel</h1>
-                    <h1 v-else>Channel {{ chanNo }}</h1>
-                    <PropOption :param="playback.synthSelector(synthChan)" />
-                    <template v-for="param in synthChan.params">
+            <div v-if="audioReady && activeLayerChan" class="controls-container">
+                <!-- <template v-for="(synthChan, chanNo) in playback.channels"> -->
+                    <!-- <h1 v-if="chanNo === 0">Default channel</h1>
+                    <h1 v-else>Channel {{ chanNo }}</h1> -->
+                    <h1 v-if="activeLayerChan === playback.channels[0]">Default channel</h1>
+                    <h1 v-else>Channel {{ playback.channels.indexOf(activeLayerChan) }}</h1>
+                    <PropOption :param="playback.synthSelector(activeLayerChan)" />
+                    <template v-for="param in activeLayerChan.params">
                         <PropOption v-if="param.type === ParamType.option" :param="param" />
                         <PropSlider v-if="param.type === ParamType.number" :param="param" />
                         <PropLoadingProgress v-if="param.type === ParamType.progress" :param="param" />
@@ -59,9 +74,9 @@ onBeforeUnmount(() => {
                         <Button v-if="param.type === ParamType.infoText" :on-click="() => showInfo(param.value)">{{
                             param.displayName }}</Button>
                     </template>
-                    <Button v-if="synthChan.synth.credits"
-                        :on-click="() => showCredits(synthChan.synth.credits!)">Credits</Button>
-                </template>
+                    <Button v-if="activeLayerChan.synth.credits"
+                        :on-click="() => showCredits(activeLayerChan.synth.credits!)">Credits</Button>
+                <!-- </template> -->
                 <br><br>
                 <Button :on-click="() => { playback.addChannel() }"> Add synth </Button>
             </div>
