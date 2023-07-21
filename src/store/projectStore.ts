@@ -82,6 +82,7 @@ export const useProjectStore = defineStore("current project", () => {
                 groupId: editNote.group?.id || null,
                 layer: editNote.layer,
             })),
+            customOctavesTable: snaps.customOctavesTable,
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
@@ -133,6 +134,8 @@ export const useProjectStore = defineStore("current project", () => {
             layer.locked = locked;
             layer.channelSlot = channelSlot;
         });
+
+        if(pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
 
         (async () => {
             await playbackStore.audioContextPromise;
