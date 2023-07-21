@@ -5,21 +5,53 @@ import { Note, NoteDefb } from '../dataTypes/Note';
 import { SynthParamStored } from '../synth/SynthInterface';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
-import {userShownDisclaimerLocalStorageKey} from '../texts/userDisclaimer';
+import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { userCustomPerformanceSettings } from './customSettingsStore';
 
-const version = "0.1.0";
+const version = "0.2.0";
+
+
+export interface LibraryItem_0_1_0 {
+    version: string;
+    name: string;
+    notes: Array<GroupNoteDef>;
+    created: Number;
+    edited: Number;
+    snaps: Array<[string, boolean]>;
+    instrument?: {
+        type: string;
+        params: Array<SynthParamStored>;
+    };
+    bpm?: number;
+}
 
 const migrators = {
     "0.0.0": (obj: any) => {
-        obj.version = version;
+        obj.version = "0.1.0";
         obj.notes = obj.notes.map((note: any) => {
             note.time = note.start;
             note.timeEnd = note.end;
             console.log(note);
             return note;
         });
+        if(!obj.bpm) obj.bpm = 120;
         return obj;
+    },
+    "0.1.0": (obj: LibraryItem_0_1_0): LibraryItem => {
+        const newObj = Object.assign({},obj) as LibraryItem & {
+            instrument?: {
+                type: string;
+                params: Array<SynthParamStored>;
+            }
+        };
+        newObj.version = "0.2.0";
+        newObj.layers = [];
+        newObj.channels = [];
+        if (obj.instrument) {
+            newObj.channels.push(obj.instrument);
+            delete newObj.instrument;
+        }
+        return newObj;
     },
 }
 
@@ -36,30 +68,33 @@ export interface LibraryItem {
     created: Number;
     edited: Number;
     snaps: Array<[string, boolean]>;
-    instrument?: {
+    channels: {
         type: string;
         params: Array<SynthParamStored>;
-    };
-    bpm?: number;
+    }[];
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    bpm: number;
 }
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 
 const reservedEntryNames = [
-    "forbidden-music", 
+    "forbidden-music",
     userShownDisclaimerLocalStorageKey,
     userCustomPerformanceSettings,
 ];
 
 const normalizeLibraryItem = (obj: any): LibraryItem => {
     if (!obj.version) obj.version = "0.0.0";
-    if (obj.version in migrators) {
+    while (obj.version in migrators) {
         // @ts-ignore
         const migrator = migrators[obj.version];
         console.log("version " + obj.version + " detected, migrating");
-        console.log(migrator, obj.version);
         obj = migrator(obj);
-    } else {
     }
     return obj;
 }
@@ -198,7 +233,7 @@ export const useLibraryStore = defineStore("library store", () => {
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
-            project.setFromProjecDefinition(iobj as LibraryItem);
+            project.setFromProjectDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             project.setFromListOfNoteDefinitions(iobj);
         }
@@ -217,7 +252,7 @@ export const useLibraryStore = defineStore("library store", () => {
         importJSONFileList,
         exportMIDIPitchBend,
         importObject,
-        
+
         version,
         filenamesList,
         errorMessage,

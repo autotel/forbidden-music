@@ -201,7 +201,8 @@ export class FourierSynth implements SynthInstance {
             },
             get value() {
                 return this.selectedIndex;
-            }
+            },
+            exportable: true,
         } as OptionSynthParam);
 
         this.params.push({
@@ -216,7 +217,8 @@ export class FourierSynth implements SynthInstance {
             },
             get value() {
                 return parent.periodicWaveContents[0];
-            }
+            },
+            exportable: true,
         })
 
         this.params.push({
@@ -231,7 +233,8 @@ export class FourierSynth implements SynthInstance {
             },
             get value() {
                 return parent.periodicWaveContents[1];
-            }
+            },
+            exportable: true,
         })
 
         this.params.push({

@@ -9,8 +9,10 @@ import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore.js';
 import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
 import { ParamType, SynthParam } from '../synth/SynthInterface.js';
+import { useLayerStore } from './layerStore.js';
 
 export const useProjectStore = defineStore("current project", () => {
+    const layers = useLayerStore();
     const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
@@ -84,17 +86,18 @@ export const useProjectStore = defineStore("current project", () => {
             edited: edited.value,
             snaps: getSnapsList(),
             bpm: playbackStore.bpm,
+            layers: layers.layers,
         } as LibraryItem;
-        if (playbackStore.synth) {
-            ret.instrument = {
-                type: playbackStore.synth.name,
-                params: playbackStore.synth.params.filter((param:SynthParam) => {
-                    return param.type !== ParamType.progress;
-                }).map((param:SynthParam) => ({
+        if (playbackStore.channels.length) {
+            ret.channels = playbackStore.channels.map((channel) => ({
+                type: channel.synth.name,
+                params: channel.params.filter((param: SynthParam) => {
+                    return param.exportable;
+                }).map((param: SynthParam) => ({
                     displayName: param.displayName,
                     value: param.value,
                 }))
-            }
+            }));
         }
         return ret;
     }
@@ -104,31 +107,39 @@ export const useProjectStore = defineStore("current project", () => {
         console.log("setFromListOfNoteDefinitions", notes);
         score.value = notes.map((note) => {
             const noteLayer = note.layer || 0;
-            if(view.layerVisibility[noteLayer] === undefined) {
-                view.layerVisibility[noteLayer] = true;
-            };
+            layers.getOrMakeLayerWithIndex(noteLayer);
             return new EditNote(note, view)
         });
     }
 
-    const setFromProjecDefinition = (pDef: LibraryItem) => {
-        console.log("setFromProjecDefinition", pDef);
+    const setFromProjectDefinition = (pDef: LibraryItem) => {
+        console.log("setFromProjectDefinition", pDef);
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
 
         setFromListOfNoteDefinitions(pDef.notes);
-        // const loadedGroups = score.value.map(({ group }) => group).filter((group) => group) as Group[];
-        // loadedGroups.map((g) => getOrCreateGroupById(g.id, g)) as Group[];
 
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
+        pDef.snaps.forEach(([name, activeState]) => {
+            if (!snaps.values[name]) return;
+            snaps.values[name].active = activeState;
+        });
+
+        pDef.layers.forEach(({channelSlot,visible,locked}, index) => {
+            const layer = layers.getOrMakeLayerWithIndex(index);
+            layer.visible = visible;
+            layer.locked = locked;
+            layer.channelSlot = channelSlot;
+        });
+
         (async () => {
             await playbackStore.audioContextPromise;
-            if (pDef.instrument) {
-                playbackStore.setSynthByName(pDef.instrument.type).then((synth) => {
-                    pDef.instrument?.params.forEach((param, index) => {
-                        try{
+            pDef.channels.forEach(({ type, params }, index) => {
+                playbackStore.setSynthByName(type, index).then((synth) => {
+                    params.forEach((param) => {
+                        try {
                             const foundNamedParam = synth.params.find((synthParam) => {
                                 return synthParam.displayName === param.displayName;
                             })
@@ -143,14 +154,10 @@ export const useProjectStore = defineStore("current project", () => {
                         }
                     });
                 })
-            }
+            });
+
         })();
 
-
-        pDef.snaps.forEach(([name, activeState]) => {
-            if (!snaps.values[name]) return;
-            snaps.values[name].active = activeState;
-        });
     }
 
     const clearScore = () => {
@@ -185,7 +192,7 @@ export const useProjectStore = defineStore("current project", () => {
         score, groups,
         name, edited, created, snaps,
         getProjectDefintion,
-        setFromProjecDefinition, setFromListOfNoteDefinitions, updateGroupBounds,
+        setFromProjectDefinition, setFromListOfNoteDefinitions, updateGroupBounds,
         getOrCreateGroupById, getNotesInGroup, setNotesGroup, setNotesGroupToNewGroup,
         clearScore, appendNote,
     }

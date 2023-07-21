@@ -8,6 +8,7 @@ import { getNotesInRange } from '../functions/getNotesInRange';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
+import { useLayerStore } from './layerStore';
 
 
 export type SelectableRange = TimeRange | TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange;
@@ -42,6 +43,7 @@ export const useSelectStore = defineStore("select", () => {
     const tool = useToolStore();
     const project = useProjectStore();
     const view = useViewStore();
+    const layers = useLayerStore();
 
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
     const isSelected = (item: TimelineSelectableItem) => {
@@ -94,7 +96,7 @@ export const useSelectStore = defineStore("select", () => {
         refreshNoteSelectionState();
     };
     const selectRange = (range: SelectableRange, restrictToGroup: (Group | null | false) = false) => {
-        const visibleLayersNotes = project.score.filter(n => view.layerVisibility[n.layer])
+        const visibleLayersNotes = project.score.filter(({layer}) => layers.isVisible(layer))
         let notesInRange = getNotesInRange(
             visibleLayersNotes,
             range
@@ -124,18 +126,8 @@ export const useSelectStore = defineStore("select", () => {
             notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
         }
 
-        // let groupsInRange:Group[] = [];
-        // if (!restrictToGroup) { // null or false
-        //     const groupsInRange = getGroupsInRange(
-        //         project.groups,
-        //         range
-        //     )
-        // }
-
-
         select(
             ...notesInRange,
-            // ...groupsInRange
         );
     };
     const addRange = (range: SelectableRange) => {

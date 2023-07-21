@@ -38,6 +38,7 @@ export type SynthParamMinimum <T> = {
     displayName: string;
     type: ParamType;
     value: T;
+    exportable: boolean;
     [key: string]: any;
 }
 

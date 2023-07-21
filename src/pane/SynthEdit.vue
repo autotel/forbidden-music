@@ -47,9 +47,10 @@ onBeforeUnmount(() => {
         </template>
         <div>
             <div v-if="audioReady" class="controls-container">
-                <template v-for="synthChan in playback.synths">
+                <template v-for="(synthChan, chanNo) in playback.channels">
+                    <h1 v-if="chanNo === 0">Default channel</h1>
+                    <h1 v-else>Channel {{ chanNo }}</h1>
                     <PropOption :param="playback.synthSelector(synthChan)" />
-                    <span><input type="number" v-model="synthChan.layer" /> Assign to layer</span>
                     <template v-for="param in synthChan.params">
                         <PropOption v-if="param.type === ParamType.option" :param="param" />
                         <PropSlider v-if="param.type === ParamType.number" :param="param" />
@@ -62,7 +63,7 @@ onBeforeUnmount(() => {
                         :on-click="() => showCredits(synthChan.synth.credits!)">Credits</Button>
                 </template>
                 <br><br>
-                <Button :on-click="() => { playback.addSynth() }"> Add synth </Button>
+                <Button :on-click="() => { playback.addChannel() }"> Add synth </Button>
             </div>
             <div v-else>
                 <Button :on-click="() => { playback.retryAudioContext() }">Click to start audio engine</Button>

@@ -275,7 +275,8 @@ export class MagicSampler implements SynthInstance {
             set value(value: number) {
                 if (!parent.outputNode) return;
                 parent.outputNode.gain.value = value;
-            }
+            },
+            exportable: false,
         } as SynthParam);
 
         this.params.push({
@@ -284,7 +285,8 @@ export class MagicSampler implements SynthInstance {
             min: 0, max: sampleDefinitions.length,
             get value() {
                 return parent.loadingProgress;
-            }
+            },
+            exportable: false,
         } as ProgressSynthParam);
 
         this.adsr.forEach((v, i) => {

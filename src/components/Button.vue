@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, useSlots } from 'vue';
-import Tooltip from './Tooltip.vue';
 import { useToolStore } from '../store/toolStore';
 const slots = useSlots()
 const tool = useToolStore();

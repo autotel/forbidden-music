@@ -19,6 +19,7 @@ import { OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinim
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
+import { useLayerStore } from "./layerStore";
 
 
 interface MidiInputInterface {
@@ -105,9 +106,14 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
 
 
 
+export interface SynthChannel {
+    synth: SynthInstance;
+    params: SynthParam[];
+}
+
 
 export const usePlaybackStore = defineStore("playback", () => {
-
+    const layerStore = useLayerStore();
     const exclusives = useExclusiveContentsStore();
     const project = useProjectStore();
     // TODO: many of these need not to be refs nor be exported.
@@ -141,16 +147,8 @@ export const usePlaybackStore = defineStore("playback", () => {
     const midiInputs = ref([] as MidiInputInterface[]);
     const currentMidiInput = ref<MidiInputInterface | null>(null);
 
-    // const synthParams = ref([] as SynthParam[]);
-    // const synth = ref<SynthInstance | undefined>(undefined);
 
-    interface SynthChannel {
-        synth: SynthInstance;
-        params: SynthParam[];
-        layer: number;
-    }
-
-    const synths = ref([] as SynthChannel[]);
+    const channels = ref([] as SynthChannel[]);
 
     const clockTicker = () => {
         if (playing.value) {
@@ -170,14 +168,28 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const currentMidiConnectionMode = ref(midiConectionModes[0]);
 
-    const addSynth = () => {
-        const newSynth = {
+    const addChannel = (index?: number) => {
+        const newChannel = {
             synth: availableSynths.value[0],
             params: availableSynths.value[0].params,
             layer: 0
         };
-        synths.value.push(newSynth);
-        return newSynth;
+        if (index !== undefined) {
+            channels.value[index] = newChannel;
+            return newChannel;
+        } else {
+            channels.value.push(newChannel);
+        }
+        return newChannel;
+    }
+    const removeChannel = (index: number) => {
+        channels.value.splice(index, 1);
+    }
+    const getOrCreateChannel = (index: number) => {
+        if (!channels.value[index]) {
+            addChannel(index);
+        }
+        return channels.value[index];
     }
 
     let audioContextListenerAlreadyStarted = false;
@@ -224,6 +236,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         } else {
             console.log("exclusives disabled");
         }
+
         if (isDev()) {
             // bc. unfinished
             availableSynths.value.push(new FmSynth(audioContext));
@@ -233,11 +246,10 @@ export const usePlaybackStore = defineStore("playback", () => {
         } else {
             console.log("local only samples disabled");
         }
-        console.log("available synths", availableSynths.value.map(s => s.name));
-        synths.value = [{
+        console.log("available channels", availableSynths.value.map(s => s.name));
+        channels.value = [{
             synth: availableSynths.value[0],
             params: [],
-            layer: 0
         }];
 
         console.log("audio is ready");
@@ -324,19 +336,14 @@ export const usePlaybackStore = defineStore("playback", () => {
         isFirtClockAfterPlay = false;
         const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
 
-        const layerChan: SynthChannel[] = [];
-        synths.value.forEach((synthChannel) => {
-            if (!layerChan[synthChannel.layer]) layerChan[synthChannel.layer] = synthChannel;
-        });
-
         playNotes.forEach((editNote) => {
             if (editNote.mute) return;
-            if (!synths.value.length) throw new Error("no synth created");
+            if (!channels.value.length) throw new Error("no synth created");
             // TODO: is this all cancelling out and becoming now? too sleepy today to check
             const noteStartFromNow = editNote.time - currentScoreTime.value;
-            // const noteStart = now + noteStartFromNow;
 
-            const synth = layerChan[editNote.layer]?.synth || synths.value[0].synth;
+            const synth = getLayerSynth(editNote.layer)
+            if (!synth) return;
 
             try {
                 if (editNote.duration) {
@@ -383,7 +390,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         currentScoreTime.value = timeReturnPoint.value;
         previousScoreTime.value = timeReturnPoint.value;
         previousClockTime.value = 0;
-        synths.value.forEach(({ synth }) => synth.releaseAll());
+        channels.value.forEach(({ synth }) => synth.releaseAll());
     }
 
     const pause = () => {
@@ -392,20 +399,16 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = false;
     }
 
-    const setSynthByName = (synthName: string) => new Promise<SynthInstance>((resolve, reject) => {
+    const setSynthByName = (synthName: string, channel = 0) => new Promise<SynthInstance>((resolve, reject) => {
         const foundSynth = availableSynths.value.find((s) => s.name === synthName);
         if (foundSynth) {
-            //     // change synth but with workaround 
-            //     // to force update synthParams.
-            //     synths.value[0] = undefined;
-            //     setTimeout(() => {
-            //         resolve(foundSynth);
-            //     }, 0);
-            synths.value[0] = {
+            const targetChannel = getOrCreateChannel(channel);
+            foundSynth.enable();
+            Object.assign(targetChannel, {
                 synth: foundSynth,
                 params: foundSynth.params,
-                layer: 0
-            };
+            })
+            resolve(foundSynth);
         } else {
             console.error("synth not found", synthName);
             reject();
@@ -443,7 +446,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     //     console.log("params", synth.value);
     // });
 
-    const synthSelector = (synthChannel: SynthChannel):OptionSynthParam => ({
+    const synthSelector = (synthChannel: SynthChannel): OptionSynthParam => ({
         type: ParamType.option,
         displayName: "Synth",
         getValue(synthChannel: SynthChannel) {
@@ -474,6 +477,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             value: index,
             displayName: s.name,
         })),
+        exportable: true,
     })
 
 
@@ -482,7 +486,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
     });
 
-    watch(synths, (newSynth, oldSynth) => {
+    watch(channels, (newSynth, oldSynth) => {
         const deletedSynths = oldSynth.filter((oldSynth) => !newSynth.find((newSynth) => newSynth.synth === oldSynth.synth));
         deletedSynths.forEach((deletedSynth) => {
             console.log("disable synth", deletedSynth.synth.name);
@@ -501,6 +505,21 @@ export const usePlaybackStore = defineStore("playback", () => {
         // synth.value?.releaseAll();
     })
 
+    /**
+     * resolve assoc of
+     * layer -> channels -> synth
+     * falls back to default channel synth 0
+     */
+
+    const getLayerSynth = (layerNo: number): SynthInstance | undefined => {
+        const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
+        const channelIfExists = channels.value[channelNo || 0] as SynthChannel | undefined;
+        if (!channelIfExists) {
+            return channels.value[0].synth;
+        }
+        return channelIfExists.synth;
+    }
+
     return {
         retryAudioContext,
         audioContextPromise,
@@ -515,15 +534,18 @@ export const usePlaybackStore = defineStore("playback", () => {
         playbarPxPosition,
         paused,
         stopped,
-        synths,
+        channels,
         play,
         stop,
         pause,
         setSynthByName,
+        getOrCreateChannel,
         midiInputs, currentMidiInput,
         midiConectionModes, currentMidiConnectionMode,
         synthSelector,
-        addSynth,
+        getLayerSynth,
+        removeChannel,
+        addChannel,
         testBeep: async () => {
             await invoke("beep", {});
             console.log("beeped");

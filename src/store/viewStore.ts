@@ -5,6 +5,7 @@ import { getNotesInRange } from "../functions/getNotesInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
+import { useLayerStore } from "./layerStore.js";
 const rgbToHex = (r:number, g:number, b:number) => {
     r = r & 0xff;
     g = g & 0xff;
@@ -123,8 +124,8 @@ export const useViewStore = defineStore("view", () => {
     const followPlayback = ref(false);
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
-    const layerVisibility = ref<boolean[]>([true]);
     const memoizedRects: NoteRect[] = [];
+    const layers = useLayerStore();
     // TODO: maybe doesn't need to be a computed, 
     // we don't need to recalc every note when one note is dragged
     // for example. Especially since the new canvas frame 
@@ -132,7 +133,7 @@ export const useViewStore = defineStore("view", () => {
     // they could be calculated only when asked, memoized too.
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
-        const layerVisibleNotes = project.score.filter(({ layer }) =>  layerVisibility.value[layer] == true );
+        const layerVisibleNotes = project.score.filter(({ layer }) =>  layers.isVisible(layer) );
         return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
@@ -394,8 +395,6 @@ export const useViewStore = defineStore("view", () => {
 
         visibleNoteRects,
         everyNoteRectAtCoordinates,
-
-        layerVisibility,
 
         followPlayback,
     };

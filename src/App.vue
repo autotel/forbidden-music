@@ -26,7 +26,7 @@ import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
-import Tooltip from './components/Tooltip.vue';
+import TooltipDisplayer from './components/TooltipDisplayer.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -359,7 +359,7 @@ watch(paneWidth, () => {
     </Modal>
     <UserDisclaimer />
 
-    <Tooltip/>
+    <TooltipDisplayer/>
 </template>
 <style scoped>
 .unclickable {

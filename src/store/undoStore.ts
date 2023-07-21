@@ -42,7 +42,7 @@ export const useUndoStore = defineStore("undo history store", () => {
         try {
             const json = LZUTF8.decompress(zipped, { inputEncoding: "Base64" });
             const pDef = JSON.parse(json) as ReturnType<typeof project.getProjectDefintion>;
-            project.setFromProjecDefinition(pDef);
+            project.setFromProjectDefinition(pDef);
         } catch (e) {
             console.error("undo history seems to be corrupted");
             console.error(e);
