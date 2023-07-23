@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, ref, watchEffect, WritableComputedRef } from "vue";
+import { useExclusiveContentsStore } from "./exclusiveContentsStore";
 
 export const userCustomPerformanceSettings = 'RbftAFPvQd-zGucC2xGaS-performance-settings';
 
@@ -8,7 +9,7 @@ export enum ViewportTech {
 }
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
-
+    const exclusives = useExclusiveContentsStore();
     const viewportTech = ref(ViewportTech.Svg);
     const showFPS = ref(false);
     const fontSize = ref(12);
@@ -23,9 +24,18 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         }
     });
 
-    const layersEnabled = ref(false);
+    const _layersEnabled = ref(false);
+    const layersEnabled = computed<boolean>({
+        get() {
+            return _layersEnabled.value && exclusives.enabled;
+        },
+        set(value) {
+            _layersEnabled.value = value;
+        }
+    });
     const midiInputEnabled = ref(false);
     const performanceSettingsEnabled = ref(true);
+    const physicalEnabled = ref(false);
 
     const deleteSettings = () => {
         localStorage.removeItem(userCustomPerformanceSettings);
@@ -46,6 +56,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 layersEnabled.value = parsed.layersEnabled;
                 midiInputEnabled.value = parsed.midiInputEnabled;
                 performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
+                physicalEnabled.value = parsed.physicalEnabled;
             }
         } catch (e) {
             console.error('could not recall user performance settings', e);
@@ -62,6 +73,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 layersEnabled: layersEnabled.value,
                 midiInputEnabled: midiInputEnabled.value,
                 performanceSettingsEnabled: performanceSettingsEnabled.value,
+                physicalEnabled: physicalEnabled.value,
             }));
             console.log('saved user performance settings');
         });
@@ -77,5 +89,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         layersEnabled,
         midiInputEnabled,
         performanceSettingsEnabled,
+        physicalEnabled,
     }
 });

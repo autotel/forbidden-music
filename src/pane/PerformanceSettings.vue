@@ -9,8 +9,10 @@ import Button from '../components/Button.vue';
 import isDev from '../functions/isDev';
 import { usePlaybackStore } from '../store/playbackStore';
 import isTauri from '../functions/isTauri';
+import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 
 const userSettings = useCustomSettingsStore();
+const exclusives = useExclusiveContentsStore();
 
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
@@ -24,7 +26,7 @@ const viewportTechs = [
     <Collapsible v-if="userSettings.performanceSettingsEnabled" tooltip="To tweak some technical settings">
         <template v-slot:icon>
             <Cog clas="icon"/>
-            Performance Settings
+            Settings
         </template>
         <div>
             <div class="form-row">
@@ -38,16 +40,18 @@ const viewportTechs = [
                 <Toggle v-model="userSettings.showFPS" />
                 <label>Show FPS</label>
             </div>
+
             <div class="form-row" v-if="userSettings.viewportTech===ViewportTech.Pixi">
                 <input v-model="userSettings.fontSize" type="number"/>
                 <label>Font Size</label>
             </div>
+
             <div class="form-row">
                 <Toggle v-model="userSettings.midiInputEnabled" />
                 <label>MIDI Input</label>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" :class="{disabled: !exclusives.enabled}">
                 <Toggle v-model="userSettings.layersEnabled" />
                 <label>Multi-layer</label>
             </div>
@@ -55,6 +59,11 @@ const viewportTechs = [
             <div class="form-row" :class="{disabled: !userSettings.layersEnabled}">
                 <Toggle v-model="userSettings.polyphonyEnabled" />
                 <label>Polyphony</label>
+            </div>
+
+            <div class="form-row">
+                <Toggle v-model="userSettings.physicalEnabled" />
+                <label>Phyisical use</label>
             </div>
             <!-- 
             <div class="form-row">

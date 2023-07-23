@@ -35,7 +35,7 @@ const expanded = ref(props.startExpanded ?? true);
             <div></div>
         </span>
     </Button>
-    <div ref="content" class="content-container full-width" :class="{ expanded }">
+    <div v-if="expanded" ref="content" class="content-container full-width" :class="{ expanded }">
         <slot>
         </slot>
     </div>

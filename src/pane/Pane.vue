@@ -9,23 +9,23 @@ import PerformanceSettings from './PerformanceSettings.vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import LayersManager from './LayersManager.vue';
 import Physical from './Physical.vue';
-
+import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 const playback = usePlaybackStore();
 const props = defineProps<{
     paneWidth: number
 }>()
-
+const exclusives = useExclusiveContentsStore();
 </script>
 <template>
     <div class="drawers-container" :style="{ width: paneWidth + 'px' }">
         <WorkingMemory startExpanded/>
         <FileManager/>
         <SynthEdit />
-        <LayersManager />
+        <LayersManager v-if="exclusives.enabled"/>
         <SnapSelector startExpanded/>
-        <PerformanceSettings />
         <MidiInputConfig/>
         <Physical/>
+        <PerformanceSettings />
     </div>
 </template>
 

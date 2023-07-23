@@ -341,7 +341,7 @@ const requestedAnimationFrame = ref<number>(0);
 
 <style scoped>
 .cursor-draw {
-    cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
+    cursor: url("../../assets/icons-iconarchive-pen.png") 3 3, crosshair;
 }
 
 .cursor-move {

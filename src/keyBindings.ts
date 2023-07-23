@@ -26,6 +26,7 @@ type KeyActionTuple = [KeyActions, string, boolean, boolean, boolean];
 
 const keyBindings: KeyActionTuple[] = [
     [KeyActions.Delete, 'Delete', false, false, false],
+    [KeyActions.Delete, 'Backspace', true, false, false],
     [KeyActions.ActivateCopyOnDrag, 'Alt', false, false, false],
     [KeyActions.PlayPause, ' ', false, false, false],
     [KeyActions.ActivateAreaSelectionMode, 'Control', false, false, false],

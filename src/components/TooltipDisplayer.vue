@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useToolStore } from '../store/toolStore';
 const tool = useToolStore();
 const container = ref<HTMLDivElement>();
 const currentShowTimeout = ref<NodeJS.Timeout | null>(null);
 const show = ref(false);
-
+// a wacky way to make tooltip more squarish, otherwise they come out too thin
+const width = computed(() => {
+    const longestWord = tool.tooltip.split(" ").reduce((a, b) => a.length > b.length ? a : b, "");
+    return (Math.max(longestWord.length / 2, tool.tooltip.length / 6) + 1) + "em";
+});
 const followMouse = true;
 
 const mousepos = (e: MouseEvent) => {
@@ -69,7 +73,7 @@ watch(() => tool.tooltipOwner, () => {
 </script>
 
 <template>
-    <div class="container" ref="container" :class="{ hidden: !show }">
+    <div class="container" ref="container" :class="{ hidden: !show }" :style="{ width }">
         {{ tool.tooltip }}
     </div>
 </template>
@@ -84,7 +88,7 @@ watch(() => tool.tooltipOwner, () => {
     left: 0;
     top: 0;
 
-    padding:  0.5em 1em;
+    padding: 0.5em 1em;
     border: solid 1px;
     border-radius: 5px;
 }

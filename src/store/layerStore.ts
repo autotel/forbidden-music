@@ -50,6 +50,12 @@ export const useLayerStore = defineStore("layer", () => {
         return layers.value[layer];
     }
 
+    getOrMakeLayerWithIndex(0);
+
+    if(!layers.value[0]) {
+        throw new Error("No layer 0");
+    }
+
     return {
         layers,
         getOrMakeLayerWithIndex,

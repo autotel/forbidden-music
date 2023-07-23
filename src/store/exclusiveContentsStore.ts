@@ -11,16 +11,16 @@ export const useExclusiveContentsStore = defineStore("exclusive contents store",
         enabled.value = true;
     });
 
-    ifDev(() => {
-        console.log("dev - exclusives mode on");
-        enabled.value = true;
-    });
+    // ifDev(() => {
+    //     console.log("dev - exclusives mode on");
+    //     enabled.value = true;
+    // });
 
     
-    // if(window.location.hash == "#exclusive") {
-    //     enabled.value = true;
-    //     console.log("exclusives mode on");
-    // }
+    if(window.location.hash == "#exclusive") {
+        enabled.value = true;
+        console.log("exclusives mode on");
+    }
     return {
         enabled
     }

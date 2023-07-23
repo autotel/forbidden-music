@@ -29,7 +29,7 @@ interface SampleFileDefinition {
 class SamplerVoice {
     inUse: boolean = false;
     sampleSoruces: SampleSource[] = [];
-
+    velocityToStartPoint: number = 0;
     private bufferSource?: AudioBufferSourceNode;
     outputNode: GainNode;
     audioContext: AudioContext;
@@ -166,6 +166,13 @@ class SamplerVoice {
         timeAccumulator += adsr[3];
         this.outputNode.gain.linearRampToValueAtTime(0, timeAccumulator);
 
+        if(this.velocityToStartPoint) {
+            if(velocity > 1) {
+                console.error("velocity > 1");
+            }
+            skipSample += this.velocityToStartPoint * (1-velocity);
+        }
+        
         this.bufferSource.start(absoluteNoteStart, skipSample, durationWithRelease);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };
@@ -229,6 +236,7 @@ export class MagicSampler implements SynthInstance {
     private sampleVoices: SamplerVoice[] = [];
     private outputNode: GainNode;
     private loadingProgress = 0;
+    private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
     credits: string = "";
     name: string = "unnamed";
@@ -276,7 +284,7 @@ export class MagicSampler implements SynthInstance {
                 if (!parent.outputNode) return;
                 parent.outputNode.gain.value = value;
             },
-            exportable: false,
+            exportable: true,
         } as SynthParam);
 
         this.params.push({
@@ -301,9 +309,25 @@ export class MagicSampler implements SynthInstance {
                     console.log("set",['attack', 'decay', 'sustain', 'release'][i], value);
                     parent.adsr[i] = value;
                 },
-                curve: 'log'
+                curve: 'log',
+                exportable: true,
             } as NumberSynthParam);
         });
+
+        this.params.push({
+            displayName: "Velocity to start point, seconds",
+            type: ParamType.number,
+            min: 0, max: 3,
+            get value() {
+                return parent.velocityToStartPoint;
+            },
+            set value(value: number) {
+                parent.velocityToStartPoint = value;
+            },
+            curve: 'log',
+            exportable: true,
+        } as SynthParam);
+       
 
     }
     triggerAttackRelease = (
@@ -322,6 +346,7 @@ export class MagicSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
+        sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
         sampleVoice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity, this.adsr);
     };
     triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
@@ -335,6 +360,7 @@ export class MagicSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
+        sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
         sampleVoice.triggerPerc(frequency, relativeNoteStart, velocity, this.adsr);
 
     };

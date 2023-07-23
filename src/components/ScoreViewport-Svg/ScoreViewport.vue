@@ -84,7 +84,7 @@ svg #playbar {
 }
 
 svg#viewport.cursor-draw {
-    cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
+    cursor: url("../../assets/icons-iconarchive-pen.png") 3 3, crosshair;
 }
 
 svg#viewport.cursor-move {
