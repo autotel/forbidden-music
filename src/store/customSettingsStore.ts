@@ -1,12 +1,15 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, ref, watchEffect, WritableComputedRef } from "vue";
 import { useExclusiveContentsStore } from "./exclusiveContentsStore";
+import isTauri from "../functions/isTauri";
 
 export const userCustomPerformanceSettings = 'RbftAFPvQd-zGucC2xGaS-performance-settings';
 
 export enum ViewportTech {
     Canvas, Pixi, Svg
 }
+
+const bool =  (v:unknown) => v === 'true' || v === true;
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
     const exclusives = useExclusiveContentsStore();
@@ -49,14 +52,14 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         try {
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
-                viewportTech.value = parsed.viewportTech;
-                showFPS.value = parsed.showFPS;
-                fontSize.value = parsed.fontSize;
-                polyphonyEnabled.value = parsed.polyphonyEnabled;
-                layersEnabled.value = parsed.layersEnabled;
-                midiInputEnabled.value = parsed.midiInputEnabled;
-                performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
-                physicalEnabled.value = parsed.physicalEnabled;
+                viewportTech.value = parsed.viewportTech || 0;
+                showFPS.value = bool(parsed.showFPS);
+                fontSize.value = parsed.fontSize || fontSize.value;
+                polyphonyEnabled.value = bool(parsed.polyphonyEnabled);
+                layersEnabled.value = bool(parsed.layersEnabled);
+                midiInputEnabled.value = bool(parsed.midiInputEnabled);
+                performanceSettingsEnabled.value = isTauri() ? true : bool(parsed.performanceSettingsEnabled);
+                physicalEnabled.value = bool(parsed.physicalEnabled);
             }
         } catch (e) {
             console.error('could not recall user performance settings', e);
