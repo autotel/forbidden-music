@@ -23,7 +23,7 @@ struct MidiMessage {
 
 use assert_no_alloc::*;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{FromSample, SizedSample};
+use cpal::{FromSample, SizedSample, Stream};
 use fundsp::hacker::*;
 
 #[cfg(debug_assertions)] // required when disable_release is set (default)
@@ -113,22 +113,34 @@ fn open_midi_connection(
         Err(e) => println!("Error: {}", e),
     }
 }
+
 #[tauri::command]
 fn beep() {
+}
+
+fn main() {
+
     let host = cpal::default_host();
+
+    let mut stream_option: Option<Stream> = None;
 
     let device = host
         .default_output_device()
         .expect("Failed to find a default output device");
     let config = device.default_output_config().unwrap();
 
-    match config.sample_format() {
+    let ssstream = match config.sample_format() {
         cpal::SampleFormat::F32 => run::<f32>(&device, &config.into()).unwrap(),
         cpal::SampleFormat::I16 => run::<i16>(&device, &config.into()).unwrap(),
         cpal::SampleFormat::U16 => run::<u16>(&device, &config.into()).unwrap(),
         _ => panic!("Unsupported format"),
-    }
-    fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyhow::Error>
+    };
+
+    fn run<T>(
+        device: &cpal::Device, 
+        config: &cpal::StreamConfig,
+        // mut stream_option: &Option<Stream>
+    )-> Result<(Stream), anyhow::Error>
     where
         T: SizedSample + FromSample<f64>,
     {
@@ -145,7 +157,7 @@ fn beep() {
         let mut c = c
             >> (declick() | declick())
             >> (dcblock() | dcblock())
-            //>> (multipass() & 0.2 * reverb_stereo(10.0, 3.0))
+            // >> (multipass() & 0.2 * reverb_stereo(5.0, 1.0))
             >> limiter_stereo((1.0, 5.0));
         //let mut c = c * 0.1;
 
@@ -156,7 +168,7 @@ fn beep() {
 
         let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-        let stream = device.build_output_stream(
+        let mut stream = device.build_output_stream(
             config,
             move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
                 write_data(data, channels, &mut next_value)
@@ -164,11 +176,13 @@ fn beep() {
             err_fn,
             None,
         )?;
-        stream.play()?;
-        // stream does not block the calling thread but I dont't know how to keep the sound beyond the scope of this function
-        std::thread::sleep(std::time::Duration::from_millis(4000));
 
-        Ok(())
+        // stream does not block the calling thread but I dont't know how to keep the sound beyond the scope of this function
+        
+        stream.play().expect("Failed to play stream");
+        // stream_option = &Some(stream);
+
+        Ok((stream))
     }
 
     fn  write_data<T>(output: &mut [T], channels: usize, next_sample: &mut dyn FnMut() -> (f64, f64))
@@ -189,9 +203,9 @@ fn beep() {
             }
         }
     }
-}
 
-fn main() {
+
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             greet,

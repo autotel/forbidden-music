@@ -1,0 +1,26 @@
+x	canvas mode, faster 
+x	multi-timbrality 
+x	add a list of parameters to set each sampler - 
+x	fix notes sometimes skipped 
+	auto compile, maybe https://github.com/tauri-apps/tauri-action
+	load button + load progrss instead of autoload 
+	dragging a note grouped in another than active group, drags the whole group 
+	copying a note grouped in another than active group, copies the whole group to new group 
+	Find midi export library or method 
+	patreon login? 
+	Better GUI for selecting snaps 
+	Base Frequency 
+	midi export 
+	Midi MPE connectivity 
+	Back to esoteric composition, or a live performance tool: 
+	Physical model sounds 
+	Remove snaps that are not useful 
+	zoom not around bottom left corner, but mouse or center of screen 
+	premium downloadable version (for piano spl) 
+	public version with video 
+	fix that after importing library item, instrument gui doesn't reflect changed instrument 
+	Change app title 
+	Fix hanging notes in Firefox 
+	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
+	group editing 
+	make playbar come back to last user selected spot on space
