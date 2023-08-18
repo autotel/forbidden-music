@@ -248,7 +248,7 @@ export const useSnapStore = defineStore("snap", () => {
     const toneSnapExplanation = ref([] as SnapExplanation[]);
     const customOctavesTable = ref(colundi as number[]);
     const onlyWithMutednotes = ref(false);
-    const onlyWithSimultaneousNotes = ref(true);
+    const onlyWithSimultaneousNotes = ref(false);
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -269,7 +269,7 @@ export const useSnapStore = defineStore("snap", () => {
     const EDOSsnap = (edo: number, targetOctave: number, toneSnap: SnapTracker) => {
         const relatedNumber = Math.round(targetOctave * edo) / edo;
         toneSnap.addSnappedValue(relatedNumber, {
-            text: "equal" + edo,
+            text: "EDO " + edo,
             relatedNumber,
         });
     }
@@ -365,7 +365,7 @@ export const useSnapStore = defineStore("snap", () => {
                     const myCandidateHz = closeHzRatio * otherHz;
                     const myCandidateOctave = frequencyToOctave(myCandidateHz);
                     toneSnap.addSnappedValue(myCandidateOctave, {
-                        text: `hz fraction ${fraction.toString()}`,
+                        text: `hz fraction ${fraction.toFraction(true)}`,
                         relatedNote: otherNote,
                     });
                 }

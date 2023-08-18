@@ -231,10 +231,13 @@ const refreshView = (time: number) => {
         for (const snapExplanation of snap.toneSnapExplanation) {
             const relatedNoteRect = snapExplanation.relatedNote ? view.rectOfNote(
                 snapExplanation.relatedNote
-            ) : null;
+            ) : snapFocusedNoteRect;
             if (relatedNoteRect) {
-                const middleX = (snapFocusedNoteRect.cx + relatedNoteRect.cx) / 2;
-                const middleY = (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
+                const middleY = 
+                    snapFocusedNoteRect.cy == relatedNoteRect.cy ? 
+                    snapFocusedNoteRect.cy : 
+                    (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
+                
                 const leftX = Math.max(relatedNoteRect.cx, 5);
                 graphics.moveTo(leftX, relatedNoteRect.cy);
                 graphics.lineTo(leftX, snapFocusedNoteRect.cy);
