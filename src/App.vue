@@ -47,6 +47,7 @@ const viewport = ref<SVGSVGElement>();
 const userSettings = useCustomSettingsStore();
 const useNewView = ref(true);
 
+
 provide('modalText', modalText);
 
 
@@ -63,9 +64,14 @@ const mouseWheelListener = (e: WheelEvent) => {
         octave: -view.pxToOctaveWithOffset(e.clientY),
     }
 
-
+    if(!view.zoomHeightWidthAspect) {
+        view.zoomHeightWidthAspect = view.viewHeightOctaves / view.viewWidthTime;
+    }
     const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
-    const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
+    // too keep w/h linked
+    const wouldViewHeightOctaves = wouldViewWidthTime * view.zoomHeightWidthAspect; 
+    // non-linked version
+    //const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
 
     if (wouldViewWidthTime < 400 && wouldViewHeightOctaves > 0.1) {
         view.viewWidthTime = wouldViewWidthTime;

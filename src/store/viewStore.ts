@@ -6,14 +6,14 @@ import { frequencyToOctave } from "../functions/toneConverters.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
 import { useLayerStore } from "./layerStore.js";
-const rgbToHex = (r:number, g:number, b:number) => {
+const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
     g = g & 0xff;
     b = b & 0xff;
     return ((r << 16) | (g << 8) | b);
 };
 
-const averageColors = (...colors:number[]) => {
+const averageColors = (...colors: number[]) => {
     let r = 0;
     let g = 0;
     let b = 0;
@@ -28,7 +28,7 @@ const averageColors = (...colors:number[]) => {
     return rgbToHex(r, g, b);
 };
 
-const desaturate = (color:number, amount:number) => {
+const desaturate = (color: number, amount: number) => {
     const r = (color >> 16) & 0xff;
     const g = (color >> 8) & 0xff;
     const b = color & 0xff;
@@ -47,7 +47,7 @@ const desaturate = (color:number, amount:number) => {
 
 const gray = rgbToHex(200, 200, 200);
 
-const preparation = (r:number,g:number,b:number)=>desaturate(averageColors(rgbToHex(r,g,b),0xFFFFFF),0.6);
+const preparation = (r: number, g: number, b: number) => desaturate(averageColors(rgbToHex(r, g, b), 0xFFFFFF), 0.6);
 
 export const layerNoteColors = [
     gray,
@@ -63,7 +63,7 @@ export const layerNoteColors = [
     preparation(223, 141, 100),
 ];
 
-export const layerNoteColorStrings  = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
+export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
 // const measureCallTime = (name:string, fn:Function)=>{
 //     const wrappedFn = (...p:any[])=>{
 //         const start = performance.now();
@@ -133,7 +133,7 @@ export const useViewStore = defineStore("view", () => {
     // they could be calculated only when asked, memoized too.
     const visibleNotes = computed((): EditNote[] => {
         visibleNotesRefreshKey.value;
-        const layerVisibleNotes = project.score.filter(({ layer }) =>  layers.isVisible(layer) );
+        const layerVisibleNotes = project.score.filter(({ layer }) => layers.isVisible(layer));
         return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
@@ -157,6 +157,10 @@ export const useViewStore = defineStore("view", () => {
     // watch(visibleNoteRects,() => {
     //     console.log("visibleNoteRects mutated",visibleNoteRects);
     // })
+
+    const zoomHeightWidthAspect = computed(() => {
+        return viewHeightOctaves.value / viewWidthTime.value;
+    });
 
     const rectOfNote = (note: EditNote): NoteRect => {
         let rect = {
@@ -243,24 +247,24 @@ export const useViewStore = defineStore("view", () => {
                 y <= noteRect.y + noteRect.height
             )) {
                 return true;
-            } else 
-            
-            if (
-                (
-                    x >= noteRect.x &&
-                    x <= noteRect.x + noteRect.width &&
-                    y >= noteRect.y &&
-                    y <= noteRect.y + noteRect.height
-                ) || (
-                    considerVeloLines &&
-                    noteRect.x - 7 <= x &&
-                    noteRect.x + 7 >= x &&
-                    veloPy - 7 <= y &&
-                    veloPy + 7 >= y
-                )
-            ) {
-                return true;
-            }
+            } else
+
+                if (
+                    (
+                        x >= noteRect.x &&
+                        x <= noteRect.x + noteRect.width &&
+                        y >= noteRect.y &&
+                        y <= noteRect.y + noteRect.height
+                    ) || (
+                        considerVeloLines &&
+                        noteRect.x - 7 <= x &&
+                        noteRect.x + 7 >= x &&
+                        veloPy - 7 <= y &&
+                        veloPy + 7 >= y
+                    )
+                ) {
+                    return true;
+                }
             return false;
         });
         return items;
@@ -396,6 +400,8 @@ export const useViewStore = defineStore("view", () => {
         everyNoteRectAtCoordinates,
 
         followPlayback,
+
+        zoomHeightWidthAspect
     };
 });
 

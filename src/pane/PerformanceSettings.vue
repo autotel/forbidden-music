@@ -10,10 +10,11 @@ import isDev from '../functions/isDev';
 import { usePlaybackStore } from '../store/playbackStore';
 import isTauri from '../functions/isTauri';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
+import { useViewStore } from '../store/viewStore';
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();
-
+const view = useViewStore();
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
     { name: 'SVG', value: ViewportTech.Svg },
