@@ -70,7 +70,9 @@ onUnmounted(() => {
             
         >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <text x="0" y="15" font-size="24px" baseline-shift="-5" >></text>
+                <text x="0" y="15" font-size="24px" baseline-shift="-5" >
+                    ⇹
+                </text>
             </svg>
         </Button>
 
