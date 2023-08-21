@@ -174,11 +174,15 @@ export const useToolStore = defineStore("edit", () => {
             currentMouseStringHelper.value = "⇅";
         } else if (current.value === Tool.Edit) {
             if (
-                noteRightEdgeBeingHovered.value 
+                noteRightEdgeBeingHovered.value
                 && noteRightEdgeBeingHovered.value.group === currentlyActiveGroup.value
             ) {
                 ret = MouseDownActions.Lengthen;
-                currentMouseStringHelper.value = "⟷";
+                if (selection.selected.size > 1) {
+                    currentMouseStringHelper.value = "⟺";
+                } else {
+                    currentMouseStringHelper.value = "⟷";
+                }
             } else if (noteBeingHovered.value) {
                 ret = MouseDownActions.Move;
                 if (noteBeingHovered.value.group !== currentlyActiveGroup.value) {
@@ -218,14 +222,31 @@ export const useToolStore = defineStore("edit", () => {
     }
 
     const _lengthenDragStartAction = (mouse: { x: number, y: number }) => {
-        noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
+        if (!noteRightEdgeBeingHovered.value) return;
+        const subject = noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
         notesBeingDraggedRightEdge = selection.getNotes();
-        if (!noteBeingDraggedRightEdge.value) throw new Error('no noteBeingDraggedRightEdge');
-        noteBeingDraggedRightEdge.value.dragStart(mouse);
+
+        // if I select one note and then lengthen another, it feels unexpected to lengthen the first one
+        // without selecting the dragged one
+        if (
+            !notesBeingDraggedRightEdge.includes(subject)
+        ) {
+            // if one note only is selected, one tends to expect that selection gets replaced
+            if (notesBeingDraggedRightEdge.length === 1) {
+                notesBeingDraggedRightEdge = [];
+                selection.clear();
+            }
+            // but if more, one expects that selection gets overwritten
+            // but that tends to be annoying, so I just add it instead.
+            if (subject) selection.add(subject);
+        }
+
+        if (!subject) throw new Error('no noteBeingDraggedRightEdge');
+        subject.dragStart(mouse);
         notesBeingDraggedRightEdge.forEach(editNote => {
             editNote.dragStart(mouse);
         });
-        snap.setFocusedNote(noteBeingDraggedRightEdge.value as EditNote);
+        snap.setFocusedNote(subject as EditNote);
 
         mouseDragStart = mouse;
         isDragging = true;
@@ -572,7 +593,7 @@ export const useToolStore = defineStore("edit", () => {
 
         groupMouseEnter,
         groupMouseLeave,
-        
+
         currentLayerNumber,
 
         currentlyActiveGroup,
