@@ -18,13 +18,13 @@ const exclusives = useExclusiveContentsStore();
 </script>
 <template>
     <div class="drawers-container" :style="{ width: paneWidth + 'px' }">
-        <WorkingMemory startExpanded/>
-        <FileManager/>
+        <WorkingMemory startExpanded />
+        <FileManager />
+        <LayersManager v-if="exclusives.enabled" />
         <SynthEdit />
-        <LayersManager v-if="exclusives.enabled"/>
-        <SnapSelector startExpanded/>
-        <MidiInputConfig/>
-        <Physical/>
+        <SnapSelector startExpanded />
+        <MidiInputConfig />
+        <Physical />
         <PerformanceSettings />
     </div>
 </template>
@@ -34,7 +34,8 @@ const exclusives = useExclusiveContentsStore();
     position: absolute;
     top: 0;
     right: 0;
-    display: inline-block;
+    display: inline;
+    flex-direction: column;
     height: calc(100vh - 90px);
     transition: width 0.2s;
     overflow-y: auto;
@@ -45,6 +46,7 @@ const exclusives = useExclusiveContentsStore();
 .icon svg {
     font-size: 30px;
 }
+
 .icon {
     font-size: 20px;
 }
