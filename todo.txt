@@ -1,12 +1,9 @@
 # Piano roll to-do
-	mutedness of notes are not represented in pixi
-	Changing layer can cause a shift in the gui because the instrment might change, and is detrimental to dbl click
-	"simultaneous" modifier status does not get saved
-	when I select a note and then right-edge drag another note, the first note should be de-selected before drag starts
-	Change app title 
+	change app icons
 	copied notes should keep their original group
 	Better GUI for selecting snaps 
 	make gui prettier?
+	zooming doesn't keep exactly the aspect ratio as I want it.
 	auto compile, maybe https://github.com/tauri-apps/tauri-action
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
 		load button + load progrss instead of autoload 
@@ -21,7 +18,11 @@
 	Record and add percussive sounds
 	Step sequencer?
 	Time or time*octave markers
+	"simultaneous" modifier status does not get saved
+	mouse helper icon should represent what the mouse is doing, if tool is engaged in a drag, instead of showing what would do on click
 
+x	when I select a note and then right-edge drag another note, the first note should be de-selected before drag starts
+x	Changing layer can cause a shift in the gui because the instrment might change, and is detrimental to dbl click
 x	fix that after importing library item, instrument gui doesn't reflect changed instrument 
 x	Fix hanging notes in Firefox 
 x	public version with video 
@@ -34,3 +35,5 @@ x	canvas mode, faster
 x	multi-timbrality 
 x	add a list of parameters to set each sampler - 
 x	fix notes sometimes skipped 
+x	mutedness of notes are not represented in pixi
+x	Change app title 

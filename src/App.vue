@@ -27,6 +27,7 @@ import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
+import Autotel from './components/Autotel.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -344,11 +345,10 @@ watch(paneWidth, () => {
             </Button>
         </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
-        <div style="position: fixed; bottom:0; right: 0;">
-            <ToolSelector />
-        </div>
-        <div style="position: fixed; bottom: 0;">
+        <div class="toolbars-container">
             <Transport />
+            <Autotel />
+            <ToolSelector />
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
@@ -364,7 +364,15 @@ watch(paneWidth, () => {
 <style scoped>
 .unclickable {
     pointer-events: none;
-
+}
+.toolbars-container {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 </style>
 
