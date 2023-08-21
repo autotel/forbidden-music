@@ -236,17 +236,16 @@ export const useViewStore = defineStore("view", () => {
             const isThin = noteRect.width === 0;
 
             if (isThin && (
-                // noteRect.x - noteRect.radius <= x &&
-                // noteRect.x + noteRect.radius >= x &&
-                // noteRect.y - noteRect.radius <= y &&
-                // noteRect.y + noteRect.radius >= y
                 x >= noteRect.x - noteRect.radius &&
                 x <= noteRect.x + noteRect.radius &&
-                y >= noteRect.y - noteRect.radius &&
-                y <= noteRect.y + noteRect.radius
+                // note theh/v asymmetry
+                y >= noteRect.y &&
+                y <= noteRect.y + noteRect.height
             )) {
                 return true;
-            } else if (
+            } else 
+            
+            if (
                 (
                     x >= noteRect.x &&
                     x <= noteRect.x + noteRect.width &&
