@@ -1,6 +1,5 @@
 # Piano roll to-do
 	change app icons
-	zooming doesn't keep exactly the aspect ratio as I want it.
 	auto compile, maybe https://github.com/tauri-apps/tauri-action
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
 		load button + load progrss instead of autoload 
@@ -14,7 +13,7 @@
 	Physical model sounds 
 	Record and add percussive sounds
 	Step sequencer?
-	Time or time*octave markers
+	Time or time*octave markers 
 	"simultaneous" modifier status does not get saved
 	mouse helper icon should represent what the mouse is doing, if tool is engaged in a drag, instead of showing what would do on click
 
@@ -25,6 +24,8 @@
 
 # Done
 
+	changing window size deforms aspect ratio
+	zooming doesn't keep exactly the aspect ratio as I want it.
 	Better GUI for selecting snaps 
 	make gui prettier?
 	copied notes should keep their original group

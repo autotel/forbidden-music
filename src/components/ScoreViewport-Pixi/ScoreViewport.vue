@@ -10,6 +10,7 @@ import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
 import { layerNoteColors, useViewStore } from '../../store/viewStore';
+import { baseFrequency } from '../../functions/toneConverters';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -264,9 +265,9 @@ const refreshView = (time: number) => {
 
     }
 
-    if (measureSteps) taskMark("6. draw notes");
-    // draw notes & velolines if 
+    const displayTexts = view.viewWidthTime < 3;
 
+    if (measureSteps) taskMark("6. draw notes");
     for (const nRect of visibleNotes) {
         const lcolor = layerNoteColors[nRect.event.layer];
         if (nRect.event.selected) {
@@ -286,6 +287,14 @@ const refreshView = (time: number) => {
             // ctx.arc(nRect.cx, nRect.cy, nRect.radius, 0, 2 * Math.PI);
             graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius);
         }
+        if (displayTexts) {
+            let text = getText();
+            text.text = `${baseFrequency}(2^${nRect.event.octave.toFixed(3)}) = ${nRect.event.frequency.toFixed(3)} hz`;
+            text.x = nRect.x + 5;
+            text.y = nRect.y + nRect.radius - userSettings.fontSize / 2;
+            text.style.fontSize = userSettings.fontSize;
+        }
+        
         if (tool.current === Tool.Modulation) {
             const veloLinePositionY = view.velocityToPxWithOffset(nRect.event.velocity);
             graphics.lineStyle(2, 0x000000, 2);

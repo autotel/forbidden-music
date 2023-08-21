@@ -45,8 +45,6 @@ const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const paneWidth = ref(300);
 const viewport = ref<SVGSVGElement>();
 const userSettings = useCustomSettingsStore();
-const useNewView = ref(true);
-
 
 provide('modalText', modalText);
 
@@ -58,26 +56,26 @@ let viewDragStartTime = 0;
 let viewDragStartY = 0;
 let viewDragStartOctave = 0;
 
+
 const mouseWheelListener = (e: WheelEvent) => {
     const viewMousePositionBefore = {
         time: view.pxToTimeWithOffset(e.clientX),
         octave: -view.pxToOctaveWithOffset(e.clientY),
     }
 
-    if(!view.zoomHeightWidthAspect) {
-        view.zoomHeightWidthAspect = view.viewHeightOctaves / view.viewWidthTime;
-    }
-    const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
-    // too keep w/h linked
-    const wouldViewHeightOctaves = wouldViewWidthTime * view.zoomHeightWidthAspect; 
-    // non-linked version
-    //const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
+    // not needed, thanks to applyRatio. Would be needed if zooming independently x and y
+    // const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
+    const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
 
-    if (wouldViewWidthTime < 400 && wouldViewHeightOctaves > 0.1) {
-        view.viewWidthTime = wouldViewWidthTime;
+    if (
+        // wouldViewWidthTime < 400 && 
+        wouldViewHeightOctaves > 0.1
+    ) {
+        // view.viewWidthTime = wouldViewWidthTime;
         view.viewHeightOctaves = wouldViewHeightOctaves;
     }
 
+    // offset zoom center back 
 
     const viewMousePositionAfter = {
         time: view.pxToTimeWithOffset(e.clientX),
@@ -86,6 +84,7 @@ const mouseWheelListener = (e: WheelEvent) => {
 
     view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
     view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
+    view.applyRatioToTime();
 
     if (view.timeOffset < 0) {
         view.timeOffset = 0;

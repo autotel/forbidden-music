@@ -111,8 +111,8 @@ export const useViewStore = defineStore("view", () => {
     const octaveOffset = ref(-3);
     const timeOffset = ref(0);
     const centerFrequency = ref(440);
-    const viewWidthPx = ref(1920);
-    const viewHeightPx = ref(1080);
+    const viewWidthPx = ref(800);
+    const viewHeightPx = ref(800);
     const viewWidthTime = ref(12);
     const viewHeightOctaves = ref(4);
     /** size of the composition, to use as reference to scroll bounds */
@@ -149,17 +149,6 @@ export const useViewStore = defineStore("view", () => {
             memoizedRects.push(r);
             return r;
         });
-    });
-
-    // watch(visibleNotes,() => {
-    //     console.log("visibleNotes mutated",visibleNotes);
-    // })
-    // watch(visibleNoteRects,() => {
-    //     console.log("visibleNoteRects mutated",visibleNoteRects);
-    // })
-
-    const zoomHeightWidthAspect = computed(() => {
-        return viewHeightOctaves.value / viewWidthTime.value;
     });
 
     const rectOfNote = (note: EditNote): NoteRect => {
@@ -282,6 +271,9 @@ export const useViewStore = defineStore("view", () => {
         timeOffset.value = boundsToTime(timeOffsetBounded);
     };
     const pxToBounds = (px: number): number => {
+        // h/v constrained
+        // return px / viewHeightPx.value;
+        // view proportion dependent
         return px / viewWidthPx.value;
     };
     const timeToBounds = (time: number): number => {
@@ -338,12 +330,25 @@ export const useViewStore = defineStore("view", () => {
         return pxToVelocity(viewHeightPx.value - px);
     };
 
+    let ratio = 1;
+    const applyRatioToTime = () => {
+        const viewPxRatio = viewWidthPx.value / viewHeightPx.value;
+        viewWidthTime.value = viewHeightOctaves.value * (ratio * viewPxRatio);
+    }
+
     const updateSize = (width: number, height: number) => {
         viewWidthPx.value = width;
         viewHeightPx.value = height;
         _offsetPxX.value = width / 2;
         _offsetPxY.value = height;
+        applyRatioToTime();
     };
+
+
+    const setOctaveToTimeRatio = (newRatio: number) => {
+        ratio = newRatio;
+        applyRatioToTime();
+    }
 
     watchEffect(() => {
         if (followPlayback.value) {
@@ -401,7 +406,8 @@ export const useViewStore = defineStore("view", () => {
 
         followPlayback,
 
-        zoomHeightWidthAspect
+        applyRatioToTime,
+        setOctaveToTimeRatio,
     };
 });
 

@@ -12,15 +12,6 @@ const props = defineProps<{
 
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 10" :x="eventRect.x" :y="eventRect.cy + 5" font-size="10">
-        (2^{{
-            eventRect.event.octave.toFixed(3)
-        }})n = {{
-            eventRect.event.frequency.toFixed(3)
-        }} hz {{
-            eventRect.event.group?.name
-        }}
-    </text>
     <circle 
         class="body" 
         v-bind="$attrs"

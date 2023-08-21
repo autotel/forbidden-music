@@ -66,6 +66,17 @@ const viewportTechs = [
                 <Toggle v-model="userSettings.physicalEnabled" />
                 <label>Phyisical use</label>
             </div>
+
+            <div class="form-row">
+                <input
+                    v-model="userSettings.octaveToTimeRatio" 
+                    type="number"
+                    step="0.01"
+                    min="0.1"
+                    max="4"
+                />
+                <label>Octave to time ratio</label>
+            </div>
             <!-- 
             <div class="form-row">
                 <Toggle v-model="userSettings.performanceSettingsEnabled" />

@@ -68,34 +68,20 @@ const isEditable = computed(() => {
 })
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 10" :x="eventRect.x" :y="eventRect.cy + 5" font-size="10">
+    <text class="texts" v-if="view.viewWidthTime < 5" :x="eventRect.x" :y="eventRect.cy + 10" font-size="20">
         (2^{{
             eventRect.event.octave.toFixed(3)
         }})n = {{
-    eventRect.event.frequency.toFixed(3)
-}} hz {{
-    eventRect.event.group?.name
-}}
+            eventRect.event.frequency.toFixed(3)
+        }} hz {{
+            eventRect.event.group?.name
+        }}
     </text>
     <g ref="noteBody">
-        <NoteElementRectangle
-            v-if="eventRect.event.duration > 0"
-            :eventRect="eventRect" 
-            :isEditable="isEditable"
-            :fill="myColor"
-        />
-        <NoteElementCircle 
-            v-else
-            :eventRect="eventRect" 
-            :isEditable="isEditable"
-            :fill="myColor"
-        />
-        <NoteVeloLine 
-            :event="eventRect.event" 
-            :interactionDisabled="interactionDisabled" 
-            :x="eventRect.cx" 
-            :selected="eventRect.event.selected"
-            :fill="myColor"
-        />
+        <NoteElementRectangle v-if="eventRect.event.duration > 0" :eventRect="eventRect" :isEditable="isEditable"
+            :fill="myColor" />
+        <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
+        <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.cx"
+            :selected="eventRect.event.selected" :fill="myColor" />
     </g>
 </template>

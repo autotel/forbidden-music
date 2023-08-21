@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, ref, watchEffect, WritableComputedRef } from "vue";
 import { useExclusiveContentsStore } from "./exclusiveContentsStore";
+import { watch } from "fs";
+import { useViewStore } from "./viewStore";
 
 export const userCustomPerformanceSettings = 'RbftAFPvQd-zGucC2xGaS-performance-settings';
 
@@ -9,10 +11,12 @@ export enum ViewportTech {
 }
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
+    const view = useViewStore();
     const exclusives = useExclusiveContentsStore();
     const viewportTech = ref(ViewportTech.Svg);
     const showFPS = ref(false);
     const fontSize = ref(12);
+    const octaveToTimeRatio = ref(1);
     // polyphony cannot be undertood or used without layers thus far
     const _polyphonyEnabled = ref(false);
     const polyphonyEnabled = computed<boolean>({
@@ -42,6 +46,12 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         viewportTech.value = ViewportTech.Svg;
         showFPS.value = false;
         fontSize.value = 12;
+        polyphonyEnabled.value = false;
+        layersEnabled.value = false;
+        midiInputEnabled.value = false;
+        performanceSettingsEnabled.value = true;
+        physicalEnabled.value = false;
+        octaveToTimeRatio.value = 1;
     }
 
     onMounted(() => {
@@ -57,6 +67,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 midiInputEnabled.value = parsed.midiInputEnabled;
                 performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
                 physicalEnabled.value = parsed.physicalEnabled;
+                octaveToTimeRatio.value = parsed.octaveToTimeRatio || 1;
             }
         } catch (e) {
             console.error('could not recall user performance settings', e);
@@ -74,9 +85,17 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 midiInputEnabled: midiInputEnabled.value,
                 performanceSettingsEnabled: performanceSettingsEnabled.value,
                 physicalEnabled: physicalEnabled.value,
+                octaveToTimeRatio: octaveToTimeRatio.value,
             }));
             console.log('saved user performance settings');
         });
+
+
+        watchEffect(() => {
+            view.setOctaveToTimeRatio(octaveToTimeRatio.value);
+        })
+
+
     });
 
 
@@ -90,5 +109,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         midiInputEnabled,
         performanceSettingsEnabled,
         physicalEnabled,
+        octaveToTimeRatio,
     }
 });
