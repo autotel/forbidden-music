@@ -141,7 +141,7 @@ const taskMark = (taskName: string) => {
 
 let textToUse = 0;
 const getText = (): PIXI.Text => {
-    let retValue = null;
+    let retValue: PIXI.Text | null = null;
     if (!texts[textToUse]) {
         texts[textToUse] = new PIXI.Text();
         pixiApp.stage.addChild(texts[textToUse]);
@@ -233,11 +233,11 @@ const refreshView = (time: number) => {
                 snapExplanation.relatedNote
             ) : snapFocusedNoteRect;
             if (relatedNoteRect) {
-                const middleY = 
-                    snapFocusedNoteRect.cy == relatedNoteRect.cy ? 
-                    snapFocusedNoteRect.cy : 
-                    (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
-                
+                const middleY =
+                    snapFocusedNoteRect.cy == relatedNoteRect.cy ?
+                        snapFocusedNoteRect.cy :
+                        (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
+
                 const leftX = Math.max(relatedNoteRect.cx, 5);
                 graphics.moveTo(leftX, relatedNoteRect.cy);
                 graphics.lineTo(leftX, snapFocusedNoteRect.cy);
@@ -272,6 +272,9 @@ const refreshView = (time: number) => {
         if (nRect.event.selected) {
             graphics.beginFill(lcolor, 1);
             graphics.lineStyle(1, 0x555555, 0.9);
+        } else if (nRect.event.mute) {
+            graphics.beginFill(lcolor, 0.15);
+            graphics.lineStyle(1, 0x333333, 0.15);
         } else {
             graphics.beginFill(lcolor, 0.5);
             graphics.lineStyle(1, 0xAAAAAA, 0.5);
