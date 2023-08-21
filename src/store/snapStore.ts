@@ -171,7 +171,7 @@ const snaps: { [key: string]: SnapDefinition } = {
         active: false,
     },
     hzFundamentalMultiple: {
-        description: "frequencies which are multiple of the fundamental frequency.",
+        description: "frequencies which are multiple of the fundamental frequency ("+ fundamental + ")",
         icon: "FF\u00d7",
         type: SnapType.Tone,
         active: false,

@@ -1,8 +1,5 @@
 # Piano roll to-do
 	change app icons
-	copied notes should keep their original group
-	Better GUI for selecting snaps 
-	make gui prettier?
 	zooming doesn't keep exactly the aspect ratio as I want it.
 	auto compile, maybe https://github.com/tauri-apps/tauri-action
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
@@ -21,19 +18,29 @@
 	"simultaneous" modifier status does not get saved
 	mouse helper icon should represent what the mouse is doing, if tool is engaged in a drag, instead of showing what would do on click
 
-x	when I select a note and then right-edge drag another note, the first note should be de-selected before drag starts
-x	Changing layer can cause a shift in the gui because the instrment might change, and is detrimental to dbl click
-x	fix that after importing library item, instrument gui doesn't reflect changed instrument 
-x	Fix hanging notes in Firefox 
-x	public version with video 
-x	premium downloadable version (for piano spl) 
-x	Remove snaps that are not useful 
-x	zoom not around bottom left corner, but mouse or center of screen 
-x	Find midi export library or method 
-x	make playbar come back to last user selected spot on space
-x	canvas mode, faster 
-x	multi-timbrality 
-x	add a list of parameters to set each sampler - 
-x	fix notes sometimes skipped 
-x	mutedness of notes are not represented in pixi
-x	Change app title 
+# Ideas
+
+	switch between log and linear hz layouts for didactic purposes.
+	integrate tuning explorer into this as a way to construct scales
+
+# Done
+
+	Better GUI for selecting snaps 
+	make gui prettier?
+	copied notes should keep their original group
+	when I select a note and then right-edge drag another note, the first note should be de-selected before drag starts
+	Changing layer can cause a shift in the gui because the instrment might change, and is detrimental to dbl click
+	fix that after importing library item, instrument gui doesn't reflect changed instrument 
+	Fix hanging notes in Firefox 
+	public version with video 
+	premium downloadable version (for piano spl) 
+	Remove snaps that are not useful 
+	zoom not around bottom left corner, but mouse or center of screen 
+	Find midi export library or method 
+	make playbar come back to last user selected spot on space
+	canvas mode, faster 
+	multi-timbrality 
+	add a list of parameters to set each sampler - 
+	fix notes sometimes skipped 
+	mutedness of notes are not represented in pixi
+	Change app title 

@@ -33,7 +33,7 @@ const toggleSelectTool = () => {
 </script>
 
 <template>
-  <div>
+  <div id="tools-container">
     <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag" :onClick="() => tool.copyOnDrag = !tool.copyOnDrag"
       tooltip="copy when dragging. [ALT]">
       Copy
@@ -76,6 +76,14 @@ const toggleSelectTool = () => {
 </template>
 
 <style scoped>
+
+#tools-container {
+    bottom: 0;
+    display: flex;
+    position: relative;
+    align-items: center;
+    flex-wrap: wrap;
+}
 .selected {
   background-color: #888;
   /* color: rgb(196, 0, 0); */

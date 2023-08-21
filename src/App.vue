@@ -347,7 +347,7 @@ watch(paneWidth, () => {
         <Pianito v-if="tool.showReferenceKeyboard" />
         <div class="toolbars-container">
             <Transport />
-            <Autotel />
+            <!-- <Autotel /> -->
             <ToolSelector />
         </div>
     </div>
@@ -372,7 +372,8 @@ watch(paneWidth, () => {
     width: 100vw;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: end;
+    height: 2.8em;
 }
 </style>
 
