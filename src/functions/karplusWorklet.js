@@ -1,21 +1,46 @@
 // @ts-check
 //@ts-ignore
 const samplingRate = sampleRate || 44100;
+const timeIncrementOfSample = 1 / samplingRate;
 //@ts-ignore
 if (!sampleRate) console.warn("sampleRate is not defined. Using 44100 instead.");
 
+const liveParameters = {
+    filter_k: 0.6,
+    filter_wet: 0.5,
+    exciter_level: 0.6,
+    exciter_att: 0.3,
+    exciter_decay: 1,
+    delay_feedback: 1,
+    cross_feedback: 0,
+    level_to_feedback: -1,
+    exciter_detuning: 0,
+    amp_detuning: 0,
+}
+
 class SampleBySampleOperator {
+    /**
+     * @param {number} inSample
+     */
     operation = (inSample) => inSample;
 }
 
 class Voice {
     getBlock(size) { }
-    trigger({ freq, amp }) { }
-    stealTrigger = (p) => this.trigger(p);
+    /**
+     * @param {Object} trigSettings
+     */
+    trig(trigSettings) { };
+    stealTrigger = (p) => this.trig(p);
     stop() { }
     isBusy = false;
 }
-
+class Noise extends SampleBySampleOperator {
+    operation = () => {
+        // TODO: use fast, less precise random
+        return Math.random() * 2 - 1
+    }
+}
 class DelayLine extends SampleBySampleOperator {
 
     delaySamples = 400;
@@ -65,11 +90,21 @@ class DelayLine extends SampleBySampleOperator {
     }
 }
 class LpBoxcar extends SampleBySampleOperator {
+    /** @type {number} */
+    k
+    /** 
+     * @param {number} k
+     */
     constructor(k) {
         super();
+        this.k = k;
         let mem = 0;
+        /** 
+         * @param {number} x
+         * @returns {number}
+         */
         this.operation = (x) => {
-            mem = k * x + (1 - k) * mem;
+            mem = this.k * x + (1 - this.k) * mem;
             return mem;
         }
         this.reset = () => {
@@ -149,7 +184,7 @@ class IIRLPFRochars extends SampleBySampleOperator {
     }
     setCutoff(cutoff) {
         this.rc = 1.0 / (cutoff * 2 * Math.PI);
-        this.dt = 1.0 / samplingRate;
+        this.dt = timeIncrementOfSample;
         this.alpha = this.dt / (this.rc + this.dt);
     }
     operation = (insample) => {
@@ -272,7 +307,6 @@ class ButterworthLpf1 extends SampleBySampleOperator {
         this.set = (cutoffFreq = 500, gain = 1, sharpness = 8) => {
             const fpass = cutoffFreq;
             const fstop = cutoffFreq - cutoffFreq / sharpness;
-            console.log("setf", fpass, fstop)
             if (!b) {
                 b = new Butterworth1(fpass, fstop, hpass, hstop);
             } else {
@@ -385,30 +419,105 @@ const applyHardnessCurve = (val) => {
 const applySigmoidRange = (input, alpha = 2.5) => {
     return 2 / (1 + Math.pow(e, -alpha * input)) - 1;
 }
-class Karplus2Voice extends Voice {
-    noiseEnvVal = 0;
-    noiseDecayInverse = 0;
+
+class Lerper {
+    increments = 0;
+    life = 0;
+    val = 0;
+    set(start, target, life) {
+        // edge case
+
+        this.increments = (target - start) / life
+        this.val = start;
+        this.life = life;
+        if (life < 1) this.val = target;
+    }
+    step() {
+        if (this.life < 1) {
+            return this.val
+        }
+        this.life--;
+        this.val += this.increments;
+        return this.val;
+    }
+}
+
+class NoiseExciter extends SampleBySampleOperator {
+    /** 
+     * attack, seconds
+     * @type {number} 
+     */
+    attack = 0.1;
+
+    /** 
+     * decay, seconds
+     * @type {number} 
+     */
+    decay = 0.3;
+
+    /** 
+     * duration, seconds
+     * @type {number} 
+     */
+    duration = 0;
+
+    /**
+     * @type {Lerper}
+     */
+    lerper = new Lerper();
+
+    noise = new Noise();
+
+    currentStage = 0;
+
+    constructor() {
+        super()
+    }
+
+    start({ amp }) {
+        this.lerper.set(
+            0,
+            amp * liveParameters.exciter_level,
+            this.attack * samplingRate
+        )
+        this.currentStage = 0;
+    }
+    operation = () => {
+        let aLevel = this.lerper.step();
+        let n = this.noise.operation();
+        if (this.lerper.life < 1) {
+            this.currentStage++;
+            if (this.currentStage == 1) {
+                this.lerper.set(this.lerper.val, 0, this.decay * samplingRate)
+            }
+        }
+        return n *= aLevel;
+    }
+
+}
+
+class KarplusVoice extends Voice {
     splsLeft = 0;
     bleed = 0;
     engaged = false;
     measuredOutputLevel = 0;
     applyGain = 1;
+    filterWet = 0.5;
+    ampToFeedback = -1;
+    exciterToTime = 0;
+    levelToTime = 0;
+    currentNormalSamplingPeriod = 1;
 
     delayLine1 = new DelayLine();
-
+    exciter = new NoiseExciter();
     filter1 = new LpBoxcar(0.1);
     dcRemover = new DCRemover();
 
-    /** @type {Array<Karplus2Voice>} */
+    /** @type {Array<KarplusVoice>} */
     otherVoices = [];
 
     constructor(voicesPool = []) {
         super();
-        // define the characteristics of the synth timbre.
-        const impulseDecay = 0.02; //seconds
-        this.noiseDecayInverse = 1 / (samplingRate * impulseDecay);
-        // play with these; but not recommended to go out of the -1 to 1 range.
-        this.delayLine1.feedback = 1;
         // so that it's possible to "leak" sound accross voices
         this.otherVoices = voicesPool;
 
@@ -416,23 +525,31 @@ class Karplus2Voice extends Voice {
 
     trig({ freq, amp, dur }) {
         this.noiseEnvVal = amp;
-        // const splfq = samplingRate / freq;
-        this.delayLine1.delaySamples = samplingRate / freq;
+        this.currentNormalSamplingPeriod = samplingRate / freq;
+        this.delayLine1.delaySamples = this.currentNormalSamplingPeriod;
+        this.delayLine1.feedback = liveParameters.delay_feedback;
         this.isBusy = true;
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
-        // it seems this doing barely anyhting to the high end
-        // this.filter1.setFreqs(1, 900);
-        // this.filter1.set(freq *32, 0.01);
-        this.filter1.reset();
-        this.delayLine1.reset();
         this.dcRemover.memory = 0;
+        this.exciter.attack = liveParameters.exciter_att;
+        this.exciter.decay = liveParameters.exciter_decay;
+        this.bleed = liveParameters.cross_feedback;
+        this.filterWet = liveParameters.filter_wet;
+        this.ampToFeedback = liveParameters.level_to_feedback;
+        this.exciterToTime = liveParameters.exciter_detuning;
+        this.levelToTime = liveParameters.amp_detuning;
+        this.exciter.start({ amp });
     }
     stop() {
         this.noiseEnvVal = 0;
         this.isBusy = false;
         this.engaged = false;
         this.splsLeft = 0;
+        this.measuredOutputLevel = 0;
+        this.filter1.reset();
+        this.delayLine1.reset();
+
     }
     /** 
      * @param {number} blockSize *
@@ -440,63 +557,110 @@ class Karplus2Voice extends Voice {
      */
     getBlock(blockSize) {
         const output = new Float32Array(blockSize);
+        const aWet = 1 - this.filterWet;
+        let probe = 0;
         if (!this.engaged) return output;
+
         for (let splN = 0; splN < blockSize; splN++) {
+            let sampleNow = 0;
+            /**
+             * noise exciter
+             */
+            const exciter = this.exciter.operation();
+            /**
+             * uncomment to listen to exciter only
+             *
+            output[splN] = sampleNow;
+            continue
 
+            /**/
 
-            let sampleNow = (Math.random() - 0.5) * this.noiseEnvVal;
-            // let sampleNow = (Math.random() - 0.5);
+            /**
+             * delay line
+             */
+            sampleNow += this.delayLine1.operation(exciter, (dry) => {
+                let w = this.filter1.operation(dry)
+                w = w * this.filterWet + dry * aWet;
 
-            sampleNow += this.delayLine1.operation(sampleNow, (s) => {
-                s = this.filter1.operation(s) * 0.5 + s * 0.5;
-                this.measuredOutputLevel = this.measuredOutputLevel * 0.9 + Math.abs(s) * 0.1;
-                this.applyGain = 1 / this.measuredOutputLevel;
-                s *= this.applyGain;
-                return s;
-            });
-            sampleNow = this.dcRemover.operation(sampleNow);
-            // sampleNow += this.delayLine2.operation(sampleNow);
-            // sampleNow += this.delayLine3.operation(sampleNow);
+                // this.measuredOutputLevel -= 0.001;
+                // if (this.measuredOutputLevel < 0) {
+                //     this.measuredOutputLevel = 0;
+                // }
+                // if (w > this.measuredOutputLevel) {
+                //     this.measuredOutputLevel += w / 10;
+                // }
+                // if (this.measuredOutputLevel > 1 / this.ampToFeedback) {  
+                //     probe = this.measuredOutputLevel * this.ampToFeedback
+                //     w /= probe;
+                // }
 
-            sampleNow = clip(sampleNow);
-            // bleed
-            if (this.bleed) this.otherVoices.forEach(voice => {
-                if (voice.engaged && voice !== this) {
-                    voice.delayLine1.operationNoTime(sampleNow * this.bleed);
-                    // voice.delayLine2.operationNoTime(sampleNow * this.bleed);
-                    // voice.delayLine3.operationNoTime(sampleNow * this.bleed);
+                const lv = Math.abs(w);
+                this.measuredOutputLevel -= 0.00001
+                if (lv > this.measuredOutputLevel) {
+                    this.measuredOutputLevel += lv / 1000
                 }
-            });
-            // this.delayLine1.delaySamples += Math.round(sampleNow * 3);
 
-            output[splN] = clip(sampleNow);
-            if (this.noiseEnvVal <= 0) {
-                this.noiseEnvVal = 0;
-            } else {
-                this.noiseEnvVal -= this.noiseDecayInverse;
+                const amplification = clamp(1 / this.measuredOutputLevel, 0, 1.01);
+                this.delayLine1.feedback = this.delayLine1.feedback * (1 - this.ampToFeedback) + amplification * this.ampToFeedback;
+
+                return w;
+            });
+
+            sampleNow = this.dcRemover.operation(sampleNow);
+            sampleNow = clip(sampleNow);
+
+            // bleed
+            // if (this.bleed) this.otherVoices.forEach(voice => {
+            //     if (voice.engaged && voice !== this) {
+            //         voice.delayLine1.operationNoTime(sampleNow * this.bleed);
+            //     }
+            // });
+
+            if (this.exciterToTime) {
+                this.delayLine1.delaySamples = this.currentNormalSamplingPeriod + this.exciterToTime * this.exciter.lerper.val * samplingRate;
             }
+            if (this.exciterToTime) {
+                this.delayLine1.delaySamples += this.levelToTime * this.measuredOutputLevel * samplingRate / 10;
+            }
+
+            output[splN] = sampleNow;
+
         }
         this.splsLeft -= blockSize;
         if (this.splsLeft <= 0) {
             this.stop();
         }
+        // console.log(probe);
         return output;
     }
 }
 
-class PolyManager {
+/**
+ * @template V
+ * @typedef {(...p:any)=>V & Voice} VoiceFactory
+ * @returns {V} 
+ */
+/**
+ * @template {Voice} V
+ */
+class PoliManager {
     maxVoices = 32;
-    /** @type {Array<Voice>} */
+    /** @type {Array<V>} */
     list = [];
     lastStolenVoice = 0;
-    /** @type {ObjectConstructor} VoiceConstructor */
-    constructor(VoiceConstructor) {
+    /** 
+     * @param { VoiceFactory<V> } voiceFactory
+     **/
+    constructor(voiceFactory) {
+        /**
+         * @returns {V}
+         */
         this.getVoice = () => {
+            /** @type {V | null} */
             let found = null;
             this.list.forEach(voice => {
                 if (!voice.isBusy) {
                     found = voice;
-                    console.log('use existing voice', this.list.indexOf(voice));
                 }
             });
             if (!found) {
@@ -505,75 +669,134 @@ class PolyManager {
                     this.lastStolenVoice += 1;
                     this.lastStolenVoice %= this.maxVoices;
                 } else {
-                    found = new VoiceConstructor(this.list);
+                    found = voiceFactory(this.list);
                     this.list.push(found);
-                    console.log('new voice', this.list.length);
                 }
             }
             return found;
         }
     }
 }
+
+
 /**
-    interface KarplusStopVoiceMessage {
-        stop: true;
-        ref: string;
-    }
-
-    interface KarplusStopAllMessage {
-        stopall: true;
-    }
-
-    interface KarplusStartVoiceMessage {
-        freq: number;
-        amp: number;
-        duration?: number;
-        ref: string;
-    }
-
+ * @typedef  {Object} KarplusStopVoiceMessage
+ * @property {true} stop
+ * @property {string} identifier
 */
-// TODO: stop when not in use, somehow.
-//@ts-ignore
+/**
+ * @typedef {Object} KarplusStopAllMessage 
+ * @property {true} stopall: true;
+*/
+
+/**
+  * @typedef {Object} KarplusStartVoiceMessage 
+  * @property {number} f frequency
+  * @property {number} a amplitude or velocity
+  * @property {number?} s length of the note
+  * @property {string} i identifier
+*/
+/**
+ * @typedef {Object} KarplusParamsChangeMessage 
+ * @property {number?} fff feedback-filter's cutoff frequency
+ * @property {number?} ffw feedback-filter's wet
+ * @property {number?} ff feedback amt
+ * @property {number?} xf cross-feedback amt
+ * @property {number?} exa exciter attack
+ * @property {number?} exd exciter decay
+*/
+
+/* to make ts work */
+if (false) {
+    function registerProcessor(arg0, arg1) {
+        throw new Error("Function not implemented.");
+    }
+}
+
+const clamp = (v, min, max) => {
+    if (v < min) return min
+    if (v > max) return max
+    return v
+}
+
 registerProcessor('karplus', class extends AudioWorkletProcessor {
     constructor() {
         super();
-        /** @type {Array<Karplus2Voice>} */
+        /** @type {Array<Voice>} */
         this.activeVoices = [];
         this.samples = [];
         this.totalSamples = 0;
         // @ts-ignore
         this.port.onmessage = ({ data }) => {
             if (data.stopall) {
-                this.policarpo.list.forEach(voice => voice.stop());
+                this.polimanager.list.forEach(voice => voice.stop());
             }
-            if (data.stop) {
-                if (this.activeVoices[data.stop]) {
-                    this.activeVoices[data.stop].stop();
-                    delete this.activeVoices[data.stop];
+            if (data.stop && data.i) {
+                if (this.activeVoices[data.i]) {
+                    this.activeVoices[data.i].stop();
+                    delete this.activeVoices[data.i];
                 } else {
-                    console.warn("no voice " + data.stop + " to stop");
+                    console.warn("no voice " + data.i + " to stop");
                 }
             }
-            if (data.freq) {
-                const freq = data.freq;
-                const dur = data.duration || 1;
-                const amp = data.amp || 1;
-                const tVoice = this.policarpo.getVoice();
-                if (data.ref) {
-                    this.activeVoices[data.ref] = tVoice;
+            if (data.f) {
+                const freq = data.f;
+                const dur = data.s || 1;
+                const amp = data.a || 1;
+                const tVoice = this.polimanager.getVoice();
+
+                if (data.i) {
+                    this.activeVoices[data.i] = tVoice;
                 }
+
+                const fALog = Math.min(Math.log2(
+                    clamp(freq, 55, 15000) - 54
+                ) / 14, 1)
+                const slope = fALog - liveParameters.filter_k
+
+                tVoice.filter1.k = liveParameters.filter_k + fALog * slope;
+
                 tVoice.trig({ freq, amp, dur });
+            }
+            if (!isNaN(data.fff)) {
+                liveParameters.filter_k = data.fff;
+            }
+            if (!isNaN(data.ffw)) {
+                liveParameters.filter_wet = data.ffw;
+            }
+            if (!isNaN(data.exv)) {
+                liveParameters.exciter_level = data.exv
+            }
+            if (!isNaN(data.exa)) {
+                liveParameters.exciter_att = data.exa
+            }
+            if (!isNaN(data.exd)) {
+                liveParameters.exciter_decay = data.exd
+            }
+            if (!isNaN(data.ff)) {
+                liveParameters.delay_feedback = data.ff
+            }
+            if (!isNaN(data.xf)) {
+                liveParameters.cross_feedback = data.xf
+            }
+            if (!isNaN(data.atoff)) {
+                liveParameters.level_to_feedback = data.atoff
+            }
+            if (!isNaN(data.exdet)) {
+                liveParameters.exciter_detuning = data.exdet
+            }
+            if (!isNaN(data.adet)) {
+                liveParameters.amp_detuning = data.adet
             }
         };
     }
-
-    policarpo = new PolyManager(Karplus2Voice);
+    polimanager = new PoliManager((...p) => new KarplusVoice(...p));
 
     process(inputs, outputs, parameters) {
         const output = outputs[0];
         const blockSize = outputs[0][0].length;
         const mix = new Float32Array(blockSize);
-        this.policarpo.list.forEach((voice) => {
+        this.polimanager.list.forEach((voice) => {
             const voiceResults = voice.getBlock(blockSize);
             for (let sampleN = 0; sampleN < blockSize; sampleN++) {
                 mix[sampleN] += voiceResults[sampleN] / 10;

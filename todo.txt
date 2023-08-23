@@ -1,10 +1,10 @@
 # Piano roll to-do
-	change app icons
-	auto compile, maybe https://github.com/tauri-apps/tauri-action
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
 		load button + load progrss instead of autoload 
+		caching
+	on tauri, typographies mustn't be fetched from google
+	auto compile, maybe https://github.com/tauri-apps/tauri-action
 	Base Frequency selection
-	karplus: manual graph of frequency to K. Lerper/extrapolator
 	patreon login? 
 	Midi MPE connectivity 
 	group editing: finish or delete
@@ -12,7 +12,7 @@
 		copying a note grouped in another than active group, copies the whole group to new group 
 	Physical model sounds 
 	Record and add percussive sounds
-	Step sequencer?
+	Step sequencer for rhythms?
 	Time or time*octave markers 
 	"simultaneous" modifier status does not get saved
 	mouse helper icon should represent what the mouse is doing, if tool is engaged in a drag, instead of showing what would do on click
@@ -24,6 +24,7 @@
 
 # Done
 
+	change app icons
 	changing window size deforms aspect ratio
 	zooming doesn't keep exactly the aspect ratio as I want it.
 	Better GUI for selecting snaps 

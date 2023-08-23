@@ -16,7 +16,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
     const viewportTech = ref(ViewportTech.Svg);
     const showFPS = ref(false);
     const fontSize = ref(12);
-    const octaveToTimeRatio = ref(1);
+    const octaveToTimeRatio = ref(1.4);
     // polyphony cannot be undertood or used without layers thus far
     const _polyphonyEnabled = ref(false);
     const polyphonyEnabled = computed<boolean>({
@@ -51,7 +51,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         midiInputEnabled.value = false;
         performanceSettingsEnabled.value = true;
         physicalEnabled.value = false;
-        octaveToTimeRatio.value = 1;
+        octaveToTimeRatio.value = 1.4;
     }
 
     onMounted(() => {
