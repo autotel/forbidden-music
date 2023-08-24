@@ -14,6 +14,11 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
   monoModeInteraction.activate("octave table editor")
   snap.values.customFrequencyTable.active = true
 }
+const relationFractionEditButtonHandler = (e: MouseEvent) => {
+  e.stopImmediatePropagation()
+  monoModeInteraction.activate("relation fraction editor")
+  snap.values.hzRelationFraction.active = true
+}
 </script>
 
 <template>
@@ -31,6 +36,11 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
       {{ isnap.icon }}
       <template v-if="snapName === 'customFrequencyTable'">
         <span class="sub-button" :onClick="frequencyTableEditButtonHandler">
+          <Pen/>
+        </span>
+      </template>
+      <template v-else-if="snapName === 'hzRelationFraction'">
+        <span class="sub-button" :onClick="relationFractionEditButtonHandler">
           <Pen/>
         </span>
       </template>

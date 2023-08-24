@@ -92,14 +92,3 @@ const viewportTechs = [
         </div>
     </Collapsible>
 </template>
-<style scoped>
-.form-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 1em;
-}
-.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
-</style>

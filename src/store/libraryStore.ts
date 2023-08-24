@@ -70,6 +70,7 @@ export interface LibraryItem {
     edited: Number;
     snaps: Array<[string, boolean]>;
     customOctavesTable?: number[];
+    snap_simplify?: number;
     channels: {
         type: string;
         params: Array<SynthParamStored>;

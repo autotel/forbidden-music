@@ -30,6 +30,8 @@ import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Autotel from './components/Autotel.vue';
 import { EditNote } from './dataTypes/EditNote';
 import { Note, NoteDefa, NoteDefb } from './dataTypes/Note';
+import { useSnapStore } from './store/snapStore';
+import Fraction from 'fraction.js';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -38,6 +40,7 @@ const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
 const selection = useSelectStore();
+const snap = useSnapStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
@@ -179,7 +182,7 @@ const keyDownListener = (e: KeyboardEvent) => {
             (async () => {
                 const text = await navigator.clipboard.readText();
                 const editNotes = project.parseNotes(text);
-                if(tool.noteThatWouldBeCreated) {
+                if (tool.noteThatWouldBeCreated) {
                     const datumNote = tool.noteThatWouldBeCreated as EditNote;
                     const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
                     const timeDiff = datumNote.time - earliestPastedNote.time;
@@ -398,10 +401,60 @@ watch(paneWidth, () => {
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
     </Modal>
+    <Modal name="relation fraction editor">
+        <div class="form-row">
+            <label>Simplicity: &nbsp;</label>
+            <input type="number" v-model="snap.simplify" step="0.01" min="0" max="1" />
+            <Button :onClick="() => snap.simplify = 0.12">default</Button>
+        </div>
+        <div>
+            <p>A higher simplicity will allow less complex fractions.</p>
+            <p> examples: </p>
+            <ul>
+                <li v-for="fr in [
+                            1 / 2,
+                            2 / 3,
+                            3 / 4,
+                            4 / 5,
+                            5 / 6,
+                            6 / 7,
+                            7 / 8,
+                            8 / 9,
+                            9 / 10
+                        ]">
+                    {{ new Fraction(fr).toFraction() }} is rounded to {{
+                        new Fraction(fr).simplify(snap.simplify).toFraction()
+                    }}
+                </li>
+            </ul>
+        </div>
+    </Modal>
     <UserDisclaimer />
 
     <TooltipDisplayer />
 </template>
+<style>
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1em;
+}
+
+.form-row.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.full-width {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#viewport {
+    user-select: none;
+}
+</style>
 <style scoped>
 .unclickable {
     pointer-events: none;
@@ -416,17 +469,5 @@ watch(paneWidth, () => {
     justify-content: space-between;
     align-items: end;
     height: 2.8em;
-}
-</style>
-
-
-<style>
-.full-width {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-#viewport {
-    user-select: none;
 }
 </style>

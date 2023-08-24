@@ -134,6 +134,7 @@ export const useProjectStore = defineStore("current project", () => {
             name: name.value,
             notes: serializeNotes(score.value),
             customOctavesTable: snaps.customOctavesTable,
+            snap_simplify: snaps.simplify,
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
@@ -187,7 +188,8 @@ export const useProjectStore = defineStore("current project", () => {
         });
 
         if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
-
+        if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
+        
         (async () => {
             await playbackStore.audioContextPromise;
             pDef.channels.forEach(({ type, params }, index) => {

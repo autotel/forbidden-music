@@ -241,7 +241,7 @@ const snaps: { [key: string]: SnapDefinition } = {
 // TODO: bug when resizing; it snaps tone. Why is it even spending 
 // time on tone snapping when resizing!?
 export const useSnapStore = defineStore("snap", () => {
-    const simplify = ref<number>(0.1);
+    const simplify = ref<number>(0.12);
     const values = ref(snaps);
     const focusedNote = ref(null as EditNote | null);
     const timeSnapExplanation = ref([] as SnapExplanation[]);
