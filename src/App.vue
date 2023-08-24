@@ -28,6 +28,8 @@ import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewp
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Autotel from './components/Autotel.vue';
+import { EditNote } from './dataTypes/EditNote';
+import { Note, NoteDefa, NoteDefb } from './dataTypes/Note';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -159,6 +161,40 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
     switch (keyAction) {
+        case KeyActions.Cut: {
+            console.log("cut");
+            const selected = selection.getNotes();
+            project.score = project.score.filter(note => !note.selected);
+            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            break;
+        }
+        case KeyActions.Copy: {
+            console.log("copy");
+            const selected = selection.getNotes();
+            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            break;
+        }
+        case KeyActions.Paste: {
+            console.log("paste");
+            (async () => {
+                const text = await navigator.clipboard.readText();
+                const editNotes = project.parseNotes(text);
+                if(tool.noteThatWouldBeCreated) {
+                    const datumNote = tool.noteThatWouldBeCreated as EditNote;
+                    const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
+                    const timeDiff = datumNote.time - earliestPastedNote.time;
+
+                    editNotes.forEach(note => {
+                        note.time += timeDiff;
+                    })
+                }
+
+                project.score.push(...editNotes);
+                selection.select(...editNotes);
+
+            })();
+            break;
+        }
         case KeyActions.Delete: {
             project.score = project.score.filter(note => !note.selected)
             // minimalistic option:
@@ -364,12 +400,13 @@ watch(paneWidth, () => {
     </Modal>
     <UserDisclaimer />
 
-    <TooltipDisplayer/>
+    <TooltipDisplayer />
 </template>
 <style scoped>
 .unclickable {
     pointer-events: none;
 }
+
 .toolbars-container {
     position: fixed;
     bottom: 0px;

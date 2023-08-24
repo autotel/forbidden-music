@@ -547,7 +547,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         removeChannel,
         addChannel,
         testBeep: async () => {
-            await invoke("beep", {});
+            await invoke("trigger", {});
             console.log("beeped");
         }
 

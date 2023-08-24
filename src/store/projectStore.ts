@@ -10,6 +10,8 @@ import { useViewStore } from './viewStore.js';
 import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
 import { ParamType, SynthParam } from '../synth/SynthInterface.js';
 import { useLayerStore } from './layerStore.js';
+import LZUTF8 from 'lzutf8';
+import { ifDev } from '../functions/isDev.js';
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -69,19 +71,68 @@ export const useProjectStore = defineStore("current project", () => {
         group.setBounds([start, end], [octaveStart, octaveEnd]);
     }, 60, true, true);
 
+    const serializeNotes = (notes: EditNote[]) => notes.map((editNote) => ({
+        frequency: editNote.frequency,
+        time: editNote.time,
+        duration: editNote.duration,
+        mute: editNote.mute,
+        velocity: editNote.velocity,
+        groupId: editNote.group?.id || null,
+        layer: editNote.layer,
+    }))
+
+    const stringifyNotes = (notes: EditNote[], zip: boolean = false) => {
+        let str = JSON.stringify(serializeNotes(notes));
+        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        return str;
+    }
+
+    const parseNotes = (str: string): EditNote[] => {
+        let json = str;
+        let objNotes = [];
+
+        try {
+            objNotes = JSON.parse(str);
+        } catch (_e) {
+            ifDev(()=>console.log("cannot be parsed, trying to decompress"));
+            try {
+                json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
+            } catch (_e) {
+                ifDev(()=>console.log("cannot be decompressed"));
+                return [];
+            }
+        }
+
+        try {
+            objNotes = JSON.parse(json);
+        } catch (_e) {
+            ifDev(()=>console.log("cannot be parsed, giving up"));
+            return [];
+        }
+
+
+        const editNotes = objNotes.map((maybeNote: unknown | NoteDefa | NoteDefb) => {
+            if (
+                (
+                    (maybeNote as NoteDefa).octave || (maybeNote as NoteDefb).frequency
+                ) && (maybeNote as NoteDefa).time
+            ) {
+                const n = new EditNote(maybeNote as NoteDefa, view);
+                return n;
+            }
+            return false;
+        }).filter((on: unknown) => on) as EditNote[];
+        if (editNotes.length === 0) {
+            console.log("no notes found in parsed text");
+            return [];
+        }
+        return editNotes;
+    }
 
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: score.value.map((editNote) => ({
-                frequency: editNote.frequency,
-                time: editNote.time,
-                duration: editNote.duration,
-                mute: editNote.mute,
-                velocity: editNote.velocity,
-                groupId: editNote.group?.id || null,
-                layer: editNote.layer,
-            })),
+            notes: serializeNotes(score.value),
             customOctavesTable: snaps.customOctavesTable,
             created: created.value,
             edited: edited.value,
@@ -128,14 +179,14 @@ export const useProjectStore = defineStore("current project", () => {
             snaps.values[name].active = activeState;
         });
 
-        pDef.layers.forEach(({channelSlot,visible,locked}, index) => {
+        pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
             const layer = layers.getOrMakeLayerWithIndex(index);
             layer.visible = visible;
             layer.locked = locked;
             layer.channelSlot = channelSlot;
         });
 
-        if(pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
+        if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
 
         (async () => {
             await playbackStore.audioContextPromise;
@@ -194,6 +245,7 @@ export const useProjectStore = defineStore("current project", () => {
     return {
         score, groups,
         name, edited, created, snaps,
+        stringifyNotes, parseNotes,
         getProjectDefintion,
         setFromProjectDefinition, setFromListOfNoteDefinitions, updateGroupBounds,
         getOrCreateGroupById, getNotesInGroup, setNotesGroup, setNotesGroupToNewGroup,

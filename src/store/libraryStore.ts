@@ -7,6 +7,7 @@ import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { userCustomPerformanceSettings } from './customSettingsStore';
+import nsLocalStorage from '../functions/nsLocalStorage';
 
 const version = "0.2.0";
 
@@ -34,11 +35,11 @@ const migrators = {
             console.log(note);
             return note;
         });
-        if(!obj.bpm) obj.bpm = 120;
+        if (!obj.bpm) obj.bpm = 120;
         return obj;
     },
     "0.1.0": (obj: LibraryItem_0_1_0): LibraryItem => {
-        const newObj = Object.assign({},obj) as LibraryItem & {
+        const newObj = Object.assign({}, obj) as LibraryItem & {
             instrument?: {
                 type: string;
                 params: Array<SynthParamStored>;
@@ -104,11 +105,11 @@ const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
     inValue.version = version;
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
-    localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
+    nsLocalStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
 
 const retrieveFromLocalStorage = (filename: string) => {
-    const storageItem = localStorage.getItem(filename);
+    const storageItem = nsLocalStorage.getItem(filename);
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
     let retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
@@ -118,15 +119,15 @@ const retrieveFromLocalStorage = (filename: string) => {
 }
 
 const listLocalStorageFiles = () => {
-    return Object.keys(localStorage).filter(n => !reservedEntryNames.includes(n));
+    return Object.keys(nsLocalStorage).filter(n => !reservedEntryNames.includes(n));
 }
 
 const exists = (filename: string) => {
-    return localStorage.getItem(filename) !== null;
+    return nsLocalStorage.getItem(filename) !== null;
 }
 
 const deleteItem = (filename: string) => {
-    localStorage.removeItem(filename);
+    nsLocalStorage.removeItem(filename);
 }
 
 export const useLibraryStore = defineStore("library store", () => {
@@ -241,6 +242,10 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     udpateItemsList();
+
+    window.onfocus = () => {
+        nsLocalStorage.syncFromLocalStorage();
+    }
 
     return {
         clear,
