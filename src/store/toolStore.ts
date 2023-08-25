@@ -399,7 +399,7 @@ export const useToolStore = defineStore("edit", () => {
             const snapNote = snap.snap({
                 inNote: freeNote,
                 targetOctave: view.pxToOctaveWithOffset(y),
-                otherNotes: view.visibleNotes,
+                otherNotes: project.score,
                 sideEffects: true,
             });
 
@@ -442,7 +442,7 @@ export const useToolStore = defineStore("edit", () => {
             const editNote = snap.snap({
                 inNote: notesBeingCreated.value[0] as EditNote,
                 targetOctave: notesBeingCreated.value[0].octave,
-                otherNotes: view.visibleNotes.filter(n => n !== notesBeingCreated.value[0])
+                otherNotes: project.score.filter(n => n !== notesBeingCreated.value[0])
             });
             notesBeingCreated.value[0].apply(editNote);
         } else
@@ -477,7 +477,7 @@ export const useToolStore = defineStore("edit", () => {
                 const editNote = snap.snap({
                     inNote: noteBeingDragged.value as EditNote,
                     targetOctave: noteBeingDragged.value.octave,
-                    otherNotes: view.visibleNotes.filter(n => {
+                    otherNotes: project.score.filter(n => {
                         let ret = n !== noteBeingDragged.value
                         ret &&= !notesBeingDragged.includes(n);
                         return ret;
@@ -507,7 +507,7 @@ export const useToolStore = defineStore("edit", () => {
                 const editNote = snap.snap({
                     inNote: noteBeingDraggedRightEdge.value as EditNote,
                     targetOctave: noteBeingDraggedRightEdge.value.octave,
-                    otherNotes: view.visibleNotes.filter(n => n !== noteBeingDraggedRightEdge.value),
+                    otherNotes: project.score.filter(n => n !== noteBeingDraggedRightEdge.value),
                     skipOctaveSnap: true,
                 });
                 noteBeingDraggedRightEdge.value.apply(editNote);

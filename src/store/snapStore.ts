@@ -5,6 +5,7 @@ import { EditNote } from '../dataTypes/EditNote';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import colundi from '../scales/colundi';
 import { getNotesInRange } from '../functions/getNotesInRange';
+import { useViewStore } from './viewStore';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -75,6 +76,7 @@ export enum SnapType {
     Time,
     Tone,
     ToneRelation,
+    ToneRelationMulti,
 }
 
 interface SnapDefinition {
@@ -120,13 +122,13 @@ const snaps: { [key: string]: SnapDefinition } = {
         description: "Octaves only",
         icon: "1EDO",
         type: SnapType.Tone,
-        active: true,
+        active: false,
     },
     equal7: {
         description: "Equal temperament, 7 tones",
         icon: "7EDO",
         type: SnapType.Tone,
-        active: true,
+        active: false,
     },
     equal10: {
         description: "Equal temperament, 10 tones",
@@ -212,6 +214,18 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.ToneRelation,
         active: false,
     },
+    arbitraryGridEDO: {
+        description: "Create an EDO grid that extrapolates the lowest two notes in range",
+        icon: "⋮ EDO",
+        type: SnapType.ToneRelationMulti,
+        active: false,
+    },
+    arbitraryGridHZ: {
+        description: "Create a frequency grid that extrapolates the lowest two notes in range",
+        icon: "⋮ HZ",
+        type: SnapType.ToneRelationMulti,
+        active: false,
+    },
     timeInteger: {
         description: "Times that are multiple of 1 time unit",
         icon: "1\u00d7",
@@ -222,7 +236,7 @@ const snaps: { [key: string]: SnapDefinition } = {
         description: "Times which are multiples of 1/4 of a time unit.",
         icon: "1/4\u00d7",
         type: SnapType.Time,
-        active: true,
+        active: false,
     },
     sameStart: {
         description: "Start positions equal to the start positions of other notes.",
@@ -235,12 +249,19 @@ const snaps: { [key: string]: SnapDefinition } = {
         icon: "T a/b",
         type: SnapType.Time,
         active: false,
+    },
+    arbitraryTimeGrid: {
+        description: "Create a time grid that extrapolates the first two notes",
+        icon: "⋯ T",
+        type: SnapType.Time,
+        active: false,
     }
 };
 
 // TODO: bug when resizing; it snaps tone. Why is it even spending 
 // time on tone snapping when resizing!?
 export const useSnapStore = defineStore("snap", () => {
+    const view = useViewStore();
     const simplify = ref<number>(0.12);
     const values = ref(snaps);
     const focusedNote = ref(null as EditNote | null);
@@ -249,6 +270,7 @@ export const useSnapStore = defineStore("snap", () => {
     const customOctavesTable = ref(colundi as number[]);
     const onlyWithMutednotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
+    const onlyWithNotesInView = ref(false);
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -279,6 +301,9 @@ export const useSnapStore = defineStore("snap", () => {
         let returnValue = otherNotes
         if (onlyWithMutednotes.value) {
             returnValue = otherNotes.filter((editNote) => editNote.mute);
+        }
+        if (onlyWithNotesInView.value) {
+            returnValue = otherNotes.filter((editNote) => view.isNoteInView(editNote))
         }
         if (onlyWithSimultaneousNotes.value && focusedNote.value) {
             returnValue = getNotesInRange(returnValue, {
@@ -356,6 +381,54 @@ export const useSnapStore = defineStore("snap", () => {
          **/
         // Relational  HZ snaps
         if (otherNotes) {
+            if(snapValues.arbitraryGridEDO.active === true) {
+                const gcd = (a: number, b: number): number => {
+                    if (b === 0) return a;
+                    return gcd(b, a % b);
+                }
+
+                const lowestTwoNotes = otherNotes.sort((a, b) => a.octave - b.octave).slice(0, 2);
+                if(lowestTwoNotes.length === 2) {
+                    const lowestNote = lowestTwoNotes[0];
+                    const datumOctave = lowestNote.octave;
+                    const octaveInterval = lowestTwoNotes[1].octave - lowestTwoNotes[0].octave;
+                    const offsetTargetOctave = targetOctave - datumOctave;
+                    const candidateOctave = datumOctave + octaveInterval * Math.round(offsetTargetOctave / octaveInterval);
+
+
+
+                    toneSnap.addSnappedValue(candidateOctave, {
+                        text: "first notes grid",
+                        relatedNumber: candidateOctave,
+                    });
+
+                }
+            }
+            if(snapValues.arbitraryGridHZ.active === true) {
+                const gcd = (a: number, b: number): number => {
+                    if (b === 0) return a;
+                    return gcd(b, a % b);
+                }
+
+                const lowestTwoNotes = otherNotes.sort((a, b) => a.frequency - b.frequency).slice(0, 2);
+                if(lowestTwoNotes.length === 2) {
+                    const lowestNote = lowestTwoNotes[0];
+                    const datumFreq = lowestNote.frequency;
+                    const frequencyInterval = lowestTwoNotes[1].frequency - lowestTwoNotes[0].frequency;
+                    const offsetTargetFreq = targetHz - datumFreq;
+                    const candidateFreq = datumFreq + frequencyInterval * Math.round(offsetTargetFreq / frequencyInterval);
+                    const candidateOctave = frequencyToOctave(candidateFreq);
+
+
+                    toneSnap.addSnappedValue(candidateOctave, {
+                        text: "first notes grid",
+                        relatedNumber: candidateOctave,
+                    });
+
+                }
+            }
+
+
             if (snapValues.hzRelationFraction.active === true) {
                 for (const otherNote of otherNotes) {
                     const otherHz = otherNote.frequency;
@@ -480,6 +553,23 @@ export const useSnapStore = defineStore("snap", () => {
 
         otherNotes = filterSnapNotes(otherNotes);
         const timeSnap = new SnapTracker(editNote.time);
+        if (snapValues.arbitraryTimeGrid.active === true) {
+            if (otherNotes) {
+                const earliestTwoNotes = otherNotes.sort((a, b) => a.time - b.time).slice(0, 2);
+                if (earliestTwoNotes.length === 2) {
+                    const earliestNote = earliestTwoNotes[0];
+                    const datumTime = earliestNote.time;
+                    const timeInterval = earliestTwoNotes[1].time - earliestTwoNotes[0].time;
+                    const offsetTargetTime = editNote.time - datumTime;
+                    const candidateTime = datumTime + timeInterval * Math.round(offsetTargetTime / timeInterval);
+                    timeSnap.addSnappedValue(candidateTime, {
+                        text: "first notes grid",
+                        relatedNumber: candidateTime,
+                    });
+                }
+            }
+        }
+
         if (snapValues.timeQuarter.active === true) {
             const relatedNumber = Math.round(editNote.time * 4);
             timeSnap.addSnappedValue(relatedNumber / 4, {
@@ -608,6 +698,7 @@ export const useSnapStore = defineStore("snap", () => {
         customOctavesTable,
         onlyWithMutednotes,
         onlyWithSimultaneousNotes,
+        onlyWithNotesInView,
         setFocusedNote,
         resetSnapExplanation,
         snap,

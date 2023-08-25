@@ -141,6 +141,16 @@ export const useViewStore = defineStore("view", () => {
             octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
         });
     });
+
+    const isNoteInView = (note: EditNote) => {
+        return (
+            note.time >= timeOffset.value &&
+            note.time <= timeOffset.value + viewWidthTime.value &&
+            note.octave >= octaveOffset.value &&
+            note.octave <= octaveOffset.value + viewHeightOctaves.value
+        );
+    }
+
     // TODO: Same here.
     const visibleNoteRects = computed((): NoteRect[] => {
         memoizedRects.length = 0;
@@ -385,6 +395,7 @@ export const useViewStore = defineStore("view", () => {
         rectOfNote,
 
         isOctaveInView,
+        isNoteInView,
 
         updateSize,
         forceRefreshVisibleNotes,
