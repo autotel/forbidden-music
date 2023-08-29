@@ -12,6 +12,7 @@ export interface TimePosition {
 export interface TimeRange {
     time: number,
     timeEnd: number,
+    
 }
 
 export interface OctavePosition {

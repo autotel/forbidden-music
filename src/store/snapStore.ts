@@ -6,16 +6,18 @@ import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverter
 import colundi from '../scales/colundi';
 import { getNotesInRange } from '../functions/getNotesInRange';
 import { useViewStore } from './viewStore';
+import { TimeRange } from '../dataTypes/TimelineItem';
+import { devLog } from '../functions/isDev';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
-export type SnapExplanation = {
+export type SnapExplanation<T = EditNote> = {
     text: string;
     relatedNote?: EditNote;
     relatedNumber?: number;
 };
 
-class SnapTracker {
+class SnapTracker<T = EditNote>{
     /** the smallest distance to a snap value found thus far */
     closestSnappedDistance: number | null = null;
     /** the resulting value corresponding to the closest snap */
@@ -27,10 +29,10 @@ class SnapTracker {
      * when a snap succeeds, it can also provide all the other objects that provide
      * the same snap
      */
-    snapValueToObjectMap = new Map<number, SnapExplanation[]>();
+    snapValueToObjectMap = new Map<number, SnapExplanation<T>[]>();
 
     /** instert a new snapped value to contend as teh closest snap point */
-    addSnappedValue(snappedValue: number, relatedSnapObject?: SnapExplanation) {
+    addSnappedValue(snappedValue: number, relatedSnapObject?: SnapExplanation<T>) {
         if (this.rawValue === null) {
             throw new Error("rawValue is null");
         }
@@ -557,22 +559,22 @@ export const useSnapStore = defineStore("snap", () => {
         }
         return { toneSnap };
     }
+
     interface TimeSnapParams {
         otherNotes: EditNote[] | undefined,
-        editNote: EditNote,
-        durationSnap: SnapTracker | false,
+        subject: TimeRange | EditNote,
+        durationSnap: SnapTracker<TimeRange | EditNote> | false,
         snapValues: { [key: string]: SnapDefinition },
     }
 
-    const timeSnaps = ({
+    const timeSnaps = <T = EditNote>({
         otherNotes,
-        editNote,
+        subject,
         durationSnap,
         snapValues,
     }: TimeSnapParams) => {
-
         otherNotes = filterSnapNotes(otherNotes);
-        const timeSnap = new SnapTracker(editNote.time);
+        const timeSnap = new SnapTracker<T>(subject.time);
         if (snapValues.arbitraryTimeGrid.active === true) {
             if (otherNotes) {
                 const earliestTwoNotes = otherNotes.sort((a, b) => a.time - b.time).slice(0, 2);
@@ -580,7 +582,7 @@ export const useSnapStore = defineStore("snap", () => {
                     const earliestNote = earliestTwoNotes[0];
                     const datumTime = earliestNote.time;
                     const timeInterval = earliestTwoNotes[1].time - earliestTwoNotes[0].time;
-                    const offsetTargetTime = editNote.time - datumTime;
+                    const offsetTargetTime = subject.time - datumTime;
                     const candidateTime = datumTime + timeInterval * Math.round(offsetTargetTime / timeInterval);
 
                     if (acceptable(candidateTime)) {
@@ -601,26 +603,26 @@ export const useSnapStore = defineStore("snap", () => {
         }
 
         if (snapValues.timeQuarter.active === true) {
-            const relatedNumber = Math.round(editNote.time * 4);
+            const relatedNumber = Math.round(subject.time * 4);
             timeSnap.addSnappedValue(relatedNumber / 4, {
                 text: "Quarter snap",
                 relatedNumber,
             });
-            if (durationSnap) {
-                const relatedNumberd = Math.round(editNote.duration! * 4) / 4
+            if (durationSnap && 'duration' in subject) {
+                const relatedNumberd = Math.round(subject.duration! * 4) / 4
                 durationSnap.addSnappedValue(relatedNumberd, {
                     text: "Quarter snap",
                     relatedNumber: relatedNumberd,
                 });
             }
         } else if (snapValues.timeInteger.active === true) {
-            const relatedStart = Math.round(editNote.time);
+            const relatedStart = Math.round(subject.time);
             timeSnap.addSnappedValue(relatedStart, {
                 text: "Integer snap",
                 relatedNumber: relatedStart,
             });
-            if (durationSnap) {
-                const relatedDuration = Math.round(editNote.duration!);
+            if (durationSnap && 'duration' in subject) {
+                const relatedDuration = Math.round(subject.duration!);
                 durationSnap.addSnappedValue(relatedDuration, {
                     text: "Integer snap",
                     relatedNumber: relatedDuration,
@@ -643,7 +645,7 @@ export const useSnapStore = defineStore("snap", () => {
             if (otherNotes) {
                 for (const otherNote of otherNotes) {
                     const otherStart = otherNote.time;
-                    const closestStartFraction = new Fraction(editNote.time).div(otherStart).simplify(simplify.value);
+                    const closestStartFraction = new Fraction(subject.time).div(otherStart).simplify(simplify.value);
                     const closeStartRatio = closestStartFraction.valueOf();
                     // reintegrate rounded proportion back to the other's start value
                     const myCandidateStart = closeStartRatio * otherStart;
@@ -676,10 +678,10 @@ export const useSnapStore = defineStore("snap", () => {
     }: SnapParams) => {
         otherNotes = filterSnapNotes(otherNotes);
         /** outNote */
-        const editNote = inNote.clone();
+        const output = inNote.clone();
         const targetHz = octaveToFrequency(targetOctave);
 
-        const durationSnap = editNote.duration ? new SnapTracker(editNote.duration) : false;
+        const durationSnap = output.duration ? new SnapTracker(output.duration) : false;
 
         const snapValues = values.value as { [key: string]: SnapDefinition };
 
@@ -688,11 +690,11 @@ export const useSnapStore = defineStore("snap", () => {
 
             const { timeSnap } = timeSnaps({
                 otherNotes,
-                editNote,
+                subject: output,
                 durationSnap,
                 snapValues
             });
-            editNote.time = timeSnap.getResult();
+            output.time = timeSnap.getResult();
             if (sideEffects) {
                 timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
             }
@@ -705,20 +707,64 @@ export const useSnapStore = defineStore("snap", () => {
                 targetHz,
                 snapValues
             });
-            editNote.octave = toneSnap.getResult();
+            output.octave = toneSnap.getResult();
             if (sideEffects) {
                 toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
             }
         }
 
 
-        if (durationSnap) editNote.duration = durationSnap.getResult();
+        if (durationSnap) output.duration = durationSnap.getResult();
 
 
 
-        return editNote;
+        return output;
 
     }
+
+
+
+
+    /** has side effects to snap explanations */
+    interface TimeRangeSnapParams {
+        inTimeRange: TimeRange,
+        otherNotes?: Array<EditNote>,
+        sideEffects?: boolean,
+    }
+    const snapTimeRange = ({
+        inTimeRange,
+        otherNotes,
+        sideEffects = true,
+    }: TimeRangeSnapParams) => {
+        otherNotes = filterSnapNotes(otherNotes);
+
+        const output = {
+            time: inTimeRange.time,
+            timeEnd: inTimeRange.timeEnd,
+            duration: inTimeRange.timeEnd - inTimeRange.time,
+        }
+
+        const durationSnap = output.duration ? new SnapTracker<TimeRange>(output.duration) : false;
+        const snapValues = values.value as { [key: string]: SnapDefinition };
+
+        const { timeSnap } = timeSnaps({
+            otherNotes,
+            subject: output,
+            durationSnap,
+            snapValues
+        });
+        output.time = timeSnap.getResult();
+        if (sideEffects) {
+            timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
+        }
+
+
+        if (durationSnap) output.duration = durationSnap.getResult();
+
+        return output;
+
+    }
+
     return {
         simplify,
         values,
@@ -732,6 +778,8 @@ export const useSnapStore = defineStore("snap", () => {
         setFocusedNote,
         resetSnapExplanation,
         snap,
+        snapTimeRange,
+
     }
 
 });

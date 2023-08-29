@@ -595,27 +595,51 @@ export const useToolStore = defineStore("edit", () => {
                 notesBeingDraggedRightEdge.forEach(editNote => {
                     editNote.dragLengthMove(mouseDelta);
                 });
-                const editNote = snap.snap({
+                const snapped = snap.snap({
                     inNote: noteBeingDraggedRightEdge.value as EditNote,
                     targetOctave: noteBeingDraggedRightEdge.value.octave,
                     otherNotes: project.score.filter(n => n !== noteBeingDraggedRightEdge.value),
                     skipOctaveSnap: true,
                 });
-                noteBeingDraggedRightEdge.value.apply(editNote);
+                noteBeingDraggedRightEdge.value.apply(snapped);
                 refresh = true;
             } else if (isDragging && timelineItemBeingDragged.value) {
-                
-                const timeMovement = view.pxToTime(mouseDelta.x);
-
+                snap.resetSnapExplanation();
                 if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
+                const timeMovement = view.pxToTime(mouseDelta.x);
+                const originalLength = timelineItemWhenDragStrted.timeEnd - timelineItemWhenDragStrted.time;
                 timelineItemBeingDragged.value.time =  timelineItemWhenDragStrted.time + timeMovement;
-                timelineItemBeingDragged.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
+                
+                const snapped = snap.snapTimeRange({
+                    inTimeRange: timelineItemBeingDragged.value,
+                    otherNotes: project.score,
+                    sideEffects: true,
+                });
+
+                snapped.timeEnd = snapped.time + originalLength;
+                Object.assign(timelineItemBeingDragged.value, snapped);
 
             } else if (isDragging && timelineItemBeingDraggedRightEdge.value) {
                 
+
+                snap.resetSnapExplanation();
+                if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
                 const timeMovement = view.pxToTime(mouseDelta.x);
-                if(!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
+                
                 timelineItemBeingDraggedRightEdge.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
+                
+                const snapped = snap.snapTimeRange({
+                    inTimeRange: timelineItemBeingDraggedRightEdge.value,
+                    otherNotes: project.score,
+                    sideEffects: true,
+                });
+
+                snapped.timeEnd = timelineItemWhenDragStrted.time + snapped.duration;
+
+                timelineItemBeingDraggedRightEdge.value.timeEnd = snapped.timeEnd;
+
+                
+
             } else {
                 updateNoteThatWouldBeCreated({
                     x: e.clientX,
