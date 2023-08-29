@@ -34,7 +34,7 @@ export type TimeRangeVelocityRange = TimeRange & VelocityRange
 export type TimeRangeOctaveRangeVelocityRange = TimeRange & OctaveRange & VelocityRange
 // ... add as needed
 
-export type TimelineItem = TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange | TimeRangeOctave;
+export type TimelineItem = TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange | TimeRangeOctave | TimeRange;
 
 //selectable stuff in the timeline 
 

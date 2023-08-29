@@ -6,6 +6,8 @@ import { frequencyToOctave } from "../functions/toneConverters.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
 import { useLayerStore } from "./layerStore.js";
+import { TimelineItem } from "../dataTypes/TimelineItem.js";
+import { timeEnd } from "console";
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
     g = g & 0xff;
@@ -47,6 +49,11 @@ const desaturate = (color: number, amount: number) => {
 
 const gray = rgbToHex(200, 200, 200);
 
+const numberOr = (v: any, or: number): number => {
+    if (typeof v === 'number') return v;
+    return or;
+}
+
 const preparation = (r: number, g: number, b: number) => desaturate(averageColors(rgbToHex(r, g, b), 0xFFFFFF), 0.6);
 
 export const layerNoteColors = [
@@ -79,9 +86,8 @@ export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16)
 //     return measureCallTime(this.name, this);
 // }
 
-
-export interface NoteRect {
-    event: EditNote;
+export interface TimelineItemRect <T extends TimelineItem = TimelineItem> {
+    event: T;
 
     // key: number;
 
@@ -98,6 +104,9 @@ export interface NoteRect {
         x: number;
         y: number;
     };
+}
+export interface NoteRect extends TimelineItemRect{
+    event: EditNote;
 }
 
 const probe = (v: any) => {
@@ -124,7 +133,7 @@ export const useViewStore = defineStore("view", () => {
     const followPlayback = ref(false);
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
-    const memoizedRects: NoteRect[] = [];
+    const memoizedNoteRects: NoteRect[] = [];
     const layers = useLayerStore();
     // TODO: maybe doesn't need to be a computed, 
     // we don't need to recalc every note when one note is dragged
@@ -142,6 +151,22 @@ export const useViewStore = defineStore("view", () => {
         });
     });
 
+    const visibleOtherItems = computed((): TimelineItem[] => {
+        visibleNotesRefreshKey.value;
+        const items = [] as TimelineItem[];
+        if (playback.loop) items.push(playback.loop);
+
+        return items.filter((item) => {
+            if ('octaveEnd' in item) {
+                if (!(isOctaveInView(item.octaveEnd) && isOctaveInView(item.octave))) return false;
+            } else if ('octave' in item) {
+                if (!isOctaveInView(item.octave)) return false;
+            }
+            return item.timeEnd >= timeOffset.value && item.time <= timeOffset.value + viewWidthTime.value;
+        });
+
+    });
+
     const isNoteInView = (note: EditNote) => {
         return (
             note.time >= timeOffset.value &&
@@ -151,14 +176,20 @@ export const useViewStore = defineStore("view", () => {
         );
     }
 
-    // TODO: Same here.
     const visibleNoteRects = computed((): NoteRect[] => {
-        memoizedRects.length = 0;
+        memoizedNoteRects.length = 0;
         return visibleNotes.value.map((note) => {
             let r = rectOfNote(note);
-            memoizedRects.push(r);
+            memoizedNoteRects.push(r);
             return r;
-        });
+        })
+    });
+
+    const visibleOtherItemRects = computed((): TimelineItemRect[] => {
+        return visibleOtherItems.value.map((item) => {
+            let r = rectOfTimelineItem(item);
+            return r;
+        })
     });
 
     const rectOfNote = (note: EditNote): NoteRect => {
@@ -186,6 +217,43 @@ export const useViewStore = defineStore("view", () => {
         }
         return rect;
     };
+
+
+
+    const rectOfTimelineItem = (item: TimelineItem): TimelineItemRect => {
+        const itemDuration = item.timeEnd - item.time;
+        let itemOctaveHeight = viewHeightOctaves.value;
+
+        if ('octaveEnd' in item) {
+            itemOctaveHeight = Math.abs(item.octaveEnd - item.octave);
+        }
+
+        let rect = {
+            x: timeToPxWithOffset(item.time),
+            y: 'octave' in item ? octaveToPxWithOffset(item.octave) : 0,
+            width: timeToPx(itemDuration),
+            height: Math.abs(octaveToPx(itemOctaveHeight)),
+            radius: 0,
+            event: item,
+            // key: tkey++,
+        } as TimelineItemRect
+
+
+        rect.radius = rect.height / 2;
+        rect.cx = rect.x;
+        rect.cy = rect.y;
+        if (rect.width === 0) {
+            rect.y -= rect.radius;
+        }
+        if (rect.width) {
+            rect.rightEdge = {
+                x: rect.x + rect.width,
+                y: rect.y,
+            };
+        }
+        return rect;
+    }
+
 
     const castIfDefined = (castFn = (v: number) => v, v: number | undefined, otherwise: null | number = null) => {
         return v === undefined ? otherwise : castFn(v);
@@ -232,7 +300,7 @@ export const useViewStore = defineStore("view", () => {
         }
     }
 
-    const everyNoteRectAtCoordinates = (x: number, y: number, considerVeloLines: boolean): NoteRect[] => {
+    const everyNoteAtCoordinates = (x: number, y: number, considerVeloLines: boolean): NoteRect[] => {
         const noteRects = visibleNoteRects.value;
         const items = noteRects.filter((noteRect) => {
             const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
@@ -269,9 +337,25 @@ export const useViewStore = defineStore("view", () => {
         return items;
     };
 
+    const everyOtherItemAtCoordinates = (x: number, y: number): TimelineItemRect[] => {
+        let itemRects = visibleOtherItemRects.value;
+        itemRects = itemRects.filter((itemRect) => {
+            if (
+                x >= itemRect.x &&
+                x <= itemRect.x + itemRect.width &&
+                y >= itemRect.y &&
+                y <= itemRect.y + itemRect.height
+            ) {
+                return true;
+            }
+            return false;
+        });
+        return itemRects;
+    }
+
     const forceRefreshVisibleNotes = () => {
         visibleNotesRefreshKey.value++;
-        memoizedRects.length = 0;
+        memoizedNoteRects.length = 0;
     };
 
     const setTimeOffset = (newTimeOffset: number) => {
@@ -393,6 +477,7 @@ export const useViewStore = defineStore("view", () => {
         pxRangeOf,
         rangeToStrictRect,
         rectOfNote,
+        rectOfTimelineItem,
 
         isOctaveInView,
         isNoteInView,
@@ -413,8 +498,10 @@ export const useViewStore = defineStore("view", () => {
         visibleNotes,
 
         visibleNoteRects,
-        everyNoteRectAtCoordinates,
+        visibleOtherItemRects,
 
+        everyNoteAtCoordinates,
+        everyOtherItemAtCoordinates,
         followPlayback,
 
         applyRatioToTime,

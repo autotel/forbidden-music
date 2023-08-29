@@ -20,6 +20,8 @@ import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
 import { useLayerStore } from "./layerStore";
+import { TimeRange } from "../dataTypes/TimelineItem";
+import { EditNote } from "../dataTypes/EditNote";
 
 
 interface MidiInputInterface {
@@ -132,6 +134,10 @@ export const usePlaybackStore = defineStore("playback", () => {
     /** how long in advance to request the scheduling of events */
     const foresight = 1;
 
+    const loop = ref<TimeRange | null>({
+        time: 2,
+        timeEnd: 4,
+    });
 
     let audioContext = new AudioContext();
 
@@ -334,7 +340,18 @@ export const usePlaybackStore = defineStore("playback", () => {
 
         let catchUp = isFirtClockAfterPlay;
         isFirtClockAfterPlay = false;
-        const playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
+
+        let playNotes:EditNote[] = [];
+
+        if (loop.value) {
+            if (currentScoreTime.value >= loop.value.timeEnd) {
+                currentScoreTime.value = loop.value.time;
+                catchUp = true;
+            }
+            // playNotes = _getEventsBetween(loop.value.time, loop.value.timeEnd, catchUp)
+        } else {
+        }
+        playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
 
         playNotes.forEach((editNote) => {
             if (editNote.mute) return;
@@ -366,6 +383,7 @@ export const usePlaybackStore = defineStore("playback", () => {
                 console.log("note play error", e);
             }
         });
+
         previousClockTime.value = now;
 
         if (currentTimeout.value) clearTimeout(currentTimeout.value);
@@ -525,6 +543,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         audioContextPromise,
         playing,
         bpm,
+        loop,
         availableSynths,
         currentScoreTime,
         timeReturnPoint,

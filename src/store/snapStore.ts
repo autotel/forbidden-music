@@ -173,7 +173,7 @@ const snaps: { [key: string]: SnapDefinition } = {
         active: false,
     },
     hzFundamentalMultiple: {
-        description: "frequencies which are multiple of the fundamental frequency ("+ fundamental + ")",
+        description: "frequencies which are multiple of the fundamental frequency (" + fundamental + ")",
         icon: "FF\u00d7",
         type: SnapType.Tone,
         active: false,
@@ -271,6 +271,10 @@ export const useSnapStore = defineStore("snap", () => {
     const onlyWithMutednotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
     const onlyWithNotesInView = ref(false);
+
+    const acceptable = (candidateOctave: number) => {
+        return candidateOctave !== Infinity && candidateOctave !== -Infinity && !isNaN(candidateOctave);
+    }
 
     /** sets a simple focusedNote flag for display purposes */
     const setFocusedNote = (to: EditNote) => {
@@ -379,39 +383,46 @@ export const useSnapStore = defineStore("snap", () => {
          * target / other = other * 1 / target
          * mycandidate = other
          **/
-        // Relational  HZ snaps
         if (otherNotes) {
-            if(snapValues.arbitraryGridEDO.active === true) {
+            if (snapValues.arbitraryGridEDO.active === true) {
                 const gcd = (a: number, b: number): number => {
                     if (b === 0) return a;
                     return gcd(b, a % b);
                 }
 
                 const lowestTwoNotes = otherNotes.sort((a, b) => a.octave - b.octave).slice(0, 2);
-                if(lowestTwoNotes.length === 2) {
+                if (lowestTwoNotes.length === 2) {
                     const lowestNote = lowestTwoNotes[0];
                     const datumOctave = lowestNote.octave;
                     const octaveInterval = lowestTwoNotes[1].octave - lowestTwoNotes[0].octave;
                     const offsetTargetOctave = targetOctave - datumOctave;
                     const candidateOctave = datumOctave + octaveInterval * Math.round(offsetTargetOctave / octaveInterval);
 
+                    if (acceptable(candidateOctave)) {
 
+                        toneSnap.addSnappedValue(candidateOctave, {
+                            text: "lowest notes grid",
+                            relatedNumber: candidateOctave,
+                            relatedNote: lowestNote,
+                        });
 
-                    toneSnap.addSnappedValue(candidateOctave, {
-                        text: "first notes grid",
-                        relatedNumber: candidateOctave,
-                    });
+                        toneSnap.addSnappedValue(candidateOctave, {
+                            text: "",
+                            relatedNumber: candidateOctave,
+                            relatedNote: lowestTwoNotes[1],
+                        });
+                    }
 
                 }
             }
-            if(snapValues.arbitraryGridHZ.active === true) {
+            if (snapValues.arbitraryGridHZ.active === true) {
                 const gcd = (a: number, b: number): number => {
                     if (b === 0) return a;
                     return gcd(b, a % b);
                 }
 
                 const lowestTwoNotes = otherNotes.sort((a, b) => a.frequency - b.frequency).slice(0, 2);
-                if(lowestTwoNotes.length === 2) {
+                if (lowestTwoNotes.length === 2) {
                     const lowestNote = lowestTwoNotes[0];
                     const datumFreq = lowestNote.frequency;
                     const frequencyInterval = lowestTwoNotes[1].frequency - lowestTwoNotes[0].frequency;
@@ -419,11 +430,20 @@ export const useSnapStore = defineStore("snap", () => {
                     const candidateFreq = datumFreq + frequencyInterval * Math.round(offsetTargetFreq / frequencyInterval);
                     const candidateOctave = frequencyToOctave(candidateFreq);
 
+                    if (acceptable(candidateOctave)) {
 
-                    toneSnap.addSnappedValue(candidateOctave, {
-                        text: "first notes grid",
-                        relatedNumber: candidateOctave,
-                    });
+                        toneSnap.addSnappedValue(candidateOctave, {
+                            text: "lowest notes grid",
+                            relatedNumber: candidateOctave,
+                            relatedNote: lowestNote,
+                        });
+
+                        toneSnap.addSnappedValue(candidateOctave, {
+                            text: "",
+                            relatedNumber: candidateOctave,
+                            relatedNote: lowestTwoNotes[1],
+                        });
+                    }
 
                 }
             }
@@ -449,7 +469,7 @@ export const useSnapStore = defineStore("snap", () => {
                     for (const otherNote of otherNotes) {
                         const relatedNumber = Math.round(targetHz / otherNote.frequency) * otherNote.frequency;
                         let txt = "multiple of ";
-                        if(relatedNumber === otherNote.frequency) txt = "equal to ";
+                        if (relatedNumber === otherNote.frequency) txt = "equal to ";
                         toneSnap.addSnappedValue(frequencyToOctave(relatedNumber), {
                             text: txt + otherNote.frequency.toPrecision(3),
                             relatedNumber,
@@ -562,10 +582,20 @@ export const useSnapStore = defineStore("snap", () => {
                     const timeInterval = earliestTwoNotes[1].time - earliestTwoNotes[0].time;
                     const offsetTargetTime = editNote.time - datumTime;
                     const candidateTime = datumTime + timeInterval * Math.round(offsetTargetTime / timeInterval);
-                    timeSnap.addSnappedValue(candidateTime, {
-                        text: "first notes grid",
-                        relatedNumber: candidateTime,
-                    });
+
+                    if (acceptable(candidateTime)) {
+
+                        timeSnap.addSnappedValue(candidateTime, {
+                            text: "first notes grid",
+                            relatedNumber: candidateTime,
+                            relatedNote: earliestNote,
+                        });
+                        timeSnap.addSnappedValue(candidateTime, {
+                            text: "",
+                            relatedNumber: candidateTime,
+                            relatedNote: earliestTwoNotes[1],
+                        });
+                    }
                 }
             }
         }

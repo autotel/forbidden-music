@@ -40,29 +40,44 @@ let noteBeingRightEdgeHovered: EditNote | null = null;
 
 
 const mouseMoveListener = (e: MouseEvent) => {
-    const notesAtCoords = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current === Tool.Modulation);
-    const firstNoteRect = notesAtCoords[0];
+    const notesAtCoords = view.everyNoteAtCoordinates(
+        e.offsetX,
+        e.offsetY,
+        tool.current === Tool.Modulation
+    );
+
+    const otherItemsAtCoords = view.everyOtherItemAtCoordinates(
+        e.offsetX,
+        e.offsetY
+    );
+
+    const everyItemAtCoords = [
+        ...notesAtCoords,
+        ...otherItemsAtCoords,
+    ];
+
+    const firstItemRect = everyItemAtCoords[0];
     // ok, this bit needs refactor 
-    if (firstNoteRect) {
-        const isRightEdge = firstNoteRect.rightEdge ? (
-            (e.offsetX > firstNoteRect.rightEdge?.x - rightEdgeWidth)
+    if (firstItemRect) {
+        const isRightEdge = firstItemRect.rightEdge ? (
+            (e.offsetX > firstItemRect.rightEdge?.x - rightEdgeWidth)
         ) : false;
         if (isRightEdge) {
-            if (noteBeingRightEdgeHovered !== firstNoteRect.event) {
-                tool.noteRightEdgeMouseEnter(firstNoteRect.event as EditNote);
-                noteBeingRightEdgeHovered = firstNoteRect.event as EditNote;
+            if (noteBeingRightEdgeHovered !== firstItemRect.event) {
+                tool.noteRightEdgeMouseEnter(firstItemRect.event as EditNote);
+                noteBeingRightEdgeHovered = firstItemRect.event as EditNote;
             }
         } else if (noteBeingRightEdgeHovered) {
             tool.noteRightEdgeMouseLeave();
             noteBeingRightEdgeHovered = null;
-            tool.noteMouseEnter(firstNoteRect.event as EditNote);
+            tool.noteMouseEnter(firstItemRect.event as EditNote);
         } else {
-            tool.noteMouseEnter(firstNoteRect.event as EditNote);
+            tool.noteMouseEnter(firstItemRect.event as EditNote);
         }
     } else if (noteBeingRightEdgeHovered) {
         tool.noteRightEdgeMouseLeave();
         noteBeingRightEdgeHovered = null;
-    } else if (!firstNoteRect && tool.noteBeingHovered) {
+    } else if (!firstItemRect && tool.noteBeingHovered) {
         tool.noteMouseLeave();
         if (noteBeingRightEdgeHovered) {
             tool.noteRightEdgeMouseLeave();
@@ -191,6 +206,26 @@ const refreshView = (time: number) => {
     graphics.drawPolygon(path);
     graphics.endFill();
 
+    // draw loop range
+    // if (playback.loop) {
+    //     const loopRect = view.rectOfTimelineItem(playback.loop);
+    //     graphics.beginFill(0x000000, 0.1);
+    //     graphics.lineStyle(1, 0x000000, 1);
+    //     graphics.drawRect(loopRect.x, loopRect.y, loopRect.width, loopRect.height);
+    //     graphics.endFill();
+    // }
+
+    const otherItemRects = view.visibleOtherItemRects;
+    otherItemRects.forEach((rect)=>{
+        graphics.beginFill(0x000000, 0.1);
+        graphics.lineStyle(1, 0x000000, 1);
+        graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
+        graphics.endFill();
+
+    });
+
+
+
     // could redraw lines only on view change, perhaps on an overlayed canvas
     if (measureSteps) taskMark("4. draw grids");
     // draw grid lines
@@ -224,27 +259,27 @@ const refreshView = (time: number) => {
 
     // draw snap explanations
     let snapExplTextsStart = textToUse - 1;
-    const snapFocusedNoteRect = snap.focusedNote ? view.rectOfNote(
+    const snapFocusedItemRect = snap.focusedNote ? view.rectOfNote(
         snap.focusedNote
     ) : null;
-    if (snapFocusedNoteRect) {
+    if (snapFocusedItemRect) {
         graphics.lineStyle(1, relationcolor, 0.5);
         for (const snapExplanation of snap.toneSnapExplanation) {
-            const relatedNoteRect = snapExplanation.relatedNote ? view.rectOfNote(
+            const relatedItemRect = snapExplanation.relatedNote ? view.rectOfNote(
                 snapExplanation.relatedNote
-            ) : snapFocusedNoteRect;
-            if (relatedNoteRect) {
+            ) : snapFocusedItemRect;
+            if (relatedItemRect) {
                 const middleY =
-                    snapFocusedNoteRect.cy == relatedNoteRect.cy ?
-                        snapFocusedNoteRect.cy :
-                        (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
+                    snapFocusedItemRect.cy == relatedItemRect.cy ?
+                        snapFocusedItemRect.cy :
+                        (snapFocusedItemRect.cy + relatedItemRect.cy) / 2;
 
-                const leftX = Math.max(relatedNoteRect.cx, 5);
-                graphics.moveTo(leftX, relatedNoteRect.cy);
-                graphics.lineTo(leftX, snapFocusedNoteRect.cy);
-                graphics.lineTo(snapFocusedNoteRect.cx, snapFocusedNoteRect.cy);
+                const leftX = Math.max(relatedItemRect.cx, 5);
+                graphics.moveTo(leftX, relatedItemRect.cy);
+                graphics.lineTo(leftX, snapFocusedItemRect.cy);
+                graphics.lineTo(snapFocusedItemRect.cx, snapFocusedItemRect.cy);
                 graphics.beginFill(relationcolor, 1);
-                graphics.drawCircle(leftX, relatedNoteRect.cy, 3);
+                graphics.drawCircle(leftX, relatedItemRect.cy, 3);
                 graphics.endFill();
                 graphics.beginFill(relationcolor, 1);
                 let text = getText();
@@ -294,7 +329,7 @@ const refreshView = (time: number) => {
             text.y = nRect.y + nRect.radius - userSettings.fontSize / 2;
             text.style.fontSize = userSettings.fontSize;
         }
-        
+
         if (tool.current === Tool.Modulation) {
             const veloLinePositionY = view.velocityToPxWithOffset(nRect.event.velocity);
             graphics.lineStyle(2, 0x000000, 2);
