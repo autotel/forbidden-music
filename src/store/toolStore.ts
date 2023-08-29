@@ -2,13 +2,14 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { Tool } from '../dataTypes/Tool';
 import { useProjectStore } from './projectStore';
-import { OctaveRange, TimeRange } from '../dataTypes/TimelineItem';
+import { OctaveRange, TimeRange, TimelineItem } from '../dataTypes/TimelineItem';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { useThrottleFn } from '@vueuse/core';
 import { EditNote } from '../dataTypes/EditNote';
 import { Group } from '../dataTypes/Group';
 import { SelectableRange, useSelectStore } from './selectStore';
+import { devLog } from '../functions/isDev';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 
@@ -20,14 +21,14 @@ export enum MouseDownActions {
     AddToSelectionAndDrag,
     SetSelectionAndDrag,
     RemoveFromSelectionAndDrag,
-    Create,
-    Lengthen,
-    DragVelocity,
-    Copy,
-    AreaSelect,
-    Move,
-    UnsetActiveGroup,
-    EnterIntoGroup,
+    CreateNote,
+    LengthenNote,
+    DragNoteVelocity,
+    CopyNote,
+    AreaSelectNotes,
+    MoveNotes,
+    LengthenItem,
+    MoveItem,
 }
 
 
@@ -61,10 +62,10 @@ export const useToolStore = defineStore("edit", () => {
         octaveEnd: 0,
         active: false
     });
+
     const showReferenceKeyboard = ref(false)
     const disallowOctaveChange = ref(false);
     const disallowTimeChange = ref(false);
-    const currentlyActiveGroup = ref<Group | null>(null);
     const currentMouseStringHelper = ref("");
 
     let newNoteDragX = 0;
@@ -83,42 +84,75 @@ export const useToolStore = defineStore("edit", () => {
         y: 0,
     };
 
+    let timelineItemWhenDragStrted: TimelineItem | false = false;
+
     // TODO: many of these probably don't need to be ref
+
     let isDragging = false;
+    // for single item edits
     let noteBeingHovered = ref<EditNote | false>(false);
     let noteRightEdgeBeingHovered = ref<EditNote | false>(false);
     let noteBeingDragged = ref<EditNote | false>(false);
     let noteBeingDraggedRightEdge = ref<EditNote | false>(false);
 
-    let groupBeingHovered = ref<Group | null>(null);
-    let groupBeingDragged = ref<Group | false>(false);
+    let timelineItemBeingHovered = ref<TimelineItem | false>(false);
+    let timelineItemRightEdgeBeingHovered = ref<TimelineItem | false>(false);
+    let timelineItemBeingDragged = ref<TimelineItem | false>(false);
+    let timelineItemBeingDraggedRightEdge = ref<TimelineItem | false>(false);
 
-    /** 
-     * only holds reference to notes in score 
-     */
+    // for multi-item edits
     let notesBeingDragged: EditNote[] = [];
     let notesBeingDraggedRightEdge: EditNote[] = [];
-    let groupsBeingDragged: Group[] = [];
+
     let alreadyDuplicatedForThisDrag = false;
 
     const cursor = computed(() => {
-        if (noteRightEdgeBeingHovered.value) return 'cursor-note-length';
-        if (noteBeingDraggedRightEdge.value) return 'cursor-note-length';
-        if (noteBeingDragged.value) return 'cursor-grabbing';
-        if (noteBeingHovered.value) return 'cursor-grab';
-        if (current.value === Tool.Edit) return 'cursor-draw';
+        switch (whatWouldMouseDownDo()) {
+            case MouseDownActions.LengthenNote:
+            case MouseDownActions.LengthenItem:
+                return 'cursor-note-length';
+            case MouseDownActions.AddToSelection:
+            case MouseDownActions.SetSelection:
+            case MouseDownActions.SetSelectionAndDrag:
+            case MouseDownActions.RemoveFromSelectionAndDrag:
+            case MouseDownActions.MoveNotes:
+            case MouseDownActions.MoveItem:
+                return 'cursor-grab';
+            case MouseDownActions.AreaSelectNotes:
+                return 'cursor-area-select';
+                // return 'cursor-grabbing';
+            case MouseDownActions.CreateNote:
+            default:
+                return 'cursor-draw';
+        }
+
+
+        // if (noteRightEdgeBeingHovered.value) return 'cursor-note-length';
+        // if (noteBeingDraggedRightEdge.value) return 'cursor-note-length';
+        // if (noteBeingDragged.value) return 'cursor-grabbing';
+        // if (noteBeingHovered.value) return 'cursor-grab';
+        // if (timelineItemBeingDragged.value) return 'cursor-grabbing';
+        // if (timelineItemBeingDraggedRightEdge.value) return 'cursor-note-length';
+        // if (current.value === Tool.Edit) return 'cursor-draw';
     });
 
+    const unhoverAll = () => {
+        snap.resetSnapExplanation();
+        noteBeingHovered.value = false;
+        noteRightEdgeBeingHovered.value = false;
+        timelineItemBeingHovered.value = false;
+        timelineItemRightEdgeBeingHovered.value = false;
+    }
+
     const noteMouseEnter = (editNote: EditNote) => {
+        unhoverAll();
         noteBeingHovered.value = editNote;
         noteThatWouldBeCreated.value = false;
-        noteRightEdgeBeingHovered.value = false;
     }
     const noteRightEdgeMouseEnter = (editNote: EditNote) => {
-        if (editNote.group !== currentlyActiveGroup.value) return;
-        noteThatWouldBeCreated.value = false;
+        unhoverAll();
         noteRightEdgeBeingHovered.value = editNote;
-        noteBeingHovered.value = false;
+        noteThatWouldBeCreated.value = false;
     }
     const noteMouseLeave = () => {
         noteRightEdgeBeingHovered.value = false;
@@ -128,11 +162,21 @@ export const useToolStore = defineStore("edit", () => {
         noteRightEdgeBeingHovered.value = false;
     }
 
-    const groupMouseEnter = (group: Group) => {
-        groupBeingHovered.value = group;
+
+    const timelineItemMouseEnter = (editNote: TimelineItem) => {
+        unhoverAll();
+        timelineItemBeingHovered.value = editNote;
     }
-    const groupMouseLeave = () => {
-        groupBeingHovered.value = null;
+    const timelineItemRightEdgeMouseEnter = (editNote: TimelineItem) => {
+        unhoverAll();
+        timelineItemRightEdgeBeingHovered.value = editNote;
+    }
+    const timelineItemMouseLeave = () => {
+        timelineItemRightEdgeBeingHovered.value = false;
+        timelineItemBeingHovered.value = false;
+    }
+    const timelineItemRightEdgeMouseLeave = () => {
+        timelineItemRightEdgeBeingHovered.value = false;
     }
 
     const whatWouldMouseDownDo = () => {
@@ -154,18 +198,15 @@ export const useToolStore = defineStore("edit", () => {
                         ret = MouseDownActions.AddToSelectionAndDrag;
                     }
                 }
-            } else if (groupBeingHovered.value) {
-                ret = MouseDownActions.EnterIntoGroup;
-                currentMouseStringHelper.value = "⇱";
             } else {
-                ret = MouseDownActions.AreaSelect;
+                ret = MouseDownActions.AreaSelectNotes;
                 currentMouseStringHelper.value = "⃞";
             }
 
         } else if (current.value === Tool.Modulation) {
             if (noteBeingHovered.value) {
                 if (selection.isSelected(noteBeingHovered.value)) {
-                    ret = MouseDownActions.DragVelocity;
+                    ret = MouseDownActions.DragNoteVelocity;
                 } else {
                     // thus far no distinction needed
                     ret = MouseDownActions.SetSelectionAndDrag;
@@ -173,83 +214,130 @@ export const useToolStore = defineStore("edit", () => {
             }
             currentMouseStringHelper.value = "⇅";
         } else if (current.value === Tool.Edit) {
-            if (
-                noteRightEdgeBeingHovered.value
-                && noteRightEdgeBeingHovered.value.group === currentlyActiveGroup.value
-            ) {
-                ret = MouseDownActions.Lengthen;
+            if (timelineItemRightEdgeBeingHovered.value) {
+                ret = MouseDownActions.LengthenItem;
+                currentMouseStringHelper.value = "⟷ i";
+            } else if (timelineItemBeingHovered.value) {
+                // ret = MouseDownActions.MoveItem;
+                ret = MouseDownActions.MoveItem;
+            } else if (noteRightEdgeBeingHovered.value) {
+                ret = MouseDownActions.LengthenNote;
                 if (selection.selected.size > 1) {
                     currentMouseStringHelper.value = "⟺";
                 } else {
                     currentMouseStringHelper.value = "⟷";
                 }
             } else if (noteBeingHovered.value) {
-                ret = MouseDownActions.Move;
-                if (noteBeingHovered.value.group !== currentlyActiveGroup.value) {
-                    ret = MouseDownActions.EnterIntoGroup;
-                    groupBeingHovered.value = noteBeingHovered.value.group;
-                    currentMouseStringHelper.value = "⇱";
-                } else if (selection.isSelected(noteBeingHovered.value)) {
-                    ret = MouseDownActions.Move;
+                ret = MouseDownActions.MoveNotes;
+                if (selection.isSelected(noteBeingHovered.value)) {
+                    ret = MouseDownActions.MoveNotes;
                 } else {
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
-            } else if (groupBeingHovered.value) {
-                ret = MouseDownActions.EnterIntoGroup;
-                currentMouseStringHelper.value = "⇱";
-            } else if (!groupBeingHovered.value && currentlyActiveGroup.value !== null) {
-                ret = MouseDownActions.UnsetActiveGroup;
-                currentMouseStringHelper.value = "⇲";
             } else {
-                ret = MouseDownActions.Create;
+                ret = MouseDownActions.CreateNote;
             }
         }
         return ret;
     }
 
     const _dragStartAction = (mouse: { x: number, y: number }) => {
-        noteBeingDragged.value = noteBeingHovered.value;
-        if (!noteBeingDragged.value) throw new Error('no noteBeingDragged');
+        // TODO: the hierarchy of what is selected on click is re-defined here. 
+        // It was first defined by whatWouldMouseDownDo
+        // ideally the precedence should be consequential and not coincidental
 
-        notesBeingDragged = selection.getNotes();
-        notesBeingDragged.forEach(editNote => {
-            editNote.dragStart(mouse);
-        });
-        // TS is insane sometimes
-        snap.setFocusedNote(noteBeingDragged.value as EditNote);
-        mouseDragStart = mouse;
-        isDragging = true;
+        if (timelineItemBeingHovered.value) {
+            const subject = timelineItemBeingDragged.value = timelineItemBeingHovered.value;
+            if (!timelineItemBeingDragged.value) throw new Error('no timelineItemBeingDragged');
+            const copyOfTimelineItem = {
+                time: subject.time,
+                timeEnd: subject.timeEnd,
+            } as { [key: string]: number };
+
+            if ('octave' in subject) {
+                copyOfTimelineItem.octave = subject.octave;
+            }
+            if ('octaveEnd' in subject) {
+                copyOfTimelineItem.octaveEnd = subject.octaveEnd;
+            }
+
+            timelineItemWhenDragStrted = copyOfTimelineItem as unknown as TimelineItem;
+
+            mouseDragStart = mouse;
+            isDragging = true;
+
+        } else if (noteBeingHovered.value) {
+            noteBeingDragged.value = noteBeingHovered.value;
+            if (!noteBeingDragged.value) throw new Error('no noteBeingDragged');
+
+            notesBeingDragged = selection.getNotes();
+            notesBeingDragged.forEach(editNote => {
+                editNote.dragStart(mouse);
+            });
+
+            snap.setFocusedNote(noteBeingDragged.value);
+            mouseDragStart = mouse;
+            isDragging = true;
+        }
     }
 
     const _lengthenDragStartAction = (mouse: { x: number, y: number }) => {
-        if (!noteRightEdgeBeingHovered.value) return;
-        const subject = noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
-        notesBeingDraggedRightEdge = selection.getNotes();
+        timelineItemBeingDragged.value = false;
+        noteBeingDragged.value = false;
 
-        // if I select one note and then lengthen another, it feels unexpected to lengthen the first one
-        // without selecting the dragged one
-        if (
-            !notesBeingDraggedRightEdge.includes(subject)
-        ) {
-            // if one note only is selected, one tends to expect that selection gets replaced
-            if (notesBeingDraggedRightEdge.length === 1) {
-                notesBeingDraggedRightEdge = [];
-                selection.clear();
+        // TODO: the hierarchy of what is selected on click is re-defined here. 
+        // It was first defined by whatWouldMouseDownDo
+        // ideally the precedence should be consequential and not coincidental
+        if (timelineItemRightEdgeBeingHovered.value) {
+            const subject = timelineItemBeingDraggedRightEdge.value = timelineItemRightEdgeBeingHovered.value;
+            if (!subject) throw new Error('no timelineItemBeingDraggedRightEdge');
+
+            const copyOfTimelineItem = {
+                time: subject.time,
+                timeEnd: subject.timeEnd,
+            } as { [key: string]: number };
+
+            if ('octave' in subject) {
+                copyOfTimelineItem.octave = subject.octave;
             }
-            // but if more, one expects that selection gets overwritten
-            // but that tends to be annoying, so I just add it instead.
-            if (subject) selection.add(subject);
+            if ('octaveEnd' in subject) {
+                copyOfTimelineItem.octaveEnd = subject.octaveEnd;
+            }
+
+            timelineItemWhenDragStrted = copyOfTimelineItem as unknown as TimelineItem;
+
+            mouseDragStart = mouse;
+            isDragging = true;
+        } else if (noteRightEdgeBeingHovered.value) {
+            const subject = noteBeingDraggedRightEdge.value = noteRightEdgeBeingHovered.value;
+            notesBeingDraggedRightEdge = selection.getNotes();
+
+            // if I select one note and then lengthen another, it feels unexpected to lengthen the first one
+            // without selecting the dragged one
+            if (
+                subject &&
+                (!notesBeingDraggedRightEdge.includes(subject))
+            ) {
+                // if one note only is selected, one tends to expect that selection gets replaced
+                if (notesBeingDraggedRightEdge.length === 1) {
+                    notesBeingDraggedRightEdge = [];
+                    selection.clear();
+                }
+                // but if more, one expects that selection gets overwritten
+                // but that tends to be annoying, so I just add it instead.
+                if (subject) selection.add(subject);
+            }
+
+            if (!subject) throw new Error('no noteBeingDraggedRightEdge');
+            subject.dragStart(mouse);
+            notesBeingDraggedRightEdge.forEach(editNote => {
+                editNote.dragStart(mouse);
+            });
+            snap.setFocusedNote(subject as EditNote);
+
+            mouseDragStart = mouse;
+            isDragging = true;
         }
-
-        if (!subject) throw new Error('no noteBeingDraggedRightEdge');
-        subject.dragStart(mouse);
-        notesBeingDraggedRightEdge.forEach(editNote => {
-            editNote.dragStart(mouse);
-        });
-        snap.setFocusedNote(subject as EditNote);
-
-        mouseDragStart = mouse;
-        isDragging = true;
     }
 
     const resetState = () => {
@@ -257,6 +345,12 @@ export const useToolStore = defineStore("edit", () => {
         noteBeingDraggedRightEdge.value = false;
         noteBeingHovered.value = false;
         noteRightEdgeBeingHovered.value = false;
+
+        timelineItemBeingDragged.value = false;
+        timelineItemBeingDraggedRightEdge.value = false;
+        timelineItemBeingHovered.value = false;
+        timelineItemRightEdgeBeingHovered.value = false;
+
         notesBeingDragged = [];
         notesBeingDraggedRightEdge = [];
         isDragging = false;
@@ -272,7 +366,7 @@ export const useToolStore = defineStore("edit", () => {
             y: e.clientY,
         }
         switch (mouseAction) {
-            case MouseDownActions.AreaSelect: {
+            case MouseDownActions.AreaSelectNotes: {
                 selection.clear();
                 const x = e.clientX;
                 const y = e.clientY;
@@ -299,10 +393,11 @@ export const useToolStore = defineStore("edit", () => {
                 selectRange.value = zeroedRange;
                 break;
             }
-            case MouseDownActions.DragVelocity:
+            case MouseDownActions.DragNoteVelocity:
                 _dragStartAction(mouse);
                 break;
-            case MouseDownActions.Lengthen:
+            case MouseDownActions.LengthenItem: // no break
+            case MouseDownActions.LengthenNote:
                 _lengthenDragStartAction(mouse);
                 break;
             case MouseDownActions.AddToSelection:
@@ -326,10 +421,11 @@ export const useToolStore = defineStore("edit", () => {
                 if (!noteBeingHovered.value) throw new Error('no noteBeingHovered');
                 selection.remove(noteBeingHovered.value);
                 break;
-            case MouseDownActions.Move:
+            case MouseDownActions.MoveItem:
+            case MouseDownActions.MoveNotes:
                 _dragStartAction(mouse);
                 break;
-            case MouseDownActions.Create:
+            case MouseDownActions.CreateNote:
                 if (!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
                 newNoteDragX = e.clientX;
                 const cloned = noteThatWouldBeCreated.value.clone();
@@ -337,14 +433,6 @@ export const useToolStore = defineStore("edit", () => {
                 noteBeingDraggedRightEdge.value = cloned;
                 noteRightEdgeBeingHovered.value = cloned;
                 _lengthenDragStartAction(mouse);
-                break;
-            case MouseDownActions.EnterIntoGroup:
-                selection.clear();
-                currentlyActiveGroup.value = groupBeingHovered.value;
-                break;
-            case MouseDownActions.UnsetActiveGroup:
-                currentlyActiveGroup.value = null;
-                selection.clear();
                 break;
             case MouseDownActions.None:
                 break;
@@ -376,7 +464,7 @@ export const useToolStore = defineStore("edit", () => {
                 sortedRange.velocityEnd = velocitiesInOrder[1];
             }
 
-            selection.selectRange(sortedRange, currentlyActiveGroup.value);
+            selection.selectRange(sortedRange);
         }
     }, 25);
 
@@ -385,7 +473,7 @@ export const useToolStore = defineStore("edit", () => {
         // if out of view, false
         if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
             noteThatWouldBeCreated.value = false;
-        } else if (whatWouldMouseDownDo() === MouseDownActions.Create) {
+        } else if (whatWouldMouseDownDo() === MouseDownActions.CreateNote) {
             const freeNote = new EditNote({
                 time: view.pxToTimeWithOffset(x),
                 duration: 0,
@@ -450,6 +538,7 @@ export const useToolStore = defineStore("edit", () => {
             // once, and under these very specific conditions
             // sets a threshold of movement before copying 
             if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
+                
                 if (Math.abs(mouseDelta.x) > 30 || Math.abs(mouseDelta.y) > 30) {
                     snap.resetSnapExplanation();
                     alreadyDuplicatedForThisDrag = true;
@@ -471,6 +560,7 @@ export const useToolStore = defineStore("edit", () => {
                 }
                 refresh = true;
             } else if (isDragging && noteBeingDragged.value && selection.isSelected(noteBeingDragged.value)) {
+                
                 snap.resetSnapExplanation();
                 noteBeingDragged.value.dragMove(mouseDelta);
 
@@ -499,6 +589,7 @@ export const useToolStore = defineStore("edit", () => {
                 });
                 refresh = true;
             } else if (isDragging && noteBeingDraggedRightEdge.value) {
+                
                 snap.resetSnapExplanation();
                 noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
                 notesBeingDraggedRightEdge.forEach(editNote => {
@@ -512,6 +603,19 @@ export const useToolStore = defineStore("edit", () => {
                 });
                 noteBeingDraggedRightEdge.value.apply(editNote);
                 refresh = true;
+            } else if (isDragging && timelineItemBeingDragged.value) {
+                
+                const timeMovement = view.pxToTime(mouseDelta.x);
+
+                if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
+                timelineItemBeingDragged.value.time =  timelineItemWhenDragStrted.time + timeMovement;
+                timelineItemBeingDragged.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
+
+            } else if (isDragging && timelineItemBeingDraggedRightEdge.value) {
+                
+                const timeMovement = view.pxToTime(mouseDelta.x);
+                if(!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
+                timelineItemBeingDraggedRightEdge.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
             } else {
                 updateNoteThatWouldBeCreated({
                     x: e.clientX,
@@ -537,12 +641,6 @@ export const useToolStore = defineStore("edit", () => {
             editNote.dragEnd(mouse);
         });
         if (notesBeingCreated.value.length && e.button !== 1) {
-            // store them to store
-            if (currentlyActiveGroup.value) {
-                notesBeingCreated.value.forEach(note => {
-                    note.group = currentlyActiveGroup.value;
-                });
-            }
             project.appendNote(...notesBeingCreated.value);
             notesBeingCreated.value = [];
         }
@@ -559,7 +657,7 @@ export const useToolStore = defineStore("edit", () => {
     }
 
     watch(() => current, () => {
-        if (whatWouldMouseDownDo() !== MouseDownActions.Create) {
+        if (whatWouldMouseDownDo() !== MouseDownActions.CreateNote) {
             noteThatWouldBeCreated.value = false;
         }
     })
@@ -568,10 +666,17 @@ export const useToolStore = defineStore("edit", () => {
         mouseDown,
         mouseMove,
         mouseUp,
+
         noteMouseEnter,
         noteRightEdgeMouseEnter,
         noteMouseLeave,
         noteRightEdgeMouseLeave,
+
+        timelineItemMouseEnter,
+        timelineItemRightEdgeMouseEnter,
+        timelineItemMouseLeave,
+        timelineItemRightEdgeMouseLeave,
+
         resetState,
 
         cursor,
@@ -592,12 +697,8 @@ export const useToolStore = defineStore("edit", () => {
         notesBeingDragged,
         noteBeingHovered,
 
-        groupMouseEnter,
-        groupMouseLeave,
-
         currentLayerNumber,
 
-        currentlyActiveGroup,
         tooltip,
         tooltipOwner,
     }

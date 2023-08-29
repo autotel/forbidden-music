@@ -95,7 +95,7 @@ export const useSelectStore = defineStore("select", () => {
         });
         refreshNoteSelectionState();
     };
-    const selectRange = (range: SelectableRange, restrictToGroup: (Group | null | false) = false) => {
+    const selectRange = (range: SelectableRange) => {
         const visibleLayersNotes = project.score.filter(({layer}) => layers.isVisible(layer))
         let notesInRange = getNotesInRange(
             visibleLayersNotes,
@@ -120,10 +120,6 @@ export const useSelectStore = defineStore("select", () => {
                 ) : false
             )
             notesInRange.push(...notesVeloLinesInRange)
-        }
-
-        if (restrictToGroup !== false) { // note that null is also a valid group restriction
-            notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
         }
 
         select(

@@ -11,6 +11,7 @@ import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
 import { layerNoteColors, useViewStore } from '../../store/viewStore';
 import { baseFrequency } from '../../functions/toneConverters';
+import { TimelineItem } from '../../dataTypes/TimelineItem';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -21,7 +22,6 @@ const gridsStore = useGridsStore();
 const rightEdgeWidth = 10;
 const snap = useSnapStore();
 const userSettings = useCustomSettingsStore();
-
 const measureSteps = 0;
 
 const pixiApp = new PIXI.Application({
@@ -37,7 +37,7 @@ const props = defineProps<{
 }>();
 
 let noteBeingRightEdgeHovered: EditNote | null = null;
-
+let otherItemRightEdgeHovered: TimelineItem | null = null;
 
 const mouseMoveListener = (e: MouseEvent) => {
     const notesAtCoords = view.everyNoteAtCoordinates(
@@ -51,37 +51,49 @@ const mouseMoveListener = (e: MouseEvent) => {
         e.offsetY
     );
 
-    const everyItemAtCoords = [
-        ...notesAtCoords,
-        ...otherItemsAtCoords,
-    ];
+    const firstNoteRect = notesAtCoords[0];
+    const firstItemRect = otherItemsAtCoords[0];
 
-    const firstItemRect = everyItemAtCoords[0];
-    // ok, this bit needs refactor 
     if (firstItemRect) {
         const isRightEdge = firstItemRect.rightEdge ? (
             (e.offsetX > firstItemRect.rightEdge?.x - rightEdgeWidth)
         ) : false;
         if (isRightEdge) {
-            if (noteBeingRightEdgeHovered !== firstItemRect.event) {
-                tool.noteRightEdgeMouseEnter(firstItemRect.event as EditNote);
-                noteBeingRightEdgeHovered = firstItemRect.event as EditNote;
+            tool.timelineItemRightEdgeMouseEnter(firstItemRect.event);
+            otherItemRightEdgeHovered = firstItemRect.event;
+        } else {
+            tool.timelineItemMouseEnter(firstItemRect.event);
+        }
+    } else if (firstNoteRect) {
+        const isRightEdge = firstNoteRect.rightEdge ? (
+            (e.offsetX > firstNoteRect.rightEdge?.x - rightEdgeWidth)
+        ) : false;
+        if (isRightEdge) {
+            if (noteBeingRightEdgeHovered !== firstNoteRect.event) {
+                tool.noteRightEdgeMouseEnter(firstNoteRect.event as EditNote);
+                noteBeingRightEdgeHovered = firstNoteRect.event as EditNote;
             }
         } else if (noteBeingRightEdgeHovered) {
             tool.noteRightEdgeMouseLeave();
             noteBeingRightEdgeHovered = null;
-            tool.noteMouseEnter(firstItemRect.event as EditNote);
+            tool.noteMouseEnter(firstNoteRect.event as EditNote);
         } else {
-            tool.noteMouseEnter(firstItemRect.event as EditNote);
+            tool.noteMouseEnter(firstNoteRect.event as EditNote);
         }
     } else if (noteBeingRightEdgeHovered) {
         tool.noteRightEdgeMouseLeave();
-        noteBeingRightEdgeHovered = null;
-    } else if (!firstItemRect && tool.noteBeingHovered) {
+    } else if (!firstNoteRect && tool.noteBeingHovered) {
         tool.noteMouseLeave();
+        tool.timelineItemMouseLeave();
         if (noteBeingRightEdgeHovered) {
             tool.noteRightEdgeMouseLeave();
             noteBeingRightEdgeHovered = null;
+        }
+
+    }else{
+        if (otherItemRightEdgeHovered) {
+            tool.timelineItemRightEdgeMouseLeave();
+            otherItemRightEdgeHovered = null;
         }
     }
 }
@@ -216,7 +228,7 @@ const refreshView = (time: number) => {
     // }
 
     const otherItemRects = view.visibleOtherItemRects;
-    otherItemRects.forEach((rect)=>{
+    otherItemRects.forEach((rect) => {
         graphics.beginFill(0x000000, 0.1);
         graphics.lineStyle(1, 0x000000, 1);
         graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
