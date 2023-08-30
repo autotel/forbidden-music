@@ -2,6 +2,7 @@
 import GroupElement from './GroupElement.vue';
 import TimeGrid from './MusicTimeGrid.vue';
 import NoteElement from './NoteElement.vue';
+import LoopRangeElement from './LoopRangeElement.vue';
 import RangeSelection from './RangeSelection.vue';
 import ToneGrid from './ToneGrid.vue';
 import ToneRelation from './ToneRelation.vue';
@@ -9,14 +10,13 @@ import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
 import { layerNoteColors, useViewStore } from '../../store/viewStore';
-import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const project = useProjectStore();
 const tool = useToolStore();
 const playback = usePlaybackStore();
 const view = useViewStore();
 const timedEventsViewport = ref<SVGSVGElement>();
-
 
 const props = defineProps<{
     width: number,
@@ -35,6 +35,7 @@ onBeforeUnmount(() => {
 });
 
 
+
 </script>
 <template>
     <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
@@ -45,21 +46,19 @@ onBeforeUnmount(() => {
         <g id="tone-relations">
             <ToneRelation />
         </g>
-        <g id="groups-container">
-            <g v-for="group in project.groups" :key="group.id">
-                <GroupElement :group="group" />
-            </g>
-        </g>
         <g id="note-would-be-created">
             <NoteElement 
                 v-if="tool.noteThatWouldBeCreated" 
                 :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
+        <g id="loop-range-container">
+            <LoopRangeElement v-for="loopRect in view.visibleLoopRects" :eventRect="loopRect" />
+        </g>
         <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
             stroke-width="1" />
         <g id="edit-notes">
-            <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect" />
+            <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect"  />
         </g>
         <g id="notes-being-created">
             <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
@@ -109,4 +108,6 @@ svg#viewport {
 g#notes-being-created rect.body {
     fill: transparent;
 }
+
+
 </style>

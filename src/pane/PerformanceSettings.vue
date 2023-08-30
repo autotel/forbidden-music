@@ -11,10 +11,12 @@ import { usePlaybackStore } from '../store/playbackStore';
 import isTauri from '../functions/isTauri';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { useViewStore } from '../store/viewStore';
+import { useToolStore } from '../store/toolStore';
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();
 const view = useViewStore();
+const tool = useToolStore();
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
     { name: 'SVG', value: ViewportTech.Svg },
@@ -65,6 +67,11 @@ const viewportTechs = [
             <div class="form-row">
                 <Toggle v-model="userSettings.physicalEnabled" />
                 <label>Phyisical use</label>
+            </div>
+
+            <div class="form-row">
+                <Toggle v-model="tool.showReferenceKeyboard" />
+                <label>Reference Keyboard</label>
             </div>
 
             <div class="form-row">

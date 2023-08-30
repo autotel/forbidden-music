@@ -29,20 +29,19 @@ export enum MouseDownActions {
     MoveNotes,
     LengthenItem,
     MoveItem,
+    CreateLoop,
 }
 
 
 // maybe doesn't need to be a store, but something else
-export const useToolStore = defineStore("edit", () => {
+export const useToolStore = defineStore("tool", () => {
     // hmm.. I might be not so good at choosing where stuff goes..
     const selection = useSelectStore();
     const view = useViewStore();
     const project = useProjectStore();
     const snap = useSnapStore();
-
     const tooltip = ref("");
-    const tooltipOwner = ref<HTMLElement | null>(null);
-
+    const tooltipOwner = ref<HTMLElement | SVGElement | null>(null);
     // TODO: probably not all these need to be refs
     /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
@@ -79,6 +78,8 @@ export const useToolStore = defineStore("edit", () => {
 
     const noteThatWouldBeCreated = ref<EditNote | false>(false);
 
+    let engagedMouseAction = ref<MouseDownActions | false>(false);
+
     let mouseDragStart = {
         x: 0,
         y: 0,
@@ -107,7 +108,8 @@ export const useToolStore = defineStore("edit", () => {
     let alreadyDuplicatedForThisDrag = false;
 
     const cursor = computed(() => {
-        switch (whatWouldMouseDownDo()) {
+        let mouseDo = engagedMouseAction.value ? engagedMouseAction.value : whatWouldMouseDownDo();
+        switch (mouseDo) {
             case MouseDownActions.LengthenNote:
             case MouseDownActions.LengthenItem:
                 return 'cursor-note-length';
@@ -116,11 +118,15 @@ export const useToolStore = defineStore("edit", () => {
             case MouseDownActions.SetSelectionAndDrag:
             case MouseDownActions.RemoveFromSelectionAndDrag:
             case MouseDownActions.MoveNotes:
-            case MouseDownActions.MoveItem:
-                return 'cursor-grab';
+            case MouseDownActions.MoveItem: {
+                if (noteBeingDragged.value || timelineItemBeingDragged.value) {
+                    return 'cursor-grabbing';
+                } else {
+                    return 'cursor-grab';
+                }
+            }
             case MouseDownActions.AreaSelectNotes:
                 return 'cursor-area-select';
-                // return 'cursor-grabbing';
             case MouseDownActions.CreateNote:
             default:
                 return 'cursor-draw';
@@ -136,21 +142,22 @@ export const useToolStore = defineStore("edit", () => {
         // if (current.value === Tool.Edit) return 'cursor-draw';
     });
 
-    const unhoverAll = () => {
-        snap.resetSnapExplanation();
-        noteBeingHovered.value = false;
-        noteRightEdgeBeingHovered.value = false;
-        timelineItemBeingHovered.value = false;
-        timelineItemRightEdgeBeingHovered.value = false;
-    }
 
     const noteMouseEnter = (editNote: EditNote) => {
-        unhoverAll();
+        // unhover all other including right edge
+        timelineItemBeingHovered.value = false;
+        timelineItemRightEdgeBeingHovered.value = false;
+        noteRightEdgeBeingHovered.value = false;
+
+
         noteBeingHovered.value = editNote;
         noteThatWouldBeCreated.value = false;
     }
     const noteRightEdgeMouseEnter = (editNote: EditNote) => {
-        unhoverAll();
+        // unhover all other but don't unhover note body
+        timelineItemBeingHovered.value = false;
+        timelineItemRightEdgeBeingHovered.value = false;
+
         noteRightEdgeBeingHovered.value = editNote;
         noteThatWouldBeCreated.value = false;
     }
@@ -160,15 +167,25 @@ export const useToolStore = defineStore("edit", () => {
     }
     const noteRightEdgeMouseLeave = () => {
         noteRightEdgeBeingHovered.value = false;
+        if(noteBeingHovered.value){
+            noteMouseEnter(noteBeingHovered.value);
+        }
     }
 
 
     const timelineItemMouseEnter = (editNote: TimelineItem) => {
-        unhoverAll();
+        // unhover all other including right edge
+        noteBeingHovered.value = false;
+        noteRightEdgeBeingHovered.value = false;
+        timelineItemRightEdgeBeingHovered.value = false;
+
         timelineItemBeingHovered.value = editNote;
     }
     const timelineItemRightEdgeMouseEnter = (editNote: TimelineItem) => {
-        unhoverAll();
+        // unhover all other but don't unhover item body
+        noteBeingHovered.value = false;
+        noteRightEdgeBeingHovered.value = false;
+
         timelineItemRightEdgeBeingHovered.value = editNote;
     }
     const timelineItemMouseLeave = () => {
@@ -177,6 +194,9 @@ export const useToolStore = defineStore("edit", () => {
     }
     const timelineItemRightEdgeMouseLeave = () => {
         timelineItemRightEdgeBeingHovered.value = false;
+        if(timelineItemBeingHovered.value){
+            timelineItemMouseEnter(timelineItemBeingHovered.value);
+        }
     }
 
     const whatWouldMouseDownDo = () => {
@@ -236,6 +256,16 @@ export const useToolStore = defineStore("edit", () => {
                 }
             } else {
                 ret = MouseDownActions.CreateNote;
+            }
+        } else if (current.value === Tool.Loop) {
+            if (timelineItemRightEdgeBeingHovered.value) {
+                ret = MouseDownActions.LengthenItem;
+                currentMouseStringHelper.value = "⟷ i";
+            } else if (timelineItemBeingHovered.value) {
+                // ret = MouseDownActions.MoveItem;
+                ret = MouseDownActions.MoveItem;
+            } else {
+                ret = MouseDownActions.CreateLoop;
             }
         }
         return ret;
@@ -361,6 +391,7 @@ export const useToolStore = defineStore("edit", () => {
 
     const mouseDown = (e: MouseEvent) => {
         const mouseAction = whatWouldMouseDownDo();
+        engagedMouseAction.value = mouseAction;
         const mouse = {
             x: e.clientX,
             y: e.clientY,
@@ -537,8 +568,8 @@ export const useToolStore = defineStore("edit", () => {
             // first mouse drag tick, when it's copying; a special event bc. notes have to be duplicated only
             // once, and under these very specific conditions
             // sets a threshold of movement before copying 
-            if (isDragging && noteBeingDragged && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
-                
+            if (isDragging && noteBeingDragged.value && copyOnDrag.value && !alreadyDuplicatedForThisDrag) {
+
                 if (Math.abs(mouseDelta.x) > 30 || Math.abs(mouseDelta.y) > 30) {
                     snap.resetSnapExplanation();
                     alreadyDuplicatedForThisDrag = true;
@@ -560,7 +591,7 @@ export const useToolStore = defineStore("edit", () => {
                 }
                 refresh = true;
             } else if (isDragging && noteBeingDragged.value && selection.isSelected(noteBeingDragged.value)) {
-                
+
                 snap.resetSnapExplanation();
                 noteBeingDragged.value.dragMove(mouseDelta);
 
@@ -589,7 +620,7 @@ export const useToolStore = defineStore("edit", () => {
                 });
                 refresh = true;
             } else if (isDragging && noteBeingDraggedRightEdge.value) {
-                
+
                 snap.resetSnapExplanation();
                 noteBeingDraggedRightEdge.value.dragLengthMove(mouseDelta);
                 notesBeingDraggedRightEdge.forEach(editNote => {
@@ -608,8 +639,8 @@ export const useToolStore = defineStore("edit", () => {
                 if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
                 const timeMovement = view.pxToTime(mouseDelta.x);
                 const originalLength = timelineItemWhenDragStrted.timeEnd - timelineItemWhenDragStrted.time;
-                timelineItemBeingDragged.value.time =  timelineItemWhenDragStrted.time + timeMovement;
-                
+                timelineItemBeingDragged.value.time = timelineItemWhenDragStrted.time + timeMovement;
+
                 const snapped = snap.snapTimeRange({
                     inTimeRange: timelineItemBeingDragged.value,
                     otherNotes: project.score,
@@ -620,14 +651,14 @@ export const useToolStore = defineStore("edit", () => {
                 Object.assign(timelineItemBeingDragged.value, snapped);
 
             } else if (isDragging && timelineItemBeingDraggedRightEdge.value) {
-                
+
 
                 snap.resetSnapExplanation();
                 if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
                 const timeMovement = view.pxToTime(mouseDelta.x);
-                
+
                 timelineItemBeingDraggedRightEdge.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
-                
+
                 const snapped = snap.snapTimeRange({
                     inTimeRange: timelineItemBeingDraggedRightEdge.value,
                     otherNotes: project.score,
@@ -638,7 +669,7 @@ export const useToolStore = defineStore("edit", () => {
 
                 timelineItemBeingDraggedRightEdge.value.timeEnd = snapped.timeEnd;
 
-                
+
 
             } else {
                 updateNoteThatWouldBeCreated({
@@ -646,15 +677,13 @@ export const useToolStore = defineStore("edit", () => {
                     y: e.clientY,
                 });
             }
-        if (noteBeingDragged.value && noteBeingDragged.value.group) {
-            project.updateGroupBounds(noteBeingDragged.value.group)
-        }
         if (refresh) {
             view.forceRefreshVisibleNotes();
         }
     }
 
     const mouseUp = (e: MouseEvent) => {
+        engagedMouseAction.value = false;
         alreadyDuplicatedForThisDrag = false;
         isDragging = false;
         const mouse = {
@@ -676,8 +705,9 @@ export const useToolStore = defineStore("edit", () => {
         }
         noteBeingDragged.value = false;
         noteBeingDraggedRightEdge.value = false;
-        noteRightEdgeBeingHovered.value = false;
         notesBeingDraggedRightEdge = [];
+        timelineItemBeingDragged.value = false;
+        timelineItemBeingDraggedRightEdge.value = false;
     }
 
     watch(() => current, () => {

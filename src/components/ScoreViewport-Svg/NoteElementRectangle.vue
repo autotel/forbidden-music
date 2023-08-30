@@ -50,7 +50,7 @@ onUnmounted(() => {
         :class="{
             selected: eventRect.event.selected,
             editable: isEditable,
-        }" :...=eventRect.rightEdge :width="eventRect.radius" :height="eventRect.height" 
+        }" :...=eventRect.rightEdge :width="view.rightEdgeWidth" :height="eventRect.height" 
     />
 </template>
 <style scoped>

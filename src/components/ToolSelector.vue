@@ -39,10 +39,6 @@ const toggleSelectTool = () => {
       Copy
     </Button>
 
-    <Button :active="tool.showReferenceKeyboard"
-      :onClick="() => tool.showReferenceKeyboard = !tool.showReferenceKeyboard">
-      keybooard
-    </Button>
 
     <Button :tooltip="`undo [${k(KeyActions.Undo)}]`" :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
       ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
@@ -51,14 +47,22 @@ const toggleSelectTool = () => {
       ↷
     </Button>
 
+    <!-- 
     <Button :onClick="toggleSelectTool" :active="tool.whatWouldMouseDownDo() === MouseDownActions.AreaSelect"
       :tooltip="`Select [${k(KeyActions.ActivateAreaSelectionMode)}]`">
       Select
+    </Button> -->
+    <Button :onClick="(e) => {
+      tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
+    }" :active="tool.current == Tool.Modulation"
+      :tooltip="`Modulation mode [${k(KeyActions.ActivateModulationMode)}]`">
+      Modulation
     </Button>
     <Button :onClick="(e) => {
-      tool.current = Tool.Modulation
-    }" :active="tool.current == Tool.Modulation" :tooltip="`Modulation mode [${k(KeyActions.ActivateModulationMode)}]`">
-      Modulation
+      tool.current = tool.current === Tool.Loop ? Tool.Edit : Tool.Loop;
+    }" :active="tool.current == Tool.Loop"
+      :tooltip="`Loop mode [${k(KeyActions.ActivateLoopMode)}]`">
+      Loop
     </Button>
     <div class="group">
       <label>Constrain</label>
@@ -76,14 +80,14 @@ const toggleSelectTool = () => {
 </template>
 
 <style scoped>
-
 #tools-container {
-    bottom: 0;
-    display: flex;
-    position: relative;
-    align-items: center;
-    flex-wrap: wrap;
+  bottom: 0;
+  display: flex;
+  position: relative;
+  align-items: center;
+  flex-wrap: wrap;
 }
+
 .selected {
   background-color: #888;
   /* color: rgb(196, 0, 0); */

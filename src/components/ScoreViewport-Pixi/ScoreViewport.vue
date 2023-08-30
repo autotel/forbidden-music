@@ -9,7 +9,7 @@ import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { layerNoteColors, useViewStore } from '../../store/viewStore';
+import { layerNoteColors, useViewStore, TimelineItemRect } from '../../store/viewStore';
 import { baseFrequency } from '../../functions/toneConverters';
 import { TimelineItem } from '../../dataTypes/TimelineItem';
 
@@ -36,8 +36,17 @@ const props = defineProps<{
     height: number,
 }>();
 
-let noteBeingRightEdgeHovered: EditNote | null = null;
-let otherItemRightEdgeHovered: TimelineItem | null = null;
+let thingBeingHovered: TimelineItemRect | null = null;
+let isHoverRightEdge = false;
+
+const didHoverChange = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
+    if(hoveredThing === thingBeingHovered && isRightEdge === isHoverRightEdge) return false;
+    return true;
+}
+const hoverChanged = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
+    thingBeingHovered = hoveredThing;
+    isHoverRightEdge = isRightEdge;
+}
 
 const mouseMoveListener = (e: MouseEvent) => {
     const notesAtCoords = view.everyNoteAtCoordinates(
@@ -51,51 +60,38 @@ const mouseMoveListener = (e: MouseEvent) => {
         e.offsetY
     );
 
-    const firstNoteRect = notesAtCoords[0];
-    const firstItemRect = otherItemsAtCoords[0];
+    const firstNoteRect = notesAtCoords[0] || null;
+    const firstItemRect = otherItemsAtCoords[0] || null;
 
-    if (firstItemRect) {
-        const isRightEdge = firstItemRect.rightEdge ? (
-            (e.offsetX > firstItemRect.rightEdge?.x - rightEdgeWidth)
+    const hoveredThing = firstNoteRect || firstItemRect || null;
+    const isRightEdge =  hoveredThing.rightEdge ? (
+            (e.offsetX > hoveredThing.rightEdge?.x - rightEdgeWidth)
         ) : false;
-        if (isRightEdge) {
-            tool.timelineItemRightEdgeMouseEnter(firstItemRect.event);
-            otherItemRightEdgeHovered = firstItemRect.event;
-        } else {
-            tool.timelineItemMouseEnter(firstItemRect.event);
-        }
-    } else if (firstNoteRect) {
-        const isRightEdge = firstNoteRect.rightEdge ? (
-            (e.offsetX > firstNoteRect.rightEdge?.x - rightEdgeWidth)
-        ) : false;
-        if (isRightEdge) {
-            if (noteBeingRightEdgeHovered !== firstNoteRect.event) {
+
+    if(didHoverChange(hoveredThing, isRightEdge)){
+        if(firstNoteRect){
+            if(isRightEdge){
                 tool.noteRightEdgeMouseEnter(firstNoteRect.event as EditNote);
-                noteBeingRightEdgeHovered = firstNoteRect.event as EditNote;
+            }else{
+                tool.noteRightEdgeMouseLeave();
+                tool.noteMouseEnter(firstNoteRect.event as EditNote);
             }
-        } else if (noteBeingRightEdgeHovered) {
-            tool.noteRightEdgeMouseLeave();
-            noteBeingRightEdgeHovered = null;
-            tool.noteMouseEnter(firstNoteRect.event as EditNote);
-        } else {
-            tool.noteMouseEnter(firstNoteRect.event as EditNote);
-        }
-    } else if (noteBeingRightEdgeHovered) {
-        tool.noteRightEdgeMouseLeave();
-    } else if (!firstNoteRect && tool.noteBeingHovered) {
-        tool.noteMouseLeave();
-        tool.timelineItemMouseLeave();
-        if (noteBeingRightEdgeHovered) {
-            tool.noteRightEdgeMouseLeave();
-            noteBeingRightEdgeHovered = null;
-        }
-
-    }else{
-        if (otherItemRightEdgeHovered) {
+        }else if(firstItemRect){
+            if(isRightEdge){
+                tool.timelineItemRightEdgeMouseEnter(firstItemRect.event);
+            }else{
+                tool.timelineItemRightEdgeMouseLeave();
+                tool.timelineItemMouseEnter(firstItemRect.event);
+            }
+        }else{
+            tool.timelineItemMouseLeave();
             tool.timelineItemRightEdgeMouseLeave();
-            otherItemRightEdgeHovered = null;
+            tool.noteMouseLeave();
+            tool.noteRightEdgeMouseLeave();
         }
     }
+    hoverChanged(hoveredThing, isRightEdge);
+
 }
 
 let deltaTime = 0;

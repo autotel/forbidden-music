@@ -4,9 +4,9 @@ import { EditNote } from "../dataTypes/EditNote.js";
 import { getNotesInRange } from "../functions/getNotesInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { usePlaybackStore } from "./playbackStore.js";
-import { useProjectStore } from "./projectStore.js";
+import { Loop, useProjectStore } from "./projectStore.js";
 import { useLayerStore } from "./layerStore.js";
-import { TimelineItem } from "../dataTypes/TimelineItem.js";
+import { TimeRange, TimelineItem } from "../dataTypes/TimelineItem.js";
 import { timeEnd } from "console";
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -86,7 +86,7 @@ export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16)
 //     return measureCallTime(this.name, this);
 // }
 
-export interface TimelineItemRect <T extends TimelineItem = TimelineItem> {
+export interface TimelineItemRect<T extends TimelineItem = TimelineItem> {
     event: T;
 
     // key: number;
@@ -96,16 +96,16 @@ export interface TimelineItemRect <T extends TimelineItem = TimelineItem> {
     width: number;
     height: number;
 
-    radius: number;
-    cx: number;
-    cy: number;
+    radius?: number;
+    cx?: number;
+    cy?: number;
 
     rightEdge?: {
         x: number;
         y: number;
     };
 }
-export interface NoteRect extends TimelineItemRect{
+export interface NoteRect extends TimelineItemRect {
     event: EditNote;
 }
 
@@ -151,17 +151,11 @@ export const useViewStore = defineStore("view", () => {
         });
     });
 
-    const visibleOtherItems = computed((): TimelineItem[] => {
+    const visibleLoops = computed((): Loop[] => {
         visibleNotesRefreshKey.value;
-        const items = [] as TimelineItem[];
-        if (playback.loop) items.push(playback.loop);
+        const items = [...project.loops] as Loop[];
 
         return items.filter((item) => {
-            if ('octaveEnd' in item) {
-                if (!(isOctaveInView(item.octaveEnd) && isOctaveInView(item.octave))) return false;
-            } else if ('octave' in item) {
-                if (!isOctaveInView(item.octave)) return false;
-            }
             return item.timeEnd >= timeOffset.value && item.time <= timeOffset.value + viewWidthTime.value;
         });
 
@@ -185,12 +179,15 @@ export const useViewStore = defineStore("view", () => {
         })
     });
 
-    const visibleOtherItemRects = computed((): TimelineItemRect[] => {
-        return visibleOtherItems.value.map((item) => {
-            let r = rectOfTimelineItem(item);
+    const visibleLoopRects = computed((): TimelineItemRect<Loop>[] => {
+        return visibleLoops.value.map((item) => {
+            let r = rectOfLoop(item) as TimelineItemRect<Loop>;
             return r;
         })
     });
+    
+    // todo: un-hardcode this everywhere
+    const rightEdgeWidth = 10;
 
     const rectOfNote = (note: EditNote): NoteRect => {
         let rect = {
@@ -211,7 +208,7 @@ export const useViewStore = defineStore("view", () => {
         if (note.duration) {
             if (!note.timeEnd) console.warn("note has duration but no timeEnd", note)
             rect.rightEdge = {
-                x: rect.x + rect.width,
+                x: rect.x + rect.width - rightEdgeWidth,
                 y: rect.y,
             };
         }
@@ -220,37 +217,23 @@ export const useViewStore = defineStore("view", () => {
 
 
 
-    const rectOfTimelineItem = (item: TimelineItem): TimelineItemRect => {
+    const rectOfLoop = (item: TimeRange ): TimelineItemRect<Loop> => {
         const itemDuration = item.timeEnd - item.time;
-        let itemOctaveHeight = viewHeightOctaves.value;
-
-        if ('octaveEnd' in item) {
-            itemOctaveHeight = Math.abs(item.octaveEnd - item.octave);
-        }
 
         let rect = {
             x: timeToPxWithOffset(item.time),
-            y: 'octave' in item ? octaveToPxWithOffset(item.octave) : 0,
+            y: 40,
             width: timeToPx(itemDuration),
-            height: Math.abs(octaveToPx(itemOctaveHeight)),
-            radius: 0,
+            height: 40,
             event: item,
-            // key: tkey++,
-        } as TimelineItemRect
+            
+        } as TimelineItemRect<Loop>;
 
+        rect.rightEdge = {
+            x: rect.x + rect.width - rightEdgeWidth,
+            y: rect.y,
+        };
 
-        rect.radius = rect.height / 2;
-        rect.cx = rect.x;
-        rect.cy = rect.y;
-        if (rect.width === 0) {
-            rect.y -= rect.radius;
-        }
-        if (rect.width) {
-            rect.rightEdge = {
-                x: rect.x + rect.width,
-                y: rect.y,
-            };
-        }
         return rect;
     }
 
@@ -306,6 +289,8 @@ export const useViewStore = defineStore("view", () => {
             const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
             const isThin = noteRect.width === 0;
 
+            if(!noteRect.radius) throw new Error("no radius");
+
             if (isThin && (
                 x >= noteRect.x - noteRect.radius &&
                 x <= noteRect.x + noteRect.radius &&
@@ -337,8 +322,8 @@ export const useViewStore = defineStore("view", () => {
         return items;
     };
 
-    const everyOtherItemAtCoordinates = (x: number, y: number): TimelineItemRect[] => {
-        let itemRects = visibleOtherItemRects.value;
+    const everyLoopAtCoordinates = (x: number, y: number): TimelineItemRect[] => {
+        let itemRects = visibleLoopRects.value;
         itemRects = itemRects.filter((itemRect) => {
             if (
                 x >= itemRect.x &&
@@ -477,7 +462,7 @@ export const useViewStore = defineStore("view", () => {
         pxRangeOf,
         rangeToStrictRect,
         rectOfNote,
-        rectOfTimelineItem,
+        rectOfLoop,
 
         isOctaveInView,
         isNoteInView,
@@ -498,11 +483,12 @@ export const useViewStore = defineStore("view", () => {
         visibleNotes,
 
         visibleNoteRects,
-        visibleOtherItemRects,
+        visibleLoopRects,
 
         everyNoteAtCoordinates,
-        everyOtherItemAtCoordinates,
+        everyLoopAtCoordinates,
         followPlayback,
+        rightEdgeWidth,
 
         applyRatioToTime,
         setOctaveToTimeRatio,

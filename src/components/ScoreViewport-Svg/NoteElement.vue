@@ -21,7 +21,7 @@ const props = defineProps<{
 // I had to add an ungly "key" that counts till infinite to force the component to rerender
 // a better solution perhaps would be to dereference on mount
 const noteBody = ref<SVGRectElement>();
-const rightEdge = ref<SVGRectElement>();
+
 const myColor = computed(() => {
     const color = layerNoteColorStrings[props.eventRect.event.layer];
     return color;
@@ -33,22 +33,12 @@ const bodyMouseEnterListener = (e: MouseEvent) => {
 const bodyMouseLeaveListener = (e: MouseEvent) => {
     tool.noteMouseLeave();
 }
-const rightEdgeMouseEnterListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseEnter(props.eventRect.event);
-}
-const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseLeave();
-}
 
 onMounted(() => {
     if (props.interactionDisabled) return;
     if (noteBody.value) {
         noteBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
-    }
-    if (rightEdge.value) {
-        rightEdge.value.addEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
     }
 });
 onUnmounted(() => {
@@ -57,14 +47,10 @@ onUnmounted(() => {
         noteBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
     }
-    if (rightEdge.value) {
-        rightEdge.value.removeEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
-    }
 });
 
 const isEditable = computed(() => {
-    return tool.current == Tool.Edit && tool.currentlyActiveGroup === props.eventRect.event.group;
+    return tool.current == Tool.Edit || tool.current == Tool.Modulation;
 })
 </script>
 <template>
@@ -72,12 +58,12 @@ const isEditable = computed(() => {
         (2^{{
             eventRect.event.octave.toFixed(3)
         }})n = {{
-            eventRect.event.frequency.toFixed(3)
-        }} hz {{
-            eventRect.event.group?.name
-        }}
+    eventRect.event.frequency.toFixed(3)
+}} hz {{
+    eventRect.event.group?.name
+}}
     </text>
-    <g ref="noteBody">
+    <g ref="noteBody" :class="{ mouseblock: !isEditable }">
         <NoteElementRectangle v-if="eventRect.event.duration > 0" :eventRect="eventRect" :isEditable="isEditable"
             :fill="myColor" />
         <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
@@ -85,3 +71,8 @@ const isEditable = computed(() => {
             :selected="eventRect.event.selected" :fill="myColor" />
     </g>
 </template>
+<style scoped>
+.mouseblock {
+    pointer-events: none;
+}
+</style>

@@ -228,6 +228,10 @@ const keyDownListener = (e: KeyboardEvent) => {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
             break;
         }
+        case KeyActions.ActivateLoopMode: {
+            tool.current = tool.current === Tool.Loop ? Tool.Edit : Tool.Loop;
+            break;
+        }
         case KeyActions.MuteSelectedEvents: {
             selection.getNotes().forEach(eNote => eNote.mute = !eNote.mute);
             break;
