@@ -726,19 +726,20 @@ export const useSnapStore = defineStore("snap", () => {
 
 
     /** has side effects to snap explanations */
-    interface TimeRangeSnapParams {
-        inTimeRange: TimeRange,
+    interface TimeRangeSnapParams<T extends TimeRange> {
+        inTimeRange: T,
         otherNotes?: Array<EditNote>,
         sideEffects?: boolean,
     }
-    const snapTimeRange = ({
+    const snapTimeRange = <T extends TimeRange>({
         inTimeRange,
         otherNotes,
         sideEffects = true,
-    }: TimeRangeSnapParams) => {
+    }: TimeRangeSnapParams<T>): T => {
         otherNotes = filterSnapNotes(otherNotes);
 
-        const output = {
+        const output: T & { duration: number } = {
+            ...inTimeRange,
             time: inTimeRange.time,
             timeEnd: inTimeRange.timeEnd,
             duration: inTimeRange.timeEnd - inTimeRange.time,
@@ -753,16 +754,16 @@ export const useSnapStore = defineStore("snap", () => {
             durationSnap,
             snapValues
         });
+
         output.time = timeSnap.getResult();
+
         if (sideEffects) {
             timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
         }
 
-
         if (durationSnap) output.duration = durationSnap.getResult();
 
         return output;
-
     }
 
     return {

@@ -52,6 +52,12 @@ onBeforeUnmount(() => {
                 :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
+        <g id="group-would-be-created">
+            <LoopRangeElement
+                v-if="tool.loopThatWouldBeCreated" 
+                :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
+                interactionDisabled />
+        </g>
         <g id="loop-range-container">
             <LoopRangeElement v-for="loopRect in view.visibleLoopRects" :eventRect="loopRect" />
         </g>

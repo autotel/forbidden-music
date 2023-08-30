@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { Tool } from '../dataTypes/Tool';
-import { useProjectStore } from './projectStore';
+import { Loop, useProjectStore } from './projectStore';
 import { OctaveRange, TimeRange, TimelineItem } from '../dataTypes/TimelineItem';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
@@ -22,6 +22,7 @@ export enum MouseDownActions {
     SetSelectionAndDrag,
     RemoveFromSelectionAndDrag,
     CreateNote,
+    CreateLoop,
     LengthenNote,
     DragNoteVelocity,
     CopyNote,
@@ -29,7 +30,6 @@ export enum MouseDownActions {
     MoveNotes,
     LengthenItem,
     MoveItem,
-    CreateLoop,
 }
 
 
@@ -67,7 +67,7 @@ export const useToolStore = defineStore("tool", () => {
     const disallowTimeChange = ref(false);
     const currentMouseStringHelper = ref("");
 
-    let newNoteDragX = 0;
+    let newLoopDragX = 0;
 
     // TODO: add a enum to select different abstractions of tone.
     // so, if using 12 tet, the text in the note is going to be semitones
@@ -75,8 +75,10 @@ export const useToolStore = defineStore("tool", () => {
     // and if rational hz, it would display hz and relationships
     // etc..
     const notesBeingCreated = ref<Array<EditNote>>([]);
+    const loopsBeingCreated = ref<Array<TimelineItem>>([]);
 
     const noteThatWouldBeCreated = ref<EditNote | false>(false);
+    const loopThatWouldBeCreated = ref<Loop | false>(false);
 
     let engagedMouseAction = ref<MouseDownActions | false>(false);
 
@@ -128,6 +130,7 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.AreaSelectNotes:
                 return 'cursor-area-select';
             case MouseDownActions.CreateNote:
+            case MouseDownActions.CreateLoop:
             default:
                 return 'cursor-draw';
         }
@@ -167,7 +170,7 @@ export const useToolStore = defineStore("tool", () => {
     }
     const noteRightEdgeMouseLeave = () => {
         noteRightEdgeBeingHovered.value = false;
-        if(noteBeingHovered.value){
+        if (noteBeingHovered.value) {
             noteMouseEnter(noteBeingHovered.value);
         }
     }
@@ -179,12 +182,16 @@ export const useToolStore = defineStore("tool", () => {
         noteRightEdgeBeingHovered.value = false;
         timelineItemRightEdgeBeingHovered.value = false;
 
+        loopThatWouldBeCreated.value = false;
+
         timelineItemBeingHovered.value = editNote;
     }
     const timelineItemRightEdgeMouseEnter = (editNote: TimelineItem) => {
         // unhover all other but don't unhover item body
         noteBeingHovered.value = false;
         noteRightEdgeBeingHovered.value = false;
+
+        loopThatWouldBeCreated.value = false;
 
         timelineItemRightEdgeBeingHovered.value = editNote;
     }
@@ -194,7 +201,7 @@ export const useToolStore = defineStore("tool", () => {
     }
     const timelineItemRightEdgeMouseLeave = () => {
         timelineItemRightEdgeBeingHovered.value = false;
-        if(timelineItemBeingHovered.value){
+        if (timelineItemBeingHovered.value) {
             timelineItemMouseEnter(timelineItemBeingHovered.value);
         }
     }
@@ -266,6 +273,7 @@ export const useToolStore = defineStore("tool", () => {
                 ret = MouseDownActions.MoveItem;
             } else {
                 ret = MouseDownActions.CreateLoop;
+                currentMouseStringHelper.value = "loop";
             }
         }
         return ret;
@@ -458,13 +466,25 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.CreateNote:
                 if (!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
-                newNoteDragX = e.clientX;
+                newLoopDragX = e.clientX;
                 const cloned = noteThatWouldBeCreated.value.clone();
                 notesBeingCreated.value = [cloned];
                 noteBeingDraggedRightEdge.value = cloned;
                 noteRightEdgeBeingHovered.value = cloned;
                 _lengthenDragStartAction(mouse);
                 break;
+            case MouseDownActions.CreateLoop:
+                if (!loopThatWouldBeCreated.value) throw new Error('no loopThatWouldBeCreated');
+                newLoopDragX = e.clientX;
+                const clonedLoop = { ...loopThatWouldBeCreated.value };
+                loopsBeingCreated.value = [clonedLoop];
+                timelineItemBeingDraggedRightEdge.value = clonedLoop;
+                timelineItemRightEdgeBeingHovered.value = clonedLoop;
+                _lengthenDragStartAction(mouse);
+                break;
+
+
+
             case MouseDownActions.None:
                 break;
         }
@@ -499,12 +519,16 @@ export const useToolStore = defineStore("tool", () => {
         }
     }, 25);
 
-    const updateNoteThatWouldBeCreated = (mouse: { x: number, y: number }) => {
+    const updateItemThatWouldBeCreated = (mouse: { x: number, y: number }) => {
         const { x, y } = mouse;
         // if out of view, false
         if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
             noteThatWouldBeCreated.value = false;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateNote) {
+            // TODO: there should be more shared groudn beteween note and loop that would be created
+            // but this requires refactoring snap to accept either
+            // Additionally, I'd like to make editNotes an object like the loops,
+            // or the other way around
             const freeNote = new EditNote({
                 time: view.pxToTimeWithOffset(x),
                 duration: 0,
@@ -528,10 +552,30 @@ export const useToolStore = defineStore("tool", () => {
             freeNote.apply(snapNote);
 
             return;
+        } else if (whatWouldMouseDownDo() === MouseDownActions.CreateLoop) {
+            const t = view.pxToTimeWithOffset(x);
+            const freeLoop = {
+                time: t,
+                timeEnd: t,
+                count: 1,
+            } as Loop;
+
+            const snappedLoop:Loop = snap.snapTimeRange({
+                inTimeRange: freeLoop,
+                otherNotes: project.score,
+                sideEffects: true,
+            });
+
+            loopThatWouldBeCreated.value = snappedLoop;
+
+            // so that it displays the lines towards the snapped pos and not the mouse pos
+            Object.assign(freeLoop, snappedLoop);
+
+            return;
         } else {
             noteThatWouldBeCreated.value = false;
+            loopThatWouldBeCreated.value = false;
         }
-
     }
 
     const mouseMove = (e: MouseEvent) => {
@@ -556,7 +600,7 @@ export const useToolStore = defineStore("tool", () => {
             lastVelocitySet = notesBeingDragged.reduce((acc, n) => acc + n.velocity, 0) / notesBeingDragged.length;
         } else if (notesBeingCreated.value.length === 1) {
             snap.resetSnapExplanation();
-            const deltaX = e.clientX - newNoteDragX;
+            const deltaX = e.clientX - newLoopDragX;
             notesBeingCreated.value[0].duration = clampToZero(view.pxToTime(deltaX));
             const editNote = snap.snap({
                 inNote: notesBeingCreated.value[0] as EditNote,
@@ -664,15 +708,16 @@ export const useToolStore = defineStore("tool", () => {
                     otherNotes: project.score,
                     sideEffects: true,
                 });
-
-                snapped.timeEnd = timelineItemWhenDragStrted.time + snapped.duration;
+                
+                const snappedDuration = snapped.timeEnd - snapped.time;
+                snapped.timeEnd = timelineItemWhenDragStrted.time + snappedDuration;
 
                 timelineItemBeingDraggedRightEdge.value.timeEnd = snapped.timeEnd;
 
 
 
             } else {
-                updateNoteThatWouldBeCreated({
+                updateItemThatWouldBeCreated({
                     x: e.clientX,
                     y: e.clientY,
                 });
@@ -714,6 +759,9 @@ export const useToolStore = defineStore("tool", () => {
         if (whatWouldMouseDownDo() !== MouseDownActions.CreateNote) {
             noteThatWouldBeCreated.value = false;
         }
+        if(whatWouldMouseDownDo() !== MouseDownActions.CreateLoop) {
+            loopThatWouldBeCreated.value = false;
+        }
     })
 
     return {
@@ -736,6 +784,7 @@ export const useToolStore = defineStore("tool", () => {
         cursor,
         whatWouldMouseDownDo,
         noteThatWouldBeCreated,
+        loopThatWouldBeCreated,
         currentMouseStringHelper,
 
         current, currentLeftHand,
