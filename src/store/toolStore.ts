@@ -175,7 +175,6 @@ export const useToolStore = defineStore("tool", () => {
 
 
     const timelineItemMouseEnter = (editNote: TimelineItem) => {
-        console.log("timelineItemMouseEnter");
         // unhover all other including right edge
         noteBeingHovered.value = false;
         noteRightEdgeBeingHovered.value = false;
@@ -195,7 +194,6 @@ export const useToolStore = defineStore("tool", () => {
         timelineItemRightEdgeBeingHovered.value = editNote;
     }
     const timelineItemMouseLeave = () => {
-        console.log("timelineItemMouseLeave");
         timelineItemRightEdgeBeingHovered.value = false;
         timelineItemBeingHovered.value = false;
     }
@@ -697,9 +695,6 @@ export const useToolStore = defineStore("tool", () => {
                 snap.resetSnapExplanation();
                 if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
                 const timeMovement = view.pxToTime(mouseDelta.x);
-
-                console.log("lenghtening loop");
-
                 timelineItemBeingDraggedRightEdge.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
 
                 const snapped = snap.snapTimeRange({
