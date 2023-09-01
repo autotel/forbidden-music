@@ -5,6 +5,7 @@ import { useToolStore } from '../../store/toolStore';
 const props = defineProps<{
     x: number,
     y: number,
+    onClick?: () => void,
     tooltip?: string
 }>();
 
@@ -46,7 +47,7 @@ onBeforeUnmount(() => {
         :y="y"
         rx="6"
         ry="6"
-        
+        :onClick="onClick"
         width="20" 
         height="20"     
     />
@@ -64,11 +65,13 @@ onBeforeUnmount(() => {
 </template>
 <style scoped>
     rect {
-        fill: rgba(0, 0, 0, 0);
+        fill: rgba(0, 0, 0, 0.041);
         stroke: #0005;
+        cursor: pointer;
     }
     text {
         font-size: 20px;
         fill: #0005;
+        pointer-events: none;
     }
 </style>
