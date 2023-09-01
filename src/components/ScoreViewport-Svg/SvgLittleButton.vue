@@ -1,26 +1,43 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useToolStore } from '../../store/toolStore';
 
-defineProps<{
+const props = defineProps<{
     x: number,
     y: number,
+    tooltip?: string
 }>();
 
 const tool = useToolStore();
 const body = ref<SVGRectElement>();
 const bodyMouseEnterListener = (e: MouseEvent) => {
+    if(!props.tooltip) return;
     e.stopImmediatePropagation();
     if (body.value) {
-        tool.tooltip = 'double click to change count';
-        tool.tooltipOwner = noteBody.value;
+        tool.tooltip = props.tooltip;
+        tool.tooltipOwner = body.value;
     }
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
+    if(tool.tooltipOwner !== body.value) return;
     e.stopImmediatePropagation();
     tool.tooltip = '';
     tool.tooltipOwner = null;
 }
+
+onMounted(() => {
+    if (body.value) {
+        body.value.addEventListener('mouseenter', bodyMouseEnterListener);
+        body.value.addEventListener('mouseleave', bodyMouseLeaveListener);
+    }
+});
+onBeforeUnmount(() => {
+    if (body.value) {
+        body.value.removeEventListener('mouseenter', bodyMouseEnterListener);
+        body.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
+    }
+});
+
 </script>
 <template>
     <rect 

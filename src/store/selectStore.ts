@@ -2,7 +2,6 @@ import { throttledWatch } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
-import { Group } from '../dataTypes/Group';
 import { TimeRange, TimeRangeOctaveRange, TimeRangeOctaveRangeVelocityRange, TimeRangeVelocityRange, TimelineSelectableItem } from '../dataTypes/TimelineItem';
 import { getNotesInRange } from '../functions/getNotesInRange';
 import { useProjectStore } from './projectStore';
@@ -12,30 +11,6 @@ import { useLayerStore } from './layerStore';
 
 
 export type SelectableRange = TimeRange | TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange;
-
-
-const getGroupsInRange = (
-    groups: Group[],
-    range: {
-        startTime: number,
-        timeEnd: number,
-        octave: number,
-        octaveEnd: number
-    }
-) => {
-    // range is expected to come in positive ranges
-    const timeStart = range.startTime;
-    const timeEnd = range.timeEnd;
-    const octaveStart = range.octave;
-    const octaveEnd = range.octaveEnd;
-
-    return groups.filter((group) => {
-        const octaveBound = [group.octave, group.octaveEnd];
-        const octaveInRange = octaveBound[0] >= octaveStart && octaveBound[1] <= octaveEnd;
-        const timeInRange = group.time >= timeStart && group.timeEnd <= timeEnd;
-        return octaveInRange && timeInRange;
-    });
-};
 
 
 export const useSelectStore = defineStore("select", () => {
@@ -52,17 +27,11 @@ export const useSelectStore = defineStore("select", () => {
     const refreshNoteSelectionState = () => {
         project.score.forEach(n => n.selected = isSelected(n))
     }
-    const refreshGroupSelectionState = () => {
-        project.groups.forEach(g => g.selected = isSelected(g))
-    }
     /**
      * get selected notes
      */
     const getNotes = (): EditNote[] => {
         return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
-    };
-    const getGroups = (): Group[] => {
-        return [...selected.value].filter((n) => n instanceof Group) as Group[];
     };
 
     const select = (...items: TimelineSelectableItem[]) => {
@@ -146,7 +115,7 @@ export const useSelectStore = defineStore("select", () => {
         selectAll,
         addRange,
         add, select, toggle,
-        getNotes, getGroups,
+        getNotes, 
         clear: clear, remove,
         isSelected,
         selected,

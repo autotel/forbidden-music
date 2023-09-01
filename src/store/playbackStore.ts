@@ -316,7 +316,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     });
 
     const resetLoopRepetitions = () => {
-
+        loopNow = undefined;
         project.loops.forEach((loop) => {
             loop.repetitionsLeft = loop.count;
         });
@@ -570,6 +570,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         paused,
         stopped,
         channels,
+        resetLoopRepetitions,
         play,
         stop,
         pause,

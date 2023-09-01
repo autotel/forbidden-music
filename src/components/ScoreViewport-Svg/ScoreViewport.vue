@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import GroupElement from './GroupElement.vue';
-import TimeGrid from './MusicTimeGrid.vue';
-import NoteElement from './NoteElement.vue';
-import LoopRangeElement from './LoopRangeElement.vue';
-import RangeSelection from './RangeSelection.vue';
-import ToneGrid from './ToneGrid.vue';
-import ToneRelation from './ToneRelation.vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { layerNoteColors, useViewStore } from '../../store/viewStore';
-import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useViewStore } from '../../store/viewStore';
+import LoopRangeElement from './LoopRangeElement.vue';
+import TimeGrid from './MusicTimeGrid.vue';
+import NoteElement from './NoteElement.vue';
+import RangeSelection from './RangeSelection.vue';
+import ToneGrid from './ToneGrid.vue';
+import ToneRelation from './ToneRelation.vue';
 
 const project = useProjectStore();
 const tool = useToolStore();
@@ -52,11 +51,17 @@ onBeforeUnmount(() => {
                 :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
-        <g id="group-would-be-created">
+        <g id="loop-would-be-created">
             <LoopRangeElement
                 v-if="tool.loopThatWouldBeCreated" 
                 :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
-                interactionDisabled />
+                interactionDisabled /> 
+        </g>
+        <g id="loops-being-created">
+            <LoopRangeElement
+                v-for="loop in tool.loopsBeingCreated" 
+                :eventRect="view.rectOfLoop(loop)"
+                interactionDisabled /> 
         </g>
         <g id="loop-range-container">
             <LoopRangeElement v-for="loopRect in view.visibleLoopRects" :eventRect="loopRect" />

@@ -2,12 +2,11 @@ import Fraction from 'fraction.js';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { EditNote } from '../dataTypes/EditNote';
+import { TimeRange } from '../dataTypes/TimelineItem';
+import { getNotesInRange } from '../functions/getNotesInRange';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import colundi from '../scales/colundi';
-import { getNotesInRange } from '../functions/getNotesInRange';
 import { useViewStore } from './viewStore';
-import { TimeRange } from '../dataTypes/TimelineItem';
-import { devLog } from '../functions/isDev';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -735,7 +734,7 @@ export const useSnapStore = defineStore("snap", () => {
         inTimeRange,
         otherNotes,
         sideEffects = true,
-    }: TimeRangeSnapParams<T>): T => {
+    }: TimeRangeSnapParams<T>): T & { duration: number } => {
         otherNotes = filterSnapNotes(otherNotes);
 
         const output: T & { duration: number } = {
@@ -761,7 +760,9 @@ export const useSnapStore = defineStore("snap", () => {
             timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
         }
 
-        if (durationSnap) output.duration = durationSnap.getResult();
+        if (durationSnap) {
+            output.duration = durationSnap.getResult();
+        }
 
         return output;
     }

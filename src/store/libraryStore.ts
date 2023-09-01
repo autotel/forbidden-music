@@ -2,20 +2,21 @@ import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
 import { Note, NoteDefb } from '../dataTypes/Note';
+import nsLocalStorage from '../functions/nsLocalStorage';
 import { SynthParamStored } from '../synth/SynthInterface';
-import { useProjectStore } from './projectStore';
-import { useViewStore } from './viewStore';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { userCustomPerformanceSettings } from './customSettingsStore';
-import nsLocalStorage from '../functions/nsLocalStorage';
+import { Loop, LoopDef, useProjectStore } from './projectStore';
+import { useViewStore } from './viewStore';
+import { TimeRange } from '../dataTypes/TimelineItem';
 
-const version = "0.2.0";
+const version = "0.3.0";
+export const LIBRARY_VERSION = version;
 
-
-export interface LibraryItem_0_1_0 {
+interface LibraryItem_0_1_0 {
     version: string;
     name: string;
-    notes: Array<GroupNoteDef>;
+    notes: Array<NoteDefb & { groupId: number }>;
     created: Number;
     edited: Number;
     snaps: Array<[string, boolean]>;
@@ -25,6 +26,27 @@ export interface LibraryItem_0_1_0 {
     };
     bpm?: number;
 }
+
+interface LibraryItem_0_2_0 extends LibraryItem_0_1_0 {
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    channels: {
+        type: string;
+        params: Array<SynthParamStored>;
+    }[];
+    customOctavesTable?: number[];
+    snap_simplify?: number;
+}
+
+
+interface LibraryItem_0_3_0 extends LibraryItem_0_2_0 {
+    loops: LoopDef[],
+}
+
+export type LibraryItem = LibraryItem_0_3_0;
 
 const migrators = {
     "0.0.0": (obj: any) => {
@@ -38,8 +60,8 @@ const migrators = {
         if (!obj.bpm) obj.bpm = 120;
         return obj;
     },
-    "0.1.0": (obj: LibraryItem_0_1_0): LibraryItem => {
-        const newObj = Object.assign({}, obj) as LibraryItem & {
+    "0.1.0": (obj: LibraryItem_0_1_0): LibraryItem_0_2_0 => {
+        const newObj = Object.assign({}, obj) as LibraryItem_0_2_0 & {
             instrument?: {
                 type: string;
                 params: Array<SynthParamStored>;
@@ -54,34 +76,16 @@ const migrators = {
         }
         return newObj;
     },
+    "0.2.0": (obj: LibraryItem_0_1_0): LibraryItem_0_3_0 => {
+        const newObj = Object.assign({}, obj) as LibraryItem_0_3_0 & {
+            loops: [],
+        };
+        newObj.version = "0.3.0";
+        return newObj;
+    },
 }
 
 
-
-export type GroupNoteDef = NoteDefb & {
-    groupId: number;
-}
-
-export interface LibraryItem {
-    version: string;
-    name: string;
-    notes: Array<GroupNoteDef>;
-    created: Number;
-    edited: Number;
-    snaps: Array<[string, boolean]>;
-    customOctavesTable?: number[];
-    snap_simplify?: number;
-    channels: {
-        type: string;
-        params: Array<SynthParamStored>;
-    }[];
-    layers: {
-        channelSlot: number;
-        visible: boolean;
-        locked: boolean;
-    }[];
-    bpm: number;
-}
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 

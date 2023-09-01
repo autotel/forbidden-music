@@ -1,15 +1,13 @@
+import { useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
+import { EditNote } from '../dataTypes/EditNote';
+import { OctaveRange, TimeRange, TimelineItem } from '../dataTypes/TimelineItem';
 import { Tool } from '../dataTypes/Tool';
 import { Loop, useProjectStore } from './projectStore';
-import { OctaveRange, TimeRange, TimelineItem } from '../dataTypes/TimelineItem';
+import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
-import { useThrottleFn } from '@vueuse/core';
-import { EditNote } from '../dataTypes/EditNote';
-import { Group } from '../dataTypes/Group';
-import { SelectableRange, useSelectStore } from './selectStore';
-import { devLog } from '../functions/isDev';
 
 const clampToZero = (n: number) => n < 0 ? 0 : n;
 
@@ -75,7 +73,7 @@ export const useToolStore = defineStore("tool", () => {
     // and if rational hz, it would display hz and relationships
     // etc..
     const notesBeingCreated = ref<Array<EditNote>>([]);
-    const loopsBeingCreated = ref<Array<TimelineItem>>([]);
+    const loopsBeingCreated = ref<Array<Loop>>([]);
 
     const noteThatWouldBeCreated = ref<EditNote | false>(false);
     const loopThatWouldBeCreated = ref<Loop | false>(false);
@@ -177,6 +175,7 @@ export const useToolStore = defineStore("tool", () => {
 
 
     const timelineItemMouseEnter = (editNote: TimelineItem) => {
+        console.log("timelineItemMouseEnter");
         // unhover all other including right edge
         noteBeingHovered.value = false;
         noteRightEdgeBeingHovered.value = false;
@@ -196,6 +195,7 @@ export const useToolStore = defineStore("tool", () => {
         timelineItemRightEdgeBeingHovered.value = editNote;
     }
     const timelineItemMouseLeave = () => {
+        console.log("timelineItemMouseLeave");
         timelineItemRightEdgeBeingHovered.value = false;
         timelineItemBeingHovered.value = false;
     }
@@ -269,7 +269,6 @@ export const useToolStore = defineStore("tool", () => {
                 ret = MouseDownActions.LengthenItem;
                 currentMouseStringHelper.value = "⟷ i";
             } else if (timelineItemBeingHovered.value) {
-                // ret = MouseDownActions.MoveItem;
                 ret = MouseDownActions.MoveItem;
             } else {
                 ret = MouseDownActions.CreateLoop;
@@ -695,11 +694,11 @@ export const useToolStore = defineStore("tool", () => {
                 Object.assign(timelineItemBeingDragged.value, snapped);
 
             } else if (isDragging && timelineItemBeingDraggedRightEdge.value) {
-
-
                 snap.resetSnapExplanation();
                 if (!timelineItemWhenDragStrted) throw new Error('no timelineItemWhenDragStrted');
                 const timeMovement = view.pxToTime(mouseDelta.x);
+
+                console.log("lenghtening loop");
 
                 timelineItemBeingDraggedRightEdge.value.timeEnd = timelineItemWhenDragStrted.timeEnd + timeMovement;
 
@@ -709,13 +708,7 @@ export const useToolStore = defineStore("tool", () => {
                     sideEffects: true,
                 });
                 
-                const snappedDuration = snapped.timeEnd - snapped.time;
-                snapped.timeEnd = timelineItemWhenDragStrted.time + snappedDuration;
-
-                timelineItemBeingDraggedRightEdge.value.timeEnd = snapped.timeEnd;
-
-
-
+                timelineItemBeingDraggedRightEdge.value.timeEnd = timelineItemBeingDraggedRightEdge.value.time + snapped.duration;
             } else {
                 updateItemThatWouldBeCreated({
                     x: e.clientX,
@@ -741,6 +734,10 @@ export const useToolStore = defineStore("tool", () => {
         if (notesBeingCreated.value.length && e.button !== 1) {
             project.appendNote(...notesBeingCreated.value);
             notesBeingCreated.value = [];
+        }
+        if (loopsBeingCreated.value.length && e.button !== 1) {
+            project.loops.push(...loopsBeingCreated.value);
+            loopsBeingCreated.value = [];
         }
         if (noteBeingDraggedRightEdge.value) {
             noteBeingDraggedRightEdge.value = false;
@@ -783,22 +780,24 @@ export const useToolStore = defineStore("tool", () => {
 
         cursor,
         whatWouldMouseDownDo,
-        noteThatWouldBeCreated,
-        loopThatWouldBeCreated,
         currentMouseStringHelper,
-
+        
         current, currentLeftHand,
         simplify,
         copyOnDrag,
         disallowOctaveChange,
         disallowTimeChange,
         showReferenceKeyboard,
-
+        
         selectRange,
-
+        
+        noteThatWouldBeCreated,
         notesBeingCreated,
         notesBeingDragged,
         noteBeingHovered,
+        
+        loopThatWouldBeCreated,
+        loopsBeingCreated,
 
         currentLayerNumber,
 

@@ -356,15 +356,18 @@ export const useViewStore = defineStore("view", () => {
         return px / viewWidthPx.value;
     };
     const timeToBounds = (time: number): number => {
+        if(scrollBound.value === 0) return 0;
         return time / scrollBound.value;
     };
     const boundsToTime = (bounds: number): number => {
         return bounds * scrollBound.value;
     };
     const pxToTime = (time: number): number => {
+        if(viewWidthPx.value === 0) return 0;
         return (time * viewWidthTime.value) / viewWidthPx.value;
     };
     const timeToPx = (px: number): number => {
+        if(viewWidthTime.value === 0) return 0;
         return (px * viewWidthPx.value) / viewWidthTime.value;
     };
     const timeToPxWithOffset = (time: number): number => {
@@ -374,9 +377,11 @@ export const useViewStore = defineStore("view", () => {
         return pxToTime(px) + timeOffset.value;
     };
     const pxToOctave = (px: number): number => {
+        if(viewHeightPx.value === 0) return 0;
         return (px * -viewHeightOctaves.value) / viewHeightPx.value;
     };
     const octaveToPx = (octave: number): number => {
+        if(viewHeightOctaves.value === 0) return 0;
         return (octave * viewHeightPx.value) / -viewHeightOctaves.value;
     };
     const pxToOctaveWithOffset = (px: number): number => {
@@ -397,9 +402,11 @@ export const useViewStore = defineStore("view", () => {
     };
     const veloPXK = 4;
     const velocityToPx = (velocity: number): number => {
+        // if(veloPXK === 0) return 0;
         return (velocity * viewHeightPx.value) / veloPXK;
     };
     const pxToVelocity = (px: number): number => {
+        if(viewHeightPx.value === 0) return 0;
         return (px * veloPXK) / viewHeightPx.value;
     };
     const velocityToPxWithOffset = (velocity: number): number => {
@@ -411,6 +418,7 @@ export const useViewStore = defineStore("view", () => {
 
     let ratio = 1;
     const applyRatioToTime = () => {
+        if(viewWidthPx.value === 0) return 0;
         const viewPxRatio = viewWidthPx.value / viewHeightPx.value;
         viewWidthTime.value = viewHeightOctaves.value * (ratio * viewPxRatio);
     }
