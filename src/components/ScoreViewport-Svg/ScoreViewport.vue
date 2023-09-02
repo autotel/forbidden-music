@@ -57,12 +57,12 @@ onBeforeUnmount(() => {
                 :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
                 interactionDisabled /> 
         </g>
-        <g id="loops-being-created">
+        <!-- <g id="loops-being-created">
             <LoopRangeElement
                 v-for="loop in tool.loopsBeingCreated" 
                 :eventRect="view.rectOfLoop(loop)"
                 interactionDisabled /> 
-        </g>
+        </g> -->
         <g id="loop-range-container">
             <LoopRangeElement v-for="loopRect in view.visibleLoopRects" :eventRect="loopRect" />
         </g>
@@ -71,9 +71,9 @@ onBeforeUnmount(() => {
         <g id="edit-notes">
             <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect"  />
         </g>
-        <g id="notes-being-created">
+        <!-- <g id="notes-being-created">
             <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
-        </g>
+        </g> -->
         <RangeSelection />
     </svg>
 </template>
