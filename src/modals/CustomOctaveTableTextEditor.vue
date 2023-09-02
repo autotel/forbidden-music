@@ -5,6 +5,7 @@ import Toggle from '../components/inputs/Toggle.vue';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import { useSelectStore } from '../store/selectStore';
 import Button from '../components/Button.vue';
+import { getFrequency } from '../dataTypes/Note';
 
 const snap = useSnapStore();
 const valid = ref(false);
@@ -28,10 +29,10 @@ const arrayUnique = (arr: any[]) => {
     });
 }
 
-const setFromSelectedNotes = () =>{
+const setFromSelectedNotes = () => {
     const selected = select.getNotes();
     const octaves = arrayUnique(selected.map(n => n.octave));
-    const frequencies = arrayUnique(selected.map(n => n.frequency));
+    const frequencies = octaves.map(octaveToFrequency);
     octavesTableText.value = octaves.join(", ");
     frequenciesTableText.value = frequencies.join(", ");
     snap.customOctavesTable = octaves;
@@ -46,7 +47,7 @@ onMounted(() => {
     }
     // on edit octaves, update frequencies
     watchEffect(() => {
-        if(!frequencyMode.value) return;
+        if (!frequencyMode.value) return;
         try {
             const octaves = octavesTableText.value.split(",")
                 .filter(l => l)
@@ -67,7 +68,7 @@ onMounted(() => {
     });
     // on edit frequencies, update octaves
     watchEffect(() => {
-        if(frequencyMode.value) return;
+        if (frequencyMode.value) return;
         try {
             const frequencies = frequenciesTableText.value.split(",")
                 .filter(l => l)
@@ -93,11 +94,14 @@ onMounted(() => {
 
 <template>
     <div>
-        <h2>Paste or write {{frequencyMode?"frequencies":"octaves"}}.</h2>
+        <h2>Paste or write {{ frequencyMode ? "frequencies" : "octaves" }}.</h2>
         <p class="line">actually, I hope you are just going to paste them. Try heading to <a target="_blank"
                 href="https://autotel.co/tuning-explorer/">Tuning explorer</a></p>
         <p class="line">Or <Button :onClick="setFromSelectedNotes">set from selected notes</Button></p>
-        <span class="line"><Toggle v-model="frequencyMode" style="display:inline" />&nbsp;&Tab;Switch to {{frequencyMode?'octaves':'frequencies'}} (precision might be lost on each toggle) </span>
+        <span class="line">
+            <Toggle v-model="frequencyMode" style="display:inline" />&nbsp;&Tab;Switch to
+            {{ frequencyMode ? 'octaves' : 'frequencies' }} (precision might be lost on each toggle)
+        </span>
         <p class="line">Use period for decimal point, and comma to separate entries</p>
         <template v-if="frequencyMode">
             <textarea v-model="frequenciesTableText" style="width: 100%; height: 44em;"></textarea>
@@ -118,7 +122,7 @@ textarea {
     position: static;
     display: block;
 }
+
 .line {
     margin: 1em 0;
-}
-</style>
+}</style>

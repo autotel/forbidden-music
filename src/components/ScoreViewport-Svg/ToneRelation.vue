@@ -2,26 +2,30 @@
 import { computed } from 'vue';
 import { useSnapStore } from '../../store/snapStore';
 import { NoteRect, useViewStore } from '../../store/viewStore';
+import { TraceType } from '../../dataTypes/Trace';
+import { ScreenCoord } from '../../dataTypes/ScreenCoord';
 
 const snap = useSnapStore();
 const view = useViewStore();
 
-interface RelatedNoteRect extends NoteRect {
+interface RelatedTraceDisp extends ReturnType<typeof view.locationOfTrace> {
     text: string,
     relatedNumber?: number
 }
 
-const focusedNoteRect = computed(() => {
-    return snap.focusedNote ? view.rectOfNote(snap.focusedNote) : undefined;
+const focusedTraceRect = computed(() => {
+    if(snap.focusedTrace) {
+        return view.locationOfTrace(snap.focusedTrace);
+    }
 });
 
-const relatedNoteRects = computed<(RelatedNoteRect | undefined)[]>(() => {
+const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
     return snap.toneSnapExplanation.map((relation) => {
         return relation.relatedNote ? {
-            ...view.rectOfNote(relation.relatedNote),
+            ...view.locationOfTrace(relation.relatedNote),
             text: relation.text, 
             relatedNumber: relation.relatedNumber,
-        } as RelatedNoteRect: undefined;
+        } as RelatedTraceDisp: undefined;
     });
 });
 
@@ -29,44 +33,44 @@ const relatedNoteRects = computed<(RelatedNoteRect | undefined)[]>(() => {
 
 </script>
 <template>
-    <template v-for="relatedNoteRect in relatedNoteRects">
-        <template v-if="relatedNoteRect?.event && focusedNoteRect">
+    <template v-for="relatedTraceLoc in relatedTraceLocations">
+        <template v-if="relatedTraceLoc?.trace && focusedTraceRect">
             <line class="relation" 
-                :x1="focusedNoteRect.cx" 
-                :y1="focusedNoteRect.cy" 
-                :x2="focusedNoteRect.cx"
-                :y2="relatedNoteRect.cy"
+                :x1="focusedTraceRect.x" 
+                :y1="focusedTraceRect.y" 
+                :x2="focusedTraceRect.x"
+                :y2="relatedTraceLoc.y"
             />
             <line class="relation" 
-                :x1="focusedNoteRect.cx" 
-                :y1="relatedNoteRect.cy" 
-                :x2="relatedNoteRect.cx"
-                :y2="relatedNoteRect.cy"
+                :x1="focusedTraceRect.x" 
+                :y1="relatedTraceLoc.y" 
+                :x2="relatedTraceLoc.x"
+                :y2="relatedTraceLoc.y"
             />
             <text
-                :x="5 + focusedNoteRect.cx"
-                :y="5 + (focusedNoteRect.cy + relatedNoteRect.cy) / 2" 
+                :x="5 + focusedTraceRect.x"
+                :y="5 + (focusedTraceRect.y + relatedTraceLoc.y) / 2" 
                 font-size="10"
             >
-                {{ relatedNoteRect.text }}
+                {{ relatedTraceLoc.text }}
             </text>
         </template>
-        <template v-else-if="relatedNoteRect?.relatedNumber && focusedNoteRect">
+        <template v-else-if="relatedTraceLoc?.relatedNumber && focusedTraceRect">
             <text
-                :x="5 + focusedNoteRect.cx"
-                :y="24 + focusedNoteRect.cy"
+                :x="5 + focusedTraceRect.x"
+                :y="24 + focusedTraceRect.y"
                 font-size="10"
             >
-                {{ relatedNoteRect.text }}
+                {{ relatedTraceLoc.text }}
             </text>
         </template>
-        <template v-else-if="focusedNoteRect">
+        <template v-else-if="focusedTraceRect">
             <text
-                :x="5 + focusedNoteRect.cx"
-                :y="24 + focusedNoteRect.cy"
+                :x="5 + focusedTraceRect.x"
+                :y="24 + focusedTraceRect.y"
                 font-size="10"
             >
-                {{ relatedNoteRect?.text }}
+                {{ relatedTraceLoc?.text }}
             </text>
         </template>
         <template v-else>
@@ -75,7 +79,7 @@ const relatedNoteRects = computed<(RelatedNoteRect | undefined)[]>(() => {
                 :y="100" 
                 font-size="10"
             >
-                []{{ relatedNoteRect?.text }}{{ focusedNoteRect ? true : false }}
+                []{{ relatedTraceLoc?.text }}{{ focusedTraceRect ? true : false }}
             </text>
         </template>
     </template>

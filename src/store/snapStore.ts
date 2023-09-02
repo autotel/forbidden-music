@@ -1,22 +1,23 @@
 import Fraction from 'fraction.js';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
+import { Note } from '../dataTypes/Note';
 import { TimeRange } from '../dataTypes/TimelineItem';
-import { getNotesInRange } from '../functions/getNotesInRange';
+import { Trace, TraceType, cloneTrace } from '../dataTypes/Trace';
+import { getTracesInRange } from '../functions/getEventsInRange';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import colundi from '../scales/colundi';
 import { useViewStore } from './viewStore';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
-export type SnapExplanation<T = EditNote> = {
+export type SnapExplanation = {
     text: string;
-    relatedNote?: EditNote;
+    relatedNote?: Trace;
     relatedNumber?: number;
 };
 
-class SnapTracker<T = EditNote>{
+class SnapTracker {
     /** the smallest distance to a snap value found thus far */
     closestSnappedDistance: number | null = null;
     /** the resulting value corresponding to the closest snap */
@@ -28,10 +29,10 @@ class SnapTracker<T = EditNote>{
      * when a snap succeeds, it can also provide all the other objects that provide
      * the same snap
      */
-    snapValueToObjectMap = new Map<number, SnapExplanation<T>[]>();
+    snapValueToObjectMap = new Map<number, SnapExplanation[]>();
 
     /** instert a new snapped value to contend as teh closest snap point */
-    addSnappedValue(snappedValue: number, relatedSnapObject?: SnapExplanation<T>) {
+    addSnappedValue(snappedValue: number, relatedSnapObject?: SnapExplanation) {
         if (this.rawValue === null) {
             throw new Error("rawValue is null");
         }
@@ -265,7 +266,7 @@ export const useSnapStore = defineStore("snap", () => {
     const view = useViewStore();
     const simplify = ref<number>(0.12);
     const values = ref(snaps);
-    const focusedNote = ref(null as EditNote | null);
+    const focusedTrace = ref(null as Trace | null);
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
     const customOctavesTable = ref(colundi as number[]);
@@ -277,10 +278,10 @@ export const useSnapStore = defineStore("snap", () => {
         return candidateOctave !== Infinity && candidateOctave !== -Infinity && !isNaN(candidateOctave);
     }
 
-    /** sets a simple focusedNote flag for display purposes */
-    const setFocusedNote = (to: EditNote) => {
+    /** sets a simple focusedTrace flag for display purposes */
+    const setFocusedTrace = (to: Trace) => {
         resetSnapExplanation();
-        focusedNote.value = to;
+        focusedTrace.value = to;
     };
     const resetSnapExplanation = () => {
         timeSnapExplanation.value = [];
@@ -288,7 +289,7 @@ export const useSnapStore = defineStore("snap", () => {
     };
     interface OctaveSnapParams {
         targetOctave: number,
-        otherNotes: EditNote[] | undefined,
+        otherTraces: Trace[] | undefined,
         targetHz: number,
         snapValues: { [key: string]: SnapDefinition },
     }
@@ -301,19 +302,19 @@ export const useSnapStore = defineStore("snap", () => {
         });
     }
 
-    const filterSnapNotes = (otherNotes: EditNote[] | undefined) => {
-        if (otherNotes === undefined) return;
-        let returnValue = otherNotes
+    const filterSnapTraces = (list: Trace[]) => {
+        if (list === undefined) return;
+        let returnValue = list
         if (onlyWithMutednotes.value) {
-            returnValue = otherNotes.filter((editNote) => editNote.mute);
+            returnValue = list.filter((editNote) => (editNote.type === TraceType.Note && editNote.mute));
         }
         if (onlyWithNotesInView.value) {
-            returnValue = otherNotes.filter((editNote) => view.isNoteInView(editNote))
+            returnValue = list.filter((editNote) => editNote.type === TraceType.Note && view.isNoteInView(editNote))
         }
-        if (onlyWithSimultaneousNotes.value && focusedNote.value) {
-            returnValue = getNotesInRange(returnValue, {
-                time: focusedNote.value.time,
-                timeEnd: focusedNote.value.timeEnd,
+        if (onlyWithSimultaneousNotes.value && focusedTrace.value) {
+            returnValue = getTracesInRange(returnValue, {
+                time: focusedTrace.value.time,
+                timeEnd: focusedTrace.value.timeEnd,
             });
         }
         return returnValue;
@@ -322,11 +323,12 @@ export const useSnapStore = defineStore("snap", () => {
 
     const octaveSnaps = ({
         targetOctave,
-        otherNotes,
+        otherTraces,
         targetHz,
         snapValues,
     }: OctaveSnapParams) => {
-        otherNotes = filterSnapNotes(otherNotes);
+        otherTraces = otherTraces ? filterSnapTraces(otherTraces) : undefined;
+
         const toneSnap = new SnapTracker(targetOctave);
 
         if (snapValues.customFrequencyTable.active === true) {
@@ -379,19 +381,30 @@ export const useSnapStore = defineStore("snap", () => {
         }
 
 
-
         /** 
          * target / other = other * 1 / target
          * mycandidate = other
-         **/
-        if (otherNotes) {
+        **/
+        if (otherTraces) {
+            type TonalTrace = Note & { frequency: number };
+            const tonalTraces: (TonalTrace)[] =
+                (otherTraces.filter(t => t.type === TraceType.Note) as Note[])
+                    .map((note) => {
+                        // TODO: calculate only upon need, memoization
+                        const frequency = octaveToFrequency(note.octave);
+                        return {
+                            ...note,
+                            frequency,
+                        }
+                    }) as TonalTrace[];
+
             if (snapValues.arbitraryGridEDO.active === true) {
                 const gcd = (a: number, b: number): number => {
                     if (b === 0) return a;
                     return gcd(b, a % b);
                 }
 
-                const lowestTwoNotes = otherNotes.sort((a, b) => a.octave - b.octave).slice(0, 2);
+                const lowestTwoNotes = tonalTraces.sort((a, b) => a.octave - b.octave).slice(0, 2);
                 if (lowestTwoNotes.length === 2) {
                     const lowestNote = lowestTwoNotes[0];
                     const datumOctave = lowestNote.octave;
@@ -416,13 +429,14 @@ export const useSnapStore = defineStore("snap", () => {
 
                 }
             }
+
             if (snapValues.arbitraryGridHZ.active === true) {
                 const gcd = (a: number, b: number): number => {
                     if (b === 0) return a;
                     return gcd(b, a % b);
                 }
 
-                const lowestTwoNotes = otherNotes.sort((a, b) => a.frequency - b.frequency).slice(0, 2);
+                const lowestTwoNotes = tonalTraces.sort((a, b) => a.frequency - b.frequency).slice(0, 2);
                 if (lowestTwoNotes.length === 2) {
                     const lowestNote = lowestTwoNotes[0];
                     const datumFreq = lowestNote.frequency;
@@ -451,7 +465,7 @@ export const useSnapStore = defineStore("snap", () => {
 
 
             if (snapValues.hzRelationFraction.active === true) {
-                for (const otherNote of otherNotes) {
+                for (const otherNote of tonalTraces) {
                     const otherHz = otherNote.frequency;
                     const fraction = new Fraction(targetHz).div(otherHz).simplify(simplify.value);
                     const closeHzRatio = fraction.valueOf();
@@ -467,7 +481,7 @@ export const useSnapStore = defineStore("snap", () => {
                 // It is presumed that fraction includes all these possibilites
 
                 if (snapValues.hzMult.active === true) {
-                    for (const otherNote of otherNotes) {
+                    for (const otherNote of tonalTraces) {
                         const relatedNumber = Math.round(targetHz / otherNote.frequency) * otherNote.frequency;
                         let txt = "multiple of ";
                         if (relatedNumber === otherNote.frequency) txt = "equal to ";
@@ -480,7 +494,7 @@ export const useSnapStore = defineStore("snap", () => {
                 };
 
                 if (snapValues.hzHalfOrDouble.active === true) {
-                    for (const otherNote of otherNotes) {
+                    for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 2
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
                         const myCandidateHzHalf = otherNote.frequency / 2
@@ -503,7 +517,7 @@ export const useSnapStore = defineStore("snap", () => {
                     }
                 }
                 if (snapValues.hzThird.active === true) {
-                    for (const otherNote of otherNotes) {
+                    for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 3
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
                         const myCandidateHzHalf = otherNote.frequency / 3
@@ -520,7 +534,7 @@ export const useSnapStore = defineStore("snap", () => {
                     }
                 }
                 if (snapValues.hzFifth.active === true) {
-                    for (const otherNote of otherNotes) {
+                    for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 5
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
                         const myCandidateHzHalf = otherNote.frequency / 5
@@ -537,7 +551,7 @@ export const useSnapStore = defineStore("snap", () => {
                     }
                 }
                 if (snapValues.hzSeventh.active === true) {
-                    for (const otherNote of otherNotes) {
+                    for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 7
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
                         const myCandidateHzHalf = otherNote.frequency / 7
@@ -560,25 +574,27 @@ export const useSnapStore = defineStore("snap", () => {
     }
 
     interface TimeSnapParams {
-        otherNotes: EditNote[] | undefined,
-        subject: TimeRange | EditNote,
-        durationSnap: SnapTracker<TimeRange | EditNote> | false,
+        otherTraces: Trace[] | undefined,
+        subject: TimeRange | Trace,
+        durationSnap: SnapTracker | false,
         snapValues: { [key: string]: SnapDefinition },
     }
 
-    const timeSnaps = <T = EditNote>({
-        otherNotes,
+    const timeSnaps = <T = Trace>({
+        otherTraces,
         subject,
         durationSnap,
         snapValues,
     }: TimeSnapParams) => {
-        otherNotes = filterSnapNotes(otherNotes);
-        const timeSnap = new SnapTracker<T>(subject.time);
+
+        const timeSnap = new SnapTracker(subject.time);
+        const subjectDuration = subject.timeEnd - subject.time;
+
         if (snapValues.arbitraryTimeGrid.active === true) {
-            if (otherNotes) {
-                const earliestTwoNotes = otherNotes.sort((a, b) => a.time - b.time).slice(0, 2);
+            if (otherTraces) {
+                const earliestTwoNotes = otherTraces.sort((a, b) => a.time - b.time).slice(0, 2);
                 if (earliestTwoNotes.length === 2) {
-                    const earliestNote = earliestTwoNotes[0];
+                    const earliestNote: Trace | undefined = earliestTwoNotes[0];
                     const datumTime = earliestNote.time;
                     const timeInterval = earliestTwoNotes[1].time - earliestTwoNotes[0].time;
                     const offsetTargetTime = subject.time - datumTime;
@@ -607,8 +623,8 @@ export const useSnapStore = defineStore("snap", () => {
                 text: "Quarter snap",
                 relatedNumber,
             });
-            if (durationSnap && 'duration' in subject) {
-                const relatedNumberd = Math.round(subject.duration! * 4) / 4
+            if (durationSnap) {
+                const relatedNumberd = Math.round(subjectDuration * 4) / 4
                 durationSnap.addSnappedValue(relatedNumberd, {
                     text: "Quarter snap",
                     relatedNumber: relatedNumberd,
@@ -620,8 +636,8 @@ export const useSnapStore = defineStore("snap", () => {
                 text: "Integer snap",
                 relatedNumber: relatedStart,
             });
-            if (durationSnap && 'duration' in subject) {
-                const relatedDuration = Math.round(subject.duration!);
+            if (durationSnap) {
+                const relatedDuration = Math.round(subjectDuration);
                 durationSnap.addSnappedValue(relatedDuration, {
                     text: "Integer snap",
                     relatedNumber: relatedDuration,
@@ -630,8 +646,8 @@ export const useSnapStore = defineStore("snap", () => {
         }
 
         if (snapValues.sameStart.active === true) {
-            if (otherNotes) {
-                for (const otherNote of otherNotes) {
+            if (otherTraces) {
+                for (const otherNote of otherTraces) {
                     timeSnap.addSnappedValue(otherNote.time, {
                         text: "Same start",
                         relatedNote: otherNote,
@@ -641,8 +657,8 @@ export const useSnapStore = defineStore("snap", () => {
         }
 
         if (snapValues.timeIntegerRelationFraction.active === true) {
-            if (otherNotes) {
-                for (const otherNote of otherNotes) {
+            if (otherTraces) {
+                for (const otherNote of otherTraces) {
                     const otherStart = otherNote.time;
                     const closestStartFraction = new Fraction(subject.time).div(otherStart).simplify(simplify.value);
                     const closeStartRatio = closestStartFraction.valueOf();
@@ -660,27 +676,30 @@ export const useSnapStore = defineStore("snap", () => {
 
     /** has side effects to snap explanations */
     interface SnapParams {
-        inNote: EditNote,
-        targetOctave: number,
-        otherNotes?: Array<EditNote>,
+        inNote: Trace,
+        targetOctave?: number,
+        otherTraces?: Array<Trace>,
         sideEffects?: boolean,
         skipOctaveSnap?: boolean,
         skipTimeSnap?: boolean,
+        snapDuration?: boolean,
     }
+
     const snap = ({
         inNote,
         targetOctave,
-        otherNotes,
+        otherTraces,
         sideEffects = true,
         skipOctaveSnap = false,
         skipTimeSnap = false,
+        snapDuration = false,
     }: SnapParams) => {
-        otherNotes = filterSnapNotes(otherNotes);
+        otherTraces = otherTraces ? filterSnapTraces(otherTraces) : otherTraces;
         /** outNote */
-        const output = inNote.clone();
-        const targetHz = octaveToFrequency(targetOctave);
+        const output = cloneTrace(inNote);
 
-        const durationSnap = output.duration ? new SnapTracker(output.duration) : false;
+        const subjectDuration = output.timeEnd - output.time;
+        const durationSnap = snapDuration ? new SnapTracker(subjectDuration) : false;
 
         const snapValues = values.value as { [key: string]: SnapDefinition };
 
@@ -688,7 +707,7 @@ export const useSnapStore = defineStore("snap", () => {
         if (!skipTimeSnap) {
 
             const { timeSnap } = timeSnaps({
-                otherNotes,
+                otherTraces,
                 subject: output,
                 durationSnap,
                 snapValues
@@ -698,27 +717,32 @@ export const useSnapStore = defineStore("snap", () => {
                 timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
             }
         }
-        // Tone snaps
-        if (!skipOctaveSnap) {
-            const { toneSnap } = octaveSnaps({
-                otherNotes,
-                targetOctave,
-                targetHz,
-                snapValues
-            });
-            output.octave = toneSnap.getResult();
-            if (sideEffects) {
-                toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
+
+        if (targetOctave && output.type === TraceType.Note) {
+            const targetHz = octaveToFrequency(targetOctave);
+            // Tone snaps
+            if (!skipOctaveSnap) {
+                const { toneSnap } = octaveSnaps({
+                    otherTraces,
+                    targetOctave,
+                    targetHz,
+                    snapValues
+                });
+                output.octave = toneSnap.getResult();
+                if (sideEffects) {
+                    toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
+                }
             }
         }
 
-
-        if (durationSnap) output.duration = durationSnap.getResult();
-
-
+        if (snapDuration && durationSnap) {
+            // when snapping duration, we want to prevent shifting the start
+            // of the note, at least on all the current use cases
+            output.time = inNote.time;
+            output.timeEnd = output.time + durationSnap.getResult();
+        }
 
         return output;
-
     }
 
 
@@ -727,15 +751,15 @@ export const useSnapStore = defineStore("snap", () => {
     /** has side effects to snap explanations */
     interface TimeRangeSnapParams<T extends TimeRange> {
         inTimeRange: T,
-        otherNotes?: Array<EditNote>,
+        otherTraces?: Array<Trace>,
         sideEffects?: boolean,
     }
     const snapTimeRange = <T extends TimeRange>({
         inTimeRange,
-        otherNotes,
+        otherTraces,
         sideEffects = true,
     }: TimeRangeSnapParams<T>): T & { duration: number } => {
-        otherNotes = filterSnapNotes(otherNotes);
+        otherTraces = otherTraces ? filterSnapTraces(otherTraces) : otherTraces;
 
         const output: T & { duration: number } = {
             ...inTimeRange,
@@ -744,11 +768,11 @@ export const useSnapStore = defineStore("snap", () => {
             duration: inTimeRange.timeEnd - inTimeRange.time,
         }
 
-        const durationSnap = output.duration ? new SnapTracker<TimeRange>(output.duration) : false;
+        const durationSnap = output.duration ? new SnapTracker(output.duration) : false;
         const snapValues = values.value as { [key: string]: SnapDefinition };
 
         const { timeSnap } = timeSnaps({
-            otherNotes,
+            otherTraces,
             subject: output,
             durationSnap,
             snapValues
@@ -770,14 +794,14 @@ export const useSnapStore = defineStore("snap", () => {
     return {
         simplify,
         values,
-        focusedNote,
+        focusedTrace,
         timeSnapExplanation,
         toneSnapExplanation,
         customOctavesTable,
         onlyWithMutednotes,
         onlyWithSimultaneousNotes,
         onlyWithNotesInView,
-        setFocusedNote,
+        setFocusedTrace,
         resetSnapExplanation,
         snap,
         snapTimeRange,

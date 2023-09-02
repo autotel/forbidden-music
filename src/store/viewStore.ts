@@ -1,13 +1,14 @@
 import { defineStore } from "pinia";
-import { computed, ref, watch, watchEffect } from "vue";
-import { EditNote } from "../dataTypes/EditNote.js";
-import { getNotesInRange } from "../functions/getNotesInRange.js";
+import { computed, ref, watchEffect } from "vue";
+import { Loop } from "../dataTypes/Loop.js";
+import { Note, getDuration } from "../dataTypes/Note.js";
+import { TimeRange } from "../dataTypes/TimelineItem.js";
+import { Trace } from "../dataTypes/Trace.js";
+import { getNotesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
-import { usePlaybackStore } from "./playbackStore.js";
-import { Loop, useProjectStore } from "./projectStore.js";
 import { useLayerStore } from "./layerStore.js";
-import { TimeRange, TimelineItem } from "../dataTypes/TimelineItem.js";
-import { timeEnd } from "console";
+import { usePlaybackStore } from "./playbackStore.js";
+import { useProjectStore } from "./projectStore.js";
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
     g = g & 0xff;
@@ -86,7 +87,7 @@ export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16)
 //     return measureCallTime(this.name, this);
 // }
 
-export interface TimelineItemRect<T extends TimelineItem = TimelineItem> {
+export interface TimelineItemRect<T extends Trace = Trace> {
     event: T;
 
     // key: number;
@@ -106,7 +107,9 @@ export interface TimelineItemRect<T extends TimelineItem = TimelineItem> {
     };
 }
 export interface NoteRect extends TimelineItemRect {
-    event: EditNote;
+    event: Note;
+    cx: number;
+    cy: number;
 }
 
 const probe = (v: any) => {
@@ -140,7 +143,7 @@ export const useViewStore = defineStore("view", () => {
     // for example. Especially since the new canvas frame 
     // is going to ask for the coords anyways. 
     // they could be calculated only when asked, memoized too.
-    const visibleNotes = computed((): EditNote[] => {
+    const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
         const layerVisibleNotes = project.score.filter(({ layer }) => layers.isVisible(layer));
         return getNotesInRange(layerVisibleNotes, {
@@ -161,7 +164,7 @@ export const useViewStore = defineStore("view", () => {
 
     });
 
-    const isNoteInView = (note: EditNote) => {
+    const isNoteInView = (note: Note) => {
         return (
             note.time >= timeOffset.value &&
             note.time <= timeOffset.value + viewWidthTime.value &&
@@ -185,15 +188,16 @@ export const useViewStore = defineStore("view", () => {
             return r;
         })
     });
-    
+
     // todo: un-hardcode this everywhere
     const rightEdgeWidth = 10;
 
-    const rectOfNote = (note: EditNote): NoteRect => {
+    const rectOfNote = (note: Note): NoteRect => {
+        const duration = getDuration(note);
         let rect = {
             x: timeToPxWithOffset(note.time) || 0,
             y: octaveToPxWithOffset(note.octave) || 0,
-            width: timeToPx(note.duration) || 0,
+            width: timeToPx(duration) || 0,
             height: Math.abs(octaveToPx(1 / 12)) || 0,
             radius: 0,
             event: note,
@@ -205,8 +209,7 @@ export const useViewStore = defineStore("view", () => {
         rect.cy = rect.y;
         rect.y -= rect.radius;
 
-        if (note.duration) {
-            if (!note.timeEnd) console.warn("note has duration but no timeEnd", note)
+        if (duration) {
             rect.rightEdge = {
                 x: rect.x + rect.width - rightEdgeWidth,
                 y: rect.y,
@@ -217,7 +220,7 @@ export const useViewStore = defineStore("view", () => {
 
 
 
-    const rectOfLoop = (item: TimeRange ): TimelineItemRect<Loop> => {
+    const rectOfLoop = (item: TimeRange): TimelineItemRect<Loop> => {
         const itemDuration = item.timeEnd - item.time;
 
         let rect = {
@@ -226,7 +229,7 @@ export const useViewStore = defineStore("view", () => {
             width: timeToPx(itemDuration),
             height: 40,
             event: item,
-            
+
         } as TimelineItemRect<Loop>;
 
         rect.rightEdge = {
@@ -235,6 +238,14 @@ export const useViewStore = defineStore("view", () => {
         };
 
         return rect;
+    }
+
+    const locationOfTrace = (trace: Trace): { trace: Trace, x: number, y: number } => {
+        return {
+            trace: trace,
+            x: timeToPxWithOffset(trace.time),
+            y: 'octave' in trace ? octaveToPxWithOffset(trace.octave) : 0,
+        }
     }
 
 
@@ -289,7 +300,7 @@ export const useViewStore = defineStore("view", () => {
             const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
             const isThin = noteRect.width === 0;
 
-            if(!noteRect.radius) throw new Error("no radius");
+            if (!noteRect.radius) throw new Error("no radius");
 
             if (isThin && (
                 x >= noteRect.x - noteRect.radius &&
@@ -356,18 +367,18 @@ export const useViewStore = defineStore("view", () => {
         return px / viewWidthPx.value;
     };
     const timeToBounds = (time: number): number => {
-        if(scrollBound.value === 0) return 0;
+        if (scrollBound.value === 0) return 0;
         return time / scrollBound.value;
     };
     const boundsToTime = (bounds: number): number => {
         return bounds * scrollBound.value;
     };
     const pxToTime = (time: number): number => {
-        if(viewWidthPx.value === 0) return 0;
+        if (viewWidthPx.value === 0) return 0;
         return (time * viewWidthTime.value) / viewWidthPx.value;
     };
     const timeToPx = (px: number): number => {
-        if(viewWidthTime.value === 0) return 0;
+        if (viewWidthTime.value === 0) return 0;
         return (px * viewWidthPx.value) / viewWidthTime.value;
     };
     const timeToPxWithOffset = (time: number): number => {
@@ -377,11 +388,11 @@ export const useViewStore = defineStore("view", () => {
         return pxToTime(px) + timeOffset.value;
     };
     const pxToOctave = (px: number): number => {
-        if(viewHeightPx.value === 0) return 0;
+        if (viewHeightPx.value === 0) return 0;
         return (px * -viewHeightOctaves.value) / viewHeightPx.value;
     };
     const octaveToPx = (octave: number): number => {
-        if(viewHeightOctaves.value === 0) return 0;
+        if (viewHeightOctaves.value === 0) return 0;
         return (octave * viewHeightPx.value) / -viewHeightOctaves.value;
     };
     const pxToOctaveWithOffset = (px: number): number => {
@@ -406,7 +417,7 @@ export const useViewStore = defineStore("view", () => {
         return (velocity * viewHeightPx.value) / veloPXK;
     };
     const pxToVelocity = (px: number): number => {
-        if(viewHeightPx.value === 0) return 0;
+        if (viewHeightPx.value === 0) return 0;
         return (px * veloPXK) / viewHeightPx.value;
     };
     const velocityToPxWithOffset = (velocity: number): number => {
@@ -418,7 +429,7 @@ export const useViewStore = defineStore("view", () => {
 
     let ratio = 1;
     const applyRatioToTime = () => {
-        if(viewWidthPx.value === 0) return 0;
+        if (viewWidthPx.value === 0) return 0;
         const viewPxRatio = viewWidthPx.value / viewHeightPx.value;
         viewWidthTime.value = viewHeightOctaves.value * (ratio * viewPxRatio);
     }
@@ -471,6 +482,7 @@ export const useViewStore = defineStore("view", () => {
         rangeToStrictRect,
         rectOfNote,
         rectOfLoop,
+        locationOfTrace,
 
         isOctaveInView,
         isNoteInView,

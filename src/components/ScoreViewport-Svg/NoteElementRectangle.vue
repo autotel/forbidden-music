@@ -14,10 +14,10 @@ const props = defineProps<{
 const rightEdge = ref<SVGElement>();
 
 const rightEdgeMouseEnterListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseEnter(props.eventRect.event);
+    tool.timelineItemRightEdgeMouseEnter(props.eventRect.event);
 }
 const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseLeave();
+    tool.timelineItemRightEdgeMouseLeave();
 }
 
 onMounted(() => {

@@ -3,23 +3,24 @@ import Collapsible from './Collapsible.vue';
 
 import { computed, ref } from 'vue';
 import Tooltip from '../components/Tooltip.vue';
-import { EditNote } from '../dataTypes/EditNote';
+import { Note, getFrequency } from '../dataTypes/Note';
 import { useViewStore } from '../store/viewStore';
 import { useCustomSettingsStore } from '../store/customSettingsStore';
 import Guitar from '../components/icons/Guitar.vue';
+import { octaveToFrequency } from '../functions/toneConverters';
 
 const stringLength = ref<number>(100);
 const unit = ref<string>('%');
 const view = useViewStore();
 const userSettings = useCustomSettingsStore();
 
-const highestEvent = ref<EditNote | undefined>(undefined);
+const highestEvent = ref<Note | undefined>(undefined);
 const unique = (array: number[]) => {
     const set = new Set(array);
     return Array.from(set);
 }
 
-const lowestEvent = computed<EditNote | undefined>(() => {
+const lowestEvent = computed<Note | undefined>(() => {
     const use = view.visibleNotes;
     let lowest = use[0];
     // this is a cheat, but is guaranteed to work in this circumstance
@@ -121,7 +122,7 @@ const bridgeWidthPercent = 40;
             <div class="fret-percent-text" v-if="lowestEvent" :style="{
                 top: 100 * stringRatioOfEvent(lowestEvent) + '%',
             }">
-                string tuning: {{ lowestEvent.frequency }} hz
+                string tuning: {{ getFrequency(lowestEvent) }} hz
             </div>
 
 

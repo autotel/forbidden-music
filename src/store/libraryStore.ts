@@ -1,14 +1,14 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
-import { Note, NoteDefb } from '../dataTypes/Note';
+import { LoopDef } from '../dataTypes/Loop';
+import { Note, NoteDef } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
 import { SynthParamStored } from '../synth/SynthInterface';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { userCustomPerformanceSettings } from './customSettingsStore';
-import { Loop, LoopDef, useProjectStore } from './projectStore';
+import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
-import { TimeRange } from '../dataTypes/TimelineItem';
 
 const version = "0.3.0";
 export const LIBRARY_VERSION = version;
@@ -16,7 +16,7 @@ export const LIBRARY_VERSION = version;
 interface LibraryItem_0_1_0 {
     version: string;
     name: string;
-    notes: Array<NoteDefb & { groupId: number }>;
+    notes: Array<{ [key: string]: number | false } & { groupId: number }>;
     created: Number;
     edited: Number;
     snaps: Array<[string, boolean]>;
@@ -42,7 +42,33 @@ interface LibraryItem_0_2_0 extends LibraryItem_0_1_0 {
 }
 
 
-interface LibraryItem_0_3_0 extends LibraryItem_0_2_0 {
+type LibraryItem_0_3_0 = {
+
+    version: string;
+    name: string;
+    created: Number;
+    edited: Number;
+    snaps: Array<[string, boolean]>;
+    instrument?: {
+        type: string;
+        params: Array<SynthParamStored>;
+    };
+    bpm?: number;
+
+
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    channels: {
+        type: string;
+        params: Array<SynthParamStored>;
+    }[];
+    customOctavesTable?: number[];
+    snap_simplify?: number;
+
+    notes: NoteDef[];
     loops: LoopDef[],
 }
 
@@ -77,7 +103,7 @@ const migrators = {
         return newObj;
     },
     "0.2.0": (obj: LibraryItem_0_1_0): LibraryItem_0_3_0 => {
-        const newObj = Object.assign({}, obj) as LibraryItem_0_3_0 & {
+        const newObj = Object.assign({}, obj) as unknown as LibraryItem_0_3_0 & {
             loops: [],
         };
         newObj.version = "0.3.0";

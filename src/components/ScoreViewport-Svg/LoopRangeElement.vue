@@ -3,8 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
 import { TimelineItemRect, useViewStore } from '../../store/viewStore';
-import { Loop, useProjectStore } from '../../store/projectStore';
+import { useProjectStore } from '../../store/projectStore';
 import SvgLittleButton from './SvgLittleButton.vue';
+import { Loop } from '../../dataTypes/Loop';
 
 
 const view = useViewStore();

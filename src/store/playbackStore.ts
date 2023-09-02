@@ -17,11 +17,12 @@ import { MagicSampler } from '../synth/MagicSampler';
 import { SineSynth } from '../synth/SineSynth';
 import { OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinimum } from "../synth/SynthInterface";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
-import { Loop, useProjectStore } from './projectStore';
+import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
 import { useLayerStore } from "./layerStore";
 import { TimeRange } from "../dataTypes/TimelineItem";
-import { EditNote } from "../dataTypes/EditNote";
+import { Loop } from "../dataTypes/Loop";
+import { Note, getDuration, getFrequency } from "../dataTypes/Note";
 
 
 interface MidiInputInterface {
@@ -354,10 +355,10 @@ export const usePlaybackStore = defineStore("playback", () => {
         let catchUp = isFirtClockAfterPlay;
         isFirtClockAfterPlay = false;
 
-        let playNotes: EditNote[] = [];
+        let playNotes: Note[] = [];
         if (loopNow) {
             if (currentScoreTime.value >= loopNow.timeEnd) {
-                if(!loopNow.repetitionsLeft) throw new Error("loop repetitions left not set");
+                if (!loopNow.repetitionsLeft) throw new Error("loop repetitions left not set");
                 if (loopNow.repetitionsLeft > 1) {
                     currentScoreTime.value = loopNow.time;
                     catchUp = true;
@@ -378,17 +379,19 @@ export const usePlaybackStore = defineStore("playback", () => {
             if (!synth) return;
 
             try {
-                if (editNote.duration) {
-                    const noteDuration = editNote.duration / rate;
+                const frequency = getFrequency(editNote);
+                const duration = getDuration(editNote);
+                if (duration) {
+                    const noteDuration = duration / rate;
                     synth.triggerAttackRelease(
-                        editNote.frequency,
+                        frequency,
                         noteDuration,
                         noteStartFromNow,
                         editNote.velocity
                     );
                 } else {
                     synth.triggerPerc(
-                        editNote.frequency,
+                        frequency,
                         noteStartFromNow,
                         editNote.velocity
                     );
@@ -415,7 +418,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         previousClockTime.value = audioContext.currentTime;
         isFirtClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
-        
+
     }
 
     const stop = () => {

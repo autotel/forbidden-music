@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, layerNoteColorStrings, layerNoteColors, useViewStore } from '../../store/viewStore';
+import { NoteRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
@@ -28,10 +28,10 @@ const myColor = computed(() => {
 });
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    tool.noteMouseEnter(props.eventRect.event);
+    tool.timelineItemMouseEnter(props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
-    tool.noteMouseLeave();
+    tool.timelineItemMouseLeave();
 }
 
 onMounted(() => {
@@ -54,7 +54,7 @@ const isEditable = computed(() => {
 })
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 5" :x="eventRect.x" :y="eventRect.cy + 10" font-size="20">
+    <!-- <text class="texts" v-if="view.viewWidthTime < 5" :x="eventRect.x" :y="eventRect.cy + 10" font-size="20">
         (2^{{
             eventRect.event.octave.toFixed(3)
         }})n = {{
@@ -62,13 +62,13 @@ const isEditable = computed(() => {
 }} hz {{
     eventRect.event.group?.name
 }}
-    </text>
+    </text> -->
     <g ref="noteBody" :class="{ mouseblock: !isEditable }">
-        <NoteElementRectangle v-if="eventRect.event.duration > 0" :eventRect="eventRect" :isEditable="isEditable"
-            :fill="myColor" />
+        <NoteElementRectangle v-if="eventRect.width/*hasDuration(eventRect.event)*/" :eventRect="eventRect"
+            :isEditable="isEditable" :fill="myColor" />
         <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
         <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.cx"
-            :selected="eventRect.event.selected" :fill="myColor" />
+            :selected="eventRect.event.selected || false" :fill="myColor" />
     </g>
 </template>
 <style scoped>

@@ -1,46 +1,50 @@
 import { throttledWatch } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
-import { TimeRange, TimeRangeOctaveRange, TimeRangeOctaveRangeVelocityRange, TimeRangeVelocityRange, TimelineSelectableItem } from '../dataTypes/TimelineItem';
-import { getNotesInRange } from '../functions/getNotesInRange';
+import { OctaveRange, TimeRange, VelocityRange, } from '../dataTypes/TimelineItem';
+import { getNotesInRange } from '../functions/getEventsInRange';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
 import { useLayerStore } from './layerStore';
+import { Trace, TraceType } from '../dataTypes/Trace';
+import { Note, setSelection } from '../dataTypes/Note';
 
-
-export type SelectableRange = TimeRange | TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange;
-
+export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
-    const selected = ref(new Set() as Set<TimelineSelectableItem>);
+    const selected = ref(new Set() as Set<Trace>);
     const tool = useToolStore();
     const project = useProjectStore();
     const view = useViewStore();
     const layers = useLayerStore();
 
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
-    const isSelected = (item: TimelineSelectableItem) => {
+    const isSelected = (item: Trace) => {
         return selected.value.has(item);
     };
     const refreshNoteSelectionState = () => {
-        project.score.forEach(n => n.selected = isSelected(n))
+        // TODO: is it really necessary?
+        project.score.forEach(n => setSelection(n, isSelected(n)));
     }
     /**
      * get selected notes
      */
-    const getNotes = (): EditNote[] => {
-        return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
+    const getNotes = (): Note[] => {
+        return [...selected.value].filter((n) => n.type === TraceType.Note) as Note[];
     };
 
-    const select = (...items: TimelineSelectableItem[]) => {
+    const getTraces = () => {
+        return [...selected.value];
+    }
+
+    const select = (...items: Trace[]) => {
         selected.value.clear();
         selected.value = new Set(items);
         refreshNoteSelectionState();
     };
 
-    const toggle = (...notes: EditNote[]) => {
+    const toggle = (...notes: Trace[]) => {
         notes.forEach((n) => {
             if (selected.value.has(n)) {
                 selected.value.delete(n);
@@ -50,14 +54,14 @@ export const useSelectStore = defineStore("select", () => {
         });
         refreshNoteSelectionState();
     };
-    const remove = (...project: (EditNote)[]) => {
+    const remove = (...project: (Trace)[]) => {
         project.forEach((n) => {
             if (!n) return;
             selected.value.delete(n);
         });
         refreshNoteSelectionState();
     }
-    const add = (...editNote: (EditNote)[]) => {
+    const add = (...editNote: (Trace)[]) => {
         editNote.forEach((n) => {
             if (!n) return;
             selected.value.add(n);
@@ -115,6 +119,7 @@ export const useSelectStore = defineStore("select", () => {
         selectAll,
         addRange,
         add, select, toggle,
+        getTraces,
         getNotes, 
         clear: clear, remove,
         isSelected,

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { Note } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { useViewStore, NoteRect } from '../../store/viewStore';
-import { EditNote } from '../../dataTypes/EditNote';
+import { useViewStore } from '../../store/viewStore';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    event: EditNote
+    event: Note
     selected: boolean
     x: number
     interactionDisabled?: boolean
@@ -24,7 +24,7 @@ const myVeloLine = ref(getVeloLine());
 
 const conditionalRefreshLine = () => {
     if (props.interactionDisabled) return;
-    if(props.selected){
+    if (props.selected) {
         myVeloLine.value = getVeloLine();
     }
 }
@@ -35,7 +35,7 @@ onMounted(() => {
     window.addEventListener('scroll', conditionalRefreshLine);
     setTimeout(() => {
         myVeloLine.value = getVeloLine();
-    },0);
+    }, 0);
 });
 onUnmounted(() => {
     if (props.interactionDisabled) return;
@@ -57,14 +57,15 @@ onUnmounted(() => {
     </template>
 </template>
 <style scoped>
-
-line, circle {
+line,
+circle {
     stroke: rgba(0, 0, 0, 0.404);
     fill: #0000;
 }
 
 
-line.selected, circle.selected {
+line.selected,
+circle.selected {
     stroke: #f889;
     stroke-width: 3px;
 }

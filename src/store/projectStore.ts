@@ -1,27 +1,18 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { EditNote } from '../dataTypes/EditNote.js';
-import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
-import { TimeRange } from '../dataTypes/TimelineItem.js';
-import { getNotesInRange } from '../functions/getNotesInRange.js';
-import { ifDev } from '../functions/isDev.js';
-import { SynthInstance, SynthParam } from '../synth/SynthInterface.js';
-import { useLayerStore } from './layerStore.js';
-import { LIBRARY_VERSION, LibraryItem } from './libraryStore.js';
-import { SynthChannel, usePlaybackStore } from './playbackStore.js';
+import { Note, NoteDef, note } from '../dataTypes/Note';
+import { Loop, LoopDef } from '../dataTypes/Loop';
+import { TimeRange } from '../dataTypes/TimelineItem';
+import { getNotesInRange } from '../functions/getEventsInRange';
+import { ifDev } from '../functions/isDev';
+import { SynthInstance, SynthParam } from '../synth/SynthInterface';
+import { useLayerStore } from './layerStore';
+import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
+import { SynthChannel, usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
-import { useViewStore } from './viewStore.js';
-import { RefSymbol } from '@vue/reactivity';
-
-export interface Loop extends TimeRange {
-    count: number;
-    repetitionsLeft?: number;
-}
-
-export interface LoopDef extends TimeRange {
-    count?: number;
-}
+import { useViewStore } from './viewStore';
+import { Trace, TraceType } from '../dataTypes/Trace';
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -32,20 +23,19 @@ export const useProjectStore = defineStore("current project", () => {
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
 
-    const score = ref<EditNote[]>([]);
+    const score = ref<Note[]>([]);
     const loops = ref<Loop[]>([]);
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
     });
 
-    const serializeNotes = (notes: EditNote[]) => notes.map((editNote) => ({
-        frequency: editNote.frequency,
+    const serializeNotes = (notes: Note[]) => notes.map((editNote) => ({
+        octave: editNote.octave,
         time: editNote.time,
-        duration: editNote.duration,
+        timeEnd: editNote.timeEnd,
         mute: editNote.mute,
         velocity: editNote.velocity,
-        groupId: editNote.group?.id || null,
         layer: editNote.layer,
     }))
 
@@ -61,7 +51,7 @@ export const useProjectStore = defineStore("current project", () => {
         return ret;
     });
 
-    const stringifyNotes = (notes: EditNote[], zip: boolean = false) => {
+    const stringifyNotes = (notes: Note[], zip: boolean = false) => {
         let str = JSON.stringify(serializeNotes(notes));
         if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
         return str;
@@ -74,7 +64,7 @@ export const useProjectStore = defineStore("current project", () => {
         return str;
     }
 
-    const parseNotes = (str: string): EditNote[] => {
+    const parseNotes = (str: string): Note[] => {
         let json = str;
         let objNotes = [];
 
@@ -98,17 +88,20 @@ export const useProjectStore = defineStore("current project", () => {
         }
 
 
-        const editNotes = objNotes.map((maybeNote: unknown | NoteDefa | NoteDefb) => {
-            if (
-                (
-                    (maybeNote as NoteDefa).octave || (maybeNote as NoteDefb).frequency
-                ) && (maybeNote as NoteDefa).time
-            ) {
-                const n = new EditNote(maybeNote as NoteDefa, view);
-                return n;
-            }
-            return false;
-        }).filter((on: unknown) => on) as EditNote[];
+        const editNotes = objNotes.map((maybeNote: unknown | NoteDef) => {
+            if (typeof maybeNote !== "object") return false;
+            if (null === maybeNote) return false;
+            if (!('time' in maybeNote)) return false;
+            if (!('timeEnd' in maybeNote)) return false;
+            if (!('octave' in maybeNote)) return false;
+            if (!('velocity' in maybeNote)) return false;
+            if (!('mute' in maybeNote)) return false;
+            if (!('layer' in maybeNote)) return false;
+
+            return note({
+                ...maybeNote as NoteDef,
+            });
+        }).filter((on: unknown) => on) as Note[];
         if (editNotes.length === 0) {
             console.log("no notes found in parsed text");
             return [];
@@ -178,12 +171,12 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
 
-    const setFromListOfNoteDefinitions = (notes: (NoteDefa | NoteDefb)[]) => {
+    const setFromListOfNoteDefinitions = (notes: NoteDef[]) => {
         console.log("setFromListOfNoteDefinitions", notes);
-        score.value = notes.map((note) => {
-            const noteLayer = note.layer || 0;
+        score.value = notes.map((noteDef) => {
+            const noteLayer = noteDef.layer || 0;
             layers.getOrMakeLayerWithIndex(noteLayer);
-            return new EditNote(note, view)
+            return note(noteDef)
         });
     }
 
@@ -196,7 +189,7 @@ export const useProjectStore = defineStore("current project", () => {
         setFromListOfNoteDefinitions(pDef.notes);
 
 
-        const nLoops = pDef.loops.map((loop: LoopDef) => {
+        const nLoops: Loop[] = pDef.loops.map((loop: LoopDef) => {
             if (!('count' in loop)) {
                 loop.count = Infinity;
             }
@@ -204,7 +197,11 @@ export const useProjectStore = defineStore("current project", () => {
                 return loop as unknown as Loop;
             }
             console.error("invalid loop definition", loop);
-            return { time: 0, timeEnd: 0, count: 0 }
+            return {
+                time: 0,
+                timeEnd: 0,
+                count: 0,
+            } as Loop;
         })
 
         loops.value = nLoops;
@@ -257,8 +254,25 @@ export const useProjectStore = defineStore("current project", () => {
         loops.value = [];
     }
 
-    const appendNote = (...notes: EditNote[]) => {
+    const appendNote = (...notes: Note[]) => {
         score.value.push(...notes);
+    }
+
+    const append = (...traces: Trace[]) => {
+        let nnotes = [] as Note[];
+        let nloops = [] as Loop[];
+        traces.forEach((trace) => {
+            switch (trace.type) {
+                case TraceType.Note:
+                    nnotes.push(trace);
+                    break;
+                case TraceType.Loop:
+                    nloops.push(trace);
+                    break;
+            }
+        })
+        appendNote(...nnotes);
+        loops.value.push(...nloops);
     }
 
     const magicLoopDuplicator = (loop: Loop) => {
@@ -280,12 +294,15 @@ export const useProjectStore = defineStore("current project", () => {
             note.time += loopLength;
         })
         loopsAfterLoop.forEach((loop) => {
-            console.log("shift loop",loop.time);
+            console.log("shift loop", loop.time);
             loop.time += loopLength;
             loop.timeEnd += loopLength;
-            console.log(" >> ",loop.time);
+            console.log(" >> ", loop.time);
         })
-        score.value.push(...notesInLoop.map((note) => note.clone()));
+
+        // clone all notes in loop
+        score.value.push(...notesInLoop.map(note));
+
         notesInLoop.forEach((note) => {
             note.time += loopLength;
         })
@@ -293,16 +310,17 @@ export const useProjectStore = defineStore("current project", () => {
             time: loop.time + loopLength,
             timeEnd: loop.timeEnd + loopLength,
             count: loop.count,
-        });
+        } as Loop);
+
         if (loop.count === Infinity) {
             loop.count = 4;
             loop.repetitionsLeft = 1;
         }
-        
+
     }
 
     return {
-        score, loops,
+        score, loops, append,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
         stringifyLoops, parseLoops,

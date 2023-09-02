@@ -1,109 +1,85 @@
-import {
-  frequencyToOctave,
-  octaveToFrequency,
-} from "../functions/toneConverters";
-import { SelectableType, TimeRangeOctaveSelectable } from "./TimelineItem";
+import { octaveToFrequency } from "../functions/toneConverters";
+import Draggable from "./Draggable";
+import Selectable from "./Selectable";
+import { OctavePosition, TimeRange, VelocityPosition } from "./TimelineItem";
+import { Trace, TraceType } from "./Trace";
 
-
-export interface NoteDefa {
+interface timeDefA {
   time: number;
-  duration?: number;
+  duration: number;
+}
+
+interface timeDefB {
+  time: number;
+  timeEnd: number;
+}
+
+interface toneDefA {
   octave: number;
-  mute?: boolean;
-  velocity?: number;
-  layer?: number;
 }
-export interface NoteDefb {
-  time: number;
-  duration?: number;
+
+interface toneDefB {
   frequency: number;
-  mute?: boolean;
+}
+
+interface othersDef {
   velocity?: number;
+  mute?: boolean;
   layer?: number;
 }
+
+export type NoteDef = othersDef & (timeDefA | timeDefB) & (toneDefA | toneDefB);
 
 export const frequencyConstant = 11;
 
-export class Note implements TimeRangeOctaveSelectable{
-  type = SelectableType.Note;
-  /** time in score time */
-  time: number;
-  /** duration in score time */
-  duration: number;
-  selected: boolean;
-  mute: boolean;
+export type Note = TimeRange & OctavePosition & Selectable & Draggable & VelocityPosition & {
+  type: TraceType.Note;
   velocity: number;
-  layer: number | undefined;
-  _octave: number | null;
-  _frequency: number | null;
+  mute: boolean;
+  layer: number;
+}
 
-  apply(noteDef: NoteDefa | NoteDefb) {
-    this.time = noteDef.time;
-    this.duration = noteDef.duration || 0;
-    this.selected = false;
-    this.mute = noteDef.mute || false;
-    this.velocity = 0.7;
-    if('velocity' in noteDef){
-      this.velocity = noteDef.velocity as number;
-    }
-    this.frequency =
-      "frequency" in noteDef
-        ? noteDef.frequency
-        : octaveToFrequency(noteDef.octave);
-  }
+export const note = (noteDef: NoteDef | Note): Note => {
+  const timeEnd = 'duration' in noteDef ? noteDef.time + noteDef.duration : noteDef.timeEnd;
+  const octave = 'octave' in noteDef ? noteDef.octave : Math.floor(Math.log2(noteDef.frequency) * frequencyConstant);
+  const layer = noteDef.layer || 0;
+  const velocity = noteDef.velocity || 0.5;
+  const mute = noteDef.mute || false;
 
-  clone() {
-    return new Note({
-      time: this.time,
-      duration: this.duration,
-      octave: this.octave,
-      mute: this.mute,
-      velocity: this.velocity,
-    });
+  return {
+    type: TraceType.Note,
+    time: noteDef.time,
+    timeEnd,
+    layer,
+    velocity,
+    octave,
+    mute,
   }
+}
 
-  get timeEnd(): number {
-    return this.duration ? this.time + this.duration : this.time;
+export const noteDef = (note: Note): timeDefA & toneDefA & othersDef => {
+  return {
+    time: note.time,
+    duration: note.timeEnd - note.time,
+    octave: note.octave,
+    layer: 'layer' in note ? note.layer : 0,
   }
-  set timeEnd(value: number | undefined) {
-    if (value === undefined) {
-      this.duration = 0;
-      return;
-    }
-    this.duration = value - this.time;
-    if (this.duration < 0) {
-      throw new Error("end is less than time");
-    }
-  }
+}
 
-  get octave() {
-    if (this._octave === null) throw new Error("octave is null");
-    return this._octave;
+export const getFrequency = (note: Note): number => {
+  return octaveToFrequency(note.octave);
+}
+export const getDuration = (note: Note): number => {
+  return note.timeEnd - note.time;
+}
+export const hasDuration = (note: Note): boolean => {
+  return note.timeEnd !== note.time;
+}
+export const setSelection = (note: Note, selected: boolean): Note => {
+  if(selected) {
+    note.selected = true;
+  }else  {
+    delete note.selected;
   }
-  set octave(value: number) {
-    this._octave = value;
-    this._frequency = octaveToFrequency(value);
-  }
-
-  get frequency() {
-    if (this._frequency === null) throw new Error("freqency is null");
-    return this._frequency;
-  }
-  set frequency(value: number) {
-    this._frequency = value;
-    this._octave = frequencyToOctave(value);
-  }
-
-  constructor(noteDef: NoteDefa | NoteDefb) {
-    this.time = 0;
-    this.duration = 0;
-    this.selected = false;
-    this.mute = false;
-    this.velocity = 0;
-    this.frequency = 0;
-    this._octave = null;
-    this._frequency = null;
-
-    this.apply(noteDef);
-  }
+  return note;
 }

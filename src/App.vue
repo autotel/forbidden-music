@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch, watchEffect } from 'vue';
+import Fraction from 'fraction.js';
+import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
+import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
+import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
+import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
+import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
@@ -14,24 +19,17 @@ import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vu
 import Modal from './modals/Modal.vue';
 import UserDisclaimer from './modals/UserDisclaimer.vue';
 import Pane from './pane/Pane.vue';
+import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
+import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
-import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
-import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
-import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
-import TooltipDisplayer from './components/TooltipDisplayer.vue';
-import Autotel from './components/Autotel.vue';
-import { EditNote } from './dataTypes/EditNote';
-import { Note, NoteDefa, NoteDefb } from './dataTypes/Note';
-import { useSnapStore } from './store/snapStore';
-import Fraction from 'fraction.js';
+import { Trace } from './dataTypes/Trace';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -183,7 +181,7 @@ const keyDownListener = (e: KeyboardEvent) => {
                 const text = await navigator.clipboard.readText();
                 const editNotes = project.parseNotes(text);
                 if (tool.noteThatWouldBeCreated) {
-                    const datumNote = tool.noteThatWouldBeCreated as EditNote;
+                    const datumNote = tool.noteThatWouldBeCreated as Trace;
                     const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
                     const timeDiff = datumNote.time - earliestPastedNote.time;
 
@@ -290,16 +288,6 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         case KeyActions.OnlyAllowVerticalMovement: {
             tool.disallowTimeChange = !tool.disallowTimeChange;
-            break;
-        }
-        case KeyActions.Group: {
-            // not ready
-            ifDev(() => {
-                console.log("group");
-                project.setNotesGroupToNewGroup(selection.getNotes());
-                e.preventDefault();
-                e.stopPropagation();
-            }).elseLog("group feature in development");
             break;
         }
         case KeyActions.Reboot: {

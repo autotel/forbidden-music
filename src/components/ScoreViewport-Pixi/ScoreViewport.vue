@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as PIXI from 'pixi.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { EditNote } from '../../dataTypes/EditNote';
+import { Trace } from '../../dataTypes/Trace';
 import { Tool } from '../../dataTypes/Tool';
 import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { useGridsStore } from '../../store/gridsStore';
@@ -71,10 +71,10 @@ const mouseMoveListener = (e: MouseEvent) => {
     if(didHoverChange(hoveredThing, isRightEdge)){
         if(firstNoteRect){
             if(isRightEdge){
-                tool.noteRightEdgeMouseEnter(firstNoteRect.event as EditNote);
+                tool.noteRightEdgeMouseEnter(firstNoteRect.event as Trace);
             }else{
                 tool.noteRightEdgeMouseLeave();
-                tool.noteMouseEnter(firstNoteRect.event as EditNote);
+                tool.noteMouseEnter(firstNoteRect.event as Trace);
             }
         }else if(firstItemRect){
             if(isRightEdge){
@@ -267,8 +267,8 @@ const refreshView = (time: number) => {
 
     // draw snap explanations
     let snapExplTextsStart = textToUse - 1;
-    const snapFocusedItemRect = snap.focusedNote ? view.rectOfNote(
-        snap.focusedNote
+    const snapFocusedItemRect = snap.focusedTrace ? view.rectOfNote(
+        snap.focusedTrace
     ) : null;
     if (snapFocusedItemRect) {
         graphics.lineStyle(1, relationcolor, 0.5);
