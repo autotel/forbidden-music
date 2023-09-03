@@ -676,6 +676,7 @@ export const useSnapStore = defineStore("snap", () => {
     }
 
     /** has side effects to snap explanations */
+    /** TODO: these params are insane */
     interface SnapParams<T extends Trace> {
         inNote: T,
         targetOctave?: number,
@@ -718,7 +719,6 @@ export const useSnapStore = defineStore("snap", () => {
                 timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
             }
         }
-
         if (targetOctave && output.type === TraceType.Note) {
             const targetHz = octaveToFrequency(targetOctave);
             // Tone snaps

@@ -165,6 +165,8 @@ const mouseDragSelectedTraces = ({
             return ret;
         }),
         sideEffects: true,
+        targetOctave: preSnapDragTrace.octave,
+
         skipOctaveSnap: disallowOctaveChange.value,
         skipTimeSnap: disallowTimeChange.value,
     } as typeof snap.snap.arguments[0];
@@ -177,14 +179,16 @@ const mouseDragSelectedTraces = ({
         octaveDeltaAfterSnap = snappedTrace.octave - octaveWhenDragStarted
     }
 
-    drag.traces.map((editNoteI, index) => {
+    drag.traces.map((draggedTrace, index) => {
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
-        editNoteI.time = timeDeltaAfterSnap + correlativeDragStartClone.time;
-        editNoteI.timeEnd = timeDeltaAfterSnap + correlativeDragStartClone.timeEnd;
+        if (!correlativeDragStartClone) throw new Error('no correlativeDragStartClone');
 
-        if ('octave' in editNoteI) {
+        draggedTrace.time = timeDeltaAfterSnap + correlativeDragStartClone.time;
+        draggedTrace.timeEnd = timeDeltaAfterSnap + correlativeDragStartClone.timeEnd;
+
+        if ('octave' in draggedTrace) {
             if (!('octave' in correlativeDragStartClone)) throw new Error('no octave in correlativeDragStartClone');
-            editNoteI.octave = octaveDeltaAfterSnap + correlativeDragStartClone.octave;
+            draggedTrace.octave = octaveDeltaAfterSnap + correlativeDragStartClone.octave;
         }
     });
     // refresh = true;
@@ -533,9 +537,17 @@ export const useToolStore = defineStore("tool", () => {
                     currentLayerNumber.value = mouse.hovered?.trace.layer;
                 }
                 break;
+            case MouseDownActions.MoveItem:
+            case MouseDownActions.MoveNotes:
+                if (mouse.drag?.trace) {
+                    snap.setFocusedTrace(mouse.drag.trace);
+                }
+                break;
             case MouseDownActions.SetSelectionAndDrag: {
                 if (!mouse.drag?.trace) throw new Error('no trace dragged');
                 selection.select(mouse.drag.trace);
+                snap.setFocusedTrace(mouse.drag.trace);
+
                 if (mouse.drag) {
                     mouse.drag.traces = [mouse.drag.trace];
                     mouse.drag.tracesWhenDragStarted = [cloneTrace(mouse.drag.trace)];
@@ -547,9 +559,6 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.RemoveFromSelection:
                 if (!mouse.hovered?.trace) throw new Error('no traceBeingHovered');
                 selection.remove(mouse.hovered?.trace);
-                break;
-            case MouseDownActions.MoveItem:
-            case MouseDownActions.MoveNotes:
                 break;
             case MouseDownActions.CreateLoop:
             case MouseDownActions.CreateNote:
