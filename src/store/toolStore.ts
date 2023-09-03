@@ -20,7 +20,7 @@ type ProjectStore = ReturnType<typeof useProjectStore>;
 type SelectStore = ReturnType<typeof useSelectStore>;
 type Reference<T> = { value: T };
 
-type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & { type: TraceType };
+type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & (Trace);
 
 interface ToolMouse {
     drag?: {
@@ -35,6 +35,7 @@ interface ToolMouse {
         alreadyDuplicated: boolean,
         isRightEdge: boolean,
         traces: Trace[],
+        /** Maybe could be removed */
         trace: Trace | false,
         tracesWhenDragStarted: Trace[],
         traceWhenDragStarted: PolyfillTrace | false,
@@ -146,13 +147,18 @@ const mouseDragSelectedTraces = ({
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
 
     snap.resetSnapExplanation();
-    // mouse.drag.trace.dragMove(mouseDelta);
+
     const octaveDragDelta = view.pxToOctave(drag.delta.y);
     const timeDragDelta = view.pxToTime(drag.delta.x);
     const octaveWhenDragStarted = 'octave' in drag.traceWhenDragStarted ? drag.traceWhenDragStarted.octave : 0;
 
+    const preSnapDragTrace = cloneTrace(drag.traceWhenDragStarted);
+
+    preSnapDragTrace.octave = octaveWhenDragStarted + octaveDragDelta;
+    preSnapDragTrace.time = drag.traceWhenDragStarted.time + timeDragDelta;
+
     const snapOptions = {
-        inNote: drag.trace as Note,
+        inNote: preSnapDragTrace,
         otherTraces: project.score.filter(n => {
             let ret = n !== drag.trace
             ret &&= !drag.traces.includes(n);
@@ -163,29 +169,16 @@ const mouseDragSelectedTraces = ({
         skipTimeSnap: disallowTimeChange.value,
     } as typeof snap.snap.arguments[0];
 
-    if (!drag.trace) throw new Error('no drag.trace');
-
-    drag.trace.time = drag.traceWhenDragStarted.time + timeDragDelta;
-    drag.trace.timeEnd = drag.traceWhenDragStarted.timeEnd + timeDragDelta;
-
-    if ('octave' in drag.trace) {
-        drag.trace.octave = octaveWhenDragStarted + octaveDragDelta;
-        snapOptions.targetOctave = drag.trace.octave;
-    }
-
-    const snappedNote = snap.snap(snapOptions)
-    const timeDeltaAfterSnap = snappedNote.time - drag.traceWhenDragStarted.time;
+    const snappedTrace = snap.snap(snapOptions)
+    const timeDeltaAfterSnap = snappedTrace.time - drag.traceWhenDragStarted.time;
 
     let octaveDeltaAfterSnap = 0;
-    if ('octave' in snappedNote) {
-        octaveDeltaAfterSnap = snappedNote.octave - octaveWhenDragStarted
+    if ('octave' in snappedTrace) {
+        octaveDeltaAfterSnap = snappedTrace.octave - octaveWhenDragStarted
     }
-
-    Object.assign(drag.trace, snappedNote);
 
     drag.traces.map((editNoteI, index) => {
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
-        // if (editNoteI === drag.trace) return;
         editNoteI.time = timeDeltaAfterSnap + correlativeDragStartClone.time;
         editNoteI.timeEnd = timeDeltaAfterSnap + correlativeDragStartClone.timeEnd;
 
@@ -226,33 +219,6 @@ const mouseDragTraceRightEdge = ({
     });
 
     sanitizeTimeRanges(...selectedTraces);
-}
-
-const mouseDragTrace = ({
-    drag,
-}: ToolMouse, {
-    view, snap, project, selection,
-}: Stores,
-    disallowOctaveChange: Reference<boolean>, disallowTimeChange: Reference<boolean>
-) => {
-    if (!drag) throw new Error('misused drag handler');
-    snap.resetSnapExplanation();
-    if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
-    if (!drag.trace) throw new Error('no drag.trace');
-
-    const timeMovement = view.pxToTime(drag.delta.x);
-    const originalLength = drag.traceWhenDragStarted.timeEnd - drag.traceWhenDragStarted.time;
-    drag.trace.time = drag.traceWhenDragStarted.time + timeMovement;
-
-    const snapped = snap.snapTimeRange({
-        inTimeRange: drag.trace,
-        otherTraces: project.score,
-        sideEffects: true,
-    });
-
-    snapped.timeEnd = snapped.time + originalLength;
-    Object.assign(drag.trace, snapped);
-
 }
 
 
@@ -374,7 +340,7 @@ export const useToolStore = defineStore("tool", () => {
             tracesWhenDragStarted: selection.getTraces().map(cloneTrace),
             alreadyDuplicated: false,
         };
-
+        // TODO: maybe unnecessary
         mouse.drag.traces.forEach(trace => {
             dragStart(trace, coords);
         });
@@ -568,17 +534,13 @@ export const useToolStore = defineStore("tool", () => {
                 }
                 break;
             case MouseDownActions.SetSelectionAndDrag: {
-                if (!mouse.hovered?.trace) throw new Error('no traceBeingHovered');
-                const hovered = mouse.hovered?.trace;
-                selection.select(hovered);
+                if (!mouse.drag?.trace) throw new Error('no trace dragged');
+                selection.select(mouse.drag.trace);
                 if (mouse.drag) {
-                    mouse.drag.traces = [];
-                    mouse.drag.trace = hovered;
+                    mouse.drag.traces = [mouse.drag.trace];
+                    mouse.drag.tracesWhenDragStarted = [cloneTrace(mouse.drag.trace)];
                 } else {
                     console.warn("no mouse.drag");
-                }
-                if ('layer' in mouse.hovered?.trace) {
-                    currentLayerNumber.value = mouse.hovered?.trace.layer;
                 }
                 break;
             }
@@ -749,16 +711,17 @@ export const useToolStore = defineStore("tool", () => {
                     mouseDragTraceRightEdge(
                         mouse, storesPill
                     );
-                } else if (mouse.drag.trace && selection.isSelected(mouse.drag.trace)) {
+                } else if (
+                    mouse.currentAction === MouseDownActions.MoveNotes
+                    || mouse.currentAction === MouseDownActions.MoveItem
+                    || mouse.currentAction === MouseDownActions.SetSelectionAndDrag
+
+                ) {
                     mouseDragSelectedTraces(
                         mouse, storesPill, disallowOctaveChange, disallowTimeChange
                     );
-                } else if (mouse.currentAction === MouseDownActions.MoveNotes) {
-                    mouseDragTrace(
-                        mouse, storesPill, disallowOctaveChange, disallowTimeChange
-                    );
                 } else {
-                    console.log(" ??? ");
+                    console.log(" ??? ", MouseDownActions[mouse.currentAction]);
                 }
         } else {
             updateItemThatWouldBeCreated(mouse.pos);
