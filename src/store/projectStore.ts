@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { Note, NoteDef, note } from '../dataTypes/Note';
 import { Loop, LoopDef } from '../dataTypes/Loop';
-import { TimeRange } from '../dataTypes/TimelineItem';
+import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
 import { SynthInstance, SynthParam } from '../synth/SynthInterface';
@@ -106,6 +106,7 @@ export const useProjectStore = defineStore("current project", () => {
             console.log("no notes found in parsed text");
             return [];
         }
+        sanitizeTimeRanges(...editNotes);
         return editNotes;
     }
 
@@ -137,7 +138,7 @@ export const useProjectStore = defineStore("current project", () => {
                 loop.count = Infinity;
             }
         })
-
+        sanitizeTimeRanges(...objLoops);
         return objLoops
     }
 

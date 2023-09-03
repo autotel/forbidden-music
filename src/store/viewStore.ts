@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref, watchEffect } from "vue";
 import { Loop } from "../dataTypes/Loop.js";
 import { Note, getDuration } from "../dataTypes/Note.js";
-import { TimeRange } from "../dataTypes/TimelineItem.js";
+import { TimeRange, sanitizeTimeRanges } from "../dataTypes/TimelineItem.js";
 import { Trace } from "../dataTypes/Trace.js";
 import { getNotesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
@@ -221,7 +221,12 @@ export const useViewStore = defineStore("view", () => {
 
 
     const rectOfLoop = (item: TimeRange): TimelineItemRect<Loop> => {
-        const itemDuration = item.timeEnd - item.time;
+        let itemDuration = item.timeEnd - item.time;
+        if (itemDuration <= 0) { 
+            itemDuration = 0;
+            sanitizeTimeRanges(item);
+            console.warn("loop duration is 0 or negative", item); 
+        }
 
         let rect = {
             x: timeToPxWithOffset(item.time),

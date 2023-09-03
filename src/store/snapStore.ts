@@ -8,6 +8,7 @@ import { getTracesInRange } from '../functions/getEventsInRange';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import colundi from '../scales/colundi';
 import { useViewStore } from './viewStore';
+import { Loop } from '../dataTypes/Loop';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -675,8 +676,8 @@ export const useSnapStore = defineStore("snap", () => {
     }
 
     /** has side effects to snap explanations */
-    interface SnapParams {
-        inNote: Trace,
+    interface SnapParams<T extends Trace> {
+        inNote: T,
         targetOctave?: number,
         otherTraces?: Array<Trace>,
         sideEffects?: boolean,
@@ -685,7 +686,7 @@ export const useSnapStore = defineStore("snap", () => {
         snapDuration?: boolean,
     }
 
-    const snap = ({
+    const snap = <T extends (Loop | Note)>({
         inNote,
         targetOctave,
         otherTraces,
@@ -693,10 +694,10 @@ export const useSnapStore = defineStore("snap", () => {
         skipOctaveSnap = false,
         skipTimeSnap = false,
         snapDuration = false,
-    }: SnapParams) => {
+    }: SnapParams<T>):T => {
         otherTraces = otherTraces ? filterSnapTraces(otherTraces) : otherTraces;
         /** outNote */
-        const output = cloneTrace(inNote);
+        const output:T = cloneTrace(inNote);
 
         const subjectDuration = output.timeEnd - output.time;
         const durationSnap = snapDuration ? new SnapTracker(subjectDuration) : false;

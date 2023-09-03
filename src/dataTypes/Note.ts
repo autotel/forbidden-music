@@ -1,7 +1,7 @@
 import { octaveToFrequency } from "../functions/toneConverters";
 import Draggable from "./Draggable";
 import Selectable from "./Selectable";
-import { OctavePosition, TimeRange, VelocityPosition } from "./TimelineItem";
+import { OctavePosition, TimeRange, VelocityPosition, sanitizeTimeRanges } from "./TimelineItem";
 import { Trace, TraceType } from "./Trace";
 
 interface timeDefA {
@@ -70,15 +70,19 @@ export const getFrequency = (note: Note): number => {
   return octaveToFrequency(note.octave);
 }
 export const getDuration = (note: Note): number => {
+  if (note.timeEnd < note.time) {
+    console.warn('Note has negative duration',note);
+    sanitizeTimeRanges(note);
+  }
   return note.timeEnd - note.time;
 }
 export const hasDuration = (note: Note): boolean => {
   return note.timeEnd !== note.time;
 }
 export const setSelection = (note: Note, selected: boolean): Note => {
-  if(selected) {
+  if (selected) {
     note.selected = true;
-  }else  {
+  } else {
     delete note.selected;
   }
   return note;

@@ -26,3 +26,11 @@ export interface VelocityRange {
     velocity: number,
     velocityEnd: number,
 }
+
+export const sanitizeTimeRanges = (... items: TimeRange[]) => {
+    items.forEach(item => {
+        if (item.timeEnd < item.time) {
+            item.timeEnd = item.time;
+        }
+    });
+}

@@ -3,9 +3,9 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
 import { Loop } from '../dataTypes/Loop';
-import { Note, note } from '../dataTypes/Note';
+import { Note, NoteDef, note } from '../dataTypes/Note';
 import { ScreenCoord } from '../dataTypes/ScreenCoord';
-import { OctaveRange, TimeRange, VelocityRange } from '../dataTypes/TimelineItem';
+import { OctaveRange, TimeRange, VelocityRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Tool } from '../dataTypes/Tool';
 import { Trace, TraceType, cloneTrace } from '../dataTypes/Trace';
 import { useProjectStore } from './projectStore';
@@ -202,9 +202,7 @@ const mouseDragTraceRightEdge = ({
     tracesBeingCreated,
 }: ToolMouse, {
     view, snap, project, selection,
-}: Stores,
-    disallowOctaveChange: Reference<boolean>, disallowTimeChange: Reference<boolean>
-) => {
+}: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
 
@@ -220,11 +218,18 @@ const mouseDragTraceRightEdge = ({
     });
 
     drag.trace.timeEnd = drag.trace.time + snapped.duration;
+    const selectedTraces = selection.getTraces();
+    selectedTraces.forEach((trace, index) => {
+        const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
+        if (trace === drag.trace) return;
+        trace.timeEnd = correlativeDragStartClone.timeEnd + snapped.duration;
+    });
+
+    sanitizeTimeRanges(...selectedTraces);
 }
 
 const mouseDragTrace = ({
     drag,
-    tracesBeingCreated,
 }: ToolMouse, {
     view, snap, project, selection,
 }: Stores,
@@ -261,7 +266,7 @@ export enum MouseDownActions {
     RemoveFromSelectionAndDrag,
     CreateNote,
     CreateLoop,
-    LengthenNote,
+    LengthenTrace,
     DragNoteVelocity,
     CopyNote,
     AreaSelectNotes,
@@ -379,7 +384,7 @@ export const useToolStore = defineStore("tool", () => {
     const cursor = computed(() => {
         let mouseDo = mouse.currentAction ? mouse.currentAction : whatWouldMouseDownDo();
         switch (mouseDo) {
-            case MouseDownActions.LengthenNote:
+            case MouseDownActions.LengthenTrace:
             case MouseDownActions.LengthenItem:
                 return 'cursor-note-length';
             case MouseDownActions.AddToSelection:
@@ -467,13 +472,12 @@ export const useToolStore = defineStore("tool", () => {
                 } else {
                     // thus far no distinction needed
                     ret = MouseDownActions.SetSelectionAndDrag;
-                    console.log("modulation");
                 }
             }
             currentMouseStringHelper.value = "⇅";
         } else if (current.value === Tool.Edit) {
             if (mouse.hovered?.traceRightEdge) {
-                ret = MouseDownActions.LengthenNote;
+                ret = MouseDownActions.LengthenTrace;
                 if (selection.selected.size > 1) {
                     currentMouseStringHelper.value = "⟺";
                 } else {
@@ -500,7 +504,6 @@ export const useToolStore = defineStore("tool", () => {
                 currentMouseStringHelper.value = "loop";
             }
         }
-        console.log(MouseDownActions[ret]);
         return ret;
     }
 
@@ -512,6 +515,7 @@ export const useToolStore = defineStore("tool", () => {
     }
 
     const mouseDown = (e: MouseEvent) => {
+        console.log("mousedown");
         registerDragStart({
             x: e.clientX,
             y: e.clientY,
@@ -547,7 +551,7 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.DragNoteVelocity:
                 break;
             case MouseDownActions.LengthenItem: // no break
-            case MouseDownActions.LengthenNote:
+            case MouseDownActions.LengthenTrace:
                 break;
             case MouseDownActions.AddToSelection:
                 if (!(mouse.hovered?.trace)) throw new Error('no traceBeingHovered');
@@ -599,7 +603,6 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.None:
                 break;
         }
-        console.log("mouse down conclusion", MouseDownActions[mouse.currentAction], mouse.drag?.traces, mouse.drag?.trace);
     }
 
     const refreshAndApplyRangeSelection = useThrottleFn((e: MouseEvent) => {
@@ -637,41 +640,27 @@ export const useToolStore = defineStore("tool", () => {
         if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
             noteThatWouldBeCreated.value = false;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateNote) {
-            // TODO: there should be more shared groudn beteween note and loop that would be created
-            // but this requires refactoring snap to accept either
-            // Additionally, I'd like to make editNotes an object like the loops,
-            // or the other way around
-            const freeNote = note({
-                time: view.pxToTimeWithOffset(x),
-                duration: 0,
+            const mouseTime = view.pxToTimeWithOffset(x);
+            const theNote = note({
+                time: mouseTime,
+                timeEnd: mouseTime,
                 octave: view.pxToOctaveWithOffset(y),
                 velocity: lastVelocitySet.value,
                 layer: currentLayerNumber.value,
             });
 
-            snap.setFocusedTrace(freeNote)
+            snap.setFocusedTrace(theNote)
 
             const snapNote = snap.snap({
-                inNote: freeNote,
+                inNote: theNote,
                 targetOctave: view.pxToOctaveWithOffset(y),
                 otherTraces: project.score,
                 sideEffects: true,
             });
 
-            switch (snapNote.type) {
-                case TraceType.Note:
-                    noteThatWouldBeCreated.value = snapNote;
-                    break;
-                case TraceType.Loop:
-                    loopThatWouldBeCreated.value = snapNote;
-                    break;
-            }
+            snapNote.timeEnd = snapNote.time;
 
-
-            // so that it displays the lines towards the snapped pos and not the mouse pos
-            // TODO: should not be needed
-            Object.assign(freeNote, snapNote);
-
+            noteThatWouldBeCreated.value = snapNote;
             return;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateLoop) {
             const t = view.pxToTimeWithOffset(x);
@@ -741,12 +730,10 @@ export const useToolStore = defineStore("tool", () => {
             }
 
             if (current.value === Tool.Modulation) {
-                console.log("mouseDragModulation");
                 mouseDragModulation(
                     mouse, storesPill, lastVelocitySet
                 );
             } else if (mouse.tracesBeingCreated.length === 1) {
-                console.log("mouseDragNotesBeingCreated");
                 mouseDragNotesBeingCreated(
                     mouse, storesPill
                 );
@@ -755,22 +742,18 @@ export const useToolStore = defineStore("tool", () => {
                 // once, and under these very specific conditions
                 // sets a threshold of movement before copying 
                 if (mouse.drag.trace && copyOnDrag.value && !mouse.drag.alreadyDuplicated) {
-                    console.log("mouseDuplicateNotes");
                     mouseDuplicateNotes(
                         mouse, storesPill
                     );
                 } else if (mouse.drag.trace && mouse.drag.isRightEdge) {
-                    console.log("mouseDragTraceRightEdge");
                     mouseDragTraceRightEdge(
-                        mouse, storesPill, disallowOctaveChange, disallowTimeChange
+                        mouse, storesPill
                     );
                 } else if (mouse.drag.trace && selection.isSelected(mouse.drag.trace)) {
-                    console.log("mouseDragSelectedTraces");
                     mouseDragSelectedTraces(
                         mouse, storesPill, disallowOctaveChange, disallowTimeChange
                     );
                 } else if (mouse.currentAction === MouseDownActions.MoveNotes) {
-                    console.log("mouseDragTrace");
                     mouseDragTrace(
                         mouse, storesPill, disallowOctaveChange, disallowTimeChange
                     );

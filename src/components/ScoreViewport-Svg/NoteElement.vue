@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
 import { NoteRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
@@ -28,6 +28,7 @@ const myColor = computed(() => {
 });
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
+    console.log('bodyMouseEnterListener');
     tool.timelineItemMouseEnter(props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
@@ -41,7 +42,7 @@ onMounted(() => {
         noteBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
     }
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
     if (props.interactionDisabled) return;
     if (noteBody.value) {
         noteBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
@@ -63,7 +64,7 @@ const isEditable = computed(() => {
     eventRect.event.group?.name
 }}
     </text> -->
-    <g ref="noteBody" :class="{ mouseblock: !isEditable }">
+    <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
         <NoteElementRectangle v-if="eventRect.width/*hasDuration(eventRect.event)*/" :eventRect="eventRect"
             :isEditable="isEditable" :fill="myColor" />
         <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />

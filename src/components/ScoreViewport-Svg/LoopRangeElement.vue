@@ -24,6 +24,7 @@ const noteBody = ref<SVGRectElement>();
 const lengthHandle = ref<SVGRectElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
+    console.log('bodyMouseEnterListener');
     tool.timelineItemMouseEnter(props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
