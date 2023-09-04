@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useToolStore } from '../../store/toolStore';
 import { NoteRect, useViewStore } from '../../store/viewStore';
 
@@ -20,16 +20,14 @@ const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
     tool.timelineItemRightEdgeMouseLeave();
 }
 
-onMounted(() => {
-    if (rightEdge.value) {
-        rightEdge.value.addEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
+watch(rightEdge, (newVal, oldVal) => {
+    if(oldVal) {
+        oldVal.removeEventListener('mouseenter', rightEdgeMouseEnterListener);
+        oldVal.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
     }
-});
-onUnmounted(() => {
-    if (rightEdge.value) {
-        rightEdge.value.removeEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
+    if(newVal) {
+        newVal.addEventListener('mouseenter', rightEdgeMouseEnterListener);
+        newVal.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
     }
 });
 

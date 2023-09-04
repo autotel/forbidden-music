@@ -2,12 +2,12 @@ import { useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
-import { Loop } from '../dataTypes/Loop';
-import { Note, NoteDef, note } from '../dataTypes/Note';
+import { Loop, loop } from '../dataTypes/Loop';
+import { Note, note } from '../dataTypes/Note';
 import { ScreenCoord } from '../dataTypes/ScreenCoord';
 import { OctaveRange, TimeRange, VelocityRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Tool } from '../dataTypes/Tool';
-import { Trace, TraceType, cloneTrace } from '../dataTypes/Trace';
+import { Trace, TraceType, cloneTrace, traceTypeSafetyCheck } from '../dataTypes/Trace';
 import { useProjectStore } from './projectStore';
 import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
@@ -20,7 +20,7 @@ type ProjectStore = ReturnType<typeof useProjectStore>;
 type SelectStore = ReturnType<typeof useSelectStore>;
 type Reference<T> = { value: T };
 
-type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & (Trace);
+type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & (Trace) & { duration: number };
 
 interface ToolMouse {
     drag?: {
@@ -59,6 +59,19 @@ interface Stores {
     selection: SelectStore,
 }
 
+const polyfillTrace = (trace: Trace): PolyfillTrace => {
+    traceTypeSafetyCheck(trace);
+    return Object.assign({
+        octave: 0,
+        octaveEnd: 0,
+        time: 0,
+        timeEnd: 0,
+        velocity: 0,
+        velocityEnd: 0,
+        duration: trace.timeEnd - trace.time,
+    }, trace);
+}
+
 
 const mouseDragModulation = ({
     drag
@@ -80,7 +93,7 @@ const mouseDragModulation = ({
     });
 }
 
-const mouseDragNotesBeingCreated = ({
+const mouseLengthenTracesBeingCreated = ({
     drag,
     tracesBeingCreated,
 }: ToolMouse, {
@@ -88,16 +101,16 @@ const mouseDragNotesBeingCreated = ({
 }: Stores
 ) => {
     if (!drag) throw new Error('misused drag handler');
+    if (tracesBeingCreated.length === 0) throw new Error('no tracesBeingCreated');
     snap.resetSnapExplanation();
     // const deltaX = e.clientX - newLoopDragX;
     // const newDuration = clampToZero(view.pxToTime(deltaX));
     const newDuration = clampToZero(view.pxToTime(drag.delta.x));
     tracesBeingCreated[0].timeEnd = tracesBeingCreated[0].time + newDuration;
-    const noteZero = tracesBeingCreated.find(n => n.type === TraceType.Note) as Note;
-
+    const traceZero = tracesBeingCreated[0];
+    if (!traceZero) throw new Error('no tracesBeingCreated[0]');
     const editNote = snap.snap({
-        inNote: noteZero,
-        targetOctave: noteZero.octave,
+        inNote: traceZero,
         otherTraces: project.score.filter(n => n !== tracesBeingCreated[0])
     });
 
@@ -116,22 +129,22 @@ const mouseDuplicateNotes = ({
         snap.resetSnapExplanation();
         drag.alreadyDuplicated = true;
         const prevDraggableTraces = drag.traces;
-        const cloned: Note[] = [];
+        const cloned: Trace[] = [];
 
         prevDraggableTraces.forEach(trace => {
-            // TODO: I can see that groups could be easily inc
-            if (trace.type !== TraceType.Note) return;
-            const newNote = cloneTrace(trace);
-            project.appendNote(newNote);
-            cloned.push(newNote);
-            dragStart(newNote, drag.start);
-            // dragEnd(trace);
+            const newTrace = cloneTrace(trace);
+            cloned.push(newTrace);
+            dragStart(newTrace, drag.start);
         });
 
+        if (!drag.trace) throw new Error('no drag.trace');
+        project.append(...cloned);
         selection.select(...cloned);
+        drag.traceWhenDragStarted = polyfillTrace(drag.trace);
+        drag.tracesWhenDragStarted = cloned.map(cloneTrace);
         drag.traces = [...cloned];
         drag.trace = cloned[0];
-        snap.setFocusedTrace(drag.trace as Note);
+        snap.setFocusedTrace(drag.trace);
     }
     // refresh = true;
 }
@@ -194,7 +207,7 @@ const mouseDragSelectedTraces = ({
     // refresh = true;
 }
 
-const mouseDragTraceRightEdge = ({
+const mouseDragTracesRightEdge = ({
     drag,
     tracesBeingCreated,
 }: ToolMouse, {
@@ -207,7 +220,6 @@ const mouseDragTraceRightEdge = ({
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
     const timeMovement = view.pxToTime(drag.delta.x);
     drag.trace.timeEnd = drag.traceWhenDragStarted.timeEnd + timeMovement;
-
     const snapped = snap.snapTimeRange({
         inTimeRange: drag.trace,
         otherTraces: project.score,
@@ -215,11 +227,12 @@ const mouseDragTraceRightEdge = ({
     });
 
     drag.trace.timeEnd = drag.trace.time + snapped.duration;
+    const changeDeltaAfterSnap = snapped.duration - drag.traceWhenDragStarted.duration;
     const selectedTraces = selection.getTraces();
     selectedTraces.forEach((trace, index) => {
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
-        trace.timeEnd = correlativeDragStartClone.timeEnd + snapped.duration;
+        trace.timeEnd = correlativeDragStartClone.timeEnd + changeDeltaAfterSnap;
     });
 
     sanitizeTimeRanges(...selectedTraces);
@@ -314,21 +327,13 @@ export const useToolStore = defineStore("tool", () => {
             isRightEdge = true;
         } else if (mouse.hovered?.trace) {
             trace = mouse.hovered?.trace;
+        } else {
+            console.log("no trace hovered");
         }
 
         if (trace) {
-            let polyfillTrace = {
-                octave: 0, octaveEnd: 0,
-                time: 0, timeEnd: 0,
-                velocity: 0, velocityEnd: 0,
-            } as PolyfillTrace;
-
-            polyfillTrace = {
-                ...polyfillTrace,
-                ...trace,
-            } as Trace & PolyfillTrace;
-
-            traceWhenDragStarted = { ...polyfillTrace } as PolyfillTrace;
+            traceTypeSafetyCheck(trace);
+            traceWhenDragStarted = polyfillTrace(trace);
         }
 
         mouse.drag = {
@@ -348,8 +353,20 @@ export const useToolStore = defineStore("tool", () => {
         mouse.drag.traces.forEach(trace => {
             dragStart(trace, coords);
         });
+
+        console.log("mouseAction", mouse.drag.traceWhenDragStarted);
     }
 
+
+    const registerMouseMove = (pos: ScreenCoord) => {
+        mouse.pos = pos;
+        if (mouse.drag) {
+            mouse.drag.delta = {
+                x: pos.x - mouse.drag.start.x,
+                y: pos.y - mouse.drag.start.y,
+            }
+        }
+    }
 
     const cursor = computed(() => {
         let mouseDo = mouse.currentAction ? mouse.currentAction : whatWouldMouseDownDo();
@@ -378,19 +395,22 @@ export const useToolStore = defineStore("tool", () => {
         }
     });
 
-    const timelineItemMouseEnter = (editNote: Trace) => {
+    const timelineItemMouseEnter = (trace: Trace) => {
+        traceTypeSafetyCheck(trace);
         loopThatWouldBeCreated.value = false;
+        noteThatWouldBeCreated.value = false;
         mouse.hovered = {
-            trace: editNote,
+            trace: trace,
         }
     }
 
-    const timelineItemRightEdgeMouseEnter = (editNote: Trace) => {
+    const timelineItemRightEdgeMouseEnter = (trace: Trace) => {
         // unhover all other but don't unhover item body
         loopThatWouldBeCreated.value = false;
+        noteThatWouldBeCreated.value = false;
         mouse.hovered = {
-            trace: editNote,
-            traceRightEdge: editNote
+            trace: trace,
+            traceRightEdge: trace
         }
     }
 
@@ -485,7 +505,6 @@ export const useToolStore = defineStore("tool", () => {
     }
 
     const mouseDown = (e: MouseEvent) => {
-        console.log("mousedown");
         registerDragStart({
             x: e.clientX,
             y: e.clientY,
@@ -560,8 +579,18 @@ export const useToolStore = defineStore("tool", () => {
                 if (!mouse.hovered?.trace) throw new Error('no traceBeingHovered');
                 selection.remove(mouse.hovered?.trace);
                 break;
-            case MouseDownActions.CreateLoop:
-            case MouseDownActions.CreateNote:
+            case MouseDownActions.CreateLoop: {
+                if (!loopThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
+                newLoopDragX = e.clientX;
+                selection.clear();
+                const cloned = cloneTrace(loopThatWouldBeCreated.value);
+                mouse.tracesBeingCreated = [cloned];
+                if (!mouse.drag) throw new Error('no mouse.drag');
+                mouse.drag.trace = cloned;
+                mouse.drag.isRightEdge = true;
+                break;
+            }
+            case MouseDownActions.CreateNote: {
                 if (!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
                 newLoopDragX = e.clientX;
                 selection.clear();
@@ -571,8 +600,9 @@ export const useToolStore = defineStore("tool", () => {
                 mouse.drag.trace = cloned;
                 mouse.drag.isRightEdge = true;
                 break;
-            case MouseDownActions.None:
-                break;
+            }
+            default:
+                console.log("-?- ", MouseDownActions[mouse.currentAction]);
         }
     }
 
@@ -635,11 +665,11 @@ export const useToolStore = defineStore("tool", () => {
             return;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateLoop) {
             const t = view.pxToTimeWithOffset(x);
-            const freeLoop = {
+            const freeLoop = loop({
                 time: t,
                 timeEnd: t,
                 count: 1,
-            } as Loop;
+            });
 
             const snappedLoop: Loop = snap.snapTimeRange({
                 inTimeRange: freeLoop,
@@ -647,9 +677,10 @@ export const useToolStore = defineStore("tool", () => {
                 sideEffects: true,
             });
 
+            snappedLoop.timeEnd = snappedLoop.time;
             loopThatWouldBeCreated.value = snappedLoop;
 
-            // so that it displays the lines towards the snapped pos and not the mouse pos
+            // TODO: delete??
             Object.assign(freeLoop, snappedLoop);
 
             return;
@@ -659,15 +690,6 @@ export const useToolStore = defineStore("tool", () => {
         }
     }
 
-    const registerMouseMove = (pos: ScreenCoord) => {
-        mouse.pos = pos;
-        if (mouse.drag) {
-            mouse.drag.delta = {
-                x: pos.x - mouse.drag.start.x,
-                y: pos.y - mouse.drag.start.y,
-            }
-        }
-    }
 
     const storesPill = {
         project,
@@ -683,8 +705,6 @@ export const useToolStore = defineStore("tool", () => {
         });
 
         let refresh = false;
-
-
 
         if ((
             current.value === Tool.Select ||
@@ -705,7 +725,7 @@ export const useToolStore = defineStore("tool", () => {
                     mouse, storesPill, lastVelocitySet
                 );
             } else if (mouse.tracesBeingCreated.length === 1) {
-                mouseDragNotesBeingCreated(
+                mouseLengthenTracesBeingCreated(
                     mouse, storesPill
                 );
             } else
@@ -717,7 +737,7 @@ export const useToolStore = defineStore("tool", () => {
                         mouse, storesPill
                     );
                 } else if (mouse.drag.trace && mouse.drag.isRightEdge) {
-                    mouseDragTraceRightEdge(
+                    mouseDragTracesRightEdge(
                         mouse, storesPill
                     );
                 } else if (

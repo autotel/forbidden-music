@@ -10,6 +10,7 @@ import NoteElement from './NoteElement.vue';
 import RangeSelection from './RangeSelection.vue';
 import ToneGrid from './ToneGrid.vue';
 import ToneRelation from './ToneRelation.vue';
+import { TraceType } from '../../dataTypes/Trace';
 
 const project = useProjectStore();
 const tool = useToolStore();
@@ -58,10 +59,6 @@ onBeforeUnmount(() => {
                 interactionDisabled /> 
         </g>
         <!-- <g id="loops-being-created">
-            <LoopRangeElement
-                v-for="loop in tool.loopsBeingCreated" 
-                :eventRect="view.rectOfLoop(loop)"
-                interactionDisabled /> 
         </g> -->
         <g id="loop-range-container">
             <LoopRangeElement v-for="loopRect in view.visibleLoopRects" :eventRect="loopRect" />
@@ -71,9 +68,17 @@ onBeforeUnmount(() => {
         <g id="edit-notes">
             <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect"  />
         </g>
-        <!-- <g id="notes-being-created">
-            <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
-        </g> -->
+        <g id="traces-being-created">
+            <template v-for="trace in tool.mouse.tracesBeingCreated">
+                <NoteElement
+                    v-if="trace.type === TraceType.Note" :eventRect="view.rectOfNote(trace)" />
+
+                <LoopRangeElement
+                    v-if="trace.type === TraceType.Loop"
+                    :eventRect="view.rectOfLoop(trace)"
+                    interactionDisabled /> 
+            </template>
+        </g>
         <RangeSelection />
     </svg>
 </template>

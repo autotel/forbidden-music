@@ -2,7 +2,7 @@ import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { Note, NoteDef, note } from '../dataTypes/Note';
-import { Loop, LoopDef } from '../dataTypes/Loop';
+import { Loop, LoopDef, loop } from '../dataTypes/Loop';
 import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
@@ -12,7 +12,7 @@ import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
 import { SynthChannel, usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
-import { Trace, TraceType } from '../dataTypes/Trace';
+import { Trace, TraceType, traceTypeSafetyCheck } from '../dataTypes/Trace';
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -133,11 +133,7 @@ export const useProjectStore = defineStore("current project", () => {
             return [];
         }
 
-        objLoops.forEach((loop: { [key: string]: number | string }) => {
-            if (!('count' in loop)) {
-                loop.count = Infinity;
-            }
-        })
+        objLoops = objLoops.map((maybeLoop: LoopDef) => loop(maybeLoop))
         sanitizeTimeRanges(...objLoops);
         return objLoops
     }
@@ -197,13 +193,14 @@ export const useProjectStore = defineStore("current project", () => {
             if (('time' in loop) && ('timeEnd' in loop)) {
                 return loop as unknown as Loop;
             }
+
             console.error("invalid loop definition", loop);
             return {
                 time: 0,
                 timeEnd: 0,
                 count: 0,
             } as Loop;
-        })
+        }).map(loop);
 
         loops.value = nLoops;
 

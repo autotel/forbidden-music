@@ -222,11 +222,6 @@ export const useViewStore = defineStore("view", () => {
 
     const rectOfLoop = (item: TimeRange): TimelineItemRect<Loop> => {
         let itemDuration = item.timeEnd - item.time;
-        if (itemDuration <= 0) { 
-            itemDuration = 0;
-            sanitizeTimeRanges(item);
-            console.warn("loop duration is 0 or negative", item); 
-        }
 
         let rect = {
             x: timeToPxWithOffset(item.time),

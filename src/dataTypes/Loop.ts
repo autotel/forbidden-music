@@ -32,6 +32,6 @@ export const loop = (loopDef: LoopDefA | LoopDefB | Loop): Loop => {
         type: TraceType.Loop,
         time: loopDef.time,
         timeEnd: deductedEnd,
-        count: loopDef.count || 1,
+        count: loopDef.count === undefined ? Infinity : loopDef.count,
     }
 }

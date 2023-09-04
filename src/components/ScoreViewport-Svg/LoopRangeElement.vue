@@ -6,6 +6,7 @@ import { TimelineItemRect, useViewStore } from '../../store/viewStore';
 import { useProjectStore } from '../../store/projectStore';
 import SvgLittleButton from './SvgLittleButton.vue';
 import { Loop } from '../../dataTypes/Loop';
+import { traceTypeSafetyCheck } from '../../dataTypes/Trace';
 
 
 const view = useViewStore();
@@ -24,8 +25,8 @@ const noteBody = ref<SVGRectElement>();
 const lengthHandle = ref<SVGRectElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    console.log('bodyMouseEnterListener');
     tool.timelineItemMouseEnter(props.eventRect.event);
+    console.log('bodyMouseEnterListener', props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
     tool.timelineItemMouseLeave();
