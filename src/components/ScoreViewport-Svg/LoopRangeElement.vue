@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Loop } from '../../dataTypes/Loop';
 import { Tool } from '../../dataTypes/Tool';
+import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
 import { TimelineItemRect, useViewStore } from '../../store/viewStore';
-import { useProjectStore } from '../../store/projectStore';
 import SvgLittleButton from './SvgLittleButton.vue';
-import { Loop } from '../../dataTypes/Loop';
-import { traceTypeSafetyCheck } from '../../dataTypes/Trace';
 
 
 const view = useViewStore();
@@ -26,7 +25,6 @@ const lengthHandle = ref<SVGRectElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
     tool.timelineItemMouseEnter(props.eventRect.event);
-    console.log('bodyMouseEnterListener', props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
     tool.timelineItemMouseLeave();
@@ -65,8 +63,9 @@ onUnmounted(() => {
     }
 });
 
-const isEditable = computed(() => {
-    return tool.current == Tool.Loop;
+const isEditable = true;
+const loopMode = computed(() => {
+    return tool.current === Tool.Loop;
 })
 </script>
 <template>
@@ -76,6 +75,7 @@ const isEditable = computed(() => {
             {{ eventRect.event.count }}
         </text>
         <rect class="body" v-bind="$attrs" :class="{
+            selected: eventRect.event.selected,
             editable: isEditable,
         }" :x="eventRect.x" :y="0" :width=eventRect.width :height="itmHeight" />
 
@@ -83,24 +83,25 @@ const isEditable = computed(() => {
             :class="{
                 editable: isEditable,
             }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="itmHeight" />
-        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black" stroke-width="1" />
+        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black"
+            stroke-width="1" />
 
-        <template v-if="!props.interactionDisabled">
-            <SvgLittleButton v-if="isEditable" :x="eventRect.x + 5" :y="30" :onClick="() => eventRect.event.count--"
+        <template v-if="!props.interactionDisabled && loopMode">
+            <SvgLittleButton :x="eventRect.x + 5" :y="30" :onClick="() => eventRect.event.count--"
                 tooltip="less repetitions"> -
             </SvgLittleButton>
-            <SvgLittleButton v-if="isEditable" :x="eventRect.x + 25" :y="30" :onClick="() => eventRect.event.count++"
+            <SvgLittleButton :x="eventRect.x + 25" :y="30" :onClick="() => eventRect.event.count++"
                 tooltip="more repetitions"> +
             </SvgLittleButton>
-            <SvgLittleButton v-if="isEditable" :x="eventRect.x + 5" :y="50" :onClick="() => eventRect.event.count = 0"
-                tooltip="disable loop"> ∅
+            <SvgLittleButton :x="eventRect.x + 5" :y="50" :onClick="() => eventRect.event.count = 0" tooltip="disable loop">
+                ∅
             </SvgLittleButton>
-            <SvgLittleButton v-if="isEditable" :x="eventRect.x + 25" :y="50"
-                :onClick="() => eventRect.event.count = Infinity" tooltip="infinite repetitions"> ∞ </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + eventRect.width - 25" :y="30"
-                :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
-            </SvgLittleButton>
+            <SvgLittleButton :x="eventRect.x + 25" :y="50" :onClick="() => eventRect.event.count = Infinity"
+                tooltip="infinite repetitions"> ∞ </SvgLittleButton>
         </template>
+        <SvgLittleButton :x="eventRect.x + eventRect.width - 25" :y="30"
+            :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
+        </SvgLittleButton>
     </g>
 </template>
 <style scoped>
@@ -115,6 +116,11 @@ const isEditable = computed(() => {
     opacity: 0.6;
 }
 
+.body.selected.editable {
+    fill: rgba(255, 51, 0, 0.644);
+    opacity: 1 !important
+}
+
 
 .lengthHandle {
     fill: #f88a;
@@ -125,4 +131,5 @@ const isEditable = computed(() => {
 
 .body:hover {
     opacity: 1 !important
-}</style>
+}
+</style>

@@ -1,31 +1,31 @@
 import { throttledWatch } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { Note } from '../dataTypes/Note';
+import { setSelection } from '../dataTypes/Selectable';
 import { OctaveRange, TimeRange, VelocityRange, } from '../dataTypes/TimelineItem';
-import { getNotesInRange } from '../functions/getEventsInRange';
+import { Trace, TraceType } from '../dataTypes/Trace';
+import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
+import { useLayerStore } from './layerStore';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
-import { useViewStore } from './viewStore';
-import { useLayerStore } from './layerStore';
-import { Trace, TraceType } from '../dataTypes/Trace';
-import { Note, setSelection } from '../dataTypes/Note';
+import { Tool } from '../dataTypes/Tool';
 
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
     const selected = ref(new Set() as Set<Trace>);
-    const tool = useToolStore();
     const project = useProjectStore();
-    const view = useViewStore();
     const layers = useLayerStore();
-
+    const tool = useToolStore();
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
     const isSelected = (item: Trace) => {
         return selected.value.has(item);
     };
-    const refreshNoteSelectionState = () => {
+    const refreshTraceSelectionState = () => {
         // TODO: is it really necessary?
         project.score.forEach(n => setSelection(n, isSelected(n)));
+        project.loops.forEach(n => setSelection(n, isSelected(n)));
     }
     /**
      * get selected notes
@@ -41,7 +41,7 @@ export const useSelectStore = defineStore("select", () => {
     const select = (...items: Trace[]) => {
         selected.value.clear();
         selected.value = new Set(items);
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
 
     const toggle = (...notes: Trace[]) => {
@@ -52,26 +52,33 @@ export const useSelectStore = defineStore("select", () => {
                 selected.value.add(n);
             }
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
     const remove = (...project: (Trace)[]) => {
         project.forEach((n) => {
             if (!n) return;
             selected.value.delete(n);
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     }
-    const add = (...editNote: (Trace)[]) => {
-        editNote.forEach((n) => {
+    const add = (...trace: (Trace)[]) => {
+        trace.forEach((n) => {
             if (!n) return;
             selected.value.add(n);
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
+    const getRangeSelectableTraces = () => {
+        if(tool.current === Tool.Edit) {
+            return project.score.filter(({ layer }) => layers.isVisible(layer));
+        } else if(tool.current === Tool.Loop) {
+            return project.loops;
+        }
+        return [];
+    }
     const selectRange = (range: SelectableRange) => {
-        const visibleLayersNotes = project.score.filter(({layer}) => layers.isVisible(layer))
-        let notesInRange = getNotesInRange(
-            visibleLayersNotes,
+        let notesInRange = getTracesInRange(
+            getRangeSelectableTraces(),
             range
         );
 
@@ -112,7 +119,7 @@ export const useSelectStore = defineStore("select", () => {
     const selectAll = () => {
         select(...project.score);
     };
-    throttledWatch(() => selected.value.size, refreshNoteSelectionState);
+    throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 
     return {
         selectRange,
@@ -120,7 +127,7 @@ export const useSelectStore = defineStore("select", () => {
         addRange,
         add, select, toggle,
         getTraces,
-        getNotes, 
+        getNotes,
         clear: clear, remove,
         isSelected,
         selected,

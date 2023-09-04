@@ -79,11 +79,3 @@ export const getDuration = (note: Note): number => {
 export const hasDuration = (note: Note): boolean => {
   return note.timeEnd !== note.time;
 }
-export const setSelection = (note: Note, selected: boolean): Note => {
-  if (selected) {
-    note.selected = true;
-  } else {
-    delete note.selected;
-  }
-  return note;
-}
