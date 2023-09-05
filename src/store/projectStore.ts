@@ -304,6 +304,7 @@ export const useProjectStore = defineStore("current project", () => {
 
         notesInLoop.forEach((note) => {
             note.time += loopLength;
+            note.timeEnd += loopLength;
         })
         
         loops.value.push(loop({
