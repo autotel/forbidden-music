@@ -513,8 +513,12 @@ export const useToolStore = defineStore("tool", () => {
                 selectRange.value = zeroedRange;
                 break;
             }
-            case MouseDownActions.LengthenItem: // no break
+            case MouseDownActions.LengthenItem:
             case MouseDownActions.LengthenTrace:
+                if(!mouse.hovered?.traceRightEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceRightEdge);
+                if(!selection.isSelected(mouse.hovered?.traceRightEdge)){
+                    selection.select(mouse.hovered?.traceRightEdge);
+                }
                 break;
             case MouseDownActions.AddToSelection:
                 if (!(mouse.hovered?.trace)) throw new Error('no traceBeingHovered');
