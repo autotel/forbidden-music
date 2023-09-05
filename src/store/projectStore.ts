@@ -273,46 +273,48 @@ export const useProjectStore = defineStore("current project", () => {
         loops.value.push(...nloops);
     }
 
-    const magicLoopDuplicator = (loop: Loop) => {
-        const notesInLoop = getNotesInRange(score.value, loop).filter((note) => {
+    const magicLoopDuplicator = (originalLoop: Loop) => {
+        const notesInLoop = getNotesInRange(score.value, originalLoop).filter((note) => {
             // dont copy notes that started earlier bc. we are already copying notes that end after
-            return note.time > loop.time;
+            // also dont copy notes that start right at the end of originalLoop
+            return note.time >= originalLoop.time && note.time < originalLoop.timeEnd
         });
         const notesAfterLoop = getNotesInRange(score.value, {
-            time: loop.timeEnd,
+            time: originalLoop.timeEnd,
             timeEnd: Infinity,
         }).filter((note) => {
             return !notesInLoop.includes(note)
         });
         const loopsAfterLoop = loops.value.filter((otherLoop) => {
-            return otherLoop.time >= loop.timeEnd;
+            return otherLoop.time >= originalLoop.timeEnd;
         });
-        const loopLength = loop.timeEnd - loop.time;
+        const loopLength = originalLoop.timeEnd - originalLoop.time;
         notesAfterLoop.forEach((note) => {
             note.time += loopLength;
         })
-        loopsAfterLoop.forEach((loop) => {
-            console.log("shift loop", loop.time);
-            loop.time += loopLength;
-            loop.timeEnd += loopLength;
-            console.log(" >> ", loop.time);
+        loopsAfterLoop.forEach((originalLoop) => {
+            console.log("shift originalLoop", originalLoop.time);
+            originalLoop.time += loopLength;
+            originalLoop.timeEnd += loopLength;
+            console.log(" >> ", originalLoop.time);
         })
 
-        // clone all notes in loop
+        // clone all notes in originalLoop
         score.value.push(...notesInLoop.map(note));
 
         notesInLoop.forEach((note) => {
             note.time += loopLength;
         })
-        loops.value.push({
-            time: loop.time + loopLength,
-            timeEnd: loop.timeEnd + loopLength,
-            count: loop.count,
-        } as Loop);
+        
+        loops.value.push(loop({
+            time: originalLoop.time + loopLength,
+            timeEnd: originalLoop.timeEnd + loopLength,
+            count: originalLoop.count,
+        }));
 
-        if (loop.count === Infinity) {
-            loop.count = 4;
-            loop.repetitionsLeft = 1;
+        if (originalLoop.count === Infinity) {
+            originalLoop.count = 4;
+            originalLoop.repetitionsLeft = 1;
         }
 
     }

@@ -23,6 +23,7 @@ export const cloneTrace = <T extends Trace>(trace: T): T => {
 }
 
 export const traceTypeSafetyCheck = isDev() ? (trace: Trace) => {
+    // return trace.type;
     // @ts-ignore
     if (!trace.type) throw new Error("trace type is " + TraceType[trace.type] ?? trace.type)
 } : () => { };

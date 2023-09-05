@@ -4,7 +4,7 @@ import { Loop } from "../dataTypes/Loop.js";
 import { Note, getDuration } from "../dataTypes/Note.js";
 import { TimeRange, sanitizeTimeRanges } from "../dataTypes/TimelineItem.js";
 import { Trace } from "../dataTypes/Trace.js";
-import { getTracesInRange } from "../functions/getEventsInRange.js";
+import { getNotesInRange, getTracesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
 import { usePlaybackStore } from "./playbackStore.js";
@@ -150,7 +150,7 @@ export const useViewStore = defineStore("view", () => {
     const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
         const layerVisibleNotes = project.score.filter(({ layer }) => layers.isVisible(layer));
-        return getTracesInRange(layerVisibleNotes, {
+        return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
