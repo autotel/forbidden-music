@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import { Note } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
@@ -20,28 +20,8 @@ const getVeloLine = () => {
     return view.velocityToPxWithOffset(props.event.velocity);
 }
 
-const myVeloLine = ref(getVeloLine());
+const myVeloLine = computed(getVeloLine);
 
-const conditionalRefreshLine = () => {
-    if (props.interactionDisabled) return;
-    if (props.selected) {
-        myVeloLine.value = getVeloLine();
-    }
-}
-
-onMounted(() => {
-    if (props.interactionDisabled) return;
-    window.addEventListener('mousemove', conditionalRefreshLine);
-    window.addEventListener('scroll', conditionalRefreshLine);
-    setTimeout(() => {
-        myVeloLine.value = getVeloLine();
-    }, 0);
-});
-onUnmounted(() => {
-    if (props.interactionDisabled) return;
-    window.removeEventListener('mousemove', conditionalRefreshLine);
-    window.addEventListener('scroll', conditionalRefreshLine);
-});
 
 </script>
 <template>
@@ -53,7 +33,7 @@ onUnmounted(() => {
         <circle :cx="x" :cy="myVeloLine" r="7" :class="{
             selected: event.selected,
             interactionDisabled: interactionDisabled,
-        }" />
+        }" v-bind="$attrs" />
     </template>
 </template>
 <style scoped>

@@ -69,7 +69,7 @@ export const useSelectStore = defineStore("select", () => {
         refreshTraceSelectionState();
     };
     const getRangeSelectableTraces = () => {
-        if(tool.current === Tool.Edit) {
+        if(tool.current === Tool.Edit || tool.current === Tool.Modulation) {
             return project.score.filter(({ layer }) => layers.isVisible(layer));
         } else if(tool.current === Tool.Loop) {
             return project.loops;

@@ -198,6 +198,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         case KeyActions.Delete: {
             project.score = project.score.filter(note => !note.selected)
+            project.loops = project.loops.filter(note => !note.selected)
             // minimalistic option:
             // tool.noteBeingHovered = false;
             // programmatic option:

@@ -99,9 +99,11 @@ const loopMode = computed(() => {
             <SvgLittleButton :x="eventRect.x + 25" :y="50" :onClick="() => eventRect.event.count = Infinity"
                 tooltip="infinite repetitions"> ∞ </SvgLittleButton>
         </template>
+        <template v-if="!props.interactionDisabled">
         <SvgLittleButton :x="eventRect.x + eventRect.width - 25" :y="30"
             :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
         </SvgLittleButton>
+        </template>
     </g>
 </template>
 <style scoped>

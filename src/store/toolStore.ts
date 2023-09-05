@@ -1,6 +1,6 @@
-import { useThrottleFn } from '@vueuse/core';
+import { clamp, useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
 import { Loop, loop } from '../dataTypes/Loop';
 import { Note, note } from '../dataTypes/Note';
@@ -84,38 +84,18 @@ const mouseDragModulation = ({
     if (!drag.traceWhenDragStarted) return;
     if (drag.traceWhenDragStarted.type !== TraceType.Note) return;
 
-    const velocityWhenDragStarted = drag.traceWhenDragStarted.velocity;
-    const velocityDelta = view.pxToVelocity(drag.delta.y);
-    drag.traces.forEach((n) => {
-        if (n.type !== TraceType.Note) return;
-        n.velocity = clampToZero(velocityWhenDragStarted + velocityDelta);
-        lastVelocitySet.value = n.velocity;
+    const velocityDelta = view.pxToVelocity(-drag.delta.y);
+    drag.traces.forEach((trace, index) => {
+        if (trace.type !== TraceType.Note) return;
+        const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
+        if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
+        if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
+        const velocityWhenDragStarted = traceWhenDragStarted.velocity;
+        trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
+        lastVelocitySet.value = trace.velocity;
     });
 }
 
-const mouseLengthenTracesBeingCreated = ({
-    drag,
-    tracesBeingCreated,
-}: ToolMouse, {
-    view, snap, project, selection,
-}: Stores
-) => {
-    if (!drag) throw new Error('misused drag handler');
-    if (tracesBeingCreated.length === 0) throw new Error('no tracesBeingCreated');
-    snap.resetSnapExplanation();
-    // const deltaX = e.clientX - newLoopDragX;
-    // const newDuration = clampToZero(view.pxToTime(deltaX));
-    const newDuration = clampToZero(view.pxToTime(drag.delta.x));
-    tracesBeingCreated[0].timeEnd = tracesBeingCreated[0].time + newDuration;
-    const traceZero = tracesBeingCreated[0];
-    if (!traceZero) throw new Error('no tracesBeingCreated[0]');
-    const editNote = snap.snap({
-        inNote: traceZero,
-        otherTraces: project.score.filter(n => n !== tracesBeingCreated[0])
-    });
-
-    Object.assign(tracesBeingCreated[0], editNote);
-}
 
 const mouseDuplicateNotes = ({
     drag,
@@ -238,7 +218,6 @@ const mouseDragTracesRightEdge = ({
     sanitizeTimeRanges(...selectedTraces);
 }
 
-
 export enum MouseDownActions {
     None,
     AddToSelection,
@@ -305,14 +284,14 @@ export const useToolStore = defineStore("tool", () => {
     const noteThatWouldBeCreated = ref<Note | false>(false);
     const loopThatWouldBeCreated = ref<Loop | false>(false);
 
-    let mouse: ToolMouse = {
+    let mouse: ToolMouse = reactive({
         tracesBeingCreated: [] as Trace[],
         currentAction: MouseDownActions.None,
         pos: {
             x: 0,
             y: 0,
         },
-    };
+    });
 
     const registerDragStart = (coords: ScreenCoord) => {
         const mouseAction = whatWouldMouseDownDo();
@@ -370,6 +349,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const cursor = computed(() => {
         let mouseDo = mouse.currentAction ? mouse.currentAction : whatWouldMouseDownDo();
+        console.log("mouseDo", MouseDownActions[mouseDo]);
         switch (mouseDo) {
             case MouseDownActions.LengthenTrace:
             case MouseDownActions.LengthenItem:
@@ -465,7 +445,10 @@ export const useToolStore = defineStore("tool", () => {
                 }
             }
             currentMouseStringHelper.value = "⇅";
-        } else if (current.value === Tool.Edit) {
+        } else if (
+            current.value === Tool.Edit
+            || current.value === Tool.Loop
+        ) {
             if (mouse.hovered?.traceRightEdge) {
                 ret = MouseDownActions.LengthenTrace;
                 if (selection.selected.size > 1) {
@@ -480,18 +463,10 @@ export const useToolStore = defineStore("tool", () => {
                 } else {
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
+            } else if (current.value === Tool.Loop) {
+                ret = MouseDownActions.CreateLoop;
             } else {
                 ret = MouseDownActions.CreateNote;
-            }
-        } else if (current.value === Tool.Loop) {
-            if (mouse.hovered?.traceRightEdge) {
-                ret = MouseDownActions.LengthenItem;
-                currentMouseStringHelper.value = "⟷ i";
-            } else if (mouse.hovered?.trace) {
-                ret = MouseDownActions.MoveItem;
-            } else {
-                ret = MouseDownActions.CreateLoop;
-                currentMouseStringHelper.value = "loop";
             }
         }
         return ret;
@@ -501,6 +476,7 @@ export const useToolStore = defineStore("tool", () => {
         delete mouse.drag;
         delete mouse.hovered;
         mouse.tracesBeingCreated = [];
+        mouse.currentAction = MouseDownActions.None;
         snap.resetSnapExplanation();
     }
 
@@ -537,8 +513,6 @@ export const useToolStore = defineStore("tool", () => {
                 selectRange.value = zeroedRange;
                 break;
             }
-            case MouseDownActions.DragNoteVelocity:
-                break;
             case MouseDownActions.LengthenItem: // no break
             case MouseDownActions.LengthenTrace:
                 break;
@@ -562,6 +536,7 @@ export const useToolStore = defineStore("tool", () => {
                     snap.setFocusedTrace(mouse.drag.trace);
                 }
                 break;
+            case MouseDownActions.DragNoteVelocity:
             case MouseDownActions.SetSelectionAndDrag: {
                 if (!mouse.drag?.trace) throw new Error('no trace dragged');
                 selection.select(mouse.drag.trace);
@@ -608,6 +583,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const refreshAndApplyRangeSelection = useThrottleFn((e: MouseEvent) => {
         if (selectRange.value.active) {
+
             const x = e.clientX;
             const y = e.clientY;
 
@@ -724,10 +700,14 @@ export const useToolStore = defineStore("tool", () => {
                 mouseDragModulation(
                     mouse, storesPill, lastVelocitySet
                 );
-            } else if (mouse.tracesBeingCreated.length === 1) {
-                mouseLengthenTracesBeingCreated(
-                    mouse, storesPill
-                );
+            } else if (
+                mouse.tracesBeingCreated.length === 1
+                && !mouse.drag.traceWhenDragStarted
+            ) {
+                mouse.drag.traces = mouse.tracesBeingCreated;
+                mouse.drag.tracesWhenDragStarted = mouse.drag.traces.map(polyfillTrace);
+                mouse.drag.traceWhenDragStarted = polyfillTrace(mouse.tracesBeingCreated[0]);
+                mouseDragTracesRightEdge(mouse, storesPill);
             } else
                 // first mouse drag tick, when it's copying; a special event bc. notes have to be duplicated only
                 // once, and under these very specific conditions
