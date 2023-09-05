@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { Note, NoteDef, note } from '../dataTypes/Note';
 import { Loop, LoopDef, loop } from '../dataTypes/Loop';
 import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
-import { getNotesInRange } from '../functions/getEventsInRange';
+import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
 import { SynthInstance, SynthParam } from '../synth/SynthInterface';
 import { useLayerStore } from './layerStore';

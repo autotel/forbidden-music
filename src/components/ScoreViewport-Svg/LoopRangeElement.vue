@@ -16,10 +16,6 @@ const props = defineProps<{
 }>();
 const project = useProjectStore();
 
-const itmHeight = computed(() => {
-    return tool.current === Tool.Loop ? view.viewHeightPx : 50
-})
-
 const noteBody = ref<SVGRectElement>();
 const lengthHandle = ref<SVGRectElement>();
 
@@ -77,12 +73,12 @@ const loopMode = computed(() => {
         <rect class="body" v-bind="$attrs" :class="{
             selected: eventRect.event.selected,
             editable: isEditable,
-        }" :x="eventRect.x" :y="0" :width=eventRect.width :height="itmHeight" />
+        }" :x="eventRect.x" :y="0" :width=eventRect.width :height="eventRect.height" />
 
         <rect v-if="!interactionDisabled && eventRect.rightEdge && isEditable" ref="lengthHandle" class="lengthHandle"
             :class="{
                 editable: isEditable,
-            }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="itmHeight" />
+            }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
         <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black"
             stroke-width="1" />
 

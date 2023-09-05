@@ -4,11 +4,13 @@ import { Loop } from "../dataTypes/Loop.js";
 import { Note, getDuration } from "../dataTypes/Note.js";
 import { TimeRange, sanitizeTimeRanges } from "../dataTypes/TimelineItem.js";
 import { Trace } from "../dataTypes/Trace.js";
-import { getNotesInRange } from "../functions/getEventsInRange.js";
+import { getTracesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
+import { useToolStore } from "./toolStore.js";
+import { Tool } from "../dataTypes/Tool.js";
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
     g = g & 0xff;
@@ -138,6 +140,8 @@ export const useViewStore = defineStore("view", () => {
     const visibleNotesRefreshKey = ref(0);
     const memoizedNoteRects: NoteRect[] = [];
     const layers = useLayerStore();
+    const tool = useToolStore();
+
     // TODO: maybe doesn't need to be a computed, 
     // we don't need to recalc every note when one note is dragged
     // for example. Especially since the new canvas frame 
@@ -146,7 +150,7 @@ export const useViewStore = defineStore("view", () => {
     const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
         const layerVisibleNotes = project.score.filter(({ layer }) => layers.isVisible(layer));
-        return getNotesInRange(layerVisibleNotes, {
+        return getTracesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
@@ -218,16 +222,15 @@ export const useViewStore = defineStore("view", () => {
         return rect;
     };
 
-
-
     const rectOfLoop = (item: TimeRange): TimelineItemRect<Loop> => {
         let itemDuration = item.timeEnd - item.time;
+        const isFullHeight = tool.current === Tool.Loop;
 
         let rect = {
             x: timeToPxWithOffset(item.time),
             y: 40,
             width: timeToPx(itemDuration),
-            height: 40,
+            height: isFullHeight?viewHeightPx.value: 40,
             event: item,
 
         } as TimelineItemRect<Loop>;
