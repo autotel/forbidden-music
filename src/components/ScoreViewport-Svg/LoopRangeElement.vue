@@ -60,8 +60,8 @@ onUnmounted(() => {
 });
 
 const isEditable = true;
-const loopMode = computed(() => {
-    return tool.current === Tool.Loop;
+const showButtons = computed(() => {
+    return tool.current === Tool.Loop || props.eventRect.event.selected;
 })
 </script>
 <template>
@@ -82,7 +82,7 @@ const loopMode = computed(() => {
         <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black"
             stroke-width="1" />
 
-        <template v-if="!props.interactionDisabled && loopMode">
+        <template v-if="!props.interactionDisabled && showButtons">
             <SvgLittleButton :x="eventRect.x + 5" :y="30" :onClick="() => eventRect.event.count--"
                 tooltip="less repetitions"> -
             </SvgLittleButton>
