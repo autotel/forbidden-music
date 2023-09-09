@@ -436,8 +436,8 @@ export const useToolStore = defineStore("tool", () => {
             }
 
         } else if (current.value === Tool.Modulation) {
-            if (mouse.drag?.trace) {
-                if (selection.isSelected(mouse.drag.trace)) {
+            if (mouse.hovered?.trace) {
+                if (selection.isSelected(mouse.hovered.trace)) {
                     ret = MouseDownActions.DragNoteVelocity;
                 } else {
                     // thus far no distinction needed
