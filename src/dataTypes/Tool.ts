@@ -5,6 +5,7 @@ export enum Tool {
     Edit,
     Modulation,
     Select,
+    Loop,
     // Audition,
     // Navigate,
 }

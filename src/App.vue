@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, provide, ref, watch, watchEffect } from 'vue';
+import Fraction from 'fraction.js';
+import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
+import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
+import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
+import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
+import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
@@ -14,19 +19,17 @@ import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vu
 import Modal from './modals/Modal.vue';
 import UserDisclaimer from './modals/UserDisclaimer.vue';
 import Pane from './pane/Pane.vue';
+import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
+import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
-import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
-import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
-import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
-import TooltipDisplayer from './components/TooltipDisplayer.vue';
+import { Trace } from './dataTypes/Trace';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -35,6 +38,7 @@ const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
 const selection = useSelectStore();
+const snap = useSnapStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
@@ -44,7 +48,6 @@ const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const paneWidth = ref(300);
 const viewport = ref<SVGSVGElement>();
 const userSettings = useCustomSettingsStore();
-const useNewView = ref(true);
 
 provide('modalText', modalText);
 
@@ -56,21 +59,26 @@ let viewDragStartTime = 0;
 let viewDragStartY = 0;
 let viewDragStartOctave = 0;
 
+
 const mouseWheelListener = (e: WheelEvent) => {
     const viewMousePositionBefore = {
         time: view.pxToTimeWithOffset(e.clientX),
         octave: -view.pxToOctaveWithOffset(e.clientY),
     }
 
-
-    const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
+    // not needed, thanks to applyRatio. Would be needed if zooming independently x and y
+    // const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
     const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
 
-    if (wouldViewWidthTime < 400 && wouldViewHeightOctaves > 0.1) {
-        view.viewWidthTime = wouldViewWidthTime;
+    if (
+        // wouldViewWidthTime < 400 && 
+        wouldViewHeightOctaves > 0.1
+    ) {
+        // view.viewWidthTime = wouldViewWidthTime;
         view.viewHeightOctaves = wouldViewHeightOctaves;
     }
 
+    // offset zoom center back 
 
     const viewMousePositionAfter = {
         time: view.pxToTimeWithOffset(e.clientX),
@@ -79,6 +87,7 @@ const mouseWheelListener = (e: WheelEvent) => {
 
     view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
     view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
+    view.applyRatioToTime();
 
     if (view.timeOffset < 0) {
         view.timeOffset = 0;
@@ -153,8 +162,43 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
     switch (keyAction) {
+        case KeyActions.Cut: {
+            console.log("cut");
+            const selected = selection.getNotes();
+            project.score = project.score.filter(note => !note.selected);
+            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            break;
+        }
+        case KeyActions.Copy: {
+            console.log("copy");
+            const selected = selection.getNotes();
+            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            break;
+        }
+        case KeyActions.Paste: {
+            console.log("paste");
+            (async () => {
+                const text = await navigator.clipboard.readText();
+                const editNotes = project.parseNotes(text);
+                if (tool.noteThatWouldBeCreated) {
+                    const datumNote = tool.noteThatWouldBeCreated as Trace;
+                    const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
+                    const timeDiff = datumNote.time - earliestPastedNote.time;
+
+                    editNotes.forEach(note => {
+                        note.time += timeDiff;
+                    })
+                }
+
+                project.score.push(...editNotes);
+                selection.select(...editNotes);
+
+            })();
+            break;
+        }
         case KeyActions.Delete: {
             project.score = project.score.filter(note => !note.selected)
+            project.loops = project.loops.filter(note => !note.selected)
             // minimalistic option:
             // tool.noteBeingHovered = false;
             // programmatic option:
@@ -181,6 +225,10 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         case KeyActions.ActivateModulationMode: {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
+            break;
+        }
+        case KeyActions.ActivateLoopMode: {
+            tool.current = tool.current === Tool.Loop ? Tool.Edit : Tool.Loop;
             break;
         }
         case KeyActions.MuteSelectedEvents: {
@@ -241,16 +289,6 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         case KeyActions.OnlyAllowVerticalMovement: {
             tool.disallowTimeChange = !tool.disallowTimeChange;
-            break;
-        }
-        case KeyActions.Group: {
-            // not ready
-            ifDev(() => {
-                console.log("group");
-                project.setNotesGroupToNewGroup(selection.getNotes());
-                e.preventDefault();
-                e.stopPropagation();
-            }).elseLog("group feature in development");
             break;
         }
         case KeyActions.Reboot: {
@@ -344,11 +382,10 @@ watch(paneWidth, () => {
             </Button>
         </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
-        <div style="position: fixed; bottom:0; right: 0;">
-            <ToolSelector />
-        </div>
-        <div style="position: fixed; bottom: 0;">
+        <div class="toolbars-container">
             <Transport />
+            <!-- <Autotel /> -->
+            <ToolSelector />
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
@@ -357,19 +394,51 @@ watch(paneWidth, () => {
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
     </Modal>
+    <Modal name="relation fraction editor">
+        <div class="form-row">
+            <label>Simplicity: &nbsp;</label>
+            <input type="number" v-model="snap.simplify" step="0.01" min="0" max="1" />
+            <Button :onClick="() => snap.simplify = 0.12">default</Button>
+        </div>
+        <div>
+            <p>A higher simplicity will allow less complex fractions.</p>
+            <p> examples: </p>
+            <ul>
+                <li v-for="fr in [
+                            1 / 2,
+                            2 / 3,
+                            3 / 4,
+                            4 / 5,
+                            5 / 6,
+                            6 / 7,
+                            7 / 8,
+                            8 / 9,
+                            9 / 10
+                        ]">
+                    {{ new Fraction(fr).toFraction() }} is rounded to {{
+                        new Fraction(fr).simplify(snap.simplify).toFraction()
+                    }}
+                </li>
+            </ul>
+        </div>
+    </Modal>
     <UserDisclaimer />
 
-    <TooltipDisplayer/>
+    <TooltipDisplayer />
 </template>
-<style scoped>
-.unclickable {
-    pointer-events: none;
-
-}
-</style>
-
-
 <style>
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1em;
+}
+
+.form-row.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .full-width {
     width: 100%;
     box-sizing: border-box;
@@ -377,5 +446,21 @@ watch(paneWidth, () => {
 
 #viewport {
     user-select: none;
+}
+</style>
+<style scoped>
+.unclickable {
+    pointer-events: none;
+}
+
+.toolbars-container {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    height: 2.8em;
 }
 </style>

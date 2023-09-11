@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
+import { Note } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { useViewStore, NoteRect } from '../../store/viewStore';
-import { EditNote } from '../../dataTypes/EditNote';
+import { useViewStore } from '../../store/viewStore';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    event: EditNote
+    event: Note
     selected: boolean
     x: number
     interactionDisabled?: boolean
@@ -20,28 +20,8 @@ const getVeloLine = () => {
     return view.velocityToPxWithOffset(props.event.velocity);
 }
 
-const myVeloLine = ref(getVeloLine());
+const myVeloLine = computed(getVeloLine);
 
-const conditionalRefreshLine = () => {
-    if (props.interactionDisabled) return;
-    if(props.selected){
-        myVeloLine.value = getVeloLine();
-    }
-}
-
-onMounted(() => {
-    if (props.interactionDisabled) return;
-    window.addEventListener('mousemove', conditionalRefreshLine);
-    window.addEventListener('scroll', conditionalRefreshLine);
-    setTimeout(() => {
-        myVeloLine.value = getVeloLine();
-    },0);
-});
-onUnmounted(() => {
-    if (props.interactionDisabled) return;
-    window.removeEventListener('mousemove', conditionalRefreshLine);
-    window.addEventListener('scroll', conditionalRefreshLine);
-});
 
 </script>
 <template>
@@ -53,18 +33,19 @@ onUnmounted(() => {
         <circle :cx="x" :cy="myVeloLine" r="7" :class="{
             selected: event.selected,
             interactionDisabled: interactionDisabled,
-        }" />
+        }" v-bind="$attrs" />
     </template>
 </template>
 <style scoped>
-
-line, circle {
+line,
+circle {
     stroke: rgba(0, 0, 0, 0.404);
     fill: #0000;
 }
 
 
-line.selected, circle.selected {
+line.selected,
+circle.selected {
     stroke: #f889;
     stroke-width: 3px;
 }

@@ -2,10 +2,11 @@
 import { ref } from 'vue'
 import Modal from '../modals/Modal.vue';
 import {userShownDisclaimerLocalStorageKey, disclaimer} from '../texts/userDisclaimer'
-const disclaimerShown = ref(localStorage.getItem(userShownDisclaimerLocalStorageKey) === 'true')
+import nsLocalStorage from '../functions/nsLocalStorage'
+const disclaimerShown = ref(nsLocalStorage.getItem(userShownDisclaimerLocalStorageKey) === 'true')
 
 const disclaimerOkButtonPressed = () => {
-    localStorage.setItem(userShownDisclaimerLocalStorageKey, 'true')
+    nsLocalStorage.setItem(userShownDisclaimerLocalStorageKey, 'true')
     disclaimerShown.value = true
 }
 

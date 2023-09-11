@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, layerNoteColorStrings, layerNoteColors, useViewStore } from '../../store/viewStore';
+import { NoteRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
@@ -21,23 +21,18 @@ const props = defineProps<{
 // I had to add an ungly "key" that counts till infinite to force the component to rerender
 // a better solution perhaps would be to dereference on mount
 const noteBody = ref<SVGRectElement>();
-const rightEdge = ref<SVGRectElement>();
+
 const myColor = computed(() => {
     const color = layerNoteColorStrings[props.eventRect.event.layer];
     return color;
 });
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    tool.noteMouseEnter(props.eventRect.event);
+    console.log('bodyMouseEnterListener');
+    tool.timelineItemMouseEnter(props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
-    tool.noteMouseLeave();
-}
-const rightEdgeMouseEnterListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseEnter(props.eventRect.event);
-}
-const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseLeave();
+    tool.timelineItemMouseLeave();
 }
 
 onMounted(() => {
@@ -46,29 +41,21 @@ onMounted(() => {
         noteBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
     }
-    if (rightEdge.value) {
-        rightEdge.value.addEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
-    }
 });
-onUnmounted(() => {
+onBeforeUnmount(() => {
     if (props.interactionDisabled) return;
     if (noteBody.value) {
         noteBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
         noteBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
     }
-    if (rightEdge.value) {
-        rightEdge.value.removeEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
-    }
 });
 
 const isEditable = computed(() => {
-    return tool.current == Tool.Edit && tool.currentlyActiveGroup === props.eventRect.event.group;
+    return tool.current == Tool.Edit || tool.current == Tool.Modulation;
 })
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 10" :x="eventRect.x" :y="eventRect.cy + 5" font-size="10">
+    <!-- <text class="texts" v-if="view.viewWidthTime < 5" :x="eventRect.x" :y="eventRect.cy + 10" font-size="20">
         (2^{{
             eventRect.event.octave.toFixed(3)
         }})n = {{
@@ -76,26 +63,17 @@ const isEditable = computed(() => {
 }} hz {{
     eventRect.event.group?.name
 }}
-    </text>
-    <g ref="noteBody">
-        <NoteElementRectangle
-            v-if="eventRect.event.duration > 0"
-            :eventRect="eventRect" 
-            :isEditable="isEditable"
-            :fill="myColor"
-        />
-        <NoteElementCircle 
-            v-else
-            :eventRect="eventRect" 
-            :isEditable="isEditable"
-            :fill="myColor"
-        />
-        <NoteVeloLine 
-            :event="eventRect.event" 
-            :interactionDisabled="interactionDisabled" 
-            :x="eventRect.cx" 
-            :selected="eventRect.event.selected"
-            :fill="myColor"
-        />
+    </text> -->
+    <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
+        <NoteElementRectangle v-if="eventRect.width/*hasDuration(eventRect.event)*/" :eventRect="eventRect"
+            :isEditable="isEditable" :fill="myColor" />
+        <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
+        <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.cx"
+            :selected="eventRect.event.selected || false" :fill="myColor" />
     </g>
 </template>
+<style scoped>
+.mouseblock {
+    pointer-events: none;
+}
+</style>

@@ -74,7 +74,7 @@ watch(() => tool.tooltipOwner, () => {
 
 <template>
     <div class="container" ref="container" :class="{ hidden: !show }" :style="{ width }">
-        {{ tool.tooltip }}
+        <p>{{ tool.tooltip }}</p>
     </div>
 </template>
 <style>

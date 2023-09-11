@@ -1,77 +1,52 @@
 import { throttledWatch } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
-import { Group } from '../dataTypes/Group';
-import { TimeRange, TimeRangeOctaveRange, TimeRangeOctaveRangeVelocityRange, TimeRangeVelocityRange, TimelineSelectableItem } from '../dataTypes/TimelineItem';
-import { getNotesInRange } from '../functions/getNotesInRange';
+import { Note } from '../dataTypes/Note';
+import { setSelection } from '../dataTypes/Selectable';
+import { OctaveRange, TimeRange, VelocityRange, } from '../dataTypes/TimelineItem';
+import { Trace, TraceType } from '../dataTypes/Trace';
+import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
+import { useLayerStore } from './layerStore';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
+import { Tool } from '../dataTypes/Tool';
 import { useViewStore } from './viewStore';
-import { useLayerStore } from './layerStore';
 
-
-export type SelectableRange = TimeRange | TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange;
-
-
-const getGroupsInRange = (
-    groups: Group[],
-    range: {
-        startTime: number,
-        timeEnd: number,
-        octave: number,
-        octaveEnd: number
-    }
-) => {
-    // range is expected to come in positive ranges
-    const timeStart = range.startTime;
-    const timeEnd = range.timeEnd;
-    const octaveStart = range.octave;
-    const octaveEnd = range.octaveEnd;
-
-    return groups.filter((group) => {
-        const octaveBound = [group.octave, group.octaveEnd];
-        const octaveInRange = octaveBound[0] >= octaveStart && octaveBound[1] <= octaveEnd;
-        const timeInRange = group.time >= timeStart && group.timeEnd <= timeEnd;
-        return octaveInRange && timeInRange;
-    });
-};
-
+export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
-    const selected = ref(new Set() as Set<TimelineSelectableItem>);
-    const tool = useToolStore();
+    const selected = ref(new Set() as Set<Trace>);
     const project = useProjectStore();
-    const view = useViewStore();
     const layers = useLayerStore();
-
+    const tool = useToolStore();
+    const view = useViewStore();
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
-    const isSelected = (item: TimelineSelectableItem) => {
+    const isSelected = (item: Trace) => {
         return selected.value.has(item);
     };
-    const refreshNoteSelectionState = () => {
-        project.score.forEach(n => n.selected = isSelected(n))
-    }
-    const refreshGroupSelectionState = () => {
-        project.groups.forEach(g => g.selected = isSelected(g))
+    const refreshTraceSelectionState = () => {
+        // TODO: is it really necessary?
+        project.score.forEach(n => setSelection(n, isSelected(n)));
+        project.loops.forEach(n => setSelection(n, isSelected(n)));
     }
     /**
      * get selected notes
      */
-    const getNotes = (): EditNote[] => {
-        return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
-    };
-    const getGroups = (): Group[] => {
-        return [...selected.value].filter((n) => n instanceof Group) as Group[];
+    const getNotes = (): Note[] => {
+        return [...selected.value].filter((n) => n.type === TraceType.Note) as Note[];
     };
 
-    const select = (...items: TimelineSelectableItem[]) => {
+    const getTraces = () => {
+        return [...selected.value];
+    }
+
+    const select = (...items: Trace[]) => {
         selected.value.clear();
         selected.value = new Set(items);
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
 
-    const toggle = (...notes: EditNote[]) => {
+    const toggle = (...notes: Trace[]) => {
         notes.forEach((n) => {
             if (selected.value.has(n)) {
                 selected.value.delete(n);
@@ -79,59 +54,76 @@ export const useSelectStore = defineStore("select", () => {
                 selected.value.add(n);
             }
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
-    const remove = (...project: (EditNote)[]) => {
+    const remove = (...project: (Trace)[]) => {
         project.forEach((n) => {
             if (!n) return;
             selected.value.delete(n);
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     }
-    const add = (...editNote: (EditNote)[]) => {
-        editNote.forEach((n) => {
+    const add = (...trace: (Trace)[]) => {
+        trace.forEach((n) => {
             if (!n) return;
             selected.value.add(n);
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
-    const selectRange = (range: SelectableRange, restrictToGroup: (Group | null | false) = false) => {
-        const visibleLayersNotes = project.score.filter(({layer}) => layers.isVisible(layer))
-        let notesInRange = getNotesInRange(
-            visibleLayersNotes,
-            range
-        );
+    const getRangeSelectableTraces = (): Trace[] => {
+        // if(tool.current === Tool.Edit || tool.current === Tool.Modulation) {
+        //     return project.score.filter(({ layer }) => layers.isVisible(layer));
+        // } else if(tool.current === Tool.Loop) {
+        //     return project.loops;
+        // }
+        // return [];
+        return [...project.score, ...project.loops];
+    }
+    const selectRange = (range: SelectableRange) => {
+        // let notesInRange:Trace[] = getTracesInRange(
+        //     getRangeSelectableTraces(),
+        //     range
+        // );
 
-        // if in modulation mode, then  also select according to "velolines"
-        if (
-            // tool.current === Tool.Modulation
-            'velocity' in range && 'velocityEnd' in range
-        ) {
-            const notesVeloLinesInRange = getNotesInRange(
-                project.score, {
-                    time: range.time,
-                    timeEnd: range.timeEnd,
-                } as SelectableRange
-            ).filter(event =>
-                'velocity' in range ? (
-                    event.velocity < range.velocityEnd
-                    &&
-                    event.velocity > range.velocity
-                ) : false
+        // // if in modulation mode, then  also select according to "velolines"
+        // if (
+        //     // tool.current === Tool.Modulation
+        //     'velocity' in range && 'velocityEnd' in range
+        // ) {
+        //     const notesVeloLinesInRange = getTracesInRange(
+        //         project.score, {
+        //             time: range.time,
+        //             timeEnd: range.timeEnd,
+        //         } as SelectableRange
+        //     ).filter(event =>
+        //         'velocity' in range ? (
+        //             event.velocity < range.velocityEnd
+        //             &&
+        //             event.velocity > range.velocity
+        //         ) : false
+        //     )
+        //     notesInRange.push(...notesVeloLinesInRange)
+        // }
+
+        const pxRange = view.pxRangeOf(range);
+        const traceRects = [...view.visibleLoopRects, ...view.visibleNoteRects];
+        if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');
+        const sureRange = pxRange as { x: number, y: number, x2: number, y2: number };
+        const tracesWithinRange = traceRects.filter(rect => {
+            return (
+                rect.width + rect.x > sureRange.x &&
+                rect.x < sureRange.x2 &&
+                rect.height + rect.y > sureRange.y &&
+                rect.y < sureRange.y2
             )
-            notesInRange.push(...notesVeloLinesInRange)
-        }
-
-        if (restrictToGroup !== false) { // note that null is also a valid group restriction
-            notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
-        }
+        }).map(r=>r.event);
 
         select(
-            ...notesInRange,
+            ...tracesWithinRange,
         );
     };
     const addRange = (range: SelectableRange) => {
-        const newNotes = getNotesInRange(
+        const newNotes = getTracesInRange(
             project.score,
             range
         );
@@ -143,14 +135,15 @@ export const useSelectStore = defineStore("select", () => {
     const selectAll = () => {
         select(...project.score);
     };
-    throttledWatch(() => selected.value.size, refreshNoteSelectionState);
+    throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 
     return {
         selectRange,
         selectAll,
         addRange,
         add, select, toggle,
-        getNotes, getGroups,
+        getTraces,
+        getNotes,
         clear: clear, remove,
         isSelected,
         selected,

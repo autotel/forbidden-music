@@ -14,6 +14,11 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
   monoModeInteraction.activate("octave table editor")
   snap.values.customFrequencyTable.active = true
 }
+const relationFractionEditButtonHandler = (e: MouseEvent) => {
+  e.stopImmediatePropagation()
+  monoModeInteraction.activate("relation fraction editor")
+  snap.values.hzRelationFraction.active = true
+}
 </script>
 
 <template>
@@ -27,6 +32,7 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
       time: isnap.type === SnapType.Time,
       tone: isnap.type === SnapType.Tone,
       toneRelation: isnap.type === SnapType.ToneRelation,
+      toneRelationMulti: isnap.type === SnapType.ToneRelationMulti,
     }" :tooltip="isnap.description">
       {{ isnap.icon }}
       <template v-if="snapName === 'customFrequencyTable'">
@@ -34,14 +40,23 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
           <Pen/>
         </span>
       </template>
+      <template v-else-if="snapName === 'hzRelationFraction'">
+        <span class="sub-button" :onClick="relationFractionEditButtonHandler">
+          <Pen/>
+        </span>
+      </template>
     </Button>
     <Button :onClick="()=>snap.onlyWithMutednotes = !snap.onlyWithMutednotes"
-      :class="{active: snap.onlyWithMutednotes}" :tooltip="snap.onlyWithMutednotes ? 'only with muted notes. Use CTRL+M to mute a note' : 'all notes'">
+      :class="{active: snap.onlyWithMutednotes}" tooltip="only with muted notes. Use CTRL+M to mute a note">
       Monly
     </Button>
     <Button :onClick="()=>snap.onlyWithSimultaneousNotes = !snap.onlyWithSimultaneousNotes"
-      :class="{active: snap.onlyWithSimultaneousNotes}" :tooltip="snap.onlyWithSimultaneousNotes ? 'only with notes which overap in time' : 'all notes'">
+      :class="{active: snap.onlyWithSimultaneousNotes}" tooltip="only with notes which overap in time">
       Simultaneous
+    </Button>
+    <Button :onClick="()=>snap.onlyWithNotesInView = !snap.onlyWithNotesInView"
+      :class="{active: snap.onlyWithNotesInView}" tooltip="only with notes in the screen's range">
+      In view
     </Button>
   </Collapsible>
 </template>
@@ -81,13 +96,7 @@ Button:active {
   background-color: rgb(0, 99, 145);
 }
 
-.tone {
-  background-color: rgb(187, 153, 0);
-}
 
-.toneRelation {
-  background-color: rgb(199, 139, 61);
-}
 
 .time.active,
 .time:hover,
@@ -95,15 +104,30 @@ Button:active {
   background-color: rgb(105, 207, 255);
 }
 
+.tone {
+  background-color: rgb(187, 153, 0);
+}
 .tone.active,
 .tone:hover,
 .tone.active:hover {
   background-color: rgb(255, 230, 116);
 }
 
+.toneRelation {
+  background-color: rgb(199, 139, 61);
+}
 .toneRelation.active,
 .toneRelation:hover,
 .toneRelation.active:hover {
   background-color: rgb(255, 195, 116);
+}
+
+.toneRelationMulti {
+  background-color: rgb(233, 150, 125);
+}
+.toneRelationMulti.active,
+.toneRelationMulti:hover,
+.toneRelationMulti.active:hover {
+  background-color: rgb(255, 119, 78);
 }
 </style>

@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import * as PIXI from 'pixi.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { EditNote } from '../../dataTypes/EditNote';
+import { Note, getFrequency } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
+import { Trace, TraceType } from '../../dataTypes/Trace';
+import { baseFrequency, octaveToFrequency } from '../../functions/toneConverters';
 import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { useGridsStore } from '../../store/gridsStore';
 import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { layerNoteColors, useViewStore } from '../../store/viewStore';
+import { TimelineItemRect, layerNoteColors, useViewStore } from '../../store/viewStore';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -20,7 +22,6 @@ const gridsStore = useGridsStore();
 const rightEdgeWidth = 10;
 const snap = useSnapStore();
 const userSettings = useCustomSettingsStore();
-
 const measureSteps = 0;
 
 const pixiApp = new PIXI.Application({
@@ -35,39 +36,60 @@ const props = defineProps<{
     height: number,
 }>();
 
-let noteBeingRightEdgeHovered: EditNote | null = null;
+let thingBeingHovered: TimelineItemRect | null = null;
+let isHoverRightEdge = false;
 
+const didHoverChange = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
+    if (hoveredThing === thingBeingHovered && isRightEdge === isHoverRightEdge) return false;
+    return true;
+}
+const hoverChanged = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
+    thingBeingHovered = hoveredThing;
+    isHoverRightEdge = isRightEdge;
+}
 
 const mouseMoveListener = (e: MouseEvent) => {
-    const notesAtCoords = view.everyNoteRectAtCoordinates(e.offsetX, e.offsetY, tool.current === Tool.Modulation);
-    const firstNoteRect = notesAtCoords[0];
-    // ok, this bit needs refactor 
-    if (firstNoteRect) {
-        const isRightEdge = firstNoteRect.rightEdge ? (
-            (e.offsetX > firstNoteRect.rightEdge?.x - rightEdgeWidth)
-        ) : false;
-        if (isRightEdge) {
-            if (noteBeingRightEdgeHovered !== firstNoteRect.event) {
-                tool.noteRightEdgeMouseEnter(firstNoteRect.event as EditNote);
-                noteBeingRightEdgeHovered = firstNoteRect.event as EditNote;
+    const notesAtCoords = view.everyNoteAtCoordinates(
+        e.offsetX,
+        e.offsetY,
+        tool.current === Tool.Modulation
+    );
+
+    const loopsAtCoords = view.everyLoopAtCoordinates(
+        e.offsetX,
+        e.offsetY
+    );
+
+    const firstNoteRect = notesAtCoords[0] || null;
+    const firstItemRect = loopsAtCoords[0] || null;
+
+    const hoveredThing = firstNoteRect || firstItemRect || null;
+    const isRightEdge = hoveredThing.rightEdge ? (
+        (e.offsetX > hoveredThing.rightEdge?.x - rightEdgeWidth)
+    ) : false;
+
+    if (didHoverChange(hoveredThing, isRightEdge)) {
+        if (firstNoteRect) {
+            if (isRightEdge) {
+                tool.timelineItemMouseEnter(firstNoteRect.event as Trace);
+            } else {
+                tool.timelineItemRightEdgeMouseLeave();
+                tool.timelineItemMouseEnter(firstNoteRect.event as Trace);
             }
-        } else if (noteBeingRightEdgeHovered) {
-            tool.noteRightEdgeMouseLeave();
-            noteBeingRightEdgeHovered = null;
-            tool.noteMouseEnter(firstNoteRect.event as EditNote);
+        } else if (firstItemRect) {
+            if (isRightEdge) {
+                tool.timelineItemRightEdgeMouseEnter(firstItemRect.event);
+            } else {
+                tool.timelineItemRightEdgeMouseLeave();
+                tool.timelineItemMouseEnter(firstItemRect.event);
+            }
         } else {
-            tool.noteMouseEnter(firstNoteRect.event as EditNote);
-        }
-    } else if (noteBeingRightEdgeHovered) {
-        tool.noteRightEdgeMouseLeave();
-        noteBeingRightEdgeHovered = null;
-    } else if (!firstNoteRect && tool.noteBeingHovered) {
-        tool.noteMouseLeave();
-        if (noteBeingRightEdgeHovered) {
-            tool.noteRightEdgeMouseLeave();
-            noteBeingRightEdgeHovered = null;
+            tool.timelineItemRightEdgeMouseLeave();
+            tool.timelineItemMouseLeave();
         }
     }
+    hoverChanged(hoveredThing, isRightEdge);
+
 }
 
 let deltaTime = 0;
@@ -141,7 +163,7 @@ const taskMark = (taskName: string) => {
 
 let textToUse = 0;
 const getText = (): PIXI.Text => {
-    let retValue = null;
+    let retValue: PIXI.Text | null = null;
     if (!texts[textToUse]) {
         texts[textToUse] = new PIXI.Text();
         pixiApp.stage.addChild(texts[textToUse]);
@@ -165,7 +187,7 @@ const refreshView = (time: number) => {
     if (measureSteps) taskMark("1. gather facts")
     const visibleNotes = [
         ...view.visibleNoteRects,
-        ...tool.notesBeingCreated.map(view.rectOfNote),
+        ...tool.notesBeingCreated.map((t) => view.rectOfNote(t)),
     ];
     if (tool.noteThatWouldBeCreated) visibleNotes.push(
         view.rectOfNote(tool.noteThatWouldBeCreated)
@@ -189,6 +211,26 @@ const refreshView = (time: number) => {
     graphics.lineStyle(3, 0x000000, 1);
     graphics.drawPolygon(path);
     graphics.endFill();
+
+    // draw loop range
+    // if (playback.loop) {
+    //     const loopRect = view.rectOfTimelineItem(playback.loop);
+    //     graphics.beginFill(0x000000, 0.1);
+    //     graphics.lineStyle(1, 0x000000, 1);
+    //     graphics.drawRect(loopRect.x, loopRect.y, loopRect.width, loopRect.height);
+    //     graphics.endFill();
+    // }
+
+    const otherItemRects = view.visibleLoopRects;
+    otherItemRects.forEach((rect) => {
+        graphics.beginFill(0x000000, 0.1);
+        graphics.lineStyle(1, 0x000000, 1);
+        graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
+        graphics.endFill();
+
+    });
+
+
 
     // could redraw lines only on view change, perhaps on an overlayed canvas
     if (measureSteps) taskMark("4. draw grids");
@@ -223,24 +265,29 @@ const refreshView = (time: number) => {
 
     // draw snap explanations
     let snapExplTextsStart = textToUse - 1;
-    const snapFocusedNoteRect = snap.focusedNote ? view.rectOfNote(
-        snap.focusedNote
+    
+    const snapFocusedItemLocation = snap.focusedTrace ? view.locationOfTrace(
+        snap.focusedTrace
     ) : null;
-    if (snapFocusedNoteRect) {
+
+    if (snapFocusedItemLocation) {
         graphics.lineStyle(1, relationcolor, 0.5);
         for (const snapExplanation of snap.toneSnapExplanation) {
-            const relatedNoteRect = snapExplanation.relatedNote ? view.rectOfNote(
+            const relatedItemLocation = snapExplanation.relatedNote ? view.locationOfTrace(
                 snapExplanation.relatedNote
-            ) : null;
-            if (relatedNoteRect) {
-                const middleX = (snapFocusedNoteRect.cx + relatedNoteRect.cx) / 2;
-                const middleY = (snapFocusedNoteRect.cy + relatedNoteRect.cy) / 2;
-                const leftX = Math.max(relatedNoteRect.cx, 5);
-                graphics.moveTo(leftX, relatedNoteRect.cy);
-                graphics.lineTo(leftX, snapFocusedNoteRect.cy);
-                graphics.lineTo(snapFocusedNoteRect.cx, snapFocusedNoteRect.cy);
+            ) : snapFocusedItemLocation;
+            if (relatedItemLocation) {
+                const middleY =
+                    snapFocusedItemLocation.y == relatedItemLocation.y ?
+                        snapFocusedItemLocation.y :
+                        (snapFocusedItemLocation.y + relatedItemLocation.y) / 2;
+
+                const leftX = Math.max(relatedItemLocation.x, 5);
+                graphics.moveTo(leftX, relatedItemLocation.y);
+                graphics.lineTo(leftX, snapFocusedItemLocation.y);
+                graphics.lineTo(snapFocusedItemLocation.x, snapFocusedItemLocation.y);
                 graphics.beginFill(relationcolor, 1);
-                graphics.drawCircle(leftX, relatedNoteRect.cy, 3);
+                graphics.drawCircle(leftX, relatedItemLocation.y, 3);
                 graphics.endFill();
                 graphics.beginFill(relationcolor, 1);
                 let text = getText();
@@ -261,14 +308,17 @@ const refreshView = (time: number) => {
 
     }
 
-    if (measureSteps) taskMark("6. draw notes");
-    // draw notes & velolines if 
+    const displayTexts = view.viewWidthTime < 3;
 
+    if (measureSteps) taskMark("6. draw notes");
     for (const nRect of visibleNotes) {
         const lcolor = layerNoteColors[nRect.event.layer];
         if (nRect.event.selected) {
             graphics.beginFill(lcolor, 1);
             graphics.lineStyle(1, 0x555555, 0.9);
+        } else if (nRect.event.mute) {
+            graphics.beginFill(lcolor, 0.15);
+            graphics.lineStyle(1, 0x333333, 0.15);
         } else {
             graphics.beginFill(lcolor, 0.5);
             graphics.lineStyle(1, 0xAAAAAA, 0.5);
@@ -278,14 +328,23 @@ const refreshView = (time: number) => {
             graphics.drawRect(nRect.x, nRect.y, nRect.width, nRect.height);
         } else {
             // ctx.arc(nRect.cx, nRect.cy, nRect.radius, 0, 2 * Math.PI);
-            graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius);
+            graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius || 12);
         }
+        if (displayTexts) {
+            let text = getText();
+            const oct = nRect.event.octave;
+            text.text = `${baseFrequency}(2^${oct.toFixed(3)}) = ${octaveToFrequency(oct).toFixed(3)} hz`;
+            text.x = nRect.x + 5;
+            text.y = nRect.y + nRect.height - userSettings.fontSize / 2;
+            text.style.fontSize = userSettings.fontSize;
+        }
+
         if (tool.current === Tool.Modulation) {
             const veloLinePositionY = view.velocityToPxWithOffset(nRect.event.velocity);
             graphics.lineStyle(2, 0x000000, 2);
             graphics.moveTo(nRect.x, veloLinePositionY + 7);
             graphics.lineTo(nRect.x, view.viewHeightPx);
-            graphics.drawCircle(nRect.cx, veloLinePositionY, nRect.radius);
+            graphics.drawCircle(nRect.cx, veloLinePositionY, nRect.radius || 12);
         }
         graphics.endFill();
     }

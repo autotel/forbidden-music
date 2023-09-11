@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useToolStore } from '../../store/toolStore';
 import { NoteRect, useViewStore } from '../../store/viewStore';
 
@@ -14,36 +14,25 @@ const props = defineProps<{
 const rightEdge = ref<SVGElement>();
 
 const rightEdgeMouseEnterListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseEnter(props.eventRect.event);
+    tool.timelineItemRightEdgeMouseEnter(props.eventRect.event);
 }
 const rightEdgeMouseLeaveListener = (e: MouseEvent) => {
-    tool.noteRightEdgeMouseLeave();
+    tool.timelineItemRightEdgeMouseLeave();
 }
 
-onMounted(() => {
-    if (rightEdge.value) {
-        rightEdge.value.addEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
+watch(rightEdge, (newVal, oldVal) => {
+    if(oldVal) {
+        oldVal.removeEventListener('mouseenter', rightEdgeMouseEnterListener);
+        oldVal.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
     }
-});
-onUnmounted(() => {
-    if (rightEdge.value) {
-        rightEdge.value.removeEventListener('mouseenter', rightEdgeMouseEnterListener);
-        rightEdge.value.removeEventListener('mouseleave', rightEdgeMouseLeaveListener);
+    if(newVal) {
+        newVal.addEventListener('mouseenter', rightEdgeMouseEnterListener);
+        newVal.addEventListener('mouseleave', rightEdgeMouseLeaveListener);
     }
 });
 
 </script>
 <template>
-    <text class="texts" v-if="view.viewWidthTime < 10" :x="eventRect.x" :y="eventRect.cy + 5" font-size="10">
-        (2^{{
-            eventRect.event.octave.toFixed(3)
-        }})n = {{
-            eventRect.event.frequency.toFixed(3)
-        }} hz {{
-            eventRect.event.group?.name
-        }}
-    </text>
     <rect
         class="body"
         v-bind="$attrs"
@@ -59,7 +48,7 @@ onUnmounted(() => {
         :class="{
             selected: eventRect.event.selected,
             editable: isEditable,
-        }" :...=eventRect.rightEdge :width="eventRect.radius" :height="eventRect.height" 
+        }" :...=eventRect.rightEdge :width="view.rightEdgeWidth" :height="eventRect.height" 
     />
 </template>
 <style scoped>

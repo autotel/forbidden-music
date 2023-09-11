@@ -1,15 +1,18 @@
-import { useThrottleFn } from '@vueuse/core';
+import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { EditNote } from '../dataTypes/EditNote.js';
-import { Group } from '../dataTypes/Group.js';
-import { LibraryItem } from './libraryStore.js';
-import { usePlaybackStore } from './playbackStore.js';
+import { Note, NoteDef, note } from '../dataTypes/Note';
+import { Loop, LoopDef, loop } from '../dataTypes/Loop';
+import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
+import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
+import { ifDev } from '../functions/isDev';
+import { SynthInstance, SynthParam } from '../synth/SynthInterface';
+import { useLayerStore } from './layerStore';
+import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
+import { SynthChannel, usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
-import { useViewStore } from './viewStore.js';
-import { NoteDefa, NoteDefb } from '../dataTypes/Note.js';
-import { ParamType, SynthParam } from '../synth/SynthInterface.js';
-import { useLayerStore } from './layerStore.js';
+import { useViewStore } from './viewStore';
+import { Trace, TraceType, traceTypeSafetyCheck } from '../dataTypes/Trace';
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -20,77 +23,138 @@ export const useProjectStore = defineStore("current project", () => {
     const playbackStore = usePlaybackStore();
     const name = ref("unnamed (autosave)" as string);
 
-    const groups = ref<Group[]>([]);
-    const score = ref<EditNote[]>([]);
-
-    const getUnusedGroupId = (): number => {
-        let ret = 0;
-        while (groups.value.find((group) => group.id === ret)) {
-            ret++;
-        }
-        return ret;
-    }
-    const getNewGroup = (name = "new group"): Group => {
-        // if groups array is a ref, it seems that group might be cloned into instead of being the same
-        const index = groups.value.push(new Group(name));
-        const newGroup = groups.value[index - 1];
-        return newGroup
-    }
+    const score = ref<Note[]>([]);
+    const loops = ref<Loop[]>([]);
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
     });
 
-    const getNotesInGroup = (group: Group): EditNote[] => {
-        return score.value.filter((note) => note.group === group);
+    const serializeNotes = (notes: Note[]) => notes.map((editNote) => ({
+        octave: editNote.octave,
+        time: editNote.time,
+        timeEnd: editNote.timeEnd,
+        mute: editNote.mute,
+        velocity: editNote.velocity,
+        layer: editNote.layer,
+    }))
+
+    const serializeLoops = (loops: Loop[]): LoopDef[] => loops.filter(
+        l => ((l.timeEnd - l.time > 0) && (l.count > 0))
+    ).map((loop) => {
+        const ret: LoopDef = {
+            time: loop.time,
+            timeEnd: loop.timeEnd,
+            count: loop.count,
+        };
+        if (loop.count === Infinity) delete ret.count;
+        return ret;
+    });
+
+    const stringifyNotes = (notes: Note[], zip: boolean = false) => {
+        let str = JSON.stringify(serializeNotes(notes));
+        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        return str;
     }
 
-    const getOrCreateGroupById = (id: number, extraProps: any): Group => {
-        const groupList = groups.value;
-        const found = groupList.find((group) => group.id === id);
-        if (found) return found;
-        const newGroup = getNewGroup();
-        newGroup.id = id;
-        Object.assign(newGroup, extraProps);
-        groupList.push(newGroup);
-        return newGroup;
+
+    const stringifyLoops = (loops: Loop[], zip: boolean = false) => {
+        let str = JSON.stringify(serializeLoops(loops));
+        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        return str;
     }
 
-    const updateGroupBounds = useThrottleFn((group: Group) => {
-        const notes = getNotesInGroup(group);
-        if (notes.length === 0) {
-            group.setBounds([0, 0], [0, 0]);
-            return;
+    const parseNotes = (str: string): Note[] => {
+        let json = str;
+        let objNotes = [];
+
+        try {
+            objNotes = JSON.parse(str);
+        } catch (_e) {
+            ifDev(() => console.log("cannot be parsed, trying to decompress"));
+            try {
+                json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
+            } catch (_e) {
+                ifDev(() => console.log("cannot be decompressed"));
+                return [];
+            }
         }
-        const start = Math.min(...notes.map((note) => note.time));
-        const end = Math.max(...notes.map((note) => note.timeEnd));
-        const octaveStart = Math.min(...notes.map((note) => note.octave));
-        const octaveEnd = Math.max(...notes.map((note) => note.octave));
-        group.setBounds([start, end], [octaveStart, octaveEnd]);
-    }, 60, true, true);
 
+        try {
+            objNotes = JSON.parse(json);
+        } catch (_e) {
+            ifDev(() => console.log("cannot be parsed, giving up"));
+            return [];
+        }
+
+
+        const editNotes = objNotes.map((maybeNote: unknown | NoteDef) => {
+            if (typeof maybeNote !== "object") return false;
+            if (null === maybeNote) return false;
+            if (!('time' in maybeNote)) return false;
+            if (!('timeEnd' in maybeNote)) return false;
+            if (!('octave' in maybeNote)) return false;
+            if (!('velocity' in maybeNote)) return false;
+            if (!('mute' in maybeNote)) return false;
+            if (!('layer' in maybeNote)) return false;
+
+            return note({
+                ...maybeNote as NoteDef,
+            });
+        }).filter((on: unknown) => on) as Note[];
+        if (editNotes.length === 0) {
+            console.log("no notes found in parsed text");
+            return [];
+        }
+        sanitizeTimeRanges(...editNotes);
+        return editNotes;
+    }
+
+    const parseLoops = (str: string): Loop[] => {
+        let json = str;
+        let objLoops = [];
+
+        try {
+            objLoops = JSON.parse(str);
+        } catch (_e) {
+            ifDev(() => console.log("cannot be parsed, trying to decompress"));
+            try {
+                json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
+            } catch (_e) {
+                ifDev(() => console.log("cannot be decompressed"));
+                return [];
+            }
+        }
+
+        try {
+            objLoops = JSON.parse(json);
+        } catch (_e) {
+            ifDev(() => console.log("cannot be parsed, giving up"));
+            return [];
+        }
+
+        objLoops = objLoops.map((maybeLoop: LoopDef) => loop(maybeLoop))
+        sanitizeTimeRanges(...objLoops);
+        return objLoops
+    }
 
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: score.value.map((editNote) => ({
-                frequency: editNote.frequency,
-                time: editNote.time,
-                duration: editNote.duration,
-                mute: editNote.mute,
-                velocity: editNote.velocity,
-                groupId: editNote.group?.id || null,
-                layer: editNote.layer,
-            })),
+            notes: serializeNotes(score.value),
+            loops: serializeLoops(loops.value),
             customOctavesTable: snaps.customOctavesTable,
+            snap_simplify: snaps.simplify,
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
             bpm: playbackStore.bpm,
             layers: layers.layers,
+            channels: [],
+            version: LIBRARY_VERSION,
         } as LibraryItem;
         if (playbackStore.channels.length) {
-            ret.channels = playbackStore.channels.map((channel) => ({
+            ret.channels = playbackStore.channels.map((channel: SynthChannel) => ({
                 type: channel.synth.name,
                 params: channel.params.filter((param: SynthParam) => {
                     return param.exportable;
@@ -104,12 +168,12 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
 
-    const setFromListOfNoteDefinitions = (notes: (NoteDefa | NoteDefb)[]) => {
+    const setFromListOfNoteDefinitions = (notes: NoteDef[]) => {
         console.log("setFromListOfNoteDefinitions", notes);
-        score.value = notes.map((note) => {
-            const noteLayer = note.layer || 0;
+        score.value = notes.map((noteDef) => {
+            const noteLayer = noteDef.layer || 0;
             layers.getOrMakeLayerWithIndex(noteLayer);
-            return new EditNote(note, view)
+            return note(noteDef)
         });
     }
 
@@ -121,6 +185,25 @@ export const useProjectStore = defineStore("current project", () => {
 
         setFromListOfNoteDefinitions(pDef.notes);
 
+
+        const nLoops: Loop[] = pDef.loops.map((loop: LoopDef) => {
+            if (!('count' in loop)) {
+                loop.count = Infinity;
+            }
+            if (('time' in loop) && ('timeEnd' in loop)) {
+                return loop as unknown as Loop;
+            }
+
+            console.error("invalid loop definition", loop);
+            return {
+                time: 0,
+                timeEnd: 0,
+                count: 0,
+            } as Loop;
+        }).map(loop);
+
+        loops.value = nLoops;
+
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
         pDef.snaps.forEach(([name, activeState]) => {
@@ -128,23 +211,24 @@ export const useProjectStore = defineStore("current project", () => {
             snaps.values[name].active = activeState;
         });
 
-        pDef.layers.forEach(({channelSlot,visible,locked}, index) => {
+        pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
             const layer = layers.getOrMakeLayerWithIndex(index);
             layer.visible = visible;
             layer.locked = locked;
             layer.channelSlot = channelSlot;
         });
 
-        if(pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
+        if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
+        if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
 
         (async () => {
             await playbackStore.audioContextPromise;
             pDef.channels.forEach(({ type, params }, index) => {
-                playbackStore.setSynthByName(type, index).then((synth) => {
+                playbackStore.setSynthByName(type, index).then((synth: SynthInstance) => {
                     params.forEach((param) => {
                         try {
-                            const foundNamedParam = synth.params.find((synthParam) => {
-                                return synthParam.displayName === param.displayName;
+                            const foundNamedParam = synth.params.find(({ displayName }) => {
+                                return displayName === param.displayName;
                             })
                             if (foundNamedParam) {
                                 foundNamedParam.value = param.value;
@@ -165,39 +249,86 @@ export const useProjectStore = defineStore("current project", () => {
 
     const clearScore = () => {
         score.value = [];
-        groups.value = [];
+        loops.value = [];
     }
 
-    const appendNote = (...notes: EditNote[]) => {
+    const appendNote = (...notes: Note[]) => {
         score.value.push(...notes);
-        let alreadyUpdatedGroups: Group[] = [];
-        notes.map((note) => {
-            if (!note.group) return;
-            if (alreadyUpdatedGroups.includes(note.group)) return;
-            alreadyUpdatedGroups.push(note.group);
-            updateGroupBounds(note.group);
-        })
     }
 
-    const setNotesGroup = (notes: EditNote[], group: Group) => {
-        notes.map((note) => {
-            note.group = group;
+    const append = (...traces: Trace[]) => {
+        let nnotes = [] as Note[];
+        let nloops = [] as Loop[];
+        traces.forEach((trace) => {
+            switch (trace.type) {
+                case TraceType.Note:
+                    nnotes.push(trace);
+                    break;
+                case TraceType.Loop:
+                    nloops.push(trace);
+                    break;
+            }
         })
-        updateGroupBounds(group);
+        appendNote(...nnotes);
+        loops.value.push(...nloops);
     }
 
-    const setNotesGroupToNewGroup = (notes: EditNote[]) => {
-        const newGroup = getNewGroup();
-        setNotesGroup(notes, newGroup);
+    const magicLoopDuplicator = (originalLoop: Loop) => {
+        const notesInLoop = getNotesInRange(score.value, originalLoop).filter((note) => {
+            // dont copy notes that started earlier bc. we are already copying notes that end after
+            // also dont copy notes that start right at the end of originalLoop
+            return note.time >= originalLoop.time && note.time < originalLoop.timeEnd
+        });
+        const notesAfterLoop = getNotesInRange(score.value, {
+            time: originalLoop.timeEnd,
+            timeEnd: Infinity,
+        }).filter((note) => {
+            return !notesInLoop.includes(note)
+        });
+        const loopsAfterLoop = loops.value.filter((otherLoop) => {
+            return otherLoop.time >= originalLoop.timeEnd;
+        });
+        const loopLength = originalLoop.timeEnd - originalLoop.time;
+        notesAfterLoop.forEach((note) => {
+            note.time += loopLength;
+        })
+        loopsAfterLoop.forEach((originalLoop) => {
+            console.log("shift originalLoop", originalLoop.time);
+            originalLoop.time += loopLength;
+            originalLoop.timeEnd += loopLength;
+            console.log(" >> ", originalLoop.time);
+        })
+
+        // clone all notes in originalLoop
+        score.value.push(...notesInLoop.map(note));
+
+        notesInLoop.forEach((note) => {
+            note.time += loopLength;
+            note.timeEnd += loopLength;
+        })
+        
+        loops.value.push(loop({
+            time: originalLoop.time + loopLength,
+            timeEnd: originalLoop.timeEnd + loopLength,
+            count: originalLoop.count,
+        }));
+
+        if (originalLoop.count === Infinity) {
+            originalLoop.count = 4;
+            originalLoop.repetitionsLeft = 1;
+        }
+
     }
 
     return {
-        score, groups,
+        score, loops, append,
         name, edited, created, snaps,
+        stringifyNotes, parseNotes,
+        stringifyLoops, parseLoops,
         getProjectDefintion,
-        setFromProjectDefinition, setFromListOfNoteDefinitions, updateGroupBounds,
-        getOrCreateGroupById, getNotesInGroup, setNotesGroup, setNotesGroupToNewGroup,
+        setFromProjectDefinition, setFromListOfNoteDefinitions,
         clearScore, appendNote,
+        magicLoopDuplicator,
     }
 
 });

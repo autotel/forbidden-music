@@ -1,8 +1,3 @@
-export enum SelectableType {
-    Note,
-    Group,
-}
-
 //stuff placed in timeline
 
 export interface TimePosition {
@@ -23,29 +18,19 @@ export interface OctaveRange {
     octaveEnd: number,
 }
 
+export interface VelocityPosition {
+    velocity: number,
+}
+
 export interface VelocityRange {
     velocity: number,
     velocityEnd: number,
 }
 
-export type TimeRangeOctaveRange = TimeRange & OctaveRange
-export type TimeRangeOctave = TimeRange & OctavePosition
-export type TimeRangeVelocityRange = TimeRange & VelocityRange
-export type TimeRangeOctaveRangeVelocityRange = TimeRange & OctaveRange & VelocityRange
-// ... add as needed
-
-export type TimelineItem = TimeRangeOctaveRange | TimeRangeVelocityRange | TimeRangeOctaveRangeVelocityRange | TimeRangeOctave;
-
-//selectable stuff in the timeline 
-
-export interface Selectable {
-    selected: boolean;
-    type?: SelectableType;
+export const sanitizeTimeRanges = (... items: TimeRange[]) => {
+    items.forEach(item => {
+        if (item.timeEnd < item.time) {
+            item.timeEnd = item.time;
+        }
+    });
 }
-
-export type TimeRangeOctaveRangeSelectable = TimeRange & OctaveRange & Selectable;
-export type TimeRangeOctaveSelectable = TimeRange & OctavePosition & Selectable;
-export type TimeOctaveRangeSelectable = TimePosition & OctaveRange & Selectable;
-export type TimeOctaveSelectable = TimePosition & OctavePosition & Selectable;
-
-export type TimelineSelectableItem = TimeRangeOctaveRangeSelectable | TimeRangeOctaveSelectable | TimeOctaveRangeSelectable | TimeOctaveSelectable;

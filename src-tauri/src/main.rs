@@ -9,10 +9,21 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, Window, Wry};
+use assert_no_alloc::*;
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{FromSample, Sample, SizedSample, Stream};
+use fundsp::hacker::*;
+
 
 #[derive(Default)]
 pub struct MidiState {
     pub input: Mutex<Option<MidiInputConnection<()>>>,
+}
+
+
+#[derive(Default)]
+pub struct VoiceState {
+    pub trigger: Mutex<Option<bool>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -20,11 +31,6 @@ struct MidiMessage {
     message: Vec<u8>,
 }
 
-
-use assert_no_alloc::*;
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{FromSample, SizedSample};
-use fundsp::hacker::*;
 
 #[cfg(debug_assertions)] // required when disable_release is set (default)
 #[global_allocator]
@@ -113,95 +119,35 @@ fn open_midi_connection(
         Err(e) => println!("Error: {}", e),
     }
 }
+
 #[tauri::command]
-fn beep() {
-    let host = cpal::default_host();
-
-    let device = host
-        .default_output_device()
-        .expect("Failed to find a default output device");
-    let config = device.default_output_config().unwrap();
-
-    match config.sample_format() {
-        cpal::SampleFormat::F32 => run::<f32>(&device, &config.into()).unwrap(),
-        cpal::SampleFormat::I16 => run::<i16>(&device, &config.into()).unwrap(),
-        cpal::SampleFormat::U16 => run::<u16>(&device, &config.into()).unwrap(),
-        _ => panic!("Unsupported format"),
-    }
-    fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyhow::Error>
-    where
-        T: SizedSample + FromSample<f64>,
-    {
-        let sample_rate = config.sample_rate.0 as f64;
-        let channels = config.channels as usize;
-
-        let c = 0.2 * (organ_hz(midi_hz(57.0)) + organ_hz(midi_hz(61.0)) + organ_hz(midi_hz(64.0)));
-
-        let c = c >> pan(0.0);
-
-        let c = c >> (chorus(0, 0.0, 0.01, 0.2) | chorus(1, 0.0, 0.01, 0.2));
-
-
-        let mut c = c
-            >> (declick() | declick())
-            >> (dcblock() | dcblock())
-            //>> (multipass() & 0.2 * reverb_stereo(10.0, 3.0))
-            >> limiter_stereo((1.0, 5.0));
-        //let mut c = c * 0.1;
-
-        c.set_sample_rate(sample_rate);
-        c.allocate();
-
-        let mut next_value = move || assert_no_alloc(|| c.get_stereo());
-
-        let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
-
-        let stream = device.build_output_stream(
-            config,
-            move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-                write_data(data, channels, &mut next_value)
-            },
-            err_fn,
-            None,
-        )?;
-        stream.play()?;
-        // stream does not block the calling thread but I dont't know how to keep the sound beyond the scope of this function
-        std::thread::sleep(std::time::Duration::from_millis(4000));
-
-        Ok(())
-    }
-
-    fn  write_data<T>(output: &mut [T], channels: usize, next_sample: &mut dyn FnMut() -> (f64, f64))
-    where
-        T: SizedSample + FromSample<f64>,
-    {
-        for frame in output.chunks_mut(channels) {
-            let sample = next_sample();
-            let left = T::from_sample(sample.0);
-            let right: T = T::from_sample(sample.1);
-
-            for (channel, sample) in frame.iter_mut().enumerate() {
-                if channel & 1 == 0 {
-                    *sample = left;
-                } else {
-                    *sample = right;
-                }
-            }
-        }
-    }
+fn trigger(
+    voice_state: tauri::State<'_, VoiceState>,
+    window: Window<Wry>
+) {
+    voice_state.trigger.lock().unwrap().replace(true);
+    println!("Triggered!");
 }
 
-fn main() {
+fn main() -> anyhow::Result<()>  {
+    let voice_state = VoiceState {
+        ..Default::default()
+    };
+    let stream = stream_setup_for(&voice_state)?;
+    stream.play()?;
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             greet,
-            beep,
+            trigger,
             open_midi_connection,
             list_midi_connections
         ])
         .manage(MidiState {
             ..Default::default()
-        }).setup(|app| {
+        })
+        .manage(voice_state)
+        .setup(|app| {
             #[cfg(debug_assertions)] // only include this code on debug builds
             {
               let window = app.get_window("main").unwrap();
@@ -212,4 +158,235 @@ fn main() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    Ok(())
+}
+
+
+
+
+pub enum Waveform {
+    Sine,
+    Square,
+    Saw,
+    Triangle,
+}
+
+pub struct Oscillator {
+    pub sample_rate: f32,
+    pub waveform: Waveform,
+    pub current_sample_index: f32,
+    pub frequency_hz: f32,
+    pub amplitude: f32,
+}
+
+impl Oscillator {
+    fn advance_sample(&mut self) {
+        self.current_sample_index = (self.current_sample_index + 1.0) % self.sample_rate;
+    }
+
+    fn set_waveform(&mut self, waveform: Waveform) {
+        self.waveform = waveform;
+    }
+
+    fn calculate_sine_output_from_freq(&self, freq: f32) -> f32 {
+        let two_pi = 2.0 * std::f32::consts::PI;
+        (self.current_sample_index * freq * two_pi / self.sample_rate).sin()
+    }
+
+    fn is_multiple_of_freq_above_nyquist(&self, multiple: f32) -> bool {
+        self.frequency_hz * multiple > self.sample_rate / 2.0
+    }
+
+    fn sine_wave(&mut self) -> f32 {
+        self.advance_sample();
+        self.calculate_sine_output_from_freq(self.frequency_hz)
+    }
+
+    fn generative_waveform(&mut self, harmonic_index_increment: i32, gain_exponent: f32) -> f32 {
+        self.advance_sample();
+        let mut output = 0.0;
+        let mut i = 1;
+        while !self.is_multiple_of_freq_above_nyquist(i as f32) {
+            let gain = 1.0 / (i as f32).powf(gain_exponent);
+            output += gain * self.calculate_sine_output_from_freq(self.frequency_hz * i as f32);
+            i += harmonic_index_increment;
+        }
+        output
+    }
+
+    fn square_wave(&mut self) -> f32 {
+        self.generative_waveform(2, 1.0)
+    }
+
+    fn saw_wave(&mut self) -> f32 {
+        self.generative_waveform(1, 1.0)
+    }
+
+    fn triangle_wave(&mut self) -> f32 {
+        self.generative_waveform(2, 2.0)
+    }
+
+    fn tick(&mut self) -> f32 {
+        self.advance_sample();
+        match self.waveform {
+            Waveform::Sine => self.sine_wave() * self.amplitude,
+            Waveform::Square => self.square_wave() * self.amplitude,
+            Waveform::Saw => self.saw_wave() * self.amplitude,
+            Waveform::Triangle => self.triangle_wave() * self.amplitude,
+        }
+    }
+}
+
+
+pub struct VeryBasicVoice {
+    pub oscillator: Oscillator,
+    pub decay_time: f32,
+    pub in_use: bool,
+}
+
+impl VeryBasicVoice {
+
+    fn set_waveform(&mut self, waveform: Waveform) {
+        self.oscillator.set_waveform(waveform);
+    }
+
+
+    fn tick(&mut self) -> f32 {
+        if !self.in_use {
+            return 0.0;
+        }
+        let delta_gain = 1.0 / (self.decay_time * self.oscillator.sample_rate);
+        self.oscillator.amplitude -= delta_gain;
+        if self.oscillator.amplitude <= 0.0 {
+            self.in_use = false;
+        }
+        self.oscillator.tick()
+    }
+}
+
+
+pub fn stream_setup_for(voice_state:&VoiceState) -> Result<cpal::Stream, anyhow::Error>
+where
+{
+    let (_host, device, config) = host_device_setup()?;
+
+    match config.sample_format() {
+        cpal::SampleFormat::I8 => make_stream::<i8>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::I16 => make_stream::<i16>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::I32 => make_stream::<i32>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::I64 => make_stream::<i64>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::U8 => make_stream::<u8>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::U16 => make_stream::<u16>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::U32 => make_stream::<u32>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::U64 => make_stream::<u64>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::F32 => make_stream::<f32>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::F64 => make_stream::<f64>(&device, &config.into(), voice_state),
+        sample_format => Err(anyhow::Error::msg(format!(
+            "Unsupported sample format '{sample_format}'"
+        ))),
+    }
+}
+
+pub fn host_device_setup(
+) -> Result<(cpal::Host, cpal::Device, cpal::SupportedStreamConfig), anyhow::Error> {
+    let host = cpal::default_host();
+
+    let device = host
+        .default_output_device()
+        .ok_or_else(|| anyhow::Error::msg("Default output device is not available"))?;
+    println!("Output device : {}", device.name()?);
+
+    let config = device.default_output_config()?;
+    println!("Default output config : {:?}", config);
+
+    Ok((host, device, config))
+}
+
+pub fn make_stream<T>(
+    device: &cpal::Device,
+    config: &cpal::StreamConfig,
+    voice_state:&VoiceState
+) -> Result<cpal::Stream, anyhow::Error>
+where
+    T: SizedSample + FromSample<f32>,
+{
+    let num_channels = config.channels as usize;
+    let mut oscillator = Oscillator {
+        waveform: Waveform::Sine,
+        sample_rate: config.sample_rate.0 as f32,
+        current_sample_index: 0.0,
+        frequency_hz: 110.0,
+        amplitude: 0.1,
+    };
+
+    oscillator.set_waveform(Waveform::Sine);
+
+    let mut voice = VeryBasicVoice {
+        oscillator,
+        decay_time: 0.8,
+        in_use: true,
+    };
+    
+    let err_fn = |err| eprintln!("Error building output sound stream: {}", err);
+
+    let time_at_start = std::time::Instant::now();
+    println!("Time at start: {:?}", time_at_start);
+
+    println!("voice state trigger: {:?}", voice_state.trigger.lock().unwrap());
+    
+    // difficult to pass in a reference to voice_state
+    // because who knows what the lib will do with the closure?
+    let stream = device.build_output_stream(
+        config,
+        move |output: &mut [T], _: &cpal::OutputCallbackInfo | {
+
+            // we need to know voice_state here!
+
+            // if voice_state.trigger.lock().unwrap().unwrap_or(false) {
+            //     voice_state.trigger.lock().unwrap().replace(false);
+            //     voice.in_use = true;
+            // }
+        
+
+            // for 0-1s play sine, 1-2s play square, 2-3s play saw, 3-4s play triangle_wave
+            // let time_since_start = std::time::Instant::now()
+            //     .duration_since(time_at_start)
+            //     .as_secs_f32();
+
+
+            // if time_since_start < 1.0 {
+            //     oscillator.set_waveform(Waveform::Sine);
+            // } else if time_since_start < 2.0 {
+            //     oscillator.set_waveform(Waveform::Triangle);
+            // } else if time_since_start < 3.0 {
+            //     oscillator.set_waveform(Waveform::Square);
+            // } else if time_since_start < 4.0 {
+            //     oscillator.set_waveform(Waveform::Saw);
+            // } else {
+            //     oscillator.set_waveform(Waveform::Sine);
+            // }
+            process_frame(output, &mut voice, num_channels)
+        },
+        err_fn,
+        None,
+    )?;
+
+    Ok(stream)
+}
+
+fn process_frame<SampleType>(
+    output: &mut [SampleType],
+    synth: &mut VeryBasicVoice,
+    num_channels: usize
+) where
+    SampleType: Sample + FromSample<f32>,
+{
+    for frame in output.chunks_mut(num_channels) {
+        let value: SampleType = SampleType::from_sample(synth.tick());
+        // copy the same value to all channels
+        for sample in frame.iter_mut() {
+            *sample = value;
+        }
+    }
 }

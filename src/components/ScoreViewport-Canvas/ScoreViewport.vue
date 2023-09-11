@@ -59,7 +59,7 @@ const refreshView = () => {
             ctx.fillRect(note.x, note.y, note.width, note.height);
         } else {
             ctx.beginPath();
-            ctx.arc(note.cx, note.cy, note.radius, 0, 2 * Math.PI);
+            ctx.arc(note.cx, note.cy, note.radius || 12, 0, 2 * Math.PI);
             ctx.fill();
         }
     }

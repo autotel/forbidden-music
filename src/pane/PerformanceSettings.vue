@@ -10,10 +10,13 @@ import isDev from '../functions/isDev';
 import { usePlaybackStore } from '../store/playbackStore';
 import isTauri from '../functions/isTauri';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
+import { useViewStore } from '../store/viewStore';
+import { useToolStore } from '../store/toolStore';
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();
-
+const view = useViewStore();
+const tool = useToolStore();
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
     { name: 'SVG', value: ViewportTech.Svg },
@@ -65,6 +68,22 @@ const viewportTechs = [
                 <Toggle v-model="userSettings.physicalEnabled" />
                 <label>Phyisical use</label>
             </div>
+
+            <div class="form-row">
+                <Toggle v-model="tool.showReferenceKeyboard" />
+                <label>Reference Keyboard</label>
+            </div>
+
+            <div class="form-row">
+                <input
+                    v-model="userSettings.octaveToTimeRatio" 
+                    type="number"
+                    step="0.01"
+                    min="0.1"
+                    max="4"
+                />
+                <label>Octave to time ratio</label>
+            </div>
             <!-- 
             <div class="form-row">
                 <Toggle v-model="userSettings.performanceSettingsEnabled" />
@@ -80,14 +99,3 @@ const viewportTechs = [
         </div>
     </Collapsible>
 </template>
-<style scoped>
-.form-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 1em;
-}
-.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
-</style>

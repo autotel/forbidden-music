@@ -1,20 +1,22 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
-import { Note, NoteDefb } from '../dataTypes/Note';
+import { LoopDef } from '../dataTypes/Loop';
+import { Note, NoteDef } from '../dataTypes/Note';
+import nsLocalStorage from '../functions/nsLocalStorage';
 import { SynthParamStored } from '../synth/SynthInterface';
-import { useProjectStore } from './projectStore';
-import { useViewStore } from './viewStore';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { userCustomPerformanceSettings } from './customSettingsStore';
+import { useProjectStore } from './projectStore';
+import { useViewStore } from './viewStore';
 
-const version = "0.2.0";
+const version = "0.3.0";
+export const LIBRARY_VERSION = version;
 
-
-export interface LibraryItem_0_1_0 {
+interface LibraryItem_0_1_0 {
     version: string;
     name: string;
-    notes: Array<GroupNoteDef>;
+    notes: Array<{ [key: string]: number | false } & { groupId: number }>;
     created: Number;
     edited: Number;
     snaps: Array<[string, boolean]>;
@@ -25,6 +27,53 @@ export interface LibraryItem_0_1_0 {
     bpm?: number;
 }
 
+interface LibraryItem_0_2_0 extends LibraryItem_0_1_0 {
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    channels: {
+        type: string;
+        params: Array<SynthParamStored>;
+    }[];
+    customOctavesTable?: number[];
+    snap_simplify?: number;
+}
+
+
+type LibraryItem_0_3_0 = {
+
+    version: string;
+    name: string;
+    created: Number;
+    edited: Number;
+    snaps: Array<[string, boolean]>;
+    instrument?: {
+        type: string;
+        params: Array<SynthParamStored>;
+    };
+    bpm?: number;
+
+
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    channels: {
+        type: string;
+        params: Array<SynthParamStored>;
+    }[];
+    customOctavesTable?: number[];
+    snap_simplify?: number;
+
+    notes: NoteDef[];
+    loops: LoopDef[],
+}
+
+export type LibraryItem = LibraryItem_0_3_0;
+
 const migrators = {
     "0.0.0": (obj: any) => {
         obj.version = "0.1.0";
@@ -34,11 +83,11 @@ const migrators = {
             console.log(note);
             return note;
         });
-        if(!obj.bpm) obj.bpm = 120;
+        if (!obj.bpm) obj.bpm = 120;
         return obj;
     },
-    "0.1.0": (obj: LibraryItem_0_1_0): LibraryItem => {
-        const newObj = Object.assign({},obj) as LibraryItem & {
+    "0.1.0": (obj: LibraryItem_0_1_0): LibraryItem_0_2_0 => {
+        const newObj = Object.assign({}, obj) as LibraryItem_0_2_0 & {
             instrument?: {
                 type: string;
                 params: Array<SynthParamStored>;
@@ -53,33 +102,18 @@ const migrators = {
         }
         return newObj;
     },
+    "0.2.0": (obj: LibraryItem_0_1_0): LibraryItem_0_3_0 => {
+        const newObj = Object.assign({
+            loops: [],
+        }, obj) as unknown as LibraryItem_0_3_0 & {
+            loops: [],
+        };
+        newObj.version = "0.3.0";
+        return newObj;
+    },
 }
 
 
-
-export type GroupNoteDef = NoteDefb & {
-    groupId: number;
-}
-
-export interface LibraryItem {
-    version: string;
-    name: string;
-    notes: Array<GroupNoteDef>;
-    created: Number;
-    edited: Number;
-    snaps: Array<[string, boolean]>;
-    customOctavesTable?: number[];
-    channels: {
-        type: string;
-        params: Array<SynthParamStored>;
-    }[];
-    layers: {
-        channelSlot: number;
-        visible: boolean;
-        locked: boolean;
-    }[];
-    bpm: number;
-}
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 
@@ -104,11 +138,11 @@ const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
     inValue.version = version;
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
-    localStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
+    nsLocalStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
 }
 
 const retrieveFromLocalStorage = (filename: string) => {
-    const storageItem = localStorage.getItem(filename);
+    const storageItem = nsLocalStorage.getItem(filename);
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
     let retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
@@ -118,15 +152,15 @@ const retrieveFromLocalStorage = (filename: string) => {
 }
 
 const listLocalStorageFiles = () => {
-    return Object.keys(localStorage).filter(n => !reservedEntryNames.includes(n));
+    return Object.keys(nsLocalStorage).filter(n => !reservedEntryNames.includes(n));
 }
 
 const exists = (filename: string) => {
-    return localStorage.getItem(filename) !== null;
+    return nsLocalStorage.getItem(filename) !== null;
 }
 
 const deleteItem = (filename: string) => {
-    localStorage.removeItem(filename);
+    nsLocalStorage.removeItem(filename);
 }
 
 export const useLibraryStore = defineStore("library store", () => {
@@ -241,6 +275,10 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     udpateItemsList();
+
+    window.onfocus = () => {
+        nsLocalStorage.syncFromLocalStorage();
+    }
 
     return {
         clear,

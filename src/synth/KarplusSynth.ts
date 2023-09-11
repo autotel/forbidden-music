@@ -1,5 +1,5 @@
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
-import { SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
 
 // It's really difficult to measure the filter cutoff, though possible.
 // maybe we can use this approach to comb filter instead of the worklet
@@ -10,7 +10,8 @@ import { SynthInstance, SynthParam } from "./SynthInterface";
 
 interface KarplusStopVoiceMessage {
     stop: true;
-    ref: string;
+    // identifier
+    i: string;
 }
 
 interface KarplusStopAllMessage {
@@ -18,30 +19,264 @@ interface KarplusStopAllMessage {
 }
 
 interface KarplusStartVoiceMessage {
-    freq: number;
-    amp: number;
-    duration?: number;
-    ref: string;
+    // frequency
+    f: number;
+    // amplitude or velocity
+    a: number;
+    // length of the note
+    s?: number;
+    // identifier
+    i: string;
 }
-// TODO: 
+
 interface KarplusParamsChangeMessage {
-    bleed?: number;
-    impulseDecay?: number;
-    impulseAttack?: number;
-    delaysDetune?: number;
+    // feedback filter cutoff frequency
+    fff?: number
+    // feedback-filter's wet
+    ffw?: number
+    // feedback amount
+    ff?: number
+    // cross-feedback amount
+    xf?: number
+    // exciter overall level
+    exv?: number
+    // exciter attack
+    exa?: number
+    // exciter decay
+    exd?: number
+    // proportionality of amp to feedback
+    atoff?: number
+    // proportionality of amp env to feedback time
+    adet?: number
+    // proportionality of exciter env to feedback time
+    exdet?: number
+}
+
+const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {
+    const target = await promise;
+    return target.port.postMessage(message);
 }
 
 export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;
     gainNode?: GainNode;
     engine?: AudioWorkletNode;
-    enable:()=>void;
-    disable:()=>void;
+    private resolveEnginePromise?: Function;
+    enable: () => void;
+    disable: () => void;
     constructor(audioContext: AudioContext) {
         this.setAudioContext(audioContext);
         // TODO... or not
-        this.enable = () => {}
-        this.disable = () => {}
+        this.enable = () => { }
+        this.disable = () => { }
+        const enginePromise = new Promise<AudioWorkletNode>((res) => {
+            this.resolveEnginePromise = res;
+        });
+
+        const fffParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    fff: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "boxcar K",
+            min: 0,
+            max: 1,
+            exportable: true,
+        } as NumberSynthParam;
+        this.params.push(fffParam)
+        fffParam.value = 0.128;
+
+        const ffwParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    ffw: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "Filter wet",
+            min: 0,
+            max: 1,
+            exportable: true,
+        } as NumberSynthParam;
+        this.params.push(ffwParam)
+        ffwParam.value = 0.645;
+
+        const ffParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    ff: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "feedback",
+            min: -1.5,
+            max: 1.5,
+            exportable: true,
+        } as NumberSynthParam;
+        this.params.push(ffParam)
+        ffParam.value = -0.630;
+
+        const exaParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    exa: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "exciter attack",
+            min: 0,
+            max: 10,
+            exportable: true,
+            curve:'log'
+        } as NumberSynthParam;
+        this.params.push(exaParam)
+        exaParam.value = 0.750
+
+        const exvParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    exv: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v; 
+            },
+            displayName: "exciter level",
+            min: 0,
+            max: 1,
+            exportable: true,
+            curve:'log'
+        } as NumberSynthParam;
+        this.params.push(exvParam)
+        exvParam.value = 0.523
+
+        const exdParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    exd: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "exciter decay",
+            min: 0,
+            max: 10,
+            exportable: true,
+            curve:'log'
+        } as NumberSynthParam;
+        this.params.push(exdParam)
+        exdParam.value = 8.341
+
+        // const xfParam = {
+        //     type: ParamType.number,
+        //     _v: 1,
+        //     set value(v: number) {
+        //         this._v = v;
+        //         postToPromised(enginePromise, {
+        //             xf: v,
+        //         } as KarplusParamsChangeMessage);
+        //     },
+        //     get value() {
+        //         return this._v;
+        //     },
+        //     displayName: "cross-feedback",
+        //     min: -0.001,
+        //     max: 0.001,
+        //     exportable: true,
+        // } as NumberSynthParam;
+        // this.params.push(xfParam)
+        // xfParam.value = 0
+
+
+        const atoffParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    atoff: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "level to feedback relation",
+            min: 0,
+            max: 1,
+            exportable: true,
+        } as NumberSynthParam;
+        this.params.push(atoffParam)
+        atoffParam.value = 0.93
+
+        const exdetParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    exdet: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "detune according to exciter level",
+            min: -0.01,
+            max: 0.01,
+            exportable: true,
+        } as NumberSynthParam;
+        this.params.push(exdetParam)
+        exdetParam.value = 0.001
+
+
+        const adetParam = {
+            type: ParamType.number,
+            _v: 1,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    adet: v,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            displayName: "detune according to exciter level",
+            min: -0.01,
+            max: 0.01,
+            exportable: true,
+        } as NumberSynthParam;
+        this.params.push(adetParam)
+        adetParam.value = 0 
     }
 
     async setAudioContext(audioContext: AudioContext) {
@@ -50,9 +285,13 @@ export class KarplusSynth implements SynthInstance {
         }
         this.audioContext = audioContext;
         this.engine = await createKarplusWorklet(audioContext);
+        if (!this.resolveEnginePromise) throw new Error("resolveEnginePromise is " + this.resolveEnginePromise)
+        this.resolveEnginePromise(this.engine);
         this.gainNode = this.audioContext.createGain();
         this.engine.connect(this.gainNode);
         this.gainNode.connect(this.audioContext.destination);
+
+
     }
 
     releaseAll = () => {
@@ -69,27 +308,27 @@ export class KarplusSynth implements SynthInstance {
     ) => {
         if (!this.audioContext) throw new Error("audio context not created");
         if (!this.engine) throw new Error("engine not created");
-        if(relativeNoteStart < 0) relativeNoteStart = 0;
+        if (relativeNoteStart < 0) relativeNoteStart = 0;
         const startTime = this.audioContext.currentTime + relativeNoteStart;
 
         this.engine.port.postMessage({
-            freq: frequency,
-            amp: velocity,
-            duration: duration,
-            ref: frequency.toFixed(4)
+            f: frequency,
+            a: velocity,
+            s: duration,
+            i: frequency.toFixed(4)
         } as KarplusStartVoiceMessage);
     };
     triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
         if (!this.audioContext) throw new Error("audio context not created");
         if (!this.engine) throw new Error("engine not created");
-        if(relativeNoteStart < 0) relativeNoteStart = 0;
+        if (relativeNoteStart < 0) relativeNoteStart = 0;
         const startTime = this.audioContext.currentTime + relativeNoteStart;
 
         this.engine.port.postMessage({
-            freq: frequency,
-            amp: velocity,
-            duration: 8, // TODO: create a perc mode to this synth
-            ref: frequency.toFixed(4)
+            f: frequency,
+            a: velocity,
+            s: 8, // TODO: create a perc mode to this synth
+            i: frequency.toFixed(4)
         } as KarplusStartVoiceMessage);
     };
     params = [] as SynthParam[];
