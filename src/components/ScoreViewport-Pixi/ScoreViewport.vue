@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import * as PIXI from 'pixi.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { Trace } from '../../dataTypes/Trace';
+import { Note, getFrequency } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
+import { Trace, TraceType } from '../../dataTypes/Trace';
+import { baseFrequency, octaveToFrequency } from '../../functions/toneConverters';
 import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { useGridsStore } from '../../store/gridsStore';
 import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { layerNoteColors, useViewStore, TimelineItemRect } from '../../store/viewStore';
-import { baseFrequency } from '../../functions/toneConverters';
-import { TimelineItem } from '../../dataTypes/TimelineItem';
+import { TimelineItemRect, layerNoteColors, useViewStore } from '../../store/viewStore';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -40,7 +40,7 @@ let thingBeingHovered: TimelineItemRect | null = null;
 let isHoverRightEdge = false;
 
 const didHoverChange = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
-    if(hoveredThing === thingBeingHovered && isRightEdge === isHoverRightEdge) return false;
+    if (hoveredThing === thingBeingHovered && isRightEdge === isHoverRightEdge) return false;
     return true;
 }
 const hoverChanged = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
@@ -55,39 +55,37 @@ const mouseMoveListener = (e: MouseEvent) => {
         tool.current === Tool.Modulation
     );
 
-    const otherItemsAtCoords = view.everyOtherItemAtCoordinates(
+    const loopsAtCoords = view.everyLoopAtCoordinates(
         e.offsetX,
         e.offsetY
     );
 
     const firstNoteRect = notesAtCoords[0] || null;
-    const firstItemRect = otherItemsAtCoords[0] || null;
+    const firstItemRect = loopsAtCoords[0] || null;
 
     const hoveredThing = firstNoteRect || firstItemRect || null;
-    const isRightEdge =  hoveredThing.rightEdge ? (
-            (e.offsetX > hoveredThing.rightEdge?.x - rightEdgeWidth)
-        ) : false;
+    const isRightEdge = hoveredThing.rightEdge ? (
+        (e.offsetX > hoveredThing.rightEdge?.x - rightEdgeWidth)
+    ) : false;
 
-    if(didHoverChange(hoveredThing, isRightEdge)){
-        if(firstNoteRect){
-            if(isRightEdge){
-                tool.noteRightEdgeMouseEnter(firstNoteRect.event as Trace);
-            }else{
-                tool.noteRightEdgeMouseLeave();
-                tool.noteMouseEnter(firstNoteRect.event as Trace);
+    if (didHoverChange(hoveredThing, isRightEdge)) {
+        if (firstNoteRect) {
+            if (isRightEdge) {
+                tool.timelineItemMouseEnter(firstNoteRect.event as Trace);
+            } else {
+                tool.timelineItemRightEdgeMouseLeave();
+                tool.timelineItemMouseEnter(firstNoteRect.event as Trace);
             }
-        }else if(firstItemRect){
-            if(isRightEdge){
+        } else if (firstItemRect) {
+            if (isRightEdge) {
                 tool.timelineItemRightEdgeMouseEnter(firstItemRect.event);
-            }else{
+            } else {
                 tool.timelineItemRightEdgeMouseLeave();
                 tool.timelineItemMouseEnter(firstItemRect.event);
             }
-        }else{
-            tool.timelineItemMouseLeave();
+        } else {
             tool.timelineItemRightEdgeMouseLeave();
-            tool.noteMouseLeave();
-            tool.noteRightEdgeMouseLeave();
+            tool.timelineItemMouseLeave();
         }
     }
     hoverChanged(hoveredThing, isRightEdge);
@@ -189,7 +187,7 @@ const refreshView = (time: number) => {
     if (measureSteps) taskMark("1. gather facts")
     const visibleNotes = [
         ...view.visibleNoteRects,
-        ...tool.notesBeingCreated.map(view.rectOfNote),
+        ...tool.notesBeingCreated.map((t) => view.rectOfNote(t)),
     ];
     if (tool.noteThatWouldBeCreated) visibleNotes.push(
         view.rectOfNote(tool.noteThatWouldBeCreated)
@@ -223,7 +221,7 @@ const refreshView = (time: number) => {
     //     graphics.endFill();
     // }
 
-    const otherItemRects = view.visibleOtherItemRects;
+    const otherItemRects = view.visibleLoopRects;
     otherItemRects.forEach((rect) => {
         graphics.beginFill(0x000000, 0.1);
         graphics.lineStyle(1, 0x000000, 1);
@@ -267,27 +265,29 @@ const refreshView = (time: number) => {
 
     // draw snap explanations
     let snapExplTextsStart = textToUse - 1;
-    const snapFocusedItemRect = snap.focusedTrace ? view.rectOfNote(
+    
+    const snapFocusedItemLocation = snap.focusedTrace ? view.locationOfTrace(
         snap.focusedTrace
     ) : null;
-    if (snapFocusedItemRect) {
+
+    if (snapFocusedItemLocation) {
         graphics.lineStyle(1, relationcolor, 0.5);
         for (const snapExplanation of snap.toneSnapExplanation) {
-            const relatedItemRect = snapExplanation.relatedNote ? view.rectOfNote(
+            const relatedItemLocation = snapExplanation.relatedNote ? view.locationOfTrace(
                 snapExplanation.relatedNote
-            ) : snapFocusedItemRect;
-            if (relatedItemRect) {
+            ) : snapFocusedItemLocation;
+            if (relatedItemLocation) {
                 const middleY =
-                    snapFocusedItemRect.cy == relatedItemRect.cy ?
-                        snapFocusedItemRect.cy :
-                        (snapFocusedItemRect.cy + relatedItemRect.cy) / 2;
+                    snapFocusedItemLocation.y == relatedItemLocation.y ?
+                        snapFocusedItemLocation.y :
+                        (snapFocusedItemLocation.y + relatedItemLocation.y) / 2;
 
-                const leftX = Math.max(relatedItemRect.cx, 5);
-                graphics.moveTo(leftX, relatedItemRect.cy);
-                graphics.lineTo(leftX, snapFocusedItemRect.cy);
-                graphics.lineTo(snapFocusedItemRect.cx, snapFocusedItemRect.cy);
+                const leftX = Math.max(relatedItemLocation.x, 5);
+                graphics.moveTo(leftX, relatedItemLocation.y);
+                graphics.lineTo(leftX, snapFocusedItemLocation.y);
+                graphics.lineTo(snapFocusedItemLocation.x, snapFocusedItemLocation.y);
                 graphics.beginFill(relationcolor, 1);
-                graphics.drawCircle(leftX, relatedItemRect.cy, 3);
+                graphics.drawCircle(leftX, relatedItemLocation.y, 3);
                 graphics.endFill();
                 graphics.beginFill(relationcolor, 1);
                 let text = getText();
@@ -328,13 +328,14 @@ const refreshView = (time: number) => {
             graphics.drawRect(nRect.x, nRect.y, nRect.width, nRect.height);
         } else {
             // ctx.arc(nRect.cx, nRect.cy, nRect.radius, 0, 2 * Math.PI);
-            graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius);
+            graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius || 12);
         }
         if (displayTexts) {
             let text = getText();
-            text.text = `${baseFrequency}(2^${nRect.event.octave.toFixed(3)}) = ${nRect.event.frequency.toFixed(3)} hz`;
+            const oct = nRect.event.octave;
+            text.text = `${baseFrequency}(2^${oct.toFixed(3)}) = ${octaveToFrequency(oct).toFixed(3)} hz`;
             text.x = nRect.x + 5;
-            text.y = nRect.y + nRect.radius - userSettings.fontSize / 2;
+            text.y = nRect.y + nRect.height - userSettings.fontSize / 2;
             text.style.fontSize = userSettings.fontSize;
         }
 
@@ -343,7 +344,7 @@ const refreshView = (time: number) => {
             graphics.lineStyle(2, 0x000000, 2);
             graphics.moveTo(nRect.x, veloLinePositionY + 7);
             graphics.lineTo(nRect.x, view.viewHeightPx);
-            graphics.drawCircle(nRect.cx, veloLinePositionY, nRect.radius);
+            graphics.drawCircle(nRect.cx, veloLinePositionY, nRect.radius || 12);
         }
         graphics.endFill();
     }

@@ -1,4 +1,4 @@
-import { octaveToFrequency } from "../functions/toneConverters";
+import { frequencyToOctave, octaveToFrequency } from "../functions/toneConverters";
 import Draggable from "./Draggable";
 import Selectable from "./Selectable";
 import { OctavePosition, TimeRange, VelocityPosition, sanitizeTimeRanges } from "./TimelineItem";
@@ -41,12 +41,12 @@ export type Note = TimeRange & OctavePosition & Selectable & Draggable & Velocit
 
 export const note = (noteDef: NoteDef | Note): Note => {
   const timeEnd = 'duration' in noteDef ? noteDef.time + noteDef.duration : noteDef.timeEnd;
-  const octave = 'octave' in noteDef ? noteDef.octave : Math.floor(Math.log2(noteDef.frequency) * frequencyConstant);
+  const octave = 'octave' in noteDef ? noteDef.octave : frequencyToOctave(noteDef.frequency);
   const layer = noteDef.layer || 0;
   const velocity = noteDef.velocity || 0.5;
   const mute = noteDef.mute || false;
 
-  return {
+  return{
     type: TraceType.Note,
     time: noteDef.time,
     timeEnd,
@@ -54,7 +54,7 @@ export const note = (noteDef: NoteDef | Note): Note => {
     velocity,
     octave,
     mute,
-  }
+  };
 }
 
 export const noteDef = (note: Note): timeDefA & toneDefA & othersDef => {

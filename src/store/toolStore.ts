@@ -515,8 +515,8 @@ export const useToolStore = defineStore("tool", () => {
             }
             case MouseDownActions.LengthenItem:
             case MouseDownActions.LengthenTrace:
-                if(!mouse.hovered?.traceRightEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceRightEdge);
-                if(!selection.isSelected(mouse.hovered?.traceRightEdge)){
+                if (!mouse.hovered?.traceRightEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceRightEdge);
+                if (!selection.isSelected(mouse.hovered?.traceRightEdge)) {
                     selection.select(mouse.hovered?.traceRightEdge);
                 }
                 break;
@@ -806,7 +806,7 @@ export const useToolStore = defineStore("tool", () => {
         noteThatWouldBeCreated,
         loopThatWouldBeCreated,
 
-        loopsBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Loop)),
-        notesBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Note)),
+        loopsBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Loop) as Loop[]),
+        notesBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Note) as Note[]),
     }
 })

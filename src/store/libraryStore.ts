@@ -103,7 +103,9 @@ const migrators = {
         return newObj;
     },
     "0.2.0": (obj: LibraryItem_0_1_0): LibraryItem_0_3_0 => {
-        const newObj = Object.assign({}, obj) as unknown as LibraryItem_0_3_0 & {
+        const newObj = Object.assign({
+            loops: [],
+        }, obj) as unknown as LibraryItem_0_3_0 & {
             loops: [],
         };
         newObj.version = "0.3.0";
