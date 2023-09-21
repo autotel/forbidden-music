@@ -126,6 +126,7 @@ fn trigger(
     window: Window<Wry>
 ) {
     voice_state.trigger.lock().unwrap().replace(true);
+    
     println!("Triggered!");
 }
 
@@ -251,6 +252,11 @@ impl VeryBasicVoice {
         self.oscillator.set_waveform(waveform);
     }
 
+    fn start(&mut self) {
+        self.in_use = true;
+        self.oscillator.current_sample_index = 0.0;
+        self.oscillator.amplitude = 1.0;
+    }
 
     fn tick(&mut self) -> f32 {
         if !self.in_use {
@@ -324,7 +330,7 @@ where
 
     let mut voice = VeryBasicVoice {
         oscillator,
-        decay_time: 0.8,
+        decay_time: 5.,
         in_use: true,
     };
     
@@ -335,39 +341,24 @@ where
 
     println!("voice state trigger: {:?}", voice_state.trigger.lock().unwrap());
     
+    let device_build_output_stream_callback = move |
+            output: &mut [T], 
+            _: &cpal::OutputCallbackInfo,
+            voice_state: &VoiceState
+        | {
+
+        if voice_state.trigger.lock().unwrap().unwrap_or(false) {
+            voice_state.trigger.lock().unwrap().replace(false);
+            voice.start();
+        };
+        process_frame(output, &mut voice, num_channels)
+    };
+
     // difficult to pass in a reference to voice_state
     // because who knows what the lib will do with the closure?
     let stream = device.build_output_stream(
         config,
-        move |output: &mut [T], _: &cpal::OutputCallbackInfo | {
-
-            // we need to know voice_state here!
-
-            // if voice_state.trigger.lock().unwrap().unwrap_or(false) {
-            //     voice_state.trigger.lock().unwrap().replace(false);
-            //     voice.in_use = true;
-            // }
-        
-
-            // for 0-1s play sine, 1-2s play square, 2-3s play saw, 3-4s play triangle_wave
-            // let time_since_start = std::time::Instant::now()
-            //     .duration_since(time_at_start)
-            //     .as_secs_f32();
-
-
-            // if time_since_start < 1.0 {
-            //     oscillator.set_waveform(Waveform::Sine);
-            // } else if time_since_start < 2.0 {
-            //     oscillator.set_waveform(Waveform::Triangle);
-            // } else if time_since_start < 3.0 {
-            //     oscillator.set_waveform(Waveform::Square);
-            // } else if time_since_start < 4.0 {
-            //     oscillator.set_waveform(Waveform::Saw);
-            // } else {
-            //     oscillator.set_waveform(Waveform::Sine);
-            // }
-            process_frame(output, &mut voice, num_channels)
-        },
+        device_build_output_stream_callback,
         err_fn,
         None,
     )?;
