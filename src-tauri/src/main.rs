@@ -14,17 +14,17 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, Sample, SizedSample, Stream};
 use fundsp::hacker::*;
 
-
 #[derive(Default)]
 pub struct MidiState {
     pub input: Mutex<Option<MidiInputConnection<()>>>,
 }
 
 
-#[derive(Default)]
+#[derive( Debug)]
 pub struct VoiceState {
     pub trigger: Mutex<Option<bool>>,
 }
+
 
 #[derive(Clone, Serialize)]
 struct MidiMessage {
@@ -122,19 +122,20 @@ fn open_midi_connection(
 
 #[tauri::command]
 fn trigger(
-    voice_state: tauri::State<'_, VoiceState>,
+    tauri_voice_state: tauri::State<'_, VoiceState>,
     window: Window<Wry>
 ) {
-    voice_state.trigger.lock().unwrap().replace(true);
+    tauri_voice_state.trigger.lock().unwrap().replace(true);
     
     println!("Triggered!");
 }
 
+static mut VOICE_STATE:VoiceState = VoiceState {
+    trigger: Mutex::new(None),
+};
+
 fn main() -> anyhow::Result<()>  {
-    let voice_state = VoiceState {
-        ..Default::default()
-    };
-    let stream = stream_setup_for(&voice_state)?;
+    let stream = stream_setup_for()?;
     stream.play()?;
 
     tauri::Builder::default()
@@ -147,7 +148,6 @@ fn main() -> anyhow::Result<()>  {
         .manage(MidiState {
             ..Default::default()
         })
-        .manage(voice_state)
         .setup(|app| {
             #[cfg(debug_assertions)] // only include this code on debug builds
             {
@@ -272,22 +272,22 @@ impl VeryBasicVoice {
 }
 
 
-pub fn stream_setup_for(voice_state:&VoiceState) -> Result<cpal::Stream, anyhow::Error>
+pub fn stream_setup_for() -> Result<cpal::Stream, anyhow::Error>
 where
 {
     let (_host, device, config) = host_device_setup()?;
 
     match config.sample_format() {
-        cpal::SampleFormat::I8 => make_stream::<i8>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::I16 => make_stream::<i16>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::I32 => make_stream::<i32>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::I64 => make_stream::<i64>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::U8 => make_stream::<u8>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::U16 => make_stream::<u16>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::U32 => make_stream::<u32>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::U64 => make_stream::<u64>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::F32 => make_stream::<f32>(&device, &config.into(), voice_state),
-        cpal::SampleFormat::F64 => make_stream::<f64>(&device, &config.into(), voice_state),
+        cpal::SampleFormat::I8 => make_stream::<i8>(&device, &config.into()),
+        cpal::SampleFormat::I16 => make_stream::<i16>(&device, &config.into()),
+        cpal::SampleFormat::I32 => make_stream::<i32>(&device, &config.into()),
+        cpal::SampleFormat::I64 => make_stream::<i64>(&device, &config.into()),
+        cpal::SampleFormat::U8 => make_stream::<u8>(&device, &config.into()),
+        cpal::SampleFormat::U16 => make_stream::<u16>(&device, &config.into()),
+        cpal::SampleFormat::U32 => make_stream::<u32>(&device, &config.into()),
+        cpal::SampleFormat::U64 => make_stream::<u64>(&device, &config.into()),
+        cpal::SampleFormat::F32 => make_stream::<f32>(&device, &config.into()),
+        cpal::SampleFormat::F64 => make_stream::<f64>(&device, &config.into()),
         sample_format => Err(anyhow::Error::msg(format!(
             "Unsupported sample format '{sample_format}'"
         ))),
@@ -308,11 +308,9 @@ pub fn host_device_setup(
 
     Ok((host, device, config))
 }
-
 pub fn make_stream<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    voice_state:&VoiceState
 ) -> Result<cpal::Stream, anyhow::Error>
 where
     T: SizedSample + FromSample<f32>,
@@ -339,22 +337,25 @@ where
     let time_at_start = std::time::Instant::now();
     println!("Time at start: {:?}", time_at_start);
 
-    println!("voice state trigger: {:?}", voice_state.trigger.lock().unwrap());
+    //println!("voice state trigger: {:?}", VOICE_STATE.trigger.lock().unwrap());
     
     let device_build_output_stream_callback = move |
             output: &mut [T], 
             _: &cpal::OutputCallbackInfo,
-            voice_state: &VoiceState
+            // VOICE_STATE: &VoiceState
         | {
-
-        if voice_state.trigger.lock().unwrap().unwrap_or(false) {
-            voice_state.trigger.lock().unwrap().replace(false);
-            voice.start();
-        };
+        let option_to_mut = |x: &mut Option<bool>| -> Option<&mut bool> { x.as_mut() };
+        // the question is how to be able to uncomment this and have it work
+        VOICE_STATE.trigger.try_lock().and_then( {
+            if *trigger {
+                *trigger = false;
+                voice.start();
+            }
+        });
         process_frame(output, &mut voice, num_channels)
     };
 
-    // difficult to pass in a reference to voice_state
+    // difficult to pass in a reference to VOICE_STATE
     // because who knows what the lib will do with the closure?
     let stream = device.build_output_stream(
         config,
