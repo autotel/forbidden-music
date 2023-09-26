@@ -79,7 +79,7 @@ export class SineSynth implements SynthInstance {
     private voices: SineVoice[] = [];
     private outputNode?: GainNode;
     credits: string = "";
-    name: string = "sine";
+    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
     enable: () => void;
     disable: () => void;
     constructor(
@@ -103,8 +103,8 @@ export class SineSynth implements SynthInstance {
             maximizer.connect(audioContext.destination);
         })()
 
-        this.enable = () => {}
-        this.disable = () => {}
+        this.enable = () => { }
+        this.disable = () => { }
 
     }
     triggerAttackRelease = (
@@ -116,7 +116,7 @@ export class SineSynth implements SynthInstance {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if(relativeNoteStart < 0) relativeNoteStart = 0;
+        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
@@ -130,7 +130,7 @@ export class SineSynth implements SynthInstance {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if(relativeNoteStart < 0) relativeNoteStart = 0;
+        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));

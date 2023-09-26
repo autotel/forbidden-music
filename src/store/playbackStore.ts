@@ -13,8 +13,9 @@ import { ExternalMidiSynth } from '../synth/ExternalMidiSynth';
 import { FmSynth } from '../synth/FmSynth';
 import { FourierSynth } from '../synth/FourierSynth';
 import { KarplusSynth } from '../synth/KarplusSynth';
-import { MagicSampler } from '../synth/MagicSampler';
+import { OneShotSampler } from '../synth/OneShotSampler';
 import { SineSynth } from '../synth/SineSynth';
+import { ClusterSineSynth } from '../synth/ClusterSineSynth';
 import { KickSynth } from '../synth/KickSynth';
 import { OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinimum } from "../synth/SynthInterface";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
@@ -202,9 +203,9 @@ export const usePlaybackStore = defineStore("playback", () => {
         console.log("waiting for audio context permission");
         await audioContext.resume();
         console.log("audio context permission granted");
-        const samplers = [] as (MagicSampler | ComplexSampler)[];
-        const exclusiveSamplers = [] as (MagicSampler | ComplexSampler)[];
-        const localOnlySamplers = [] as (MagicSampler | ComplexSampler)[];
+        const samplers = [] as (OneShotSampler | ComplexSampler)[];
+        const exclusiveSamplers = [] as (OneShotSampler | ComplexSampler)[];
+        const localOnlySamplers = [] as (OneShotSampler | ComplexSampler)[];
 
 
         sampleDefinitions.forEach((sampleDefinition) => {
@@ -217,7 +218,7 @@ export const usePlaybackStore = defineStore("playback", () => {
                     sampleDefinition.readme
                 ))
             } else {
-                arrayWhereToPush.push(new MagicSampler(
+                arrayWhereToPush.push(new OneShotSampler(
                     audioContext,
                     sampleDefinition.samples,
                     sampleDefinition.name,
@@ -236,6 +237,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             availableSynths.value.push(...exclusiveSamplers);
             availableSynths.value.unshift(new FourierSynth(audioContext));
             availableSynths.value.unshift(new KickSynth(audioContext));
+            availableSynths.value.unshift(new ClusterSineSynth(audioContext));
         } else {
             console.log("exclusives disabled");
         }

@@ -221,11 +221,12 @@ class SampleSource {
             const response = await fetch(sampleDefinition.path, {
                 cache: "default",
             })
-            console.group("header: " + sampleDefinition.path);
+            console.groupCollapsed("header: " + sampleDefinition.path);
             response.headers.forEach((value, key) => {
-                console.log(key,":", value);
-                if(key.match('date')) {
+                if (key.match('date')) {
                     console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
+                } else if (key.match('cache-control')) {
+                    console.log(key + ":", value);
                 }
             });
             console.groupEnd();
@@ -237,7 +238,7 @@ class SampleSource {
     }
 }
 
-export class MagicSampler implements SynthInstance {
+export class OneShotSampler implements SynthInstance {
     private audioContext: AudioContext;
     private sampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
@@ -246,7 +247,7 @@ export class MagicSampler implements SynthInstance {
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
     credits: string = "";
-    name: string = "unnamed";
+    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
     enable: () => void;
     disable: () => void;
     constructor(
@@ -268,7 +269,7 @@ export class MagicSampler implements SynthInstance {
         if (name) this.name = name;
         this.enable = () => {
             this.sampleSources.forEach(async (sampleSource) => {
-                if(sampleSource.isLoading || sampleSource.isLoaded) return;
+                if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();
                 this.loadingProgress += 1;
             });

@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
             </div>
         </template>
         <span style="{position: absolute; z-index: 2;}">
-            {{ props.param.displayName }} &nbsp; {{ param.value?.toFixed(3) }} ({{ preMapValue.toFixed(2) }})
+            {{ props.param.displayName }} &nbsp; {{ param.value?.toFixed(3) }}
         </span>
     </div>
 </template>

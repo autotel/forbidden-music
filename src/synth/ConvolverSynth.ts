@@ -88,7 +88,7 @@ ConvolverVoice[] = [];
         value: null
     }
     credits: string = "";
-    name: string = "fourier";
+    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
     enable: () => void;
     disable: () => void;
     constructor(

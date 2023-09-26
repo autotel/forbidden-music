@@ -349,7 +349,6 @@ export const useToolStore = defineStore("tool", () => {
 
     const cursor = computed(() => {
         let mouseDo = mouse.currentAction ? mouse.currentAction : whatWouldMouseDownDo();
-        console.log("mouseDo", MouseDownActions[mouseDo]);
         switch (mouseDo) {
             case MouseDownActions.LengthenTrace:
             case MouseDownActions.LengthenItem:
