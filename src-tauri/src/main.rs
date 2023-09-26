@@ -111,10 +111,13 @@ fn open_midi_connection(
 
 #[tauri::command]
 fn trigger(window: Window<Wry>) {
-    let (_host, device, config) = host_device_setup().expect("could not setup host device");
-    let stream = sr_select_make_stream(device, config).expect("could not make stream");
+    // let (_host, device, config) = host_device_setup().expect("could not setup host device");
+    // let stream = sr_select_make_stream(device, config).expect("could not make stream");
 
-    stream.play().expect("play didnt work");
+    // stream.play().expect("play didnt work");
+
+    let mut voice = VOICE_STATE.lock().unwrap();
+    voice.trigger();
 }
 
 fn main() -> anyhow::Result<()> {
@@ -241,7 +244,7 @@ impl VeryBasicVoice {
         self.in_use = true;
         self.envelope_countdown = self.envelope_duration;
         self.oscillator.amplitude = 1.0;
-        
+
     }
     fn tick(&mut self) -> f32 {
         if !self.in_use {
@@ -329,19 +332,25 @@ where
     }
 }
 
-static mut VOICE_STATE: VeryBasicVoice = VeryBasicVoice {
-    oscillator: Oscillator {
-        waveform: Waveform::Sine,
-        sample_rate: 44100.0,
-        current_sample_index: 0.0,
-        frequency_hz: 110.0,
-        amplitude: 0.2,
-    },
-    decay_time: 0.8,
-    in_use: false,
-    envelope_countdown: 0.,
-    envelope_duration: 1.,
-};
+// static mut VOICE_STATE: VeryBasicVoice = VeryBasicVoice {
+//     oscillator: Oscillator {
+//         waveform: Waveform::Sine,
+//         sample_rate: 44100.0,
+//         current_sample_index: 0.0,
+//         frequency_hz: 110.0,
+//         amplitude: 0.2,
+//     },
+//     decay_time: 0.8,
+//     in_use: false,
+//     envelope_countdown: 0.,
+//     envelope_duration: 1.,
+// };
+
+// mutex voice_state
+lazy_static::lazy_static! {
+    static ref VOICE_STATE: Mutex<VeryBasicVoice> = Mutex::new(newVeryBasicVoice(44100.0));
+}
+
 
 pub fn make_stream<T>(
     device: &cpal::Device,
@@ -351,12 +360,6 @@ where
     T: SizedSample + FromSample<f32>,
 {
     let num_channels = config.channels as usize;
-
-    // let mut voice = newVeryBasicVoice(config.sample_rate.0 as f32);
-    let mut voice = unsafe { &mut VOICE_STATE };
-    voice.trigger();
-
-    print!("voice state: {:?}", voice);
 
     let err_fn = |err| eprintln!("Error building output sound stream: {}", err);
 
@@ -368,7 +371,7 @@ where
     let stream = device.build_output_stream(
         config,
         move |output: &mut [T], _: &cpal::OutputCallbackInfo| {
-            process_frame(output, &mut voice, num_channels)
+            process_frame(output,  num_channels)
         },
         err_fn,
         None,
@@ -379,11 +382,13 @@ where
 
 fn process_frame<SampleType>(
     output: &mut [SampleType],
-    synth: &mut VeryBasicVoice,
     num_channels: usize,
 ) where
     SampleType: Sample + FromSample<f32>,
 {
+
+    let mut synth = VOICE_STATE.lock().unwrap();
+
     for frame in output.chunks_mut(num_channels) {
         let value: SampleType = SampleType::from_sample(synth.tick());
         // copy the same value to all channels
