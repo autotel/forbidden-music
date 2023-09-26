@@ -11,6 +11,7 @@ const barSkip = (e: MouseEvent) => {
     if(e.buttons===1){
         const leftPx = e.offsetX;
         const time = view.pxToTimeWithOffset(leftPx);
+        playback.resetLoopRepetitions();
         playback.currentScoreTime = time;
         playback.previousScoreTime = time;
         playback.timeReturnPoint = time;
@@ -67,16 +68,31 @@ onUnmounted(() => {
             :active="view.followPlayback"
             :onClick="()=>view.followPlayback=!view.followPlayback" 
             tooltip="Follow playback: Keep moving the view to keep the current score time at the center"
-            
         >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <text x="0" y="15" font-size="24px" baseline-shift="-5" >></text>
+                <text x="0" y="15" font-size="24px" baseline-shift="-8" >
+                    ⇹
+                </text>
             </svg>
         </Button>
 
     </div>
 </template>
 <style scoped>
+
+#transport-controls {
+    bottom: 0;
+    display: flex;
+    position: relative;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#transport-controls>*{
+    height: 2.6rem;
+    display: block;
+    box-sizing: border-box;
+}
+
 #skip-bar {
     position: fixed;
     left: 0px;
@@ -95,12 +111,11 @@ onUnmounted(() => {
     background-color: rgb(241, 241, 241);
     border: none;
     font-family: monospace;
-    height: 1em;
     display: inline-block;
     position: relative;
     line-height: 0;
     font-size: 26px;
-    width: 3em;
+    width: 4em;
 }
 
 #bpm:active {

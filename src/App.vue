@@ -1,48 +1,53 @@
 <script setup lang="ts">
-import { invoke } from "@tauri-apps/api/tauri";
-import { onBeforeUnmount, onMounted, onUnmounted, provide, ref } from 'vue';
-import GroupElement from './components/GroupElement.vue';
-import TimeGrid from './components/MusicTimeGrid.vue';
-import NoteElement from './components/NoteElement.vue';
+import Fraction from 'fraction.js';
+import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
-import RangeSelection from './components/RangeSelection.vue';
+import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
+import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
+import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
-import ToneGrid from './components/ToneGrid.vue';
-import ToneRelation from './components/ToneRelation.vue';
 import ToolSelector from './components/ToolSelector.vue';
+import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
+import AnglesLeft from './components/icons/AnglesLeft.vue';
+import AnglesRight from './components/icons/AnglesRight.vue';
 import { Tool } from './dataTypes/Tool';
 import { ifDev } from './functions/isDev';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
-import LibraryManager from './modals/LibraryManager.vue';
-import MidiInputConfig from './modals/MidiInputConfig.vue';
 import Modal from './modals/Modal.vue';
-import SnapSelector from './modals/SnapSelector.vue';
-import SynthEdit from './modals/SynthEdit.vue';
+import UserDisclaimer from './modals/UserDisclaimer.vue';
+import Pane from './pane/Pane.vue';
+import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
+import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
+import { Trace } from './dataTypes/Trace';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
 const tool = useToolStore();
-const timedEventsViewport = ref<SVGSVGElement>();
 const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
 const selection = useSelectStore();
+const snap = useSnapStore();
 const mouseWidget = ref();
 const modalText = ref("");
 const clickOutsideCatcher = ref();
 const undoStore = useUndoStore();
-const mainInteraction = monoModeInteraction.createInteractionModal("default");
+const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
+const paneWidth = ref(300);
+const viewport = ref<SVGSVGElement>();
+const userSettings = useCustomSettingsStore();
 
 provide('modalText', modalText);
 
@@ -54,17 +59,45 @@ let viewDragStartTime = 0;
 let viewDragStartY = 0;
 let viewDragStartOctave = 0;
 
+
 const mouseWheelListener = (e: WheelEvent) => {
-    view.viewWidthTime **= 1 + e.deltaY / 1000;
-    view.viewHeightOctaves **= 1 + e.deltaY / 1000;
-    // prevent viewWidthTime from going out of bounds
-    if (view.viewWidthTime < 0.1) {
-        view.viewWidthTime = 0.1;
+    const viewMousePositionBefore = {
+        time: view.pxToTimeWithOffset(e.clientX),
+        octave: -view.pxToOctaveWithOffset(e.clientY),
     }
+
+    // not needed, thanks to applyRatio. Would be needed if zooming independently x and y
+    // const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
+    const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
+
+    if (
+        // wouldViewWidthTime < 400 && 
+        wouldViewHeightOctaves > 0.1
+    ) {
+        // view.viewWidthTime = wouldViewWidthTime;
+        view.viewHeightOctaves = wouldViewHeightOctaves;
+    }
+
+    // offset zoom center back 
+
+    const viewMousePositionAfter = {
+        time: view.pxToTimeWithOffset(e.clientX),
+        octave: -view.pxToOctaveWithOffset(e.clientY),
+    }
+
+    view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
+    view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
+    view.applyRatioToTime();
+
+    if (view.timeOffset < 0) {
+        view.timeOffset = 0;
+    }
+
 }
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
+        // TODO: Use a cursor instead, this is unnecessarily expensive
         mouseWidget.value.style.left = e.clientX + 10 + "px";
         mouseWidget.value.style.top = e.clientY + 10 + "px";
     }
@@ -88,6 +121,26 @@ const mouseMoveListener = (e: MouseEvent) => {
     }
 }
 
+const mouseUpListener = (e: MouseEvent) => {
+    tool.mouseUp(e);
+    // stop panning view, if it were
+    draggingView = false;
+}
+const mouseDownListener = (e: MouseEvent) => {
+    // middle wheel
+    if (e.button === 1) {
+        e.stopPropagation();
+        draggingView = true;
+        viewDragStartX = e.clientX;
+        viewDragStartTime = view.timeOffset;
+        viewDragStartY = e.clientY;
+        viewDragStartOctave = view.octaveOffset;
+    } else {
+        // left button
+        tool.mouseDown(e);
+    }
+}
+
 const keyUpListener = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement) {
         return;
@@ -108,10 +161,44 @@ const keyDownListener = (e: KeyboardEvent) => {
         return;
     }
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
-    console.log(keyAction);
     switch (keyAction) {
+        case KeyActions.Cut: {
+            console.log("cut");
+            const selected = selection.getNotes();
+            project.score = project.score.filter(note => !note.selected);
+            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            break;
+        }
+        case KeyActions.Copy: {
+            console.log("copy");
+            const selected = selection.getNotes();
+            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            break;
+        }
+        case KeyActions.Paste: {
+            console.log("paste");
+            (async () => {
+                const text = await navigator.clipboard.readText();
+                const editNotes = project.parseNotes(text);
+                if (tool.noteThatWouldBeCreated) {
+                    const datumNote = tool.noteThatWouldBeCreated as Trace;
+                    const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
+                    const timeDiff = datumNote.time - earliestPastedNote.time;
+
+                    editNotes.forEach(note => {
+                        note.time += timeDiff;
+                    })
+                }
+
+                project.score.push(...editNotes);
+                selection.select(...editNotes);
+
+            })();
+            break;
+        }
         case KeyActions.Delete: {
             project.score = project.score.filter(note => !note.selected)
+            project.loops = project.loops.filter(note => !note.selected)
             // minimalistic option:
             // tool.noteBeingHovered = false;
             // programmatic option:
@@ -138,6 +225,10 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         case KeyActions.ActivateModulationMode: {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
+            break;
+        }
+        case KeyActions.ActivateLoopMode: {
+            tool.current = tool.current === Tool.Loop ? Tool.Edit : Tool.Loop;
             break;
         }
         case KeyActions.MuteSelectedEvents: {
@@ -200,61 +291,16 @@ const keyDownListener = (e: KeyboardEvent) => {
             tool.disallowTimeChange = !tool.disallowTimeChange;
             break;
         }
-        case KeyActions.Group: {
-            // not ready
-            ifDev(() => {
-                console.log("group");
-                project.setNotesGroupToNewGroup(selection.getNotes());
-                e.preventDefault();
-                e.stopPropagation();
-            }).elseLog("group feature in development");
+        case KeyActions.Reboot: {
+            window.location.reload();
+            // lol
             break;
         }
 
     }
 }
-const mouseUpListener = (e: MouseEvent) => {
-    tool.mouseUp(e);
-    // stop panning view, if it were
-    draggingView = false;
-}
-const mouseDownListener = (e: MouseEvent) => {
-    // middle wheel
-    if (e.button === 1) {
-        e.stopPropagation();
-        draggingView = true;
-        viewDragStartX = e.clientX;
-        viewDragStartTime = view.timeOffset;
-        viewDragStartY = e.clientY;
-        viewDragStartOctave = view.octaveOffset;
-    } else {
-        // left button
-        tool.mouseDown(e);
-    }
-}
-
-const resize = () => {
-    const $viewPort = timedEventsViewport.value;
-    if (!$viewPort) throw new Error("timedEventsViewport not found");
-
-    $viewPort.style.width = window.innerWidth - 35 + "px";
-    $viewPort.style.height = window.innerHeight - 50 + "px";
-
-    view.updateSize(window.innerWidth, window.innerHeight);
-
-};
-
-
-async function testBeep() {
-        // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-        await invoke("beep", {  });
-        console.log("beeped");
-}
 
 onMounted(() => {
-    const $viewPort = timedEventsViewport.value;
-    if (!$viewPort) throw new Error("timedEventsViewport not found");
-
     if (clickOutsideCatcher.value) {
         window.addEventListener('wheel', (e) => {
             if (e.target === clickOutsideCatcher.value) {
@@ -274,84 +320,72 @@ onMounted(() => {
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
     autosaveTimeout.value = setInterval(autosaveCall, 1000);
 
+    mainInteraction.addEventListener(window, 'keydown', keyDownListener);
+    mainInteraction.addEventListener(window, 'keyup', keyUpListener);
 
-    resize();
+    const $viewPort = viewport.value;
+    if (!$viewPort?.addEventListener) throw new Error("viewport not found");
 
     mainInteraction.addEventListener($viewPort, 'mousedown', mouseDownListener);
+    mainInteraction.addEventListener(window, 'mouseup', mouseUpListener);
     mainInteraction.addEventListener($viewPort, 'mousemove', mouseMoveListener);
     mainInteraction.addEventListener($viewPort, 'wheel', mouseWheelListener);
 
-    window.addEventListener('mouseup', mouseUpListener);
-
-    mainInteraction.addEventListener(window, 'keydown', keyDownListener);
-    mainInteraction.addEventListener(window, 'keyup', keyUpListener);
-    mainInteraction.addEventListener(window, 'resize', resize);
-
-    setInterval(()=>testBeep(), 4000);
+    window.addEventListener('resize', resize);
+    resize();
 
 })
 onBeforeUnmount(() => {
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
     libraryStore.clear();
-});
-
-onUnmounted(() => {
-
-    const $viewPort = timedEventsViewport.value;
-    if (!$viewPort) throw new Error("timedEventsViewport not found");
 
     window.removeEventListener('mouseup', mouseUpListener);
     mainInteraction.removeAllEventListeners();
 });
 
+const resize = () => {
+    viewportSize.value = {
+        width: window.innerWidth - paneWidth.value,
+        height: window.innerHeight - 50,
+    };
+    view.updateSize(viewportSize.value.width, viewportSize.value.height);
+};
 
+const viewportSize = ref({ width: 0, height: 0 });
+
+watch(paneWidth, () => {
+    resize();
+})
 </script>
 <template>
     <div>
-        <Pianito v-if="tool.showReferenceKeyboard" />
-        <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
-            <g id="grid">
-                <TimeGrid />
-                <ToneGrid />
-            </g>
-            <g id="tone-relations">
-                <ToneRelation />
-            </g>
-            <g id="groups-container">
-                <g v-for="group in project.groups" :key="group.id">
-                    <GroupElement :group="group" />
-                </g>
-            </g>
-            <g id="note-would-be-created">
-                <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
-                    interactionDisabled />
-            </g>
-            <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
-                stroke-width="1" />
-            <g id="edit-notes">
-                <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect" />
-            </g>
-            <g id="notes-being-created">
-                <NoteElement v-for="rect in tool.notesBeingCreated" :eventRect="view.rectOfNote(rect)" />
-            </g>
-            <RangeSelection />
-        </svg>
+        <div ref="viewport"
+            :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
+            <ScoreViewport v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
+                :height="viewportSize.height" />
+            <ScoreViewportRawCanvas v-else-if="userSettings.viewportTech === ViewportTech.Canvas"
+                :width="viewportSize.width" :height="viewportSize.height" />
+            <ScoreViewportOld v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
+                :height="viewportSize.height" />
+        </div>
         <TimeScrollBar />
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}
         </div>
+        <div style="position:absolute; right:0px; top:30px">
+            <Pane :paneWidth="paneWidth" />
+            <Button :onClick="() => paneWidth = paneWidth ? 0 : 300" style="position:absolute"
+                :style="{ right: paneWidth + 'px' }">
 
-        <div style="position: fixed; bottom:0; right: 0;">
-            <ToolSelector />
+                <AnglesRight v-if="paneWidth" />
+                <AnglesLeft v-else />
+            </Button>
         </div>
-        <div style="position: fixed; bottom: 0;">
+        <Pianito v-if="tool.showReferenceKeyboard" />
+        <div class="toolbars-container">
             <Transport />
-        </div>
-        <div class="drawers-container">
-            <LibraryManager />
-            <SynthEdit />
-            <SnapSelector />
-            <MidiInputConfig v-if="playback.midiInputs.length" />
+            <!-- <Autotel /> -->
+            <ToolSelector />
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
@@ -360,67 +394,73 @@ onUnmounted(() => {
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
     </Modal>
+    <Modal name="relation fraction editor">
+        <div class="form-row">
+            <label>Simplicity: &nbsp;</label>
+            <input type="number" v-model="snap.simplify" step="0.01" min="0" max="1" />
+            <Button :onClick="() => snap.simplify = 0.12">default</Button>
+        </div>
+        <div>
+            <p>A higher simplicity will allow less complex fractions.</p>
+            <p> examples: </p>
+            <ul>
+                <li v-for="fr in [
+                            1 / 2,
+                            2 / 3,
+                            3 / 4,
+                            4 / 5,
+                            5 / 6,
+                            6 / 7,
+                            7 / 8,
+                            8 / 9,
+                            9 / 10
+                        ]">
+                    {{ new Fraction(fr).toFraction() }} is rounded to {{
+                        new Fraction(fr).simplify(snap.simplify).toFraction()
+                    }}
+                </li>
+            </ul>
+        </div>
+    </Modal>
+    <UserDisclaimer />
+
+    <TooltipDisplayer />
 </template>
-<style scoped>
-.drawers-container {
-    /* position: fixed; */
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    display: inline-block;
-    /*display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: auto; */
+<style>
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1em;
 }
 
-.unclickable {
+.form-row.disabled {
+    opacity: 0.5;
     pointer-events: none;
-
 }
 
-
-svg#viewport.cursor-note-length {
-    cursor: col-resize;
-    cursor: ew-resize;
+.full-width {
+    width: 100%;
+    box-sizing: border-box;
 }
 
-svg #playbar {
-    stroke: rgb(95, 0, 0);
-}
-
-svg#viewport.cursor-draw {
-    cursor: url("./assets/icons-iconarchive-pen.png?url") 3 3, crosshair;
-}
-
-svg#viewport.cursor-move {
-    cursor: move;
-}
-
-svg#viewport.cursor-grab {
-    cursor: grab;
-}
-
-svg#viewport.cursor-grabbing {
-    cursor: grabbing;
-}
-
-svg#viewport {
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: 1px solid rgb(230, 223, 215);
-}
-
-g#notes-being-created rect.body {
-    fill: transparent;
+#viewport {
+    user-select: none;
 }
 </style>
+<style scoped>
+.unclickable {
+    pointer-events: none;
+}
 
-
-<style>
-* {
-    user-select: none;
+.toolbars-container {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    height: 2.8em;
 }
 </style>

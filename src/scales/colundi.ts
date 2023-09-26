@@ -129,4 +129,4 @@ export default ([
     11439.3898528632,
     11825.5304346664,
     12141.3448537286,
-]).map(frequencyToOctave);
+]).map(n=>n/4).map(frequencyToOctave);

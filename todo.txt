@@ -1,0 +1,48 @@
+# Piano roll to-do
+	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
+		load button + load progrss instead of autoload 
+		caching
+	on tauri, typographies mustn't be fetched from google
+	auto compile, maybe https://github.com/tauri-apps/tauri-action
+	Base Frequency selection
+	patreon login? 
+	Midi MPE connectivity 
+	group editing: finish or delete
+		dragging a note grouped in another than active group, drags the whole group 
+		copying a note grouped in another than active group, copies the whole group to new group 
+	Physical model sounds 
+	Record and add percussive sounds
+	Step sequencer for rhythms?
+	Time or time*octave markers 
+	"simultaneous" modifier status does not get saved
+	mouse helper icon should represent what the mouse is doing, if tool is engaged in a drag, instead of showing what would do on click
+
+# Ideas
+
+	switch between log and linear hz layouts for didactic purposes.
+	integrate tuning explorer into this as a way to construct scales
+
+# Done
+
+	change app icons
+	changing window size deforms aspect ratio
+	zooming doesn't keep exactly the aspect ratio as I want it.
+	Better GUI for selecting snaps 
+	make gui prettier?
+	copied notes should keep their original group
+	when I select a note and then right-edge drag another note, the first note should be de-selected before drag starts
+	Changing layer can cause a shift in the gui because the instrment might change, and is detrimental to dbl click
+	fix that after importing library item, instrument gui doesn't reflect changed instrument 
+	Fix hanging notes in Firefox 
+	public version with video 
+	premium downloadable version (for piano spl) 
+	Remove snaps that are not useful 
+	zoom not around bottom left corner, but mouse or center of screen 
+	Find midi export library or method 
+	make playbar come back to last user selected spot on space
+	canvas mode, faster 
+	multi-timbrality 
+	add a list of parameters to set each sampler - 
+	fix notes sometimes skipped 
+	mutedness of notes are not represented in pixi
+	Change app title 

@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue';
+import { onMounted, reactive, ref, watchEffect } from 'vue';
 
 
 const samplingRate = 44100; // note its 44100 / 10
-
+const calculatedCutoffs: [number, number][] = [];
 const ftCalcs = ref(0);
 const frequency = 180
-const inputSquareWave = new Array(441).fill(0).map((_, i) => {
+const inputPulseWave = new Array(441).fill(0).map((_, i) => {
+    return 1;
     const period = samplingRate / frequency;
     const x = i % period;
-    // return Math.sin(x / period * 2 * Math.PI);
     const threshold = period / 2;
     return x < threshold ? 1 : -1;
 });
@@ -20,26 +20,44 @@ const sineWindow = (i: number, period: number) => {
     return Math.sin(i / period * Math.PI);
 }
 const noise = (len: number) => new Array(len).fill(0).map((_, i) => {
-    return (Math.random());// * sineWindow(i, len);
+    return (Math.random()) *2 - 1;// * sineWindow(i, len);
 });
 
-const outputWave = ref(new Array(inputSquareWave.length).fill(0));
+const outputPulseWave = ref(new Array(inputPulseWave.length).fill(0));
 const outputNoiseFft = ref(new Array(noiseLen).fill(0));
 const errors = ref<string[]>([]);
-const testFilterFunctionString = ref(`arr => {
-    class LpBoxcar {
-        constructor(k) {
-            let mem = 0;
-            this.operation = (x) => {
-                mem = k * x + (1 - k) * mem;
-                return mem;
-            }
+const testFilterFunctionString = ref(`
+arr => {
+    class IIRLPFRochars {
+        /** @type {Number} */
+        rc;
+        /** @type {Number} */
+        dt;
+        /** @type {Number} */
+        alpha;
+        /** @type {Number} */
+        last_val = 0;
+        /** @type {Number} */
+        offset;
+        constructor(cutoff) {
+            this.setCutoff(cutoff);
+        }
+        setCutoff(cutoff) {
+            this.rc = 1.0 / (cutoff * 2 * Math.PI);
+            this.dt = 1.0 / samplingRate;
+            this.alpha = this.dt / (this.rc + this.dt);
+        }
+        operation = (insample) => {
+            this.offset++;
+            this.last_val = this.last_val
+                + (this.alpha * (insample - this.last_val));
+            return this.last_val;
         }
     }
 
-    const lp = new LpBoxcar(0.01);
+    const lp = new IIRLPFRochars(500);
     return arr.map((x) => {
-        return x-lp.operation(x);
+        return lp.operation(x);
     })
 }`);
 /**
@@ -75,15 +93,31 @@ const FFT = (x_re: number[], x_im: number[]) => {
 const previousNoiseFft = [...outputNoiseFft.value];
 const ftTimeout = ref<any>(0);
 const outImaginary = new Array(noiseLen).fill(0);
+let smoothed = new Array(noiseLen).fill(0);
+let delta = new Array(noiseLen).fill(0);
+let deltaDelta = new Array(noiseLen).fill(0);
+let testNoise = noise(noiseLen);
+let outNoiseResult: number[] = [];
+let ftOfPulse: number[] = [];
+let ftOfPulseImaginary: number[] = [];
+const calculateDerivate = (arr: number[]) => {
+    return arr.map((x, i) => {
+        if (i === 0) return 0;
+        return (x - arr[i - 1]);
+    });
+}
+
 const calcFt = () => {
     try {
         const testFilterFunction = eval(testFilterFunctionString.value);
-        const testNoise = noise(noiseLen);
-        const outNoiseResult: number[] = testFilterFunction([...testNoise]);
+        testNoise = noise(noiseLen);
+        outNoiseResult = testFilterFunction([...testNoise]);
         const noiseChange = outNoiseResult.map((x, i) => {
             return (x) - (testNoise[i]);
         });
-        // const outNoiseResult: number[] = testFilterFunction(inputSquareWave);
+        ftOfPulse = [...outputPulseWave.value];
+        FFT(ftOfPulse, ftOfPulseImaginary);
+        // const outNoiseResult: number[] = testFilterFunction(inputPulseWave);
         FFT(noiseChange, outImaginary);
         const weightNew = 1 / (ftCalcs.value + 1);
         const weightOld = 1 - weightNew;
@@ -92,7 +126,11 @@ const calcFt = () => {
             return x * weightNew + previousNoiseFft[i] * weightOld;
         });
         previousNoiseFft.splice(0, previousNoiseFft.length, ...outNoiseFtAverage);
-
+        let pValue: number = 0;
+        let maxSmoothedValue = 0;
+        // cutoff should be at the edges of the delta curves
+        delta = calculateDerivate(outputPulseWave.value)
+        deltaDelta = calculateDerivate(delta)
         outputNoiseFft.value = outNoiseFtAverage;
         ftCalcs.value++;
     } catch (e: any) {
@@ -112,30 +150,60 @@ onMounted(() => {
 watchEffect(() => {
     try {
         const testFilterFunction = eval(testFilterFunctionString.value);
-        outputWave.value = testFilterFunction(inputSquareWave);
+        outputPulseWave.value = testFilterFunction(inputPulseWave);
         ftCalcs.value = 0;
         errors.value = [];
     } catch (e: any) {
         errors.value = [e + ""];
     }
     // error if output is not array
-    if (!Array.isArray(outputWave.value)) {
+    if (!Array.isArray(outputPulseWave.value)) {
         errors.value.push("output is not an array");
     }
+});
+
+const drawHeight = 140;
+const halfHeight = drawHeight / 2;
+
+const displays = reactive({
+    outNoiseResult: false,
+    outputPulseWave: true,
+    outputNoiseFft: true,
+    delta: true,
+    deltaDelta: true,
+    ftOfPulse: true,
 });
 
 </script>
 <template>
     <div class="side-by-side">
-        <svg ref="outputDisplay" class="output svg" :viewBox="`0 0 ${inputSquareWave.length} 140`" style="width: 50%">
-            <line class="zero" x1="0" y1="70" :x2="inputSquareWave.length" y2="70" />
-            <text fill="rgba(255,0,0,0.23)" font-size="12" x="0" y="0" dy="1em">precision: {{ftCalcs}}</text>
-            <path v-if="outputWave && outputWave.length > 0" class="output trace"
-                :d="`M${outputWave.map((y, x) => `${x},${y * 100 + 70}`).join(' ')}`" />
-            <path v-if="outputNoiseFft && outputNoiseFft.length > 0" class="ft output trace"
-                :d="`M${outputNoiseFft.map((y, x) => `${nOrZero(x)},${nOrZero(y) * 100 + 70}`).join(' ')}`" />
+        <svg ref="outputDisplay" class="output svg" :viewBox="`0 0 ${inputPulseWave.length} ${drawHeight}`"
+            style="width: 50%">
+            <line class="zero" x1="0" y1="70" :x2="inputPulseWave.length" y2="70" />
+            <text fill="rgba(255,0,0,0.23)" font-size="12" x="0" y="0" dy="1em">precision: {{ ftCalcs }}</text>
+            <path v-if="displays.outNoiseResult && outNoiseResult.length > 0" class="output trace"
+                :d="`M${outNoiseResult.map((y, x) => `${x},${halfHeight - y * 100}`).join(' ')}`" />
+            <path v-if="displays.outputPulseWave && outputPulseWave.length > 0" class="output trace"
+                :d="`M${outputPulseWave.map((y, x) => `${x},${halfHeight - y * 100}`).join(' ')}`" />
+            <path v-if="displays.outputNoiseFft && outputNoiseFft.length > 0" class="ft output trace"
+                :d="`M${outputNoiseFft.map((y, x) => `${nOrZero(x)},${halfHeight - nOrZero(y) * 100}`).join(' ')}`" />
+            <path v-if="displays.delta && delta.length > 0" class="deltaft output trace"
+                :d="`M${delta.map((y, x) => `${nOrZero(x)},${halfHeight - nOrZero(y) * 100}`).join(' ')}`" />
+            <path v-if="displays.deltaDelta && deltaDelta.length > 0" class="deltaft output trace"
+                :d="`M${deltaDelta.map((y, x) => `${nOrZero(x)},${halfHeight - nOrZero(y) * 100}`).join(' ')}`" />
+            <path v-if="displays.ftOfPulse && ftOfPulse.length > 0" class="ft output trace"
+                :d="`M${ftOfPulse.map((y, x) => `${nOrZero(x)},${halfHeight - nOrZero(y) * 100}`).join(' ')}`" />
+
         </svg>
-        <textarea v-model="testFilterFunctionString" style="width: 50%; height: 100vh;"></textarea>
+        <div style="width: 50%; height: 100vh;">
+            <textarea v-model="testFilterFunctionString" style="width:100%" ></textarea>
+            <input type="checkbox" v-model="displays.outNoiseResult" /> outNoiseResult
+            <input type="checkbox" v-model="displays.outputPulseWave" /> outputPulseWave
+            <input type="checkbox" v-model="displays.outputNoiseFft" /> outputNoiseFft
+            <input type="checkbox" v-model="displays.delta" /> delta
+            <input type="checkbox" v-model="displays.deltaDelta" /> deltaDelta
+            <input type="checkbox" v-model="displays.ftOfPulse" /> ftOfPulse
+        </div>
     </div>
     <p class="err" v-if="errors.length > 0">{{ errors.join('\n') }}</p>
 </template>
@@ -172,6 +240,10 @@ watchEffect(() => {
 
 .output.trace.ft {
     stroke: rgba(255, 255, 255, 0.397);
+}
+
+.output.trace.deltaft {
+    stroke: rgba(175, 90, 11, 0.575);
 }
 
 .err {

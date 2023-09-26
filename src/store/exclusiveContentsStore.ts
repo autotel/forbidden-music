@@ -17,10 +17,10 @@ export const useExclusiveContentsStore = defineStore("exclusive contents store",
     });
 
     
-    // if(window.location.hash == "#exclusive") {
-    //     enabled.value = true;
-    //     console.log("exclusives mode on");
-    // }
+    if(window.location.hash == "#exclusive") {
+        enabled.value = true;
+        console.log("exclusives mode on");
+    }
     return {
         enabled
     }

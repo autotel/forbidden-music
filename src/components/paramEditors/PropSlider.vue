@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { NumberSynthParam } from '../../synth/SynthInterface';
 
 const props = defineProps({
@@ -11,18 +11,18 @@ const props = defineProps({
 let mouseDownPos = {
     x: 0, y: 0,
 };
-let currentValueOnDragStart = 0;
-const currentValue = ref(0);
+let preMapValueOnDragStart = 0;
+const preMapValue = ref(0);
 const dragging = ref(false);
 const valueDraggable = ref();
 const ww = 600;
-
 const minMaxRange = props.param.max - props.param.min;
 
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
 
+    let range = props.param.max - props.param.min;
 
     let mouseMovePos = {
         x: e.clientX,
@@ -32,21 +32,29 @@ const mouseDrag = (e: MouseEvent) => {
     let deltaY = mouseDownPos.y - mouseMovePos.y;
     let deltaX = mouseMovePos.x - mouseDownPos.x;
 
-    let valueToAdd = (deltaY + deltaX) * minMaxRange;
+    let valueToAdd = (deltaY + deltaX);
 
-    let val = currentValueOnDragStart + (valueToAdd / ww);
+    let preMapNewVal = preMapValueOnDragStart + (valueToAdd / ww);
 
-    if (val > props.param.max) {
-        val = props.param.max;
+
+    if (isNaN(preMapNewVal)) {
+        preMapNewVal = props.param.min;
     }
-    if (val < props.param.min) {
-        val = props.param.min;
+    if (preMapNewVal < 0) {
+        preMapNewVal = 0;
     }
-    if (isNaN(val)) {
-        val = props.param.min;
+    if (preMapNewVal > 1) {
+        preMapNewVal = 1;
     }
-    currentValue.value = val;
-    props.param.value = val;
+
+    preMapValue.value = preMapNewVal;
+
+    if (props.param.curve === 'log') {
+        props.param.value = Math.pow(range + 1, preMapNewVal) - 1 + props.param.min;
+    } else {
+        props.param.value = preMapNewVal * range + props.param.min;
+    }
+
 }
 const windowMouseMove = (e: MouseEvent) => {
     if (!dragging.value) return;
@@ -57,7 +65,7 @@ const mouseDown = (e: MouseEvent) => {
         x: e.clientX,
         y: e.clientY,
     };
-    currentValueOnDragStart = currentValue.value;
+    preMapValueOnDragStart = preMapValue.value;
     e.stopPropagation();
     e.preventDefault();
     dragging.value = true;
@@ -68,7 +76,8 @@ const mouseUp = (e: MouseEvent) => {
     dragging.value = false;
 }
 onMounted(() => {
-    currentValue.value = props.param.value;
+    const range = props.param.max - props.param.min;
+    preMapValue.value = props.param.value / range;
     const $valueDraggable = valueDraggable.value;
     if (!$valueDraggable) {
         console.error("valueDraggable ref is " + valueDraggable.value);
@@ -91,21 +100,20 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:300px">
-        
+    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:100%">
+
         <template v-if="props.param.max !== undefined && props.param.min !== undefined">
             <div class="prog-container">
-                <div class="prog-bar" :class="{ negative: currentValue < 0 }" :style="{
-                    width: (currentValue > 0 ? (currentValue / props.param.max) : (currentValue / props.param.min)) * 100 + '%',
-                    left: (currentValue > 0 ? 0 : (1 - currentValue / props.param.min)) * 100 + '%',
+                <div class="prog-bar" :class="{ negative: preMapValue < 0 }" :style="{
+                    width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
+                    left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
                 }"></div>
             </div>
         </template>
         <span style="{position: absolute; z-index: 2;}">
-            {{ props.param.displayName }} &nbsp; {{ currentValue?.toFixed(2) }}
+            {{ props.param.displayName }} &nbsp; {{ param.value?.toFixed(3) }} ({{ preMapValue.toFixed(2) }})
         </span>
     </div>
-
 </template>
 <style>
 .prog-bar {
@@ -142,5 +150,6 @@ onBeforeUnmount(() => {
     align-items: center;
     text-align: center;
     justify-content: center;
+    box-sizing: border-box;
 }
 </style>

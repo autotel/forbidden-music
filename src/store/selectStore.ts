@@ -1,99 +1,52 @@
-import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
-import { EditNote } from '../dataTypes/EditNote';
-import { useProjectStore } from './projectStore';
 import { throttledWatch } from '@vueuse/core';
-import { Group } from '../dataTypes/Group';
-import { TimelineItem } from '../dataTypes/TimelineItem';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { Note } from '../dataTypes/Note';
+import { setSelection } from '../dataTypes/Selectable';
+import { OctaveRange, TimeRange, VelocityRange, } from '../dataTypes/TimelineItem';
+import { Trace, TraceType } from '../dataTypes/Trace';
+import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
+import { useLayerStore } from './layerStore';
+import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { Tool } from '../dataTypes/Tool';
 import { useViewStore } from './viewStore';
 
-interface RangeA {
-    startTime: number,
-    endTime: number,
-    startOctave: number,
-    endOctave: number
-}
-
-interface RangeB {
-    startTime: number,
-    endTime: number,
-}
-
-
-const getNotesInRange = (
-    notes: EditNote[],
-    range: RangeA | RangeB
-) => {
-    const timeStart = Math.min(range.startTime, range.endTime);
-    const timeEnd = Math.max(range.startTime, range.endTime);
-    const octaveStart = 'startOctave' in range ? Math.min(range.startOctave, range.endOctave) : undefined;
-    const octaveEnd = 'startOctave' in range ? Math.max(range.startOctave, range.endOctave) : undefined;
-
-    return notes.filter((editNote) => {
-        // deemed as in octave range if said restriction is not set
-        const octaveInRange = (octaveStart === undefined)
-            || (editNote.octave >= octaveStart && editNote.octave <= octaveEnd!);
-        const timeInRange = editNote.timeEnd >= timeStart && editNote.time <= timeEnd;
-        return octaveInRange && timeInRange;
-    });
-};
-
-const getGroupsInRange = (
-    groups: Group[],
-    range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }
-) => {
-    const octaveStart = Math.min(range.startOctave, range.endOctave);
-    const octaveEnd = Math.max(range.startOctave, range.endOctave);
-    const timeStart = Math.min(range.startTime, range.endTime);
-    const timeEnd = Math.max(range.startTime, range.endTime);
-
-    return groups.filter((group) => {
-        const octaveBound = [group.octave, group.octaveEnd];
-        const octaveInRange = octaveBound[0] >= octaveStart && octaveBound[1] <= octaveEnd;
-        const timeInRange = group.time >= timeStart && group.timeEnd <= timeEnd;
-        return octaveInRange && timeInRange;
-    });
-};
-
+export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
-    const selected = ref(new Set() as Set<TimelineItem>);
-    const tool = useToolStore();
+    const selected = ref(new Set() as Set<Trace>);
     const project = useProjectStore();
+    const layers = useLayerStore();
+    const tool = useToolStore();
     const view = useViewStore();
-
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
-    const isSelected = (item: TimelineItem) => {
+    const isSelected = (item: Trace) => {
         return selected.value.has(item);
     };
-    const refreshNoteSelectionState = () => {
-        project.score.forEach(n => n.selected = isSelected(n))
+    const refreshTraceSelectionState = () => {
+        // TODO: is it really necessary?
+        project.score.forEach(n => setSelection(n, isSelected(n)));
+        project.loops.forEach(n => setSelection(n, isSelected(n)));
     }
-    const refreshGroupSelectionState = () => {
-        project.groups.forEach(g => g.selected = isSelected(g))
-    }
-
-    const getNotes = (): EditNote[] => {
-        return [...selected.value].filter((n) => n instanceof EditNote) as EditNote[];
-    };
-    const getGroups = (): Group[] => {
-        return [...selected.value].filter((n) => n instanceof Group) as Group[];
+    /**
+     * get selected notes
+     */
+    const getNotes = (): Note[] => {
+        return [...selected.value].filter((n) => n.type === TraceType.Note) as Note[];
     };
 
-    const select = (...items: TimelineItem[]) => {
+    const getTraces = () => {
+        return [...selected.value];
+    }
+
+    const select = (...items: Trace[]) => {
         selected.value.clear();
         selected.value = new Set(items);
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
 
-    const toggle = (...notes: EditNote[]) => {
+    const toggle = (...notes: Trace[]) => {
         notes.forEach((n) => {
             if (selected.value.has(n)) {
                 selected.value.delete(n);
@@ -101,75 +54,76 @@ export const useSelectStore = defineStore("select", () => {
                 selected.value.add(n);
             }
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
-    const remove = (...project: (EditNote)[]) => {
+    const remove = (...project: (Trace)[]) => {
         project.forEach((n) => {
             if (!n) return;
             selected.value.delete(n);
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     }
-    const add = (...editNote: (EditNote)[]) => {
-        editNote.forEach((n) => {
+    const add = (...trace: (Trace)[]) => {
+        trace.forEach((n) => {
             if (!n) return;
             selected.value.add(n);
         });
-        refreshNoteSelectionState();
+        refreshTraceSelectionState();
     };
-    const selectRange = (range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }, restrictToGroup: (Group | null | false) = false) => {
+    const getRangeSelectableTraces = (): Trace[] => {
+        // if(tool.current === Tool.Edit || tool.current === Tool.Modulation) {
+        //     return project.score.filter(({ layer }) => layers.isVisible(layer));
+        // } else if(tool.current === Tool.Loop) {
+        //     return project.loops;
+        // }
+        // return [];
+        return [...project.score, ...project.loops];
+    }
+    const selectRange = (range: SelectableRange) => {
+        // let notesInRange:Trace[] = getTracesInRange(
+        //     getRangeSelectableTraces(),
+        //     range
+        // );
 
-        let notesInRange = getNotesInRange(
-            project.score,
-            range
-        );
-
-        // if in modulation mode, then  also select according to "velolines"
-        if (tool.current === Tool.Modulation) {
-            const notesVeloLinesInRange = getNotesInRange(
-                project.score, {
-                    startTime: range.startTime,
-                    endTime: range.endTime,
-                } as RangeB
-            ).filter(n =>
-                view.velocityToPxWithOffset(n.velocity) > view.octaveToPxWithOffset(range.startOctave)
-                &&
-                view.velocityToPxWithOffset(n.velocity) < view.octaveToPxWithOffset(range.endOctave)
-            )
-            notesInRange.push(...notesVeloLinesInRange)
-
-        }
-
-        if (restrictToGroup !== false) { // note that null is also a valid group restriction
-            notesInRange = notesInRange.filter(n => n.group === restrictToGroup)
-        }
-
-        // let groupsInRange:Group[] = [];
-        // if (!restrictToGroup) { // null or false
-        //     const groupsInRange = getGroupsInRange(
-        //         project.groups,
-        //         range
+        // // if in modulation mode, then  also select according to "velolines"
+        // if (
+        //     // tool.current === Tool.Modulation
+        //     'velocity' in range && 'velocityEnd' in range
+        // ) {
+        //     const notesVeloLinesInRange = getTracesInRange(
+        //         project.score, {
+        //             time: range.time,
+        //             timeEnd: range.timeEnd,
+        //         } as SelectableRange
+        //     ).filter(event =>
+        //         'velocity' in range ? (
+        //             event.velocity < range.velocityEnd
+        //             &&
+        //             event.velocity > range.velocity
+        //         ) : false
         //     )
+        //     notesInRange.push(...notesVeloLinesInRange)
         // }
 
+        const pxRange = view.pxRangeOf(range);
+        const traceRects = [...view.visibleLoopRects, ...view.visibleNoteRects];
+        if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');
+        const sureRange = pxRange as { x: number, y: number, x2: number, y2: number };
+        const tracesWithinRange = traceRects.filter(rect => {
+            return (
+                rect.width + rect.x > sureRange.x &&
+                rect.x < sureRange.x2 &&
+                rect.height + rect.y > sureRange.y &&
+                rect.y < sureRange.y2
+            )
+        }).map(r=>r.event);
 
         select(
-            ...notesInRange,
-            // ...groupsInRange
+            ...tracesWithinRange,
         );
     };
-    const addRange = (range: {
-        startTime: number,
-        endTime: number,
-        startOctave: number,
-        endOctave: number
-    }) => {
-        const newNotes = getNotesInRange(
+    const addRange = (range: SelectableRange) => {
+        const newNotes = getTracesInRange(
             project.score,
             range
         );
@@ -181,14 +135,15 @@ export const useSelectStore = defineStore("select", () => {
     const selectAll = () => {
         select(...project.score);
     };
-    throttledWatch(() => selected.value.size, refreshNoteSelectionState);
+    throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 
     return {
         selectRange,
         selectAll,
         addRange,
         add, select, toggle,
-        getNotes, getGroups,
+        getTraces,
+        getNotes,
         clear: clear, remove,
         isSelected,
         selected,

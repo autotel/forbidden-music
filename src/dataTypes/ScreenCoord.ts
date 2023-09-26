@@ -1,0 +1,1 @@
+export type ScreenCoord = { x: number, y: number };

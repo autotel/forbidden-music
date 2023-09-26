@@ -38,6 +38,7 @@ export type SynthParamMinimum <T> = {
     displayName: string;
     type: ParamType;
     value: T;
+    exportable: boolean;
     [key: string]: any;
 }
 
@@ -45,8 +46,9 @@ export interface NumberSynthParam extends SynthParamMinimum<number> {
     type: ParamType.number;
     value: number;
     displayName: string;
-    min: number
-    max: number
+    min: number;
+    max: number;
+    curve?: 'linear' | 'log';
 }
 
 export interface ProgressSynthParam extends SynthParamMinimum<number> {

@@ -21,7 +21,7 @@ setInterval(updateDisplayProgress, 1000);
 
 </script>
 <template>
-    <div class="load-progress-container" style="width:300px">
+    <div class="load-progress-container">
         {{ props.param.displayName }}
         <template v-if="props.param.max !== undefined && props.param.min !== undefined">
             <div class="prog-container">
@@ -68,5 +68,8 @@ setInterval(updateDisplayProgress, 1000);
     align-items: center;
     text-align: center;
     justify-content: center;
+    width:100%;
+    box-sizing: border-box;
+
 }
 </style>

@@ -18,3 +18,9 @@ export function ifDev(callback: () => void) {
         }
     }
 }
+
+export function devLog(...args: any[]) {
+    if (isDev()) {
+        console.log(...args);
+    }
+}

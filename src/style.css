@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Prata&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap');
 * {
   margin: 0;
   padding: 0;
@@ -6,10 +9,19 @@
 body {
   overflow: hidden;
   font-family: Arial, Helvetica, sans-serif;
+  /* font-family: 'Roboto', sans-serif; */
+  font-family: 'Didact Gothic', sans-serif;
   font-size: 14;
+  font-weight: 300;
 }
 
 button {
   font-family: inherit;
   font-size: inherit;
+  font-weight: inherit;
+}
+
+p {
+  font-family: 'Prata', sans-serif;
+  /* font-family: 'Libre Baskerville', serif; */
 }
