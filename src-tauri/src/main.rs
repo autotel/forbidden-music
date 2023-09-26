@@ -269,8 +269,8 @@ impl VeryBasicVoice {
     }
 }
 
-pub fn newVeryBasicVoice (sample_rate: f32) -> VeryBasicVoice {
-    let mut ret = VeryBasicVoice {
+pub fn new_very_basic_voice (sample_rate: f32) -> VeryBasicVoice {
+    let ret = VeryBasicVoice {
         oscillator: Oscillator {
             waveform: Waveform::Sine,
             sample_rate: sample_rate,
@@ -352,7 +352,7 @@ where
 
 // mutex voice_state
 lazy_static::lazy_static! {
-    static ref VOICE_STATE: Mutex<VeryBasicVoice> = Mutex::new(newVeryBasicVoice(44100.0));
+    static ref VOICE_STATE: Mutex<VeryBasicVoice> = Mutex::new(new_very_basic_voice(44100.0));
 }
 
 
