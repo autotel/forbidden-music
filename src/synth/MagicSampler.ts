@@ -1,6 +1,4 @@
-import { time } from "console";
 import { NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
-import { set } from "@vueuse/core";
 
 class PerformanceChronometer {
     private startTime: number;
@@ -166,13 +164,13 @@ class SamplerVoice {
         timeAccumulator += adsr[3];
         this.outputNode.gain.linearRampToValueAtTime(0, timeAccumulator);
 
-        if(this.velocityToStartPoint) {
-            if(velocity > 1) {
+        if (this.velocityToStartPoint) {
+            if (velocity > 1) {
                 console.error("velocity > 1");
             }
-            skipSample += this.velocityToStartPoint * (1-velocity);
+            skipSample += this.velocityToStartPoint * (1 - velocity);
         }
-        
+
         this.bufferSource.start(absoluteNoteStart, skipSample, durationWithRelease);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
     };
@@ -202,7 +200,7 @@ class SampleSource {
     sampleInherentFrequency: number;
     sampleInherentVelocity?: number;
     isLoaded: boolean = false;
-    private isLoading: boolean = false;
+    isLoading: boolean = false;
 
     load = async () => {
         console.error("samplesource constructed wrong");
@@ -219,9 +217,18 @@ class SampleSource {
 
             if (this.isLoaded || this.isLoading) throw new Error("redundant load call");
             this.isLoading = true;
-
-            const response = await fetch(sampleDefinition.path)
-
+            // const fetchHeaders = new Headers();
+            const response = await fetch(sampleDefinition.path, {
+                cache: "default",
+            })
+            console.group("header: " + sampleDefinition.path);
+            response.headers.forEach((value, key) => {
+                console.log(key,":", value);
+                if(key.match('date')) {
+                    console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
+                }
+            });
+            console.groupEnd();
             const arrayBuffer = await response.arrayBuffer();
             this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             this.isLoaded = true;
@@ -261,6 +268,7 @@ export class MagicSampler implements SynthInstance {
         if (name) this.name = name;
         this.enable = () => {
             this.sampleSources.forEach(async (sampleSource) => {
+                if(sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();
                 this.loadingProgress += 1;
             });
@@ -306,7 +314,7 @@ export class MagicSampler implements SynthInstance {
                     return parent.adsr[i];
                 },
                 set value(value: number) {
-                    console.log("set",['attack', 'decay', 'sustain', 'release'][i], value);
+                    console.log("set", ['attack', 'decay', 'sustain', 'release'][i], value);
                     parent.adsr[i] = value;
                 },
                 curve: 'log',
@@ -327,7 +335,7 @@ export class MagicSampler implements SynthInstance {
             curve: 'log',
             exportable: true,
         } as SynthParam);
-       
+
 
     }
     triggerAttackRelease = (
