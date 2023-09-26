@@ -15,6 +15,7 @@ import { FourierSynth } from '../synth/FourierSynth';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { MagicSampler } from '../synth/MagicSampler';
 import { SineSynth } from '../synth/SineSynth';
+import { KickSynth } from '../synth/KickSynth';
 import { OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinimum } from "../synth/SynthInterface";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useProjectStore } from './projectStore';
@@ -234,6 +235,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (exclusives.enabled) {
             availableSynths.value.push(...exclusiveSamplers);
             availableSynths.value.unshift(new FourierSynth(audioContext));
+            availableSynths.value.unshift(new KickSynth(audioContext));
         } else {
             console.log("exclusives disabled");
         }
