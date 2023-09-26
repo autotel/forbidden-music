@@ -110,13 +110,15 @@ fn open_midi_connection(
 }
 
 #[tauri::command]
-fn trigger(window: Window<Wry>) {
+fn trigger(_window: Window<Wry>, frequency: f32, amplitude: f32) {
     // let (_host, device, config) = host_device_setup().expect("could not setup host device");
     // let stream = sr_select_make_stream(device, config).expect("could not make stream");
 
     // stream.play().expect("play didnt work");
 
     let mut voice = VOICE_STATE.lock().unwrap();
+    voice.oscillator.frequency_hz = frequency;
+    voice.oscillator.amplitude = amplitude;
     voice.trigger();
 }
 
@@ -243,8 +245,10 @@ impl VeryBasicVoice {
     fn trigger(&mut self) {
         self.in_use = true;
         self.envelope_countdown = self.envelope_duration;
-        self.oscillator.amplitude = 1.0;
-
+        //
+        if(self.oscillator.amplitude == 0.0) {
+            self.oscillator.amplitude = 0.2;
+        }
     }
     fn tick(&mut self) -> f32 {
         if !self.in_use {
