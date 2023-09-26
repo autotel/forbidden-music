@@ -46,77 +46,14 @@ fn beep() {
         let sample_rate = config.sample_rate.0 as f64;
         let channels = config.channels as usize;
 
-        //let c = mls();
-        //let c = (mls() | dc(400.0) | dc(50.0)) >> resonator();
-        //let c = pink();
-
-        // FM synthesis.
-        //let f = 110.0;
-        //let m = 5.0;
-        //let c = oversample(sine_hz(f) * f * m + f >> sine());
-
-        // Pulse wave.
-        //let c = lfo(|t| {
-        //    let pitch = 220.0;
-        //    let duty = lerp11(0.01, 0.99, sin_hz(0.05, t));
-        //    (pitch, duty)
-        //}) >> pulse();
-
-        //let c = zero() >> pluck(220.0, 0.8, 0.8);
-        //let c = dc(110.0) >> dsf_saw_r(0.99);
-        //let c = dc(110.0) >> triangle();
-        //let c = dc(110.0) >> soft_saw();
-        //let c = lfo(|t| xerp11(20.0, 2000.0, sin_hz(0.1, t))) >> dsf_square_r(0.99) >> lowpole_hz(1000.0);
-        //let c = dc(110.0) >> square();
         let c = 0.2 * (organ_hz(midi_hz(57.0)) + organ_hz(midi_hz(61.0)) + organ_hz(midi_hz(64.0)));
-        //let c = dc(440.0) >> rossler();
-        //let c = dc(110.0) >> lorenz();
-        //let c = organ_hz(110.1) + organ_hz(54.9);
-        //let c = pink() >> hold_hz(440.0, 0.0);
-
-        // Filtered noise tone.
-        //let c = (noise() | dc((440.0, 50.0))) >> !resonator() >> resonator();
-
-        // Test ease_noise.
-        //let c = lfo(|t| xerp11(50.0, 5000.0, ease_noise(smooth9, 0, t))) >> triangle();
-
-        // Bandpass filtering.
-        //let c = c >> (pass() | envelope(|t| xerp11(500.0, 5000.0, sin_hz(0.05, t)))) >> bandpass_q(5.0);
-        //let c = c >> (pass() | envelope(|t| (xerp11(500.0, 5000.0, sin_hz(0.05, t)), 0.9))) >> !bandrez() >> bandrez();
-
-        // Waveshaper.
-        //let c = c >> shape(Shape::Crush(20.0));
-
-        // Add feedback delay.
-        //let c = c >> (pass() & feedback(butterpass_hz(1000.0) >> delay(1.0) * 0.5));
-
-        // Apply Moog filter.
-        //let c = (c | lfo(|t| (xerp11(110.0, 11000.0, sin_hz(0.1, t)), 0.6))) >> moog();
-
         let c = c >> pan(0.0);
-
-        //let c = fundsp::sound::risset_glissando(false);
-
-        // Add chorus.
         let c = c >> (chorus(0, 0.0, 0.01, 0.2) | chorus(1, 0.0, 0.01, 0.2));
-
-        // Add flanger.
-        //let c = c
-        //    >> (flanger(0.6, 0.005, 0.01, |t| lerp11(0.005, 0.01, sin_hz(0.1, t)))
-        //        | flanger(0.6, 0.005, 0.01, |t| lerp11(0.005, 0.01, cos_hz(0.1, t))));
-
-        // Add phaser.
-        //let c = c
-        //    >> (phaser(0.5, |t| sin_hz(0.1, t) * 0.5 + 0.5)
-        //        | phaser(0.5, |t| cos_hz(0.1, t) * 0.5 + 0.5));
 
         let mut c = c
             >> (declick() | declick())
             >> (dcblock() | dcblock())
-            //>> (multipass() & 0.2 * reverb_stereo(10.0, 3.0))
             >> limiter_stereo((1.0, 5.0));
-        //let mut c = c * 0.1;
-
         c.set_sample_rate(sample_rate);
         c.allocate();
 
@@ -133,8 +70,7 @@ fn beep() {
             None,
         )?;
         stream.play()?;
-        // GUI gets locked on vue but, for example, the score keeps playing
-        // prolly need to make a thread for the sound or smthing
+        
         std::thread::sleep(std::time::Duration::from_millis(4000));
 
         Ok(())
