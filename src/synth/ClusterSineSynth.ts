@@ -1,5 +1,6 @@
-import { ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
+import { frequencyToOctave } from "../functions/toneConverters";
 
 export class ClusterSineVoice {
     inUse: boolean = false;
@@ -11,12 +12,15 @@ export class ClusterSineVoice {
     relativeGains = [0.25, 0.5, 1, 0.5, 0.25];
     frequencyMultipliers: Map<number, number> = new Map();
     imprecision: number = 0;
+    pan: number = 0;
     setValues: (relativeOctaves: number[], relativeGains: number[]) => void;
 
     constructor(audioContext: AudioContext) {
         const oscillators: OscillatorNode[] = [];
         const gainNode = audioContext.createGain();
-        this.outputNode = gainNode;
+        const panner = audioContext.createStereoPanner();
+        gainNode.connect(panner);
+        this.outputNode = panner;
 
         const getOrMakeOscillator = (index: number) => {
             if (oscillators[index]) return oscillators[index];
@@ -83,6 +87,7 @@ export class ClusterSineVoice {
                 relativeNoteStart = 0;
             }
             const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
+            panner.pan.value = this.pan;
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
             gainNode.gain.setValueAtTime(0, absoluteStartTime);
             gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
@@ -109,6 +114,7 @@ export class ClusterSineVoice {
                 duration += relativeNoteStart;
                 relativeNoteStart = 0;
             }
+            panner.pan.value = this.pan;
             const absoluteNoteStart = audioContext.currentTime + relativeNoteStart;
             gainNode.gain.cancelScheduledValues(absoluteNoteStart);
             gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
@@ -146,12 +152,33 @@ export class ClusterSineSynth implements SynthInstance {
     oscillatorsCount: number = 2;
     imprecision: number = 0;
 
+
+    params = [] as SynthParam[];
+    panCorrParam = {
+        displayName: "octave - pan correlation",
+        exportable: true,
+        type: ParamType.number,
+        value: 0,
+        min: -1,
+        max: 1,
+    } as NumberSynthParam;
+
     memoizedCluster = {
         octavesInterval: 0,
         volumeRolloff: 0,
         oscillatorsCount: 0,
         relativeOctaves: [] as number[],
         gains: [] as number[],
+    }
+
+    octaveToPan = (octave: number) => {
+        const corr = this.panCorrParam.value;
+        const refOct = 3;
+        const octDiff = octave - refOct;
+        const pan = octDiff * corr;
+        if(pan < -1) return -1;
+        if(pan > 1) return 1;
+        return pan;
     }
 
     getCluster = () => {
@@ -244,7 +271,7 @@ export class ClusterSineSynth implements SynthInstance {
             min: 0,
             max: 10,
         });
-
+        this.params.push(this.panCorrParam);
         this.enable = () => { }
         this.disable = () => { }
 
@@ -268,6 +295,8 @@ export class ClusterSineSynth implements SynthInstance {
         }
         const { relativeOctaves, gains } = this.getCluster();
         voice.setValues(relativeOctaves, gains);
+        // TODO: stupid conversion back to octave, of a value which probably was converted from octave?
+        voice.pan = this.octaveToPan(frequencyToOctave(frequency));
         voice.imprecision = this.imprecision;
         voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
     };
@@ -283,7 +312,9 @@ export class ClusterSineSynth implements SynthInstance {
             voice.outputNode.connect(this.outputNode);
 
         }
+        
         const { relativeOctaves, gains } = this.getCluster();
+        voice.pan = this.octaveToPan(frequencyToOctave(frequency));
         voice.setValues(relativeOctaves, gains);
         voice.triggerPerc(frequency, relativeNoteStart, velocity);
 
@@ -293,5 +324,4 @@ export class ClusterSineSynth implements SynthInstance {
             voice.stop();
         });
     }
-    params = [] as SynthParam[];
 }
