@@ -77,7 +77,7 @@ export class SineVoice {
 export class SineSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: SineVoice[] = [];
-    private outputNode?: GainNode;
+    outputNode: GainNode;
     credits: string = "";
     name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
     enable: () => void;
@@ -88,23 +88,27 @@ export class SineSynth implements SynthInstance {
         credits?: string
     ) {
         this.audioContext = audioContext;
-
         this.voices.forEach((voice) => {
             voice.outputNode.connect(this.outputNode);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
+        this.outputNode = audioContext.createGain();
+        let maximizer: AudioNode | undefined;
 
-        (async () => {
-            this.outputNode = audioContext.createGain();
-            const maximizer = await createMaximizerWorklet(audioContext);
-            this.outputNode.connect(maximizer);
-            maximizer.connect(audioContext.destination);
-        })()
-
-        this.enable = () => { }
-        this.disable = () => { }
+        this.enable = async () => {
+            if(!maximizer) {
+                // TODO: move maximizer to an fx, and remove it from here
+                maximizer = await createMaximizerWorklet(audioContext);
+            }
+            maximizer.connect(this.outputNode);
+        }
+        this.disable = () => {
+            if (maximizer) {
+                maximizer.disconnect();
+            }
+        }
 
     }
     triggerAttackRelease = (

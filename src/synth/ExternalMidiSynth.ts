@@ -1,5 +1,5 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
-import { ParamType, SynthInstance, SynthParam, OptionSynthParam } from './SynthInterface';
+import { ParamType, SynthInstance, SynthParam, OptionSynthParam, ExternalSynthInstance } from './SynthInterface';
 
 
 //@ts-ignore
@@ -22,7 +22,7 @@ type HeldChannel = {
     identifier: any;
 }
 
-export class ExternalMidiSynth implements SynthInstance {
+export class ExternalMidiSynth implements ExternalSynthInstance {
     constructor(audioContext: AudioContext) {
         this.updateParams();
 
@@ -31,7 +31,6 @@ export class ExternalMidiSynth implements SynthInstance {
     //@ts-ignore
     midiOutputs: MIDIOutput[] = [];
     selectedMidiOutputIndex = 0;
-
     usedChannels = [
         false, false, false, false,
         false, false, false, false,

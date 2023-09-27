@@ -28,29 +28,22 @@ interface FmParamsChangeMessage {
 // TODO: make polyphonic
 export class FmSynth implements SynthInstance {
     private audioContext?: AudioContext;
-    gainNode?: GainNode;
+    outputNode: GainNode;
     engine?: AudioWorkletNode;
     enable: () => void
     disable: () => void
     constructor(audioContext: AudioContext) {
-        this.setAudioContext(audioContext);
+        this.outputNode = audioContext.createGain();
+        this.audioContext = audioContext;
+        createFmWorklet(audioContext).then((engine)=>{
+            this.engine = engine;
+            this.engine.connect(this.outputNode);
+        });
+
         // TODO... or not
         this.enable = () => { }
         this.disable = () => { }
     }
-
-
-    async setAudioContext(audioContext: AudioContext) {
-        if (this.audioContext) {
-            throw new Error("audio context already set");
-        }
-        this.audioContext = audioContext;
-        this.engine = await createFmWorklet(audioContext);
-        this.gainNode = this.audioContext.createGain();
-        this.engine.connect(this.gainNode);
-        this.gainNode.connect(this.audioContext.destination);
-    }
-
     releaseAll = () => {
         console.log("stopping all notes");
         if (this.engine) this.engine.port.postMessage({ stopall: true } as FmStopAllMessage);

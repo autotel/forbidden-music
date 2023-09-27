@@ -141,7 +141,7 @@ class FourierVoice {
 export class FourierSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: FourierVoice[] = [];
-    private outputNode?: GainNode;
+    outputNode: GainNode;
     periodicWaveRef: NullableRef<PeriodicWave> = {
         value: null
     }
@@ -167,15 +167,10 @@ export class FourierSynth implements SynthInstance {
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
+        this.outputNode = audioContext.createGain();
 
-        (async () => {
-            this.outputNode = audioContext.createGain();
-            const maximizer = await createMaximizerWorklet(audioContext);
-            this.outputNode.connect(maximizer);
-            maximizer.connect(audioContext.destination);
-        })()
-
-        this.enable = () => { }
+        this.enable = async () => { 
+        }
         this.disable = () => { }
 
         this.periodicWaveRef = {

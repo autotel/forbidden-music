@@ -140,7 +140,7 @@ export class ClusterSineVoice {
 export class ClusterSineSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: ClusterSineVoice[] = [];
-    private outputNode?: GainNode;
+    outputNode: GainNode;
     credits: string = "";
     name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
     enable: () => void;
@@ -216,7 +216,7 @@ export class ClusterSineSynth implements SynthInstance {
         credits?: string
     ) {
         this.audioContext = audioContext;
-
+        this.outputNode = audioContext.createGain();
         this.voices.forEach((voice) => {
             voice.outputNode.connect(this.outputNode);
         });
@@ -224,12 +224,6 @@ export class ClusterSineSynth implements SynthInstance {
         if (name) this.name = name;
 
 
-        (async () => {
-            this.outputNode = audioContext.createGain();
-            const maximizer = await createMaximizerWorklet(audioContext);
-            this.outputNode.connect(maximizer);
-            maximizer.connect(audioContext.destination);
-        })()
 
         const synth = this;
         this.params.push({

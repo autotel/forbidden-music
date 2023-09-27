@@ -63,7 +63,6 @@ class SamplerVoice {
         this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = sampleSource.sampleBuffer;
         this.bufferSource.connect(this.outputNode);
-        // this.bufferSource.connect(this.audioContext.destination);
 
         if (!sampleSource2?.sampleBuffer) return;
         this.bufferSource2 = this.audioContext.createBufferSource();
@@ -185,7 +184,7 @@ export class ComplexSampler implements SynthInstance {
     private sampleSources: SampleSource[];
     private fixedSampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
-    private outputNode: GainNode;
+    outputNode: GainNode;
     credits: string = "";
     name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
     enable:()=>void;
@@ -213,7 +212,6 @@ export class ComplexSampler implements SynthInstance {
         this.sampleVoices.forEach((sampleVoice) => {
             sampleVoice.outputNode.connect(this.outputNode);
         });
-        this.outputNode.connect(audioContext.destination);
         if (credits) this.credits = credits;
         if (name) this.name = name;
         this.enable = () => {

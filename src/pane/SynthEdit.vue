@@ -1,42 +1,37 @@
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, onUnmounted, reactive, Ref, ref, watch } from "vue";
-import { SynthChannel, usePlaybackStore } from "../store/playbackStore";
-import { ParamType, SynthInstance } from "../synth/SynthInterface";
+import { inject, onBeforeUnmount, onMounted, Ref, ref, watch } from "vue";
 import Button from "../components/Button.vue";
-import Collapsible from "./Collapsible.vue";
-import PropOption from "../components/paramEditors/PropOption.vue";
-import PropSlider from '../components/paramEditors/PropSlider.vue';
 import HeartPulse from "../components/icons/HeartPulse.vue";
-import { useMonoModeInteraction } from "../store/monoModeInteraction";
-import NumberArrayEditor from "../components/paramEditors/NumberArrayEditor.vue";
-import { onMounted } from "vue";
-import PropLoadingProgress from "../components/paramEditors/PropLoadingProgress.vue";
-import { useToolStore } from "../store/toolStore";
-import { useLayerStore } from "../store/layerStore";
-import { nextTick } from "process";
-import { layerNoteColorStrings } from "../store/viewStore";
+import PropOption from "../components/paramEditors/PropOption.vue";
+import { useAudioContextStore } from "../store/audioContextStore";
 import { useCustomSettingsStore } from "../store/customSettingsStore";
-const playback = usePlaybackStore();
-const audioReady = ref(false);
+import { useLayerStore } from "../store/layerStore";
+import { useMonoModeInteraction } from "../store/monoModeInteraction";
+import { SynthChannel, usePlaybackStore } from "../store/playbackStore";
+import { useToolStore } from "../store/toolStore";
+import { layerNoteColorStrings } from "../store/viewStore";
+import Collapsible from "./Collapsible.vue";
+import ParamsSliderList from "./ParamsSliderList.vue";
+import { useEffectsStore } from "../store/effectsStore";
+
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
+const playback = usePlaybackStore();
+const effects = useEffectsStore();
+const audioReady = ref(false);
 const userSettings = useCustomSettingsStore();
 const tool = useToolStore();
 const layers = useLayerStore();
+const audioContextStore = useAudioContextStore();
 const showCredits = (credits: string) => {
     if (!infoTextModal) throw new Error('infoTextModal not injected');
     infoTextModal.value = credits;
     monoModeInteraction.activate("credits modal");
 }
 
-const showInfo = (info: string) => {
-    if (!infoTextModal) throw new Error('infoTextModal not injected');
-    infoTextModal.value = info;
-    monoModeInteraction.activate("credits modal");
-}
 
 onMounted(() => {
-    playback.audioContextPromise.then(() => {
+    audioContextStore.audioContextPromise.then(() => {
         audioReady.value = true;
     })
 })
@@ -60,10 +55,10 @@ const setActiveLayerChanToCurrentLayerTarget = () => {
 
 watch([
     // () => tool.currentLayerNumber, 
-    ()=>layers.layers[tool.currentLayerNumber]?.channelSlot
+    () => layers.layers[tool.currentLayerNumber]?.channelSlot
 ], setActiveLayerChanToCurrentLayerTarget);
 
-onMounted(()=>playback.audioContextPromise.then(() => {
+onMounted(() => audioContextStore.audioContextPromise.then(() => {
     setActiveLayerChanToCurrentLayerTarget();
 }))
 
@@ -78,42 +73,40 @@ onMounted(()=>playback.audioContextPromise.then(() => {
             <div v-if="audioReady" class="controls-container">
                 <template v-if="userSettings.polyphonyEnabled" v-for="(synthChan, chanNo) in playback.channels">
 
-                    <Button 
-                        :onClick="() => activeLayerChan = synthChan" 
-                        :active="synthChan===activeLayerChan" 
-                        style="width:100%; text-align:left; margin-left: 2em"
-                        :active-color="layerNoteColorStrings[1]"
-                        >
-                            <template v-if="chanNo === 0">
-                                default - 
-                            </template>
-                            <template v-else>
-                                <span class="encircled">{{ chanNo }}</span>
-                            </template>
-                            {{ synthChan.synth.name }}
+                    <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan === activeLayerChan"
+                        style="width:100%; text-align:left; margin-left: 2em" :active-color="layerNoteColorStrings[1]">
+                        <template v-if="chanNo === 0">
+                            default -
+                        </template>
+                        <template v-else>
+                            <span class="encircled">{{ chanNo }}</span>
+                        </template>
+                        {{ synthChan.synth.name }}
                     </Button>
                 </template>
 
                 <template v-if="activeLayerChan">
                     <PropOption :param="playback.synthSelector(activeLayerChan)" />
-                    <template v-for="param in activeLayerChan.params">
-                        <PropOption v-if="param.type === ParamType.option" :param="param" />
-                        <PropSlider v-if="param.type === ParamType.number" :param="param" />
-                        <PropLoadingProgress v-if="param.type === ParamType.progress" :param="param" />
-                        <NumberArrayEditor v-if="param.type === ParamType.nArray" :param="param" />
-                        <Button v-if="param.type === ParamType.infoText" :on-click="() => showInfo(param.value)">{{
-                            param.displayName }}</Button>
-                    </template>
+                    <ParamsSliderList :synthParams="activeLayerChan.params" />
                     <Button v-if="activeLayerChan.synth.credits"
                         :on-click="() => activeLayerChan ? showCredits(activeLayerChan.synth.credits!) : null">
                         Credits
                     </Button>
                 </template>
                 <br><br>
-                <Button v-if="userSettings.polyphonyEnabled" :on-click="() => { playback.addChannel() }"> Add synth </Button>
+                <Button v-if="userSettings.polyphonyEnabled" :on-click="() => { playback.addChannel() }"> Add synth
+                </Button>
+                <template v-if="userSettings.effectsEnabled" v-for="effect in effects.effectsChain">
+                    <h3>Master {{effect.name}}</h3>
+                    <ParamsSliderList :synthParams="effect.params" />
+                    <Button v-if="effect.credits"
+                        :on-click="() => activeLayerChan ? showCredits(effect.credits!) : null">
+                        Credits
+                    </Button>
+                </template>
             </div>
             <div v-else>
-                <Button :on-click="() => { playback.retryAudioContext() }">Click to start audio engine</Button>
+                <Button :on-click="() => { audioContextStore.retryAudioContext() }">Click to start audio engine</Button>
             </div>
         </div>
     </Collapsible>
@@ -123,6 +116,7 @@ onMounted(()=>playback.audioContextPromise.then(() => {
     width: 100%;
     box-sizing: border-box;
 }
+
 .encircled {
     display: inline-flex;
     border-radius: 50%;
@@ -135,7 +129,7 @@ onMounted(()=>playback.audioContextPromise.then(() => {
     width: 1.5em;
     height: 1.5em;
 
-    position:relative;
+    position: relative;
     left: -1.5em;
 }
 </style>

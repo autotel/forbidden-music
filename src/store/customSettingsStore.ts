@@ -30,7 +30,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
             _polyphonyEnabled.value = value;
         }
     });
-
+    const effectsEnabled = ref(true);
     const _layersEnabled = ref(false);
     const layersEnabled = computed<boolean>({
         get() {
@@ -108,6 +108,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         showFPS,
         fontSize,
         polyphonyEnabled,
+        effectsEnabled,
         layersEnabled,
         midiInputEnabled,
         performanceSettingsEnabled,

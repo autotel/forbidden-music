@@ -89,7 +89,7 @@ const PARAM_DECAY_TIME = 1;
 export class KickSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: KickVoice[] = [];
-    private outputNode?: GainNode;
+    outputNode: GainNode;
     credits: string = "";
     name: string =  this.constructor.name.replace(/([A-Z])/g, " $1");
     enable: () => void;
@@ -123,13 +123,8 @@ export class KickSynth implements SynthInstance {
         if (name) this.name = name;
 
 
-        (async () => {
-            this.outputNode = audioContext.createGain();
-            const maximizer = await createMaximizerWorklet(audioContext);
-            this.outputNode.connect(maximizer);
-            maximizer.connect(audioContext.destination);
-        })()
-
+        this.outputNode = audioContext.createGain();
+        
         this.params = [
             this.startOctaveParam,
             this.decayTimeParam,

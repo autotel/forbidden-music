@@ -61,19 +61,30 @@ const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) 
 
 export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;
-    gainNode?: GainNode;
+    outputNode: AudioNode;
     engine?: AudioWorkletNode;
-    private resolveEnginePromise?: Function;
     enable: () => void;
     disable: () => void;
     constructor(audioContext: AudioContext) {
-        this.setAudioContext(audioContext);
+        this.audioContext = audioContext;
+        this.outputNode = this.audioContext.createGain();
+
+        const enginePromise = createKarplusWorklet(audioContext)
+        
+        enginePromise.then((engine) => {
+            this.engine = engine;
+            this.engine.connect(this.outputNode);
+        });
+        
+        const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {
+            const target = await promise;
+            return target.port.postMessage(message);
+        };
+
+
         // TODO... or not
         this.enable = () => { }
         this.disable = () => { }
-        const enginePromise = new Promise<AudioWorkletNode>((res) => {
-            this.resolveEnginePromise = res;
-        });
 
         const fffParam = {
             type: ParamType.number,
@@ -151,7 +162,7 @@ export class KarplusSynth implements SynthInstance {
             min: 0,
             max: 10,
             exportable: true,
-            curve:'log'
+            curve: 'log'
         } as NumberSynthParam;
         this.params.push(exaParam)
         exaParam.value = 0.750
@@ -166,13 +177,13 @@ export class KarplusSynth implements SynthInstance {
                 } as KarplusParamsChangeMessage);
             },
             get value() {
-                return this._v; 
+                return this._v;
             },
             displayName: "exciter level",
             min: 0,
             max: 1,
             exportable: true,
-            curve:'log'
+            curve: 'log'
         } as NumberSynthParam;
         this.params.push(exvParam)
         exvParam.value = 0.523
@@ -193,31 +204,10 @@ export class KarplusSynth implements SynthInstance {
             min: 0,
             max: 10,
             exportable: true,
-            curve:'log'
+            curve: 'log'
         } as NumberSynthParam;
         this.params.push(exdParam)
         exdParam.value = 8.341
-
-        // const xfParam = {
-        //     type: ParamType.number,
-        //     _v: 1,
-        //     set value(v: number) {
-        //         this._v = v;
-        //         postToPromised(enginePromise, {
-        //             xf: v,
-        //         } as KarplusParamsChangeMessage);
-        //     },
-        //     get value() {
-        //         return this._v;
-        //     },
-        //     displayName: "cross-feedback",
-        //     min: -0.001,
-        //     max: 0.001,
-        //     exportable: true,
-        // } as NumberSynthParam;
-        // this.params.push(xfParam)
-        // xfParam.value = 0
-
 
         const atoffParam = {
             type: ParamType.number,
@@ -278,9 +268,9 @@ export class KarplusSynth implements SynthInstance {
             exportable: true,
         } as NumberSynthParam;
         this.params.push(adetParam)
-        adetParam.value = 0 
+        adetParam.value = 0
 
-        const extypeParam:OptionSynthParam = {
+        const extypeParam: OptionSynthParam = {
             type: ParamType.option,
             set value(v: number) {
                 this._v = v;
@@ -295,7 +285,7 @@ export class KarplusSynth implements SynthInstance {
             options: [{
                 value: "noise",
                 displayName: "noise",
-            },{
+            }, {
                 value: "multiplux",
                 displayName: "multiplux",
             },],
@@ -304,22 +294,6 @@ export class KarplusSynth implements SynthInstance {
         this.params.push(extypeParam)
 
     }
-
-    async setAudioContext(audioContext: AudioContext) {
-        if (this.audioContext) {
-            throw new Error("audio context already set");
-        }
-        this.audioContext = audioContext;
-        this.engine = await createKarplusWorklet(audioContext);
-        if (!this.resolveEnginePromise) throw new Error("resolveEnginePromise is " + this.resolveEnginePromise)
-        this.resolveEnginePromise(this.engine);
-        this.gainNode = this.audioContext.createGain();
-        this.engine.connect(this.gainNode);
-        this.gainNode.connect(this.audioContext.destination);
-
-
-    }
-
     releaseAll = () => {
         console.log("stopping all notes");
         if (this.engine) this.engine.port.postMessage({ stopall: true } as KarplusStopAllMessage);

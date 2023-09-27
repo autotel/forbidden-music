@@ -1,6 +1,11 @@
-
-export interface SynthInstance {
-    name: any,
+export interface AudioModule {
+    name: string,
+    params: SynthParam[],
+    enable: () => void,
+    disable: () => void,
+    credits?: string,
+}
+export interface ExternalSynthInstance extends AudioModule {
     triggerAttackRelease: (
         frequency: number,
         duration: number,
@@ -13,11 +18,27 @@ export interface SynthInstance {
         velocity: number
     ) => void,
     releaseAll: () => void,
-    params: SynthParam[],
-    enable: () => void,
-    disable: () => void,
-    credits?: string,
+}
 
+export interface SynthInstance extends AudioModule {
+    outputNode: AudioNode,
+    triggerAttackRelease: (
+        frequency: number,
+        duration: number,
+        relativeNoteStart: number,
+        velocity: number
+    ) => void,
+    triggerPerc: (
+        frequency: number,
+        relativeNoteStart: number,
+        velocity: number
+    ) => void,
+    releaseAll: () => void,
+}
+
+export interface EffectInstance extends AudioModule {
+    outputNode: AudioNode,
+    inputNode: AudioNode,
 }
 
 export enum ParamType {
@@ -34,7 +55,7 @@ export type SynthParamStored = {
     value: any,
 }
 
-export type SynthParamMinimum <T> = {
+export type SynthParamMinimum<T> = {
     displayName: string,
     type: ParamType,
     value: T,

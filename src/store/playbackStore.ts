@@ -17,7 +17,7 @@ import { OneShotSampler } from '../synth/OneShotSampler';
 import { SineSynth } from '../synth/SineSynth';
 import { ClusterSineSynth } from '../synth/ClusterSineSynth';
 import { KickSynth } from '../synth/KickSynth';
-import { OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinimum } from "../synth/SynthInterface";
+import { AudioModule, ExternalSynthInstance, OptionSynthParam, ParamType, SynthInstance, SynthParam, SynthParamMinimum } from "../synth/SynthInterface";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
@@ -25,6 +25,8 @@ import { useLayerStore } from "./layerStore";
 import { TimeRange } from "../dataTypes/TimelineItem";
 import { Loop } from "../dataTypes/Loop";
 import { Note, getDuration, getFrequency } from "../dataTypes/Note";
+import { useAudioContextStore } from "./audioContextStore";
+import { useEffectsStore } from "./effectsStore";
 
 
 interface MidiInputInterface {
@@ -109,10 +111,10 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
     return returnValues;
 }
 
-
+type AdmissibleSynthType = SynthInstance | ExternalSynthInstance;
 
 export interface SynthChannel {
-    synth: SynthInstance;
+    synth: AdmissibleSynthType;
     params: SynthParam[];
 }
 
@@ -136,8 +138,8 @@ export const usePlaybackStore = defineStore("playback", () => {
     const previousClockTime = ref(0);
     /** how long in advance to request the scheduling of events */
     const foresight = 1;
-
-    let audioContext = new AudioContext();
+    const audioContextStore = useAudioContextStore();
+    const effectsStore = useEffectsStore();
 
     const view = useViewStore();
 
@@ -147,7 +149,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const paused = computed(() => (!playing.value) && currentScoreTime.value != 0);
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
 
-    const availableSynths = ref([] as SynthInstance[]);
+    const availableSynths = ref([] as AdmissibleSynthType[]);
     const midiInputs = ref([] as MidiInputInterface[]);
     const currentMidiInput = ref<MidiInputInterface | null>(null);
 
@@ -194,96 +196,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
         return channels.value[index];
     }
-
-    let audioContextListenerAlreadyStarted = false;
-
-    const startContextListener = async () => {
-        if (audioContextListenerAlreadyStarted) return;
-        audioContextListenerAlreadyStarted = true;
-        console.log("waiting for audio context permission");
-        await audioContext.resume();
-        console.log("audio context permission granted");
-        const samplers = [] as (OneShotSampler | ComplexSampler)[];
-        const exclusiveSamplers = [] as (OneShotSampler | ComplexSampler)[];
-        const localOnlySamplers = [] as (OneShotSampler | ComplexSampler)[];
-
-
-        sampleDefinitions.forEach((sampleDefinition) => {
-            const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
-            if (sampleDefinition.isComplexSampler) {
-                arrayWhereToPush.push(new ComplexSampler(
-                    audioContext,
-                    sampleDefinition.samples,
-                    "(CPX)" + sampleDefinition.name,
-                    sampleDefinition.readme
-                ))
-            } else {
-                arrayWhereToPush.push(new OneShotSampler(
-                    audioContext,
-                    sampleDefinition.samples,
-                    sampleDefinition.name,
-                    sampleDefinition.readme
-                ))
-            }
-        });
-
-        availableSynths.value = [
-            new SineSynth(audioContext),
-            new ExternalMidiSynth(audioContext),
-            ...samplers
-        ];
-
-        if (exclusives.enabled) {
-            availableSynths.value.push(...exclusiveSamplers);
-            availableSynths.value.unshift(new FourierSynth(audioContext));
-            availableSynths.value.unshift(new KickSynth(audioContext));
-            availableSynths.value.unshift(new ClusterSineSynth(audioContext));
-        } else {
-            console.log("exclusives disabled");
-        }
-
-        if (isDev()) {
-            // bc. unfinished
-            availableSynths.value.push(new FmSynth(audioContext));
-            availableSynths.value.push(new KarplusSynth(audioContext));
-            // bc. pirate
-            availableSynths.value.push(...localOnlySamplers);
-        } else {
-            console.log("local only samples disabled");
-        }
-        console.log("available channels", availableSynths.value.map(s => s.name));
-        channels.value = [{
-            synth: availableSynths.value[0],
-            params: [],
-        }];
-
-        console.log("audio is ready");
-        if (audioContext.state === "running") {
-            window.removeEventListener("mousedown", startContextListener);
-        }
-    }
-
-    const retryAudioContext = async () => {
-        audioContext.resume();
-        console.log("audio context state", audioContext.state);
-    }
-
-    // if context is allowed to start without interaction, start it now
-    const audioContextPromise = new Promise(async (resolve) => {
-        startContextListener().then(() => {
-            resolve(audioContext);
-        });
-        if (audioContext.state === "running") {
-            console.log("audio context allowed without interaction");
-        } else {
-            window.addEventListener("mousedown", () => {
-                audioContext.resume();
-            });
-        }
-    });
-
-    // otherwise, wait for interaction
-    window.addEventListener("mousedown", startContextListener);
 
 
     // if (!isTauri()) {
@@ -339,7 +251,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const _clockAction = () => {
         const rate = bpm.value / 60;
-
+        const audioContext = audioContextStore.audioContext;
         if (!audioContext) throw new Error("audio context not created");
 
         if (!loopNow || loopNow?.repetitionsLeft === 0) {
@@ -416,6 +328,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const play = async () => {
         resetLoopRepetitions();
+        const audioContext = audioContextStore.audioContext;
         if (audioContext.state !== 'running') await audioContext.resume();
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
@@ -441,52 +354,40 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = false;
     }
 
-    const setSynthByName = (synthName: string, channel = 0) => new Promise<SynthInstance>((resolve, reject) => {
-        const foundSynth = availableSynths.value.find((s) => s.name === synthName);
-        if (foundSynth) {
-            const targetChannel = getOrCreateChannel(channel);
-            foundSynth.enable();
-            Object.assign(targetChannel, {
-                synth: foundSynth,
-                params: foundSynth.params,
-            })
-            resolve(foundSynth);
-        } else {
-            console.error("synth not found", synthName);
-            reject();
-        }
+    /**
+     * enables, connects and in other ways notify
+     * the change into a new synth
+     */
+    const setSynth = (synth: AdmissibleSynthType, channel = 0) => {
+        const targetChannel = getOrCreateChannel(channel);
+        const oldSynth = targetChannel.synth;
+        targetChannel.synth = synth;
+        targetChannel.params = synth.params;
+        Object.assign(targetChannel, {
+            synth: synth,
+            params: synth.params,
+        })
+        console.log("disabling old synth", oldSynth.name, "enabling", synth.name);
+        oldSynth.disable();
+        synth.enable();
+        if('outputNode' in oldSynth) oldSynth.outputNode.disconnect();
+        if('outputNode' in synth) synth.outputNode.connect(effectsStore.myInput); 
+    }
+
+    const setSynthByName = (synthName: string, channel = 0) => new Promise<AdmissibleSynthType>((resolve, reject) => {
+        audioContextStore.audioContextPromise.then(() => {
+            const foundSynth = availableSynths.value.find((s) => s.name === synthName);
+            if (foundSynth) {
+                setSynth(foundSynth, channel);
+                resolve(foundSynth);
+            } else {
+                console.error("synth not found", synthName);
+                console.log("available synths", availableSynths.value.map(s => s.name));
+                reject();
+            }
+        });
     })
 
-
-    // watch(() => synth.value?.params, () => {
-    //     // selec which synth to choose
-    //     const val = [
-    //         {
-    //             type: ParamType.option,
-    //             displayName: "Synth",
-    //             get value() {
-    //                 const ret = synth.value ? availableSynths.value.indexOf(
-    //                     synth.value
-    //                 ) : 0;
-    //                 if (ret === -1) {
-    //                     console.error("synth not found");
-    //                     return 0;
-    //                 }
-    //                 return ret;
-    //             },
-    //             set value(choiceNo: number) {
-    //                 synth.value = availableSynths.value[choiceNo];
-    //             },
-    //             options: availableSynths.value.map((s, index) => ({
-    //                 value: index,
-    //                 displayName: s.name,
-    //             })),
-    //         },
-    //     ] as SynthParam[];
-    //     if (synth.value?.params) val.push(...synth.value.params);
-    //     synthParams.value = val;
-    //     console.log("params", synth.value);
-    // });
 
     const synthSelector = (synthChannel: SynthChannel): OptionSynthParam => ({
         type: ParamType.option,
@@ -502,12 +403,8 @@ export const usePlaybackStore = defineStore("playback", () => {
             return ret;
         },
         setValue(synthChannel: SynthChannel, choiceNo: number) {
-            const oldSynth = synthChannel.synth;
-            synthChannel.synth = availableSynths.value[choiceNo];
-            synthChannel.params = synthChannel.synth.params;
-            console.log("disabling old synth", oldSynth.name, "enabling", synthChannel.synth.name);
-            oldSynth.disable();
-            synthChannel.synth.enable();
+            if(!availableSynths.value[choiceNo]) throw new Error(`no synth at index ${choiceNo}`);
+            setSynth(availableSynths.value[choiceNo], channels.value.indexOf(synthChannel));
         },
         get value() {
             return this.getValue(synthChannel);
@@ -528,19 +425,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         playbarPxPosition.value = view.timeToPxWithOffset(currentScoreTime.value);
     });
 
-    watch(channels, (newSynth, oldSynth) => {
-        const deletedSynths = oldSynth.filter((oldSynth) => !newSynth.find((newSynth) => newSynth.synth === oldSynth.synth));
-        deletedSynths.forEach((deletedSynth) => {
-            console.log("disable synth", deletedSynth.synth.name);
-            deletedSynth.synth.disable();
-        })
-        const createdSynths = newSynth.filter((newSynth) => !oldSynth.find((oldSynth) => newSynth.synth === oldSynth.synth));
-        createdSynths.forEach((createdSynth) => {
-            console.log("enable synth", createdSynth.synth.name);
-            createdSynth.synth.enable();
-        });
-    });
-
     // i.e. when user skips in timeline
     watch(timeReturnPoint, () => {
         isFirtClockAfterPlay = true;
@@ -553,7 +437,7 @@ export const usePlaybackStore = defineStore("playback", () => {
      * falls back to default channel synth 0
      */
 
-    const getLayerSynth = (layerNo: number): SynthInstance | undefined => {
+    const getLayerSynth = (layerNo: number): AdmissibleSynthType | undefined => {
         const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
         const channelIfExists = channels.value[channelNo || 0] as SynthChannel | undefined;
         if (!channelIfExists) {
@@ -562,9 +446,66 @@ export const usePlaybackStore = defineStore("playback", () => {
         return channelIfExists.synth;
     }
 
+
+    audioContextStore.audioContextPromise.then((audioContext:AudioContext)=>{
+        const samplers = [] as (OneShotSampler | ComplexSampler)[];
+        const exclusiveSamplers = [] as (OneShotSampler | ComplexSampler)[];
+        const localOnlySamplers = [] as (OneShotSampler | ComplexSampler)[];
+
+
+        sampleDefinitions.forEach((sampleDefinition) => {
+            const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
+            if (sampleDefinition.isComplexSampler) {
+                arrayWhereToPush.push(new ComplexSampler(
+                    audioContext,
+                    sampleDefinition.samples,
+                    "(CPX)" + sampleDefinition.name,
+                    sampleDefinition.readme
+                ))
+            } else {
+                arrayWhereToPush.push(new OneShotSampler(
+                    audioContext,
+                    sampleDefinition.samples,
+                    sampleDefinition.name,
+                    sampleDefinition.readme
+                ))
+            }
+        });
+
+        availableSynths.value = [
+            new SineSynth(audioContext),
+            new ExternalMidiSynth(audioContext),
+            ...samplers
+        ];
+
+        if (exclusives.enabled) {
+            availableSynths.value.push(...exclusiveSamplers);
+            availableSynths.value.unshift(new FourierSynth(audioContext));
+            availableSynths.value.unshift(new KickSynth(audioContext));
+            availableSynths.value.unshift(new ClusterSineSynth(audioContext));
+        } else {
+            console.log("exclusives disabled");
+        }
+
+        if (isDev()) {
+            // bc. unfinished
+            availableSynths.value.push(new FmSynth(audioContext));
+            availableSynths.value.push(new KarplusSynth(audioContext));
+            // bc. pirate
+            availableSynths.value.push(...localOnlySamplers);
+        } else {
+            console.log("local only samples disabled");
+        }
+        console.log("available channels", availableSynths.value.map(s => s.name));
+        channels.value = [{
+            synth: availableSynths.value[0],
+            params: [],
+        }];
+
+
+    });
+
     return {
-        retryAudioContext,
-        audioContextPromise,
         playing,
         bpm,
         availableSynths,
@@ -572,7 +513,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         timeReturnPoint,
         previousScoreTime,
         currentTimeout,
-        audioContext,
         playbarPxPosition,
         paused,
         stopped,

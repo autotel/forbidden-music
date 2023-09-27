@@ -74,8 +74,6 @@ class SamplerVoice {
         this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = sampleSource.sampleBuffer;
         this.bufferSource.connect(this.outputNode);
-        // this.bufferSource.connect(this.audioContext.destination);
-
     }
 
     private releaseVoice = () => {
@@ -242,7 +240,7 @@ export class OneShotSampler implements SynthInstance {
     private audioContext: AudioContext;
     private sampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
-    private outputNode: GainNode;
+    outputNode: GainNode;
     private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
@@ -264,7 +262,6 @@ export class OneShotSampler implements SynthInstance {
         this.sampleVoices.forEach((sampleVoice) => {
             sampleVoice.outputNode.connect(this.outputNode);
         });
-        this.outputNode.connect(audioContext.destination);
         if (credits) this.credits = credits;
         if (name) this.name = name;
         this.enable = () => {
