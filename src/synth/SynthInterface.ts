@@ -1,22 +1,22 @@
 
 export interface SynthInstance {
-    name: any;
+    name: any,
     triggerAttackRelease: (
         frequency: number,
         duration: number,
         relativeNoteStart: number,
         velocity: number
-    ) => void;
+    ) => void,
     triggerPerc: (
         frequency: number,
         relativeNoteStart: number,
         velocity: number
-    ) => void;
-    releaseAll: () => void;
-    params: SynthParam[];
-    enable: () => void;
-    disable: () => void;
-    credits?: string;
+    ) => void,
+    releaseAll: () => void,
+    params: SynthParam[],
+    enable: () => void,
+    disable: () => void,
+    credits?: string,
 
 }
 
@@ -30,63 +30,63 @@ export enum ParamType {
 }
 
 export type SynthParamStored = {
-    displayName: string;
-    value: any;
+    displayName: string,
+    value: any,
 }
 
 export type SynthParamMinimum <T> = {
-    displayName: string;
-    type: ParamType;
-    value: T;
-    exportable: boolean;
-    [key: string]: any;
+    displayName: string,
+    type: ParamType,
+    value: T,
+    exportable: boolean,
+    [key: string]: any,
 }
 
 export interface NumberSynthParam extends SynthParamMinimum<number> {
-    type: ParamType.number;
-    value: number;
-    displayName: string;
-    min: number;
-    max: number;
-    curve?: 'linear' | 'log';
+    type: ParamType.number,
+    value: number,
+    displayName: string,
+    min: number,
+    max: number,
+    curve?: 'linear' | 'log',
 }
 
 export interface ProgressSynthParam extends SynthParamMinimum<number> {
-    type: ParamType.progress;
-    value: number;
-    displayName: string;
+    type: ParamType.progress,
+    value: number,
+    displayName: string,
     min: number
     max: number
 }
 
 export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
-    type: ParamType.boolean;
-    value: boolean;
-    displayName: string;
+    type: ParamType.boolean,
+    value: boolean,
+    displayName: string,
 }
 
 export interface OptionSynthParam extends SynthParamMinimum<number> {
-    type: ParamType.option;
+    type: ParamType.option,
     /** choice number */
-    value: number;
+    value: number,
     options: {
-        value: string | number;
-        displayName: string;
+        value: string | number,
+        displayName: string,
     }[]
-    displayName: string;
+    displayName: string,
 }
 
 export interface InfoTextSynthParam extends SynthParamMinimum<string> {
-    type: ParamType.infoText;
-    value: string;
-    displayName: string;
+    type: ParamType.infoText,
+    value: string,
+    displayName: string,
 }
 
 export interface ArraySynthParam extends SynthParamMinimum<number[]> {
-    type: ParamType.nArray;
-    value: number[];
-    displayName: string;
-    updateFlag?: string;
+    type: ParamType.nArray,
+    value: number[],
+    displayName: string,
+    updateFlag?: string,
     min: number
     max: number
 }
@@ -98,5 +98,5 @@ export type SynthParam =
     OptionSynthParam |
     InfoTextSynthParam |
     ProgressSynthParam |
-    ArraySynthParam;
+    ArraySynthParam
 

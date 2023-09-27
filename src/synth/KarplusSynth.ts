@@ -1,12 +1,12 @@
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
-import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, OptionSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
 
 // It's really difficult to measure the filter cutoff, though possible.
 // maybe we can use this approach to comb filter instead of the worklet
 // https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
 // perhaps its even cheaper computationally and allow me more exploration
 
-
+type KarplusExciterType = "noise" | "multiplux";
 
 interface KarplusStopVoiceMessage {
     stop: true;
@@ -50,6 +50,8 @@ interface KarplusParamsChangeMessage {
     adet?: number
     // proportionality of exciter env to feedback time
     exdet?: number
+    // type of exciter
+    extype?: KarplusExciterType
 }
 
 const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {
@@ -277,6 +279,30 @@ export class KarplusSynth implements SynthInstance {
         } as NumberSynthParam;
         this.params.push(adetParam)
         adetParam.value = 0 
+
+        const extypeParam:OptionSynthParam = {
+            type: ParamType.option,
+            set value(v: number) {
+                this._v = v;
+                postToPromised(enginePromise, {
+                    extype: this.options[v].value,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            exportable: true,
+            options: [{
+                value: "noise",
+                displayName: "noise",
+            },{
+                value: "multiplux",
+                displayName: "multiplux",
+            },],
+            displayName: "exciter type",
+        }
+        this.params.push(extypeParam)
+
     }
 
     async setAudioContext(audioContext: AudioContext) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/SynthInterface';
 
 const props = defineProps({
@@ -16,7 +16,7 @@ const preMapValue = ref(0);
 const dragging = ref(false);
 const valueDraggable = ref();
 const ww = 600;
-const minMaxRange = props.param.max - props.param.min;
+const displayValue = ref(props.param.value);
 
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
@@ -54,7 +54,7 @@ const mouseDrag = (e: MouseEvent) => {
     } else {
         props.param.value = preMapNewVal * range + props.param.min;
     }
-
+    displayValue.value = props.param.value;
 }
 const windowMouseMove = (e: MouseEvent) => {
     if (!dragging.value) return;
@@ -75,6 +75,11 @@ const mouseUp = (e: MouseEvent) => {
     e.preventDefault();
     dragging.value = false;
 }
+watch(props.param, (newVal) => {
+    displayValue.value = props.param.value;
+    const range = props.param.max - props.param.min;
+    preMapValue.value = props.param.value / range;
+});
 onMounted(() => {
     const range = props.param.max - props.param.min;
     preMapValue.value = props.param.value / range;
@@ -86,6 +91,7 @@ onMounted(() => {
     $valueDraggable.addEventListener('mousedown', mouseDown);
     window.addEventListener('mouseup', mouseUp);
     window.addEventListener('mousemove', windowMouseMove);
+    displayValue.value = props.param.value;
 });
 onBeforeUnmount(() => {
     const $valueDraggable = valueDraggable.value;
@@ -96,7 +102,6 @@ onBeforeUnmount(() => {
     $valueDraggable.removeEventListener('mousedown', mouseDown);
     window.removeEventListener('mouseup', mouseUp);
     window.removeEventListener('mousemove', windowMouseMove);
-
 });
 </script>
 <template>
@@ -111,7 +116,7 @@ onBeforeUnmount(() => {
             </div>
         </template>
         <span style="{position: absolute; z-index: 2;}">
-            {{ props.param.displayName }} &nbsp; {{ param.value?.toFixed(3) }}
+            {{ props.param.displayName }} &nbsp; {{ displayValue.toFixed(3) }}
         </span>
     </div>
 </template>

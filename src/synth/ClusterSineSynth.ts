@@ -149,7 +149,7 @@ export class ClusterSineSynth implements SynthInstance {
     // other cluster formulas could be thought of - this is an obvious one
     octavesInterval: number = 0.2002;
     volumeRolloff: number = 0.75;
-    oscillatorsCount: number = 2;
+    oscillatorsCount: number = 3;
     imprecision: number = 0;
 
 
@@ -232,6 +232,19 @@ export class ClusterSineSynth implements SynthInstance {
         })()
 
         const synth = this;
+        this.params.push({
+            displayName: "oscillators count",
+            exportable: true,
+            type: ParamType.number,
+            set value(value: number) {
+                synth.oscillatorsCount = Math.round(value);
+            },
+            get value() {
+                return synth.oscillatorsCount;
+            },
+            min: 1,
+            max: 7,
+        });
         this.params.push({
             displayName: "octave interval",
             exportable: true,

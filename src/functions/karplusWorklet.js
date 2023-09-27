@@ -41,6 +41,7 @@ class Noise extends SampleBySampleOperator {
         return Math.random() * 2 - 1
     }
 }
+
 class DelayLine extends SampleBySampleOperator {
 
     delaySamples = 400;
@@ -442,7 +443,7 @@ class Lerper {
     }
 }
 
-class NoiseExciter extends SampleBySampleOperator {
+class Exciter extends SampleBySampleOperator {
     /** 
      * attack, seconds
      * @type {number} 
@@ -462,12 +463,23 @@ class NoiseExciter extends SampleBySampleOperator {
     duration = 0;
 
     /**
+     * @type {{val: number}}
+     */
+    envelope = new Lerper();
+
+    start({ amp }) { }
+}
+
+class NoiseExciter extends Exciter {
+    attack = 0.1;
+    decay = 0.3;
+    duration = 0;
+
+    /**
      * @type {Lerper}
      */
-    lerper = new Lerper();
-
+    envelope = new Lerper();
     noise = new Noise();
-
     currentStage = 0;
 
     constructor() {
@@ -475,7 +487,7 @@ class NoiseExciter extends SampleBySampleOperator {
     }
 
     start({ amp }) {
-        this.lerper.set(
+        this.envelope.set(
             0,
             amp * liveParameters.exciter_level,
             this.attack * samplingRate
@@ -483,18 +495,62 @@ class NoiseExciter extends SampleBySampleOperator {
         this.currentStage = 0;
     }
     operation = () => {
-        let aLevel = this.lerper.step();
+        let aLevel = this.envelope.step();
         let n = this.noise.operation();
-        if (this.lerper.life < 1) {
+        if (this.envelope.life < 1) {
             this.currentStage++;
             if (this.currentStage == 1) {
-                this.lerper.set(this.lerper.val, 0, this.decay * samplingRate)
+                this.envelope.set(this.envelope.val, 0, this.decay * samplingRate)
             }
         }
         return n *= aLevel;
     }
-
 }
+
+class MultiPluxExciter extends Exciter {
+    attack = 0.1;
+    decay = 0.3;
+    duration = 0;
+
+    freq = 3;
+    interval = samplingRate / this.freq;
+    waveCounter = 0;
+
+    /**
+     * @type {Lerper}
+     */
+    envelope = new Lerper();
+    currentStage = 0;
+
+    constructor() {
+        super()
+    }
+
+    start({ amp }) {
+        this.envelope.set(
+            0,
+            amp * liveParameters.exciter_level,
+            this.attack * samplingRate
+        )
+        this.currentStage = 0;
+    }
+    operation = () => {
+        let aLevel = this.envelope.step();
+        let n = ((this.waveCounter % this.interval) / this.interval) * 2 - 1;
+        this.waveCounter++;
+        if (this.envelope.life < 1) {
+            this.currentStage++;
+            if (this.currentStage == 1) {
+                this.envelope.set(this.envelope.val, 0, this.decay * samplingRate)
+            }
+        }
+        return n *= aLevel;
+    }
+}
+
+/**
+ * @typedef {'noise' | 'multiplux'} ExciterTypeName
+ * */
 
 class KarplusVoice extends Voice {
     splsLeft = 0;
@@ -509,7 +565,16 @@ class KarplusVoice extends Voice {
     currentNormalSamplingPeriod = 1;
 
     delayLine1 = new DelayLine();
-    exciter = new NoiseExciter();
+
+    /**  @type {Exciter} */
+    exciter = new (KarplusVoice.getExciterConstructor())();
+    syncExciterType = () => {
+        if(KarplusVoice.getExciterConstructor() !== this.exciter.constructor) {
+            this.exciter = new (KarplusVoice.getExciterConstructor())();
+        }
+    }
+            
+    
     filter1 = new LpBoxcar(0.1);
     dcRemover = new DCRemover();
 
@@ -523,6 +588,7 @@ class KarplusVoice extends Voice {
 
     }
 
+
     trig({ freq, amp, dur }) {
         this.noiseEnvVal = amp;
         this.currentNormalSamplingPeriod = samplingRate / freq;
@@ -532,13 +598,15 @@ class KarplusVoice extends Voice {
         this.engaged = true;
         this.splsLeft = dur * samplingRate;
         this.dcRemover.memory = 0;
-        this.exciter.attack = liveParameters.exciter_att;
-        this.exciter.decay = liveParameters.exciter_decay;
         this.bleed = liveParameters.cross_feedback;
         this.filterWet = liveParameters.filter_wet;
         this.ampToFeedback = liveParameters.level_to_feedback;
         this.exciterToTime = liveParameters.exciter_detuning;
         this.levelToTime = liveParameters.amp_detuning;
+        //exciter
+        this.syncExciterType();
+        this.exciter.attack = liveParameters.exciter_att;
+        this.exciter.decay = liveParameters.exciter_decay;
         this.exciter.start({ amp });
     }
     stop() {
@@ -566,7 +634,7 @@ class KarplusVoice extends Voice {
             /**
              * noise exciter
              */
-            const exciter = this.exciter.operation();
+            const exciter = this.exciter.operation(0);
             /**
              * uncomment to listen to exciter only
              *
@@ -617,7 +685,8 @@ class KarplusVoice extends Voice {
             // });
 
             if (this.exciterToTime) {
-                this.delayLine1.delaySamples = this.currentNormalSamplingPeriod + this.exciterToTime * this.exciter.lerper.val * samplingRate;
+                this.delayLine1.delaySamples = this.currentNormalSamplingPeriod
+                    + this.exciterToTime * this.exciter.envelope.val * samplingRate;
             }
             if (this.exciterToTime) {
                 this.delayLine1.delaySamples += this.levelToTime * this.measuredOutputLevel * samplingRate / 10;
@@ -632,6 +701,18 @@ class KarplusVoice extends Voice {
         }
         // console.log(probe);
         return output;
+    }
+}
+/** @type {ExciterTypeName} */
+KarplusVoice.exciterType = 'noise';
+KarplusVoice.getExciterConstructor = () => {
+    switch (KarplusVoice.exciterType) {
+        case 'noise':
+            return NoiseExciter;
+        case 'multiplux':
+            return MultiPluxExciter;
+        default:
+            throw new Error('unknown exciter type ' + KarplusVoice.exciterType);
     }
 }
 
@@ -704,6 +785,7 @@ class PoliManager {
  * @property {number?} xf cross-feedback amt
  * @property {number?} exa exciter attack
  * @property {number?} exd exciter decay
+ * @property {ExciterTypeName?} extype exciter type
 */
 
 /* to make ts work */
@@ -718,7 +800,7 @@ const clamp = (v, min, max) => {
     if (v > max) return max
     return v
 }
-
+// @ts-ignore
 registerProcessor('karplus', class extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -787,6 +869,9 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
             }
             if (!isNaN(data.adet)) {
                 liveParameters.amp_detuning = data.adet
+            }
+            if (data.extype) {
+                KarplusVoice.exciterType = data.extype;
             }
         };
     }
