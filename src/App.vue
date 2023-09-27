@@ -30,6 +30,7 @@ import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
 import { Trace } from './dataTypes/Trace';
+import { transposeTime } from './dataTypes/Note';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -266,14 +267,14 @@ const keyDownListener = (e: KeyboardEvent) => {
         }
         case KeyActions.MoveLeft: {
             console.log("move left");
-            selection.getNotes().forEach(eNote => eNote.time -= 1);
+            selection.getNotes().forEach(eNote => transposeTime(eNote, -1));
             e.preventDefault();
             e.stopPropagation();
             break;
         }
         case KeyActions.MoveRight: {
             console.log("move right");
-            selection.getNotes().forEach(eNote => eNote.time += 1);
+            selection.getNotes().forEach(eNote => transposeTime(eNote, 1));
             e.preventDefault();
             e.stopPropagation();
             break;

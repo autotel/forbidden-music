@@ -79,3 +79,8 @@ export const getDuration = (note: Note): number => {
 export const hasDuration = (note: Note): boolean => {
   return note.timeEnd !== note.time;
 }
+export const transposeTime = (note: Note, time: number): Note => {
+  note.time += time;
+  note.timeEnd += time;
+  return note;
+}
