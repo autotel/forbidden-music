@@ -2,6 +2,9 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/SynthInterface';
 
+// TODO: this could use a refactor
+
+
 const props = defineProps({
     param: {
         type: Object as () => NumberSynthParam,

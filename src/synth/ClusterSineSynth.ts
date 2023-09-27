@@ -93,7 +93,7 @@ export class ClusterSineVoice {
             gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
             gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
             forEachRelativeOctave((relativeOctave, frequencyMultiplier, oscillator, index) => {
-                const fq = frequency * frequencyMultiplier + this.imprecision * (Math.random() - 0.5);
+                const fq = frequency * frequencyMultiplier + frequency * this.imprecision * (Math.random() - 0.5);
                 oscillator.frequency.setValueAtTime(fq, audioContext.currentTime + relativeNoteStart);
             });
 
@@ -121,7 +121,7 @@ export class ClusterSineVoice {
             gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
 
             forEachRelativeOctave((relativeOctave, frequencyMultiplier, oscillator, index) => {
-                const fq = frequency * frequencyMultiplier + this.imprecision * (Math.random() - 0.5);
+                const fq = frequency * frequencyMultiplier + frequency * this.imprecision * (Math.random() - 0.5);
                 oscillator.frequency.setValueAtTime(fq, audioContext.currentTime + relativeNoteStart);
             });
 
@@ -282,7 +282,7 @@ export class ClusterSineSynth implements SynthInstance {
                 return synth.imprecision;
             },
             min: 0,
-            max: 10,
+            max: 1,
         });
         this.params.push(this.panCorrParam);
         this.enable = () => { }
