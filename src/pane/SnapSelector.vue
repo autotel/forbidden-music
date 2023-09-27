@@ -4,10 +4,12 @@ import Magnet from "../components/icons/Magnet.vue";
 import Pen from "../components/icons/Pen.vue";
 import { SnapType, useSnapStore } from '../store/snapStore';
 import Collapsible from './Collapsible.vue';
-
 import { useMonoModeInteraction } from '../store/monoModeInteraction';
+import { useCustomSettingsStore } from '../store/customSettingsStore';
+
 const snap = useSnapStore();
 const monoModeInteraction = useMonoModeInteraction();
+const userSettings = useCustomSettingsStore();
 
 const frequencyTableEditButtonHandler = (e: MouseEvent) => {
   e.stopImmediatePropagation()
@@ -19,6 +21,21 @@ const relationFractionEditButtonHandler = (e: MouseEvent) => {
   monoModeInteraction.activate("relation fraction editor")
   snap.values.hzRelationFraction.active = true
 }
+const onlyWithNotesInTheSameLayerToggle = (e: MouseEvent) => {
+  e.stopImmediatePropagation()
+  snap.onlyWithNotesInTheSameLayer = !snap.onlyWithNotesInTheSameLayer
+  if(snap.onlyWithNotesInTheSameLayer) {
+    snap.onlyWithNotesInDifferentLayer = false
+  }
+}
+const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
+  e.stopImmediatePropagation()
+  snap.onlyWithNotesInDifferentLayer = !snap.onlyWithNotesInDifferentLayer
+  if(snap.onlyWithNotesInDifferentLayer) {
+    snap.onlyWithNotesInTheSameLayer = false
+  }
+}
+
 </script>
 
 <template>
@@ -58,6 +75,16 @@ const relationFractionEditButtonHandler = (e: MouseEvent) => {
       :class="{active: snap.onlyWithNotesInView}" tooltip="only with notes in the screen's range">
       In view
     </Button>
+    <template v-if="userSettings.layersEnabled">
+      <Button :onClick="onlyWithNotesInTheSameLayerToggle"
+        :class="{active: snap.onlyWithNotesInTheSameLayer}" tooltip="only with notes in the same layer">
+        == layer
+      </Button>
+      <Button :onClick="onlyWithyNotesInDifferentLayerToggle"
+        :class="{active: snap.onlyWithNotesInDifferentLayer}" tooltip="only with notes in a different layer">
+        != layer
+      </Button>
+    </template>
   </Collapsible>
 </template>
 

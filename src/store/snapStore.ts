@@ -9,6 +9,8 @@ import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverter
 import colundi from '../scales/colundi';
 import { useViewStore } from './viewStore';
 import { Loop } from '../dataTypes/Loop';
+import { useLayerStore } from './layerStore';
+import { useToolStore } from './toolStore';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -265,6 +267,8 @@ const snaps: { [key: string]: SnapDefinition } = {
 // time on tone snapping when resizing!?
 export const useSnapStore = defineStore("snap", () => {
     const view = useViewStore();
+    const tool = useToolStore();
+    const layers = useLayerStore();
     const simplify = ref<number>(0.12);
     const values = ref(snaps);
     const focusedTrace = ref(null as Trace | null);
@@ -274,6 +278,9 @@ export const useSnapStore = defineStore("snap", () => {
     const onlyWithMutednotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
     const onlyWithNotesInView = ref(false);
+    const onlyWithNotesInTheSameLayer = ref(false);
+    const onlyWithNotesInDifferentLayer = ref(false);
+
 
     const acceptable = (candidateOctave: number) => {
         return candidateOctave !== Infinity && candidateOctave !== -Infinity && !isNaN(candidateOctave);
@@ -303,20 +310,36 @@ export const useSnapStore = defineStore("snap", () => {
         });
     }
 
-    const filterSnapTraces = (list: Trace[]) => {
+    const filterSnapTraces = (list: Trace[]): (Trace[]) | undefined => {
         if (list === undefined) return;
         let returnValue = list
         if (onlyWithMutednotes.value) {
-            returnValue = list.filter((editNote) => (editNote.type === TraceType.Note && editNote.mute));
+            returnValue = returnValue.filter((trace) => (trace.type === TraceType.Note && trace.mute));
         }
         if (onlyWithNotesInView.value) {
-            returnValue = list.filter((editNote) => editNote.type === TraceType.Note && view.isNoteInView(editNote))
+            returnValue = returnValue.filter((trace) => trace.type === TraceType.Note && view.isNoteInView(trace))
         }
         if (onlyWithSimultaneousNotes.value && focusedTrace.value) {
             returnValue = getTracesInRange(returnValue, {
                 time: focusedTrace.value.time,
                 timeEnd: focusedTrace.value.timeEnd,
             });
+        }
+        if (onlyWithNotesInDifferentLayer.value && onlyWithNotesInTheSameLayer.value) {
+            throw new Error("both onlyWithNotesInDifferentLayer and onlyWithNotesInTheSameLayer are true");
+        }
+        if (onlyWithNotesInTheSameLayer.value) {
+            const activeLayer = tool.currentLayerNumber;
+            returnValue = returnValue.filter((trace) => {
+                return ('layer' in trace && trace.layer === activeLayer)
+            });
+            return returnValue;
+        } else if (onlyWithNotesInDifferentLayer.value) {
+            const activeLayer = tool.currentLayerNumber;
+            returnValue = returnValue.filter((trace) => {
+                return ('layer' in trace && trace.layer !== activeLayer)
+            });
+            return returnValue;
         }
         return returnValue;
     }
@@ -695,10 +718,10 @@ export const useSnapStore = defineStore("snap", () => {
         skipOctaveSnap = false,
         skipTimeSnap = false,
         snapDuration = false,
-    }: SnapParams<T>):T => {
+    }: SnapParams<T>): T => {
         otherTraces = otherTraces ? filterSnapTraces(otherTraces) : otherTraces;
         /** outNote */
-        const output:T = cloneTrace(inNote);
+        const output: T = cloneTrace(inNote);
 
         const subjectDuration = output.timeEnd - output.time;
         const durationSnap = snapDuration ? new SnapTracker(subjectDuration) : false;
@@ -802,6 +825,8 @@ export const useSnapStore = defineStore("snap", () => {
         onlyWithMutednotes,
         onlyWithSimultaneousNotes,
         onlyWithNotesInView,
+        onlyWithNotesInTheSameLayer,
+        onlyWithNotesInDifferentLayer,
         setFocusedTrace,
         resetSnapExplanation,
         snap,
