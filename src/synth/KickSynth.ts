@@ -124,6 +124,7 @@ export class KickSynth implements SynthInstance {
 
 
         this.outputNode = audioContext.createGain();
+        this.outputNode.gain.value = 0.1;
         
         this.params = [
             this.startOctaveParam,

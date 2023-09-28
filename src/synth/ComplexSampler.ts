@@ -208,7 +208,7 @@ export class ComplexSampler implements SynthInstance {
             }
         });
         this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0.35;
+        this.outputNode.gain.value = 0.2;
         this.sampleVoices.forEach((sampleVoice) => {
             sampleVoice.outputNode.connect(this.outputNode);
         });

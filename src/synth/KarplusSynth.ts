@@ -61,21 +61,22 @@ const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) 
 
 export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;
-    outputNode: AudioNode;
+    outputNode: GainNode;
     engine?: AudioWorkletNode;
     enable: () => void;
     disable: () => void;
     constructor(audioContext: AudioContext) {
         this.audioContext = audioContext;
         this.outputNode = this.audioContext.createGain();
+        this.outputNode.gain.value = 0.5;
 
         const enginePromise = createKarplusWorklet(audioContext)
-        
+
         enginePromise.then((engine) => {
             this.engine = engine;
             this.engine.connect(this.outputNode);
         });
-        
+
         const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {
             const target = await promise;
             return target.port.postMessage(message);
@@ -241,7 +242,7 @@ export class KarplusSynth implements SynthInstance {
             get value() {
                 return this._v;
             },
-            displayName: "detune according to exciter level",
+            displayName: "exciter -> detune",
             min: -0.01,
             max: 0.01,
             exportable: true,
@@ -262,7 +263,7 @@ export class KarplusSynth implements SynthInstance {
             get value() {
                 return this._v;
             },
-            displayName: "detune according to exciter level",
+            displayName: "amp -> detune",
             min: -0.01,
             max: 0.01,
             exportable: true,
@@ -273,6 +274,7 @@ export class KarplusSynth implements SynthInstance {
         const extypeParam: OptionSynthParam = {
             type: ParamType.option,
             set value(v: number) {
+                if (v >= this.options.length) v = 0;
                 this._v = v;
                 postToPromised(enginePromise, {
                     extype: this.options[v].value,

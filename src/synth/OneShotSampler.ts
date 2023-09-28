@@ -259,6 +259,7 @@ export class OneShotSampler implements SynthInstance {
             return new SampleSource(audioContext, sampleDefinition);
         });
         this.outputNode = this.audioContext.createGain();
+        this.outputNode.gain.value = 0.3;
         this.sampleVoices.forEach((sampleVoice) => {
             sampleVoice.outputNode.connect(this.outputNode);
         });

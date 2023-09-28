@@ -45,11 +45,11 @@ export const useEffectsStore = defineStore('playback-effects', () => {
     }
 
     audioContextStore.audioContextPromise.then(() => {
+        addEffect(new AutoMaximizerEffect(audioContextStore.audioContext));
         addEffect(new ConvolutionReverbEffect(
             audioContextStore.audioContext, 
             sampleDefinitions.flat()
         ));
-        addEffect(new AutoMaximizerEffect(audioContextStore.audioContext));   
     });
 
     return {

@@ -6,13 +6,14 @@ import { Loop, LoopDef, loop } from '../dataTypes/Loop';
 import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
-import { SynthInstance, SynthParam } from '../synth/SynthInterface';
+import { ExternalSynthInstance, SynthInstance, SynthParam } from '../synth/SynthInterface';
 import { useLayerStore } from './layerStore';
 import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
 import { SynthChannel, usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { Trace, TraceType, traceTypeSafetyCheck } from '../dataTypes/Trace';
+import { useAudioContextStore } from './audioContextStore';
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -21,6 +22,7 @@ export const useProjectStore = defineStore("current project", () => {
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const playbackStore = usePlaybackStore();
+    const audioContextStore = useAudioContextStore();
     const name = ref("unnamed (autosave)" as string);
 
     const score = ref<Note[]>([]);
@@ -222,9 +224,9 @@ export const useProjectStore = defineStore("current project", () => {
         if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
 
         (async () => {
-            await playbackStore.audioContextPromise;
+            await audioContextStore.audioContextPromise;
             pDef.channels.forEach(({ type, params }, index) => {
-                playbackStore.setSynthByName(type, index).then((synth: SynthInstance) => {
+                playbackStore.setSynthByName(type, index).then((synth) => {
                     params.forEach((param) => {
                         try {
                             const foundNamedParam = synth.params.find(({ displayName }) => {

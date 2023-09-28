@@ -34,6 +34,7 @@ export class FmSynth implements SynthInstance {
     disable: () => void
     constructor(audioContext: AudioContext) {
         this.outputNode = audioContext.createGain();
+        this.outputNode.gain.value = 0.6;
         this.audioContext = audioContext;
         createFmWorklet(audioContext).then((engine)=>{
             this.engine = engine;

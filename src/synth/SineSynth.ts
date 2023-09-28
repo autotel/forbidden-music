@@ -95,6 +95,8 @@ export class SineSynth implements SynthInstance {
         if (name) this.name = name;
 
         this.outputNode = audioContext.createGain();
+        this.outputNode.gain.value = 0.1;
+        
         let maximizer: AudioNode | undefined;
 
         this.enable = async () => {

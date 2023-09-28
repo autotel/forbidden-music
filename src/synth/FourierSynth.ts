@@ -168,7 +168,7 @@ export class FourierSynth implements SynthInstance {
         if (name) this.name = name;
 
         this.outputNode = audioContext.createGain();
-
+        this.outputNode.gain.value = 0.1;
         this.enable = async () => { 
         }
         this.disable = () => { }

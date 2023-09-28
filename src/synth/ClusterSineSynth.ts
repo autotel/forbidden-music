@@ -217,6 +217,7 @@ export class ClusterSineSynth implements SynthInstance {
     ) {
         this.audioContext = audioContext;
         this.outputNode = audioContext.createGain();
+        this.outputNode.gain.value = 0.07;
         this.voices.forEach((voice) => {
             voice.outputNode.connect(this.outputNode);
         });
