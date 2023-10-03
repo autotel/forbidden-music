@@ -28,7 +28,6 @@ const myColor = computed(() => {
 });
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    console.log('bodyMouseEnterListener');
     tool.timelineItemMouseEnter(props.eventRect.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {

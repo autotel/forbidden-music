@@ -73,29 +73,6 @@ const polyfillTrace = (trace: Trace): PolyfillTrace => {
 }
 
 
-const mouseDragModulation = ({
-    drag
-}: ToolMouse, {
-    view,
-}: Stores,
-    lastVelocitySet: Reference<number>,
-) => {
-    if (!drag) throw new Error('misused drag handler');
-    if (!drag.traceWhenDragStarted) return;
-    if (drag.traceWhenDragStarted.type !== TraceType.Note) return;
-
-    const velocityDelta = view.pxToVelocity(-drag.delta.y);
-    drag.traces.forEach((trace, index) => {
-        if (trace.type !== TraceType.Note) return;
-        const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
-        if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
-        if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
-        const velocityWhenDragStarted = traceWhenDragStarted.velocity;
-        trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
-        lastVelocitySet.value = trace.velocity;
-    });
-}
-
 
 const mouseDuplicateNotes = ({
     drag,
@@ -185,6 +162,29 @@ const mouseDragSelectedTraces = ({
         }
     });
     // refresh = true;
+}
+
+
+const mouseDragModulationSelectedTraces = (
+    { drag }: ToolMouse,
+    { view, snap, project }: Stores,
+    /** provide this reference in order to set de initial velocity for new traces */
+    lastVelocitySet: Reference<number> = { value: 0 }
+) => {
+    if (!drag) throw new Error('misused drag handler');
+    if (!drag.traceWhenDragStarted) return;
+    if (drag.traceWhenDragStarted.type !== TraceType.Note) return;
+
+    const velocityDelta = view.pxToVelocity(-drag.delta.y);
+    drag.traces.forEach((trace, index) => {
+        if (trace.type !== TraceType.Note) return;
+        const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
+        if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
+        if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
+        const velocityWhenDragStarted = traceWhenDragStarted.velocity;
+        trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
+        lastVelocitySet.value = trace.velocity;
+    });
 }
 
 const mouseDragTracesRightEdge = ({
@@ -332,8 +332,6 @@ export const useToolStore = defineStore("tool", () => {
         mouse.drag.traces.forEach(trace => {
             dragStart(trace, coords);
         });
-
-        console.log("mouseAction", mouse.drag.traceWhenDragStarted);
     }
 
 
@@ -533,13 +531,13 @@ export const useToolStore = defineStore("tool", () => {
                     currentLayerNumber.value = mouse.hovered?.trace.layer;
                 }
                 break;
+            case MouseDownActions.DragNoteVelocity:
             case MouseDownActions.MoveItem:
             case MouseDownActions.MoveNotes:
                 if (mouse.drag?.trace) {
                     snap.setFocusedTrace(mouse.drag.trace);
                 }
                 break;
-            case MouseDownActions.DragNoteVelocity:
             case MouseDownActions.SetSelectionAndDrag: {
                 if (!mouse.drag?.trace) throw new Error('no trace dragged');
                 selection.select(mouse.drag.trace);
@@ -605,9 +603,9 @@ export const useToolStore = defineStore("tool", () => {
 
             if ('velocity' in selectRange.value) {
                 selectRange.value.velocityEnd = view.pxToVelocityWithOffset(y);
-                
+
                 const velocitiesInOrder = [
-                    selectRange.value.velocity, 
+                    selectRange.value.velocity,
                     selectRange.value.velocityEnd
                 ].sort((a, b) => a - b);
 
@@ -705,7 +703,7 @@ export const useToolStore = defineStore("tool", () => {
             }
 
             if (current.value === Tool.Modulation) {
-                mouseDragModulation(
+                mouseDragModulationSelectedTraces(
                     mouse, storesPill, lastVelocitySet
                 );
             } else if (
