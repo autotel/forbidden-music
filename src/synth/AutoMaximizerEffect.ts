@@ -80,7 +80,7 @@ export class AutoMaximizerEffect implements EffectInstance {
     outputNode: GainNode;
     inputNode: GainNode;
     credits: string = "";
-    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string = "AutoMaximizer";
     enable: () => void;
     disable: () => void;
     constructor(

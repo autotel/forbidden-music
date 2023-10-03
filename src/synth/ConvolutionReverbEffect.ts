@@ -27,7 +27,7 @@ export class ConvolutionReverbEffect implements EffectInstance {
     inputNode: AudioNode;
     outputNode: AudioNode;
     params: SynthParam[] = [];
-    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string = "Convolution Reverb";
     enable: () => void;
     disable: () => void;
     credits: string = "";

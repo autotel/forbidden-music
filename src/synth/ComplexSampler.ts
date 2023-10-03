@@ -186,7 +186,7 @@ export class ComplexSampler implements SynthInstance {
     private sampleVoices: SamplerVoice[] = [];
     outputNode: GainNode;
     credits: string = "";
-    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string = "ComplexSampler";
     enable:()=>void;
     disable:()=>void;
     constructor(

@@ -91,7 +91,7 @@ export class KickSynth implements SynthInstance {
     private voices: KickVoice[] = [];
     outputNode: GainNode;
     credits: string = "";
-    name: string =  this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string =  "Kick";
     enable: () => void;
     disable: () => void;
     startOctaveParam: NumberSynthParam = {

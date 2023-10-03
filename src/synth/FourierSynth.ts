@@ -149,7 +149,7 @@ export class FourierSynth implements SynthInstance {
     periodicWaveContents = defaultPericWaveContents();
 
     credits: string = "";
-    name: string =  this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string =  "Fourier Synth";
     enable = () => {
         this.updatePeriodicWave();
     }

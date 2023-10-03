@@ -79,7 +79,7 @@ export class SineSynth implements SynthInstance {
     private voices: SineVoice[] = [];
     outputNode: GainNode;
     credits: string = "";
-    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string = "Sine";
     enable: () => void;
     disable: () => void;
     constructor(

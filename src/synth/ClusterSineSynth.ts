@@ -142,7 +142,7 @@ export class ClusterSineSynth implements SynthInstance {
     private voices: ClusterSineVoice[] = [];
     outputNode: GainNode;
     credits: string = "";
-    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string = "ClusterSineSynth";
     enable: () => void;
     disable: () => void;
 

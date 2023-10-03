@@ -245,7 +245,7 @@ export class OneShotSampler implements SynthInstance {
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
     credits: string = "";
-    name: string = this.constructor.name.replace(/([A-Z])/g, " $1");
+    name: string = "One Shot Sampler";
     enable: () => void;
     disable: () => void;
     constructor(
