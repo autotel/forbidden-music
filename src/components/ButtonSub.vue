@@ -30,27 +30,26 @@ const mouseLeave = (e: MouseEvent) => {
 </script>
 
 <template>
-    <button 
-        @mouseenter="mouseEnter" 
-        @mouseleave="mouseLeave" 
-        @click="onClick" 
-        :class="{ active, danger, inline }"
-        :style="{ backgroundColor: active ? activeColor : '' }"    
-    >
+    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger, inline }"
+        :style="{ backgroundColor: active ? activeColor : '' }">
         <slot></slot>
     </button>
 </template>
 
 <style scoped>
 button {
-    padding: 0.3em 0.6em;
-    border: none;
-    cursor: pointer;
-    background-color: rgb(241, 241, 241);
+    border-radius: 50%;
+    height: 1.5rem;
+    width: 1.5rem;
+    background-color: rgb(212, 212, 212);
+    padding: 0;
+    border: solid 1px;
+    display: inline-block;
+    position: relative;
 }
 
 button:hover {
-    background-color: rgb(214, 214, 214);
+    background-color: rgba(255, 255, 255, 0.425);
 
 }
 

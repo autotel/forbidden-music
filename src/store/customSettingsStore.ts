@@ -55,6 +55,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         performanceSettingsEnabled.value = true;
         physicalEnabled.value = false;
         octaveToTimeRatio.value = 1.4;
+        effectsEnabled.value = false;
     }
 
     onMounted(() => {
@@ -71,6 +72,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
                 physicalEnabled.value = parsed.physicalEnabled;
                 octaveToTimeRatio.value = parsed.octaveToTimeRatio || 1;
+                effectsEnabled.value = parsed.effectsEnabled || false;
             }
         } catch (e) {
             console.error('could not recall user performance settings', e);
@@ -89,6 +91,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 performanceSettingsEnabled: performanceSettingsEnabled.value,
                 physicalEnabled: physicalEnabled.value,
                 octaveToTimeRatio: octaveToTimeRatio.value,
+                effectsEnabled: effectsEnabled.value,
             }));
             console.log('saved user performance settings');
         });

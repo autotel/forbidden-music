@@ -79,7 +79,6 @@ export class AutoMaximizerEffect implements EffectInstance {
     private voices: SineVoice[] = [];
     outputNode: GainNode;
     inputNode: GainNode;
-    credits: string = "";
     name: string = "AutoMaximizer";
     enable: () => void;
     disable: () => void;
@@ -87,7 +86,6 @@ export class AutoMaximizerEffect implements EffectInstance {
         audioContext: AudioContext,
     ) {
         this.audioContext = audioContext;
-        this.credits = "maximizer worklet by autotel";
 
         this.outputNode = audioContext.createGain();
         this.inputNode = audioContext.createGain();

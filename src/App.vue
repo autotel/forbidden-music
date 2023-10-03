@@ -428,6 +428,10 @@ watch(paneWidth, () => {
     <TooltipDisplayer />
 </template>
 <style>
+.padded {
+    margin-left: 1em;
+    margin-right: 1em;
+}
 .form-row {
     display: flex;
     justify-content: space-between;
@@ -435,6 +439,10 @@ watch(paneWidth, () => {
     margin: 1em;
 }
 
+.form-section {
+    margin: 1em;
+    font-weight: 600;
+}
 .form-row.disabled {
     opacity: 0.5;
     pointer-events: none;

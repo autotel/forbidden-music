@@ -6,6 +6,7 @@ import { SnapType, useSnapStore } from '../store/snapStore';
 import Collapsible from './Collapsible.vue';
 import { useMonoModeInteraction } from '../store/monoModeInteraction';
 import { useCustomSettingsStore } from '../store/customSettingsStore';
+import ButtonSub from '../components/ButtonSub.vue';
 
 const snap = useSnapStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -53,14 +54,14 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
     }" :tooltip="isnap.description">
       {{ isnap.icon }}
       <template v-if="snapName === 'customFrequencyTable'">
-        <span class="sub-button" :onClick="frequencyTableEditButtonHandler">
+        <ButtonSub :onClick="frequencyTableEditButtonHandler">
           <Pen/>
-        </span>
+        </ButtonSub>
       </template>
       <template v-else-if="snapName === 'hzRelationFraction'">
-        <span class="sub-button" :onClick="relationFractionEditButtonHandler">
+        <ButtonSub class="sub-button" :onClick="relationFractionEditButtonHandler">
           <Pen/>
-        </span>
+        </ButtonSub>
       </template>
     </Button>
     <Button :onClick="()=>snap.onlyWithMutednotes = !snap.onlyWithMutednotes"
@@ -100,16 +101,6 @@ Button {
 Button:active {
 } */
 
-.sub-button {
-  border-radius: 1em;
-  height: 2em;
-  background-color: rgb(212, 212, 212);
-  padding: 0 0.6em;
-  border: solid 1px;
-}
-.sub-button:hover {
-  background-color: rgba(255, 255, 255, 0.425);
-}
 .active {
   /* border-bottom: solid 4px;
   padding-bottom: 0; */

@@ -13,6 +13,7 @@ import { layerNoteColorStrings } from "../store/viewStore";
 import Collapsible from "./Collapsible.vue";
 import ParamsSliderList from "./ParamsSliderList.vue";
 import { useEffectsStore } from "../store/effectsStore";
+import ButtonSub from "../components/ButtonSub.vue";
 
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
@@ -71,38 +72,54 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
         </template>
         <div>
             <div v-if="audioReady" class="controls-container">
-                <template v-if="userSettings.polyphonyEnabled" v-for="(synthChan, chanNo) in playback.channels">
+                <h2 class="padded">Synth</h2>
 
-                    <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan === activeLayerChan"
-                        style="width:100%; text-align:left; margin-left: 2em" :active-color="layerNoteColorStrings[1]">
-                        <template v-if="chanNo === 0">
-                            default -
-                        </template>
-                        <template v-else>
-                            <span class="encircled">{{ chanNo }}</span>
-                        </template>
-                        {{ synthChan.synth.name }}
+                <template v-if="userSettings.polyphonyEnabled">
+                    <h3 class="padded">Layer polyphony</h3>
+                    <template v-for="(synthChan, chanNo) in playback.channels">
+                        <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan === activeLayerChan"
+                            style="width:calc(100% - 2em); display:flex; justify-content: space-between;" :style="chanNo ? 'padding-left:2em' : ''"
+                            :active-color="layerNoteColorStrings[1]" class="padded"
+                            :tooltip="`open synth control channel ${chanNo} (assigned in layers)`">
+                            <template v-if="chanNo === 0">
+                                default -
+                            </template>
+                            <template v-else>
+                                <span class="encircled">{{ chanNo }}</span>
+                            </template>
+                            {{ synthChan.synth.name }}
+
+                            <ButtonSub class="sub-button" :onClick="() => { playback.channels.splice(chanNo, 1) }">
+                                ×
+                            </ButtonSub>
+                        </Button>
+                    </template>
+                    <Button v-if="userSettings.polyphonyEnabled" :on-click="() => { playback.addChannel() }" class="padded"
+                        tooltip="Add a new synth channel">
+                        + Channel
                     </Button>
+
                 </template>
 
                 <template v-if="activeLayerChan">
                     <PropOption :param="playback.synthSelector(activeLayerChan)" />
                     <ParamsSliderList :synthParams="activeLayerChan.params" />
-                    <Button v-if="activeLayerChan.synth.credits"
+                    <Button class="padded" v-if="activeLayerChan.synth.credits"
                         :on-click="() => activeLayerChan ? showCredits(activeLayerChan.synth.credits!) : null">
                         Credits
                     </Button>
                 </template>
                 <br><br>
-                <Button v-if="userSettings.polyphonyEnabled" :on-click="() => { playback.addChannel() }"> Add synth
-                </Button>
-                <template v-if="userSettings.effectsEnabled" v-for="effect in effects.effectsChain">
-                    <h3>Master {{effect.name}}</h3>
-                    <ParamsSliderList :synthParams="effect.params" />
-                    <Button v-if="effect.credits"
-                        :on-click="() => activeLayerChan ? showCredits(effect.credits!) : null">
-                        Credits
-                    </Button>
+                <template v-if="userSettings.effectsEnabled">
+                    <h2 class="padded">Master effects</h2>
+                    <template v-for="effect in effects.effectsChain">
+                        <h3 class="padded">{{ effect.name }}</h3>
+                        <ParamsSliderList :synthParams="effect.params" />
+                        <Button class="padded" v-if="effect.credits"
+                            :on-click="() => activeLayerChan ? showCredits(effect.credits!) : null">
+                            Credits
+                        </Button>
+                    </template>
                 </template>
             </div>
             <div v-else>

@@ -17,7 +17,6 @@ import { useAudioContextStore } from './audioContextStore';
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
-    const view = useViewStore();
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
