@@ -605,7 +605,12 @@ export const useToolStore = defineStore("tool", () => {
 
             if ('velocity' in selectRange.value) {
                 selectRange.value.velocityEnd = view.pxToVelocityWithOffset(y);
-                const velocitiesInOrder = [selectRange.value.velocity, selectRange.value.velocityEnd].sort((a, b) => a - b);
+                
+                const velocitiesInOrder = [
+                    selectRange.value.velocity, 
+                    selectRange.value.velocityEnd
+                ].sort((a, b) => a - b);
+
                 sortedRange.velocity = velocitiesInOrder[0];
                 sortedRange.velocityEnd = velocitiesInOrder[1];
             }

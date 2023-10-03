@@ -11,7 +11,7 @@ import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { Tool } from '../dataTypes/Tool';
 import { useViewStore } from './viewStore';
-
+import { filterMap } from "../functions/filterMap";
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
@@ -84,41 +84,48 @@ export const useSelectStore = defineStore("select", () => {
         //     getRangeSelectableTraces(),
         //     range
         // );
-
-        // // if in modulation mode, then  also select according to "velolines"
-        // if (
-        //     // tool.current === Tool.Modulation
-        //     'velocity' in range && 'velocityEnd' in range
-        // ) {
-        //     const notesVeloLinesInRange = getTracesInRange(
-        //         project.score, {
-        //             time: range.time,
-        //             timeEnd: range.timeEnd,
-        //         } as SelectableRange
-        //     ).filter(event =>
-        //         'velocity' in range ? (
-        //             event.velocity < range.velocityEnd
-        //             &&
-        //             event.velocity > range.velocity
-        //         ) : false
-        //     )
-        //     notesInRange.push(...notesVeloLinesInRange)
-        // }
+        select();
 
         const pxRange = view.pxRangeOf(range);
         const traceRects = [...view.visibleLoopRects, ...view.visibleNoteRects];
         if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');
         const sureRange = pxRange as { x: number, y: number, x2: number, y2: number };
-        const tracesWithinRange = traceRects.filter(rect => {
+
+        const tracesWithinTimeRange = traceRects.filter(rect => {
+            return (
+                rect.width + rect.x > sureRange.x &&
+                rect.x < sureRange.x2
+            )
+        });
+
+        const tracesWithinRange = tracesWithinTimeRange.filter(rect => {
             return (
                 rect.width + rect.x > sureRange.x &&
                 rect.x < sureRange.x2 &&
                 rect.height + rect.y > sureRange.y &&
                 rect.y < sureRange.y2
             )
-        }).map(r=>r.event);
+        }).map(r => r.event);
 
-        select(
+        if (
+            'velocity' in range && 'velocityEnd' in range
+        ) {
+            const tracesWithingVeloRange = filterMap(tracesWithinTimeRange, rect => {
+                const evt = rect.event;
+                if (evt.type !== TraceType.Note) return false;
+                const note = evt as Note;
+                return (
+                    note.velocity >= range.velocity &&
+                    note.velocity <= range.velocityEnd
+                ) ? note : false;
+            })
+            add(
+                ...tracesWithingVeloRange,
+            );
+        }
+
+
+        add(
             ...tracesWithinRange,
         );
     };
