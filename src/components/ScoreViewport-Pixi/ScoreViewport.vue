@@ -64,14 +64,16 @@ const mouseMoveListener = (e: MouseEvent) => {
     const firstItemRect = loopsAtCoords[0] || null;
 
     const hoveredThing = firstNoteRect || firstItemRect || null;
-    const isRightEdge = hoveredThing.rightEdge ? (
+    const isRightEdge = hoveredThing?.rightEdge ? (
         (e.offsetX > hoveredThing.rightEdge?.x - rightEdgeWidth)
     ) : false;
 
+    
     if (didHoverChange(hoveredThing, isRightEdge)) {
         if (firstNoteRect) {
             if (isRightEdge) {
-                tool.timelineItemMouseEnter(firstNoteRect.event as Trace);
+                console.log("here");
+                tool.timelineItemRightEdgeMouseEnter(firstNoteRect.event as Trace);
             } else {
                 tool.timelineItemRightEdgeMouseLeave();
                 tool.timelineItemMouseEnter(firstNoteRect.event as Trace);

@@ -46,6 +46,7 @@ button {
     border: solid 1px;
     display: inline-block;
     position: relative;
+    cursor: pointer;
 }
 
 button:hover {
