@@ -115,6 +115,9 @@ export const useSelectStore = defineStore("select", () => {
                 if (evt.type !== TraceType.Note) return false;
                 const note = evt as Note;
                 return (
+                    // bc. velolines appear at start of notes
+                    note.time >= range.time &&
+                    note.time <= range.timeEnd &&
                     note.velocity >= range.velocity &&
                     note.velocity <= range.velocityEnd
                 ) ? note : false;
