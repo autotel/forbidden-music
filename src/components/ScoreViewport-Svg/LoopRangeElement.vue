@@ -66,7 +66,7 @@ const showButtons = computed(() => {
 </script>
 <template>
     <g ref="noteBody">
-        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20">
+        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20"  v-if="!interactionDisabled && eventRect.rightEdge">
             {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
             {{ eventRect.event.count }}
         </text>

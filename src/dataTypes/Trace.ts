@@ -10,6 +10,7 @@ export enum TraceType {
     Loop,
 }
 
+export type Trace = Note | Loop;
 
 export const cloneTrace = <T extends Trace>(trace: T): T => {
     switch (trace.type) {
@@ -27,4 +28,14 @@ export const traceTypeSafetyCheck = isDev() ? (trace: Trace) => {
     // @ts-ignore
     if (!trace.type) throw new Error("trace type is " + TraceType[trace.type] ?? trace.type)
 } : () => { };
-export type Trace = Note | Loop;
+
+
+export const transposeTime = <T extends Trace>(trace: T, time: number): T => {
+    trace.time += time;
+    trace.timeEnd += time;
+    return trace;
+}
+
+export const duration = (trace: Trace): number => {
+    return trace.timeEnd - trace.time;
+}

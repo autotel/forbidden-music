@@ -1,6 +1,6 @@
 import { clamp, useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref, watch } from 'vue';
+import { Ref, computed, reactive, ref, watch } from 'vue';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
 import { Loop, loop } from '../dataTypes/Loop';
 import { Note, note } from '../dataTypes/Note';
@@ -617,6 +617,20 @@ export const useToolStore = defineStore("tool", () => {
         }
     }, 25);
 
+    /** apply snaps modifying the target loop */
+    const applySnapToLoop = (targetLoop: Loop, otherTraces: Trace[]) => {
+        const snappedLoop: Loop = snap.snapTimeRange({
+            inTimeRange: targetLoop,
+            otherTraces: project.score,
+            sideEffects: true,
+        });
+        if(snappedLoop.timeEnd < snappedLoop.time) {
+            snappedLoop.timeEnd = snappedLoop.time;
+        }
+
+        Object.assign(targetLoop, snappedLoop);
+    }
+
     const updateItemThatWouldBeCreated = (mouse: { x: number, y: number }) => {
         const { x, y } = mouse;
         // if out of view, false
@@ -646,23 +660,14 @@ export const useToolStore = defineStore("tool", () => {
             noteThatWouldBeCreated.value = snapNote;
             return;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateLoop) {
+
             const t = view.pxToTimeWithOffset(x);
-            const freeLoop = loop({
-                time: t,
-                timeEnd: t,
-            });
-
-            const snappedLoop: Loop = snap.snapTimeRange({
-                inTimeRange: freeLoop,
-                otherTraces: project.score,
-                sideEffects: true,
-            });
-
-            snappedLoop.timeEnd = snappedLoop.time;
-            loopThatWouldBeCreated.value = snappedLoop;
-
-            // TODO: delete??
-            Object.assign(freeLoop, snappedLoop);
+            if (!loopThatWouldBeCreated.value) {
+                loopThatWouldBeCreated.value = loop({ time: 0, timeEnd: 0 });
+            }
+            loopThatWouldBeCreated.value.time = t;
+            loopThatWouldBeCreated.value.timeEnd = t;
+            applySnapToLoop(loopThatWouldBeCreated.value, project.loops);
 
             return;
         } else {
@@ -787,6 +792,7 @@ export const useToolStore = defineStore("tool", () => {
         cursor,
         whatWouldMouseDownDo,
         currentMouseStringHelper,
+        applySnapToLoop,
 
         current, currentLeftHand,
         simplify,

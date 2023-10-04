@@ -30,7 +30,7 @@ import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
 import { Trace } from './dataTypes/Trace';
-import { transposeTime } from './dataTypes/Note';
+import { transposeTime } from './dataTypes/Trace';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
