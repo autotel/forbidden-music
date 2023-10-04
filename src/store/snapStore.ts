@@ -308,6 +308,17 @@ export const useSnapStore = defineStore("snap", () => {
     const filterSnapTraces = (list: Trace[]): (Trace[]) | undefined => {
         if (list === undefined) return;
         let returnValue = list
+
+        // remove traces in groups which aren't visible
+        returnValue = returnValue.filter((trace) => {
+            if ('layer' in trace) {
+                const layer = layers.layers[trace.layer];
+                return layer.visible;
+            }
+            return true;
+        });
+
+
         if (onlyWithMutednotes.value) {
             returnValue = returnValue.filter((trace) => (trace.type === TraceType.Note && trace.mute));
         }
