@@ -11,7 +11,6 @@ export const getNotesInRange = (
     const timeEnd = range.timeEnd;
     const octaveStart = 'octave' in range ? range.octave : undefined;
     const octaveEnd = 'octaveEnd' in range ? range.octaveEnd : undefined;
-
     return notes.filter((editNote) => {
         // deemed as in octave range if said restriction is not set
         const octaveInRange = (octaveStart === undefined)

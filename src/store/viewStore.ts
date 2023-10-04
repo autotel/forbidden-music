@@ -168,15 +168,6 @@ export const useViewStore = defineStore("view", () => {
 
     });
 
-    const isNoteInView = (note: Note) => {
-        return (
-            note.time >= timeOffset.value &&
-            note.time <= timeOffset.value + viewWidthTime.value &&
-            note.octave >= octaveOffset.value &&
-            note.octave <= octaveOffset.value + viewHeightOctaves.value
-        );
-    }
-
     const visibleNoteRects = computed((): NoteRect[] => {
         memoizedNoteRects.length = 0;
         return visibleNotes.value.map((note) => {
@@ -488,7 +479,6 @@ export const useViewStore = defineStore("view", () => {
         locationOfTrace,
 
         isOctaveInView,
-        isNoteInView,
 
         updateSize,
         forceRefreshVisibleNotes,

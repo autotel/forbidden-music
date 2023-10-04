@@ -286,11 +286,6 @@ export const useSnapStore = defineStore("snap", () => {
         return candidateOctave !== Infinity && candidateOctave !== -Infinity && !isNaN(candidateOctave);
     }
 
-    /** sets a simple focusedTrace flag for display purposes */
-    const setFocusedTrace = (to: Trace) => {
-        resetSnapExplanation();
-        focusedTrace.value = to;
-    };
     const resetSnapExplanation = () => {
         timeSnapExplanation.value = [];
         toneSnapExplanation.value = [];
@@ -317,7 +312,12 @@ export const useSnapStore = defineStore("snap", () => {
             returnValue = returnValue.filter((trace) => (trace.type === TraceType.Note && trace.mute));
         }
         if (onlyWithNotesInView.value) {
-            returnValue = returnValue.filter((trace) => trace.type === TraceType.Note && view.isNoteInView(trace))
+            returnValue = getTracesInRange(returnValue, {
+                time: view.timeOffset,
+                timeEnd: view.timeOffset + view.viewWidthTime,
+                octave: -view.octaveOffset,
+                octaveEnd: -view.octaveOffset + view.viewHeightOctaves,
+            });
         }
         if (onlyWithSimultaneousNotes.value && focusedTrace.value) {
             returnValue = getTracesInRange(returnValue, {
@@ -827,7 +827,6 @@ export const useSnapStore = defineStore("snap", () => {
         onlyWithNotesInView,
         onlyWithNotesInTheSameLayer,
         onlyWithNotesInDifferentLayer,
-        setFocusedTrace,
         resetSnapExplanation,
         snap,
         snapTimeRange,

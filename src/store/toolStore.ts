@@ -101,7 +101,7 @@ const mouseDuplicateNotes = ({
         drag.tracesWhenDragStarted = cloned.map(cloneTrace);
         drag.traces = [...cloned];
         drag.trace = cloned[0];
-        snap.setFocusedTrace(drag.trace);
+        snap.focusedTrace = drag.trace;
     }
     // refresh = true;
 }
@@ -535,13 +535,15 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.MoveItem:
             case MouseDownActions.MoveNotes:
                 if (mouse.drag?.trace) {
-                    snap.setFocusedTrace(mouse.drag.trace);
+                    snap.resetSnapExplanation();
+                    snap.focusedTrace = mouse.drag.trace;
                 }
                 break;
             case MouseDownActions.SetSelectionAndDrag: {
                 if (!mouse.drag?.trace) throw new Error('no trace dragged');
                 selection.select(mouse.drag.trace);
-                snap.setFocusedTrace(mouse.drag.trace);
+                snap.resetSnapExplanation();
+                snap.focusedTrace = mouse.drag.trace;
 
                 if (mouse.drag) {
                     mouse.drag.traces = [mouse.drag.trace];
@@ -645,8 +647,7 @@ export const useToolStore = defineStore("tool", () => {
                 velocity: lastVelocitySet.value,
                 layer: currentLayerNumber.value,
             });
-
-            snap.setFocusedTrace(theNote)
+            snap.resetSnapExplanation();
 
             const snapNote = snap.snap({
                 inNote: theNote,
@@ -656,6 +657,7 @@ export const useToolStore = defineStore("tool", () => {
             });
 
             snapNote.timeEnd = snapNote.time;
+            snap.focusedTrace = snapNote;
 
             noteThatWouldBeCreated.value = snapNote;
             return;
