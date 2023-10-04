@@ -181,15 +181,18 @@ const keyDownListener = (e: KeyboardEvent) => {
             (async () => {
                 const text = await navigator.clipboard.readText();
                 const editNotes = project.parseNotes(text);
+                
+                const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
+                let timeDiff = view.pxToTimeWithOffset(tool.mouse.pos.x) - earliestPastedNote.time;
+
                 if (tool.noteThatWouldBeCreated) {
                     const datumNote = tool.noteThatWouldBeCreated as Trace;
-                    const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
-                    const timeDiff = datumNote.time - earliestPastedNote.time;
-
-                    editNotes.forEach(note => {
-                        note.time += timeDiff;
-                    })
+                    timeDiff = datumNote.time - earliestPastedNote.time;
                 }
+
+                editNotes.forEach(note => {
+                    transposeTime(note, timeDiff);
+                })
 
                 project.score.push(...editNotes);
                 selection.select(...editNotes);
@@ -332,7 +335,7 @@ onMounted(() => {
     mainInteraction.addEventListener($viewPort, 'mousemove', mouseMoveListener);
     mainInteraction.addEventListener($viewPort, 'wheel', mouseWheelListener);
     mainInteraction.addEventListener($viewPort, 'mouseleave' as any, () => {
-        snap.resetSnapExplanation();        
+        snap.resetSnapExplanation();
     });
     window.addEventListener('resize', resize);
     resize();
@@ -433,6 +436,7 @@ watch(paneWidth, () => {
     margin-left: 1em;
     margin-right: 1em;
 }
+
 .form-row {
     display: flex;
     justify-content: space-between;
@@ -444,6 +448,7 @@ watch(paneWidth, () => {
     margin: 1em;
     font-weight: 600;
 }
+
 .form-row.disabled {
     opacity: 0.5;
     pointer-events: none;
