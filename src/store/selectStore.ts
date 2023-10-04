@@ -140,7 +140,7 @@ export const useSelectStore = defineStore("select", () => {
         selected.value.clear();
     };
     const selectAll = () => {
-        select(...project.score);
+        select(...project.score, ...project.loops);
     };
     throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 
