@@ -9,7 +9,6 @@ const props = defineProps<{
     active?: boolean | undefined
     danger?: boolean | undefined
     tooltip?: string
-    inline?: boolean
     activeColor?: string
 }>()
 
@@ -19,7 +18,7 @@ const mouseEnter = (e: MouseEvent) => {
     if (!tooltip) return;
     tool.tooltip = tooltip;
     tool.tooltipOwner = e.target as HTMLElement;
-}
+} 
 
 const mouseLeave = (e: MouseEvent) => {
     tool.tooltip = '';
@@ -30,7 +29,7 @@ const mouseLeave = (e: MouseEvent) => {
 </script>
 
 <template>
-    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger, inline }"
+    <button @mouseenter="mouseEnter" @mouseleave="mouseLeave" @click="onClick" :class="{ active, danger }"
         :style="{ backgroundColor: active ? activeColor : '' }">
         <slot></slot>
     </button>
@@ -44,9 +43,10 @@ button {
     background-color: rgb(212, 212, 212);
     padding: 0;
     border: solid 1px;
-    display: inline-block;
-    position: relative;
     cursor: pointer;
+    display:inline;
+    margin-top: -0.5em;
+    margin-bottom: -0.5em;
 }
 
 button:hover {
@@ -66,11 +66,4 @@ button.danger:hover {
     background-color: rgb(255, 90, 49);
 }
 
-button.inline {
-    padding: 0;
-    margin: 0;
-    background-color: transparent;
-    display: inline-block;
-    position: relative;
-}
 </style>

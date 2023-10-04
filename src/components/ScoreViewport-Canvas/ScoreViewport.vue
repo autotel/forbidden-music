@@ -3,7 +3,7 @@ import { Tool } from '../../dataTypes/Tool';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { useViewStore } from '../../store/viewStore';
+import { NoteRect, useViewStore } from '../../store/viewStore';
 import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 const project = useProjectStore();
 const tool = useToolStore();
@@ -45,21 +45,29 @@ onBeforeUnmount(() => {
 });
 
 const refreshView = () => {
-    console.log("refreshing view");
     const visibleNotes = view.visibleNoteRects;
     const playbackPxPosition = playback.playbarPxPosition;
     const ctx = canvas.value?.getContext("2d");
+    
+    const perspNudge = (rect:NoteRect) => {
+        return  (rect.event.time - view.timeOffset ) * (1 - rect.event.velocity) * view.timeToPx(1);
+    }
+
     if (!ctx) return;
-    ctx.clearRect(0, 0, props.width, props.height);
+    // ctx.clearRect(0, 0, props.width, props.height);
     ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, props.width, props.height);
+    ctx.fillStyle = "white";
     ctx.fillRect(playbackPxPosition, 0, 1, props.height);
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
     for (const note of visibleNotes) {
+        const pn = perspNudge(note);
+        const sn = 1/(note.event.velocity * 6);
         if (note.width) {
-            ctx.fillRect(note.x, note.y, note.width, note.height);
+            ctx.fillRect(note.x + pn, note.y, note.width * pn, note.height * sn);
         } else {
             ctx.beginPath();
-            ctx.arc(note.cx, note.cy, note.radius || 12, 0, 2 * Math.PI);
+            ctx.arc(note.cx + pn, note.cy, (note.radius || 12) * sn, 0, 2 * Math.PI);
             ctx.fill();
         }
     }

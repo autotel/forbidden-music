@@ -650,7 +650,6 @@ export const useToolStore = defineStore("tool", () => {
             const freeLoop = loop({
                 time: t,
                 timeEnd: t,
-                count: 1,
             });
 
             const snappedLoop: Loop = snap.snapTimeRange({
