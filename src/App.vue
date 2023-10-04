@@ -47,7 +47,7 @@ const undoStore = useUndoStore();
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const paneWidth = ref(300);
-const viewport = ref<SVGSVGElement>();
+const viewport = ref<HTMLElement>();
 const userSettings = useCustomSettingsStore();
 
 provide('modalText', modalText);
@@ -331,7 +331,9 @@ onMounted(() => {
     mainInteraction.addEventListener(window, 'mouseup', mouseUpListener);
     mainInteraction.addEventListener($viewPort, 'mousemove', mouseMoveListener);
     mainInteraction.addEventListener($viewPort, 'wheel', mouseWheelListener);
-
+    mainInteraction.addEventListener($viewPort, 'mouseleave' as any, () => {
+        snap.resetSnapExplanation();        
+    });
     window.addEventListener('resize', resize);
     resize();
 
@@ -339,7 +341,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
     libraryStore.clear();
-
     window.removeEventListener('mouseup', mouseUpListener);
     mainInteraction.removeAllEventListeners();
 });
