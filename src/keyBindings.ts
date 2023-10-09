@@ -27,7 +27,7 @@ type KeyActionTuple = [KeyActions, string, boolean, boolean, boolean];
 
 const keyBindings: KeyActionTuple[] = [
     [KeyActions.Delete, 'Delete', false, false, false],
-    [KeyActions.Delete, 'Backspace', true, false, false],
+    [KeyActions.Delete, 'Backspace', false, false, false],
     [KeyActions.Cut, 'x', true, false, false],
     [KeyActions.Copy, 'c', true, false, false],
     [KeyActions.Paste, 'v', true, false, false],
@@ -53,6 +53,7 @@ const keyBindings: KeyActionTuple[] = [
 ];
 
 export const logKeys = (e: KeyboardEvent) => {
+    const ctrlKey = e.ctrlKey || e.metaKey;
     console.log(
         "action:", getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey),
         "key:", e.key,

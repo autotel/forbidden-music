@@ -363,7 +363,7 @@ watch(paneWidth, () => {
 })
 </script>
 <template>
-    <div>
+    <div oncontextmenu="return false;">
         <div ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewport v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
