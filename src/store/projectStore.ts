@@ -12,7 +12,7 @@ import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
 import { SynthChannel, usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
-import { Trace, TraceType, traceTypeSafetyCheck } from '../dataTypes/Trace';
+import { Trace, TraceType, traceTypeSafetyCheck, transposeTime } from '../dataTypes/Trace';
 import { useAudioContextStore } from './audioContextStore';
 
 export const useProjectStore = defineStore("current project", () => {
@@ -291,7 +291,7 @@ export const useProjectStore = defineStore("current project", () => {
         });
         const loopLength = originalLoop.timeEnd - originalLoop.time;
         notesAfterLoop.forEach((note) => {
-            note.time += loopLength;
+            transposeTime(note, loopLength);
         })
         loopsAfterLoop.forEach((originalLoop) => {
             console.log("shift originalLoop", originalLoop.time);
