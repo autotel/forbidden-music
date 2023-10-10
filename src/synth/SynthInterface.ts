@@ -9,13 +9,17 @@ export interface ExternalSynthInstance extends AudioModule {
     triggerAttackRelease: (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
-        velocity: number
+        /** absolute note start time, in web audio api time */
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo?:number
     ) => void,
     triggerPerc: (
         frequency: number,
-        relativeNoteStart: number,
-        velocity: number
+        /** absolute note start time, in web audio api time */
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo?:number
     ) => void,
     releaseAll: () => void,
 }
@@ -25,13 +29,17 @@ export interface SynthInstance extends AudioModule {
     triggerAttackRelease: (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
-        velocity: number
+        /** absolute note start time, in web audio api time */
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo?:number
     ) => void,
     triggerPerc: (
         frequency: number,
-        relativeNoteStart: number,
-        velocity: number
+        /** absolute note start time, in web audio api time */
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo?:number
     ) => void,
     releaseAll: () => void,
 }

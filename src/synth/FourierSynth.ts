@@ -62,8 +62,8 @@ type NullableRef<T> = {
 
 class FourierVoice {
     inUse: boolean = false;
-    triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
-    triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
+    triggerAttackRelease: (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => void;
+    triggerPerc: (frequency: number, absoluteNoteStart: number, velocity: number) => void;
     stop: () => void;
     outputNode: any;
     periodicWaveRef: SimpleRef<PeriodicWave>;
@@ -86,22 +86,17 @@ class FourierVoice {
         this.triggerAttackRelease = (
             frequency: number,
             duration: number,
-            relativeNoteStart: number,
+            absoluteStartTime: number,
             velocity: number
         ) => {
             this.inUse = true;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
             gainNode.gain.setValueAtTime(0, absoluteStartTime);
             gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
             gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
             oscillator.frequency.value = frequency * frequencyMultiplier;
             oscillator.setPeriodicWave(this.periodicWaveRef.value);
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
+            oscillator.frequency.setValueAtTime(frequency, absoluteStartTime);
             setTimeout(() => {
                 releaseVoice();
             }, duration * 1000);
@@ -109,16 +104,11 @@ class FourierVoice {
 
         this.triggerPerc = (
             frequency: number,
-            relativeNoteStart: number,
+            absoluteNoteStart: number,
             velocity: number
         ) => {
             this.inUse = true;
             let duration = velocity * 2.8;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteNoteStart = audioContext.currentTime + relativeNoteStart;
             gainNode.gain.cancelScheduledValues(absoluteNoteStart);
             gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
             gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);

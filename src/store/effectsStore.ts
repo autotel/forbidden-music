@@ -84,6 +84,8 @@ export const useEffectsStore = defineStore('playback-effects', () => {
 
     if(userSettingsStore.effectsEnabled) {
         activateEffects();
+    }else{
+        deactivateEffects();
     }
 
 

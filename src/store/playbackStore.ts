@@ -128,13 +128,11 @@ export const usePlaybackStore = defineStore("playback", () => {
     const bpm = ref(110);
     /** in musical time */
     const currentScoreTime = ref(0);
-    /** in musical time */
-    const previousScoreTime = ref(0);
     const currentTimeout = ref(null as null | any);
     /** where does the playback return to when playback stops */
     const timeReturnPoint = ref(0);
     /** in seconds */
-    const previousClockTime = ref(0);
+    let previousClockTime = 0;
     /** how long in advance to request the scheduling of events */
     const foresight = 1;
     const audioContextStore = useAudioContextStore();
@@ -143,7 +141,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const view = useViewStore();
 
     const playbarPxPosition = ref(0);
-    const playFrameSizeMs = 30;
+    const playFrameSizeMs = 300;
 
     const paused = computed(() => (!playing.value) && currentScoreTime.value != 0);
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
@@ -247,8 +245,16 @@ export const usePlaybackStore = defineStore("playback", () => {
     let isFirtClockAfterPlay = true;
     let loopNow: Loop | undefined;
 
-    const _clockAction = () => {
+    const musicalTimeToWebAudioTime = (musicalTime: number) => {
         const rate = bpm.value / 60;
+        return musicalTime / rate;
+    }
+    const webAudioTimeToMusicalTime = (webAudioTime: number) => {
+        const rate = bpm.value / 60;
+        return webAudioTime * rate;
+    }
+
+    const _clockAction = () => {
         const audioContext = audioContextStore.audioContext;
         if (!audioContext) throw new Error("audio context not created");
 
@@ -260,11 +266,13 @@ export const usePlaybackStore = defineStore("playback", () => {
             });
         }
 
-
-        const now = audioContext.currentTime;
-        const deltaTime = now - previousClockTime.value;
-        currentScoreTime.value += deltaTime * rate;
-
+        // reference time to consider as zero towards each event to be queued
+        const tickTime = audioContext.currentTime;
+        const deltaTime = tickTime - previousClockTime;
+        
+        // score time with respect to which we measure -t towards each event
+        const scoreTickTime = currentScoreTime.value;
+        currentScoreTime.value += webAudioTimeToMusicalTime(deltaTime);
 
         let catchUp = isFirtClockAfterPlay;
         isFirtClockAfterPlay = false;
@@ -281,13 +289,22 @@ export const usePlaybackStore = defineStore("playback", () => {
                 loopNow.repetitionsLeft--;
             }
         }
-        playNotes = _getEventsBetween(previousScoreTime.value, currentScoreTime.value, catchUp)
+        playNotes = _getEventsBetween(scoreTickTime, currentScoreTime.value, catchUp)
 
         playNotes.forEach((editNote) => {
             if (editNote.mute) return;
             if (!channels.value.length) throw new Error("no synth created");
-            // TODO: is this all cancelling out and becoming now? too sleepy today to check
-            const noteStartFromNow = editNote.time - currentScoreTime.value;
+            
+            let noteStartRelative = musicalTimeToWebAudioTime(editNote.time - scoreTickTime);
+
+
+            const noteStartAbsolute = tickTime + noteStartRelative;
+            console.log("note start in ", noteStartRelative);
+
+            if (noteStartRelative < 0) {
+                console.log("catch-up note");
+                noteStartRelative = 0;
+            }
 
             const synth = getLayerSynth(editNote.layer)
             if (!synth) return;
@@ -296,17 +313,17 @@ export const usePlaybackStore = defineStore("playback", () => {
                 const frequency = getFrequency(editNote);
                 const duration = getDuration(editNote);
                 if (duration) {
-                    const noteDuration = duration / rate;
+                    const noteDuration =  musicalTimeToWebAudioTime(duration);
                     synth.triggerAttackRelease(
                         frequency,
                         noteDuration,
-                        noteStartFromNow,
+                        noteStartAbsolute,
                         editNote.velocity
                     );
                 } else {
                     synth.triggerPerc(
                         frequency,
-                        noteStartFromNow,
+                        noteStartAbsolute,
                         editNote.velocity
                     );
 
@@ -316,12 +333,11 @@ export const usePlaybackStore = defineStore("playback", () => {
             }
         });
 
-        previousClockTime.value = now;
+        previousClockTime = tickTime;
 
         if (currentTimeout.value) clearTimeout(currentTimeout.value);
         currentTimeout.value = setTimeout(_clockAction, playFrameSizeMs);
 
-        previousScoreTime.value = currentScoreTime.value;
     }
 
     const play = async () => {
@@ -330,7 +346,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (audioContext.state !== 'running') await audioContext.resume();
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
-        previousClockTime.value = audioContext.currentTime;
+        previousClockTime = audioContext.currentTime;
         isFirtClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
 
@@ -341,8 +357,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         currentTimeout.value = null;
         playing.value = false;
         currentScoreTime.value = timeReturnPoint.value;
-        previousScoreTime.value = timeReturnPoint.value;
-        previousClockTime.value = 0;
+        previousClockTime = 0;
         channels.value.forEach(({ synth }) => synth.releaseAll());
     }
 
@@ -519,7 +534,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         availableSynths,
         currentScoreTime,
         timeReturnPoint,
-        previousScoreTime,
         currentTimeout,
         playbarPxPosition,
         paused,

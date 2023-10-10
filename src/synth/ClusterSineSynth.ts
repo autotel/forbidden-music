@@ -4,7 +4,7 @@ import { frequencyToOctave } from "../functions/toneConverters";
 
 export class ClusterSineVoice {
     inUse: boolean = false;
-    triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
+    triggerAttackRelease: (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
     stop: () => void;
     outputNode: any;
@@ -78,15 +78,10 @@ export class ClusterSineVoice {
         this.triggerAttackRelease = (
             frequency: number,
             duration: number,
-            relativeNoteStart: number,
+            absoluteStartTime: number,
             velocity: number
         ) => {
             this.inUse = true;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
             panner.pan.value = this.pan;
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
             gainNode.gain.setValueAtTime(0, absoluteStartTime);
@@ -94,7 +89,7 @@ export class ClusterSineVoice {
             gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
             forEachRelativeOctave((relativeOctave, frequencyMultiplier, oscillator, index) => {
                 const fq = frequency * frequencyMultiplier + frequency * this.imprecision * (Math.random() - 0.5);
-                oscillator.frequency.setValueAtTime(fq, audioContext.currentTime + relativeNoteStart);
+                oscillator.frequency.setValueAtTime(fq, absoluteStartTime);
             });
 
             setTimeout(() => {
@@ -105,24 +100,20 @@ export class ClusterSineVoice {
 
         this.triggerPerc = (
             frequency: number,
-            relativeNoteStart: number,
+            absoluteNoteStart: number,
             velocity: number
         ) => {
             this.inUse = true;
             let duration = velocity * 2.8;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
+
             panner.pan.value = this.pan;
-            const absoluteNoteStart = audioContext.currentTime + relativeNoteStart;
             gainNode.gain.cancelScheduledValues(absoluteNoteStart);
             gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
             gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
 
             forEachRelativeOctave((relativeOctave, frequencyMultiplier, oscillator, index) => {
                 const fq = frequency * frequencyMultiplier + frequency * this.imprecision * (Math.random() - 0.5);
-                oscillator.frequency.setValueAtTime(fq, audioContext.currentTime + relativeNoteStart);
+                oscillator.frequency.setValueAtTime(fq, absoluteNoteStart);
             });
 
 

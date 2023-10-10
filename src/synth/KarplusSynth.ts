@@ -305,33 +305,36 @@ export class KarplusSynth implements SynthInstance {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
+        absoluteNoteStart: number,
         velocity: number
     ) => {
         if (!this.audioContext) throw new Error("audio context not created");
-        if (!this.engine) throw new Error("engine not created");
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
-        const startTime = this.audioContext.currentTime + relativeNoteStart;
+        //TODO: make it precise
 
-        this.engine.port.postMessage({
-            f: frequency,
-            a: velocity,
-            s: duration,
-            i: frequency.toFixed(4)
-        } as KarplusStartVoiceMessage);
+        setTimeout(() => {
+            if(!this.engine) throw new Error("engine not created");
+            this.engine.port.postMessage({
+                f: frequency,
+                a: velocity,
+                s: duration,
+                i: frequency.toFixed(4)
+            } as KarplusStartVoiceMessage)
+        }, (absoluteNoteStart - this.audioContext.currentTime) * 1000);
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
         if (!this.audioContext) throw new Error("audio context not created");
-        if (!this.engine) throw new Error("engine not created");
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
-        const startTime = this.audioContext.currentTime + relativeNoteStart;
+        if (!this.audioContext) throw new Error("audio context not created");
+        //TODO: make it precise
 
-        this.engine.port.postMessage({
-            f: frequency,
-            a: velocity,
-            s: 8, // TODO: create a perc mode to this synth
-            i: frequency.toFixed(4)
-        } as KarplusStartVoiceMessage);
+        setTimeout(() => {
+            if(!this.engine) throw new Error("engine not created");
+            this.engine.port.postMessage({
+                f: frequency,
+                a: velocity,
+                s: 4,
+                i: frequency.toFixed(4)
+            } as KarplusStartVoiceMessage)
+        }, (absoluteNoteStart - this.audioContext.currentTime) * 1000);
     };
     params = [] as SynthParam[];
     credits = "Karplus strong synth implementation by Autotel.";

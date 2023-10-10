@@ -94,20 +94,19 @@ class SamplerVoice {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
-        velocity: number
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo: number = 0
     ) => {
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-        let catchup = relativeNoteStart < 0;
+
         let skipSample = 0;
-        if (catchup) {
+        if (noteStartedTimeAgo > 0) {
             // allow catch up, but not for already ended notes.
-            if (relativeNoteStart + duration < 0) return;
-            duration += relativeNoteStart;
-            skipSample = -relativeNoteStart;
-            relativeNoteStart = 0;
+            if (noteStartedTimeAgo - duration < 0) return;
+            duration -= noteStartedTimeAgo;
+            skipSample = noteStartedTimeAgo;
         }
-        const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
         const absoluteNoteEnd = absoluteNoteStart + duration;
 
         this.inUse = true;
@@ -130,13 +129,14 @@ class SamplerVoice {
 
     triggerPerc = (
         frequency: number,
-        relativeNoteStart: number,
-        velocity: number
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo: number = 0
     ) => {
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency);
         // TODO: duration might be innacurate bc. of play rate
         const duration = sampleSource.sampleBuffer!.duration;
-        this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        this.triggerAttackRelease(frequency, duration, absoluteNoteStart, velocity, noteStartedTimeAgo);
     }
 
     stop = () => {
@@ -187,8 +187,8 @@ export class ComplexSampler implements SynthInstance {
     outputNode: GainNode;
     credits: string = "";
     name: string = "ComplexSampler";
-    enable:()=>void;
-    disable:()=>void;
+    enable: () => void;
+    disable: () => void;
     constructor(
         audioContext: AudioContext,
         sampleDefinitions: SampleFileDefinition[],
@@ -226,7 +226,8 @@ export class ComplexSampler implements SynthInstance {
         frequency: number,
         duration: number,
         relativeNoteStart: number,
-        velocity: number
+        velocity: number,
+        noteStartedTimeAgo: number = 0
     ) => {
         let sampleVoice = this.sampleVoices.find((sampleVoice) => {
             return !sampleVoice.inUse;
@@ -244,9 +245,15 @@ export class ComplexSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
-        sampleVoice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        sampleVoice.triggerAttackRelease(
+            frequency,
+            duration,
+            relativeNoteStart,
+            velocity,
+            noteStartedTimeAgo
+        );
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number, noteStartedTimeAgo: number = 0) => {
         let sampleVoice = this.sampleVoices.find((sampleVoice) => {
             return !sampleVoice.inUse;
         });
@@ -263,8 +270,7 @@ export class ComplexSampler implements SynthInstance {
             sampleVoice.outputNode.connect(this.outputNode);
 
         }
-        sampleVoice.triggerPerc(frequency, relativeNoteStart, velocity);
-
+        sampleVoice.triggerPerc(frequency, absoluteNoteStart, velocity, noteStartedTimeAgo);
     };
     releaseAll = () => {
         this.sampleVoices.forEach((sampleVoice) => {

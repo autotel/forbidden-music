@@ -54,12 +54,12 @@ export class FmSynth implements SynthInstance {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
+        absoluteNoteStart: number,
         velocity: number
     ) => {
         if (!this.audioContext) throw new Error("audio context not created");
         if (!this.engine) throw new Error("engine not created");
-        // const startTime = this.audioContext.currentTime + relativeNoteStart;
+        // const startTime = this.audioContext.currentTime + absoluteNoteStart;
         const note = frequencyToNote12(frequency);
         console.log("trig note", note);
         // TODO: maybe use frequency directly, would need to edit the worklet
@@ -77,8 +77,8 @@ export class FmSynth implements SynthInstance {
             });
         }, duration * 1000);
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
-        this.triggerAttackRelease(frequency, 0.7, relativeNoteStart, velocity);
+    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
+        this.triggerAttackRelease(frequency, 0.7, absoluteNoteStart, velocity);
     };
 
 

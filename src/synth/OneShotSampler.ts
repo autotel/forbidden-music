@@ -125,21 +125,19 @@ class SamplerVoice {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
+        absoluteNoteStart: number,
         velocity: number,
-        adsr: number[]
+        noteStartedTimeAgo: number = 0,
+        adsr: number[] = [0.01, 10, 0, 0.2],
     ) => {
         if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-        let catchup = relativeNoteStart < 0;
         let skipSample = 0;
-        if (catchup) {
+        if (noteStartedTimeAgo > 0) {
             // allow catch up, but not for already ended notes.
-            if (relativeNoteStart + duration < 0) return;
-            duration += relativeNoteStart;
-            skipSample = -relativeNoteStart;
-            relativeNoteStart = 0;
+            if (noteStartedTimeAgo - duration < 0) return;
+            duration -= noteStartedTimeAgo;
+            skipSample = noteStartedTimeAgo;
         }
-        const absoluteNoteStart = this.audioContext.currentTime + relativeNoteStart;
         const scoreNoteEnd = absoluteNoteStart + duration;
         const durationWithRelease = duration + adsr[3];
 
@@ -175,14 +173,22 @@ class SamplerVoice {
 
     triggerPerc = (
         frequency: number,
-        relativeNoteStart: number,
+        absoluteNoteStart: number,
         velocity: number,
-        adsr: number[]
+        noteStartedTimeAgo: number = 0,
+        adsr: number[] = [0.01, 10, 0, 0.2],
     ) => {
         const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
         // TODO: duration might be innacurate bc. of play rate
         const duration = sampleSource.sampleBuffer!.duration;
-        this.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity, adsr);
+        this.triggerAttackRelease(
+            frequency, 
+            duration, 
+            absoluteNoteStart, 
+            velocity, 
+            noteStartedTimeAgo, 
+            adsr
+        );
     }
 
     stop = () => {
@@ -340,8 +346,9 @@ export class OneShotSampler implements SynthInstance {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
-        velocity: number
+        absoluteNoteStart: number,
+        velocity: number,
+        noteStartedTimeAgo: number = 0
     ) => {
         let sampleVoice = this.sampleVoices.find((sampleVoice) => {
             return !sampleVoice.inUse;
@@ -354,9 +361,21 @@ export class OneShotSampler implements SynthInstance {
 
         }
         sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
-        sampleVoice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity, this.adsr);
+        sampleVoice.triggerAttackRelease(
+            frequency, 
+            duration, 
+            absoluteNoteStart, 
+            velocity, 
+            noteStartedTimeAgo,
+            this.adsr
+        );
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+    triggerPerc = (
+        frequency: number, 
+        absoluteNoteStart: number, 
+        velocity: number, 
+        noteStartedTimeAgo: number = 0 
+    ) => {
         let sampleVoice = this.sampleVoices.find((sampleVoice) => {
             return !sampleVoice.inUse;
         });
@@ -368,7 +387,14 @@ export class OneShotSampler implements SynthInstance {
 
         }
         sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
-        sampleVoice.triggerPerc(frequency, relativeNoteStart, velocity, this.adsr);
+
+        sampleVoice.triggerPerc(
+            frequency, 
+            absoluteNoteStart, 
+            velocity, 
+            noteStartedTimeAgo, 
+            this.adsr
+        );
 
     };
     releaseAll = () => {

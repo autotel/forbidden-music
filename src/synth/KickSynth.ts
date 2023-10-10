@@ -3,8 +3,8 @@ import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 
 export class KickVoice {
     inUse: boolean = false;
-    triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
-    triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
+    triggerAttackRelease: (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => void;
+    triggerPerc: (frequency: number, absoluteNoteStart: number, velocity: number) => void;
     stop: () => void;
     outputNode: any;
     startOctave: number = 2;
@@ -36,20 +36,15 @@ export class KickVoice {
         this.triggerAttackRelease = (
             frequency: number,
             duration: number,
-            relativeNoteStart: number,
+            absoluteNoteStart: number,
             velocity: number
         ) => {
             this.inUse = true;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
-            gainNode.gain.cancelScheduledValues(absoluteStartTime);
-            gainNode.gain.setValueAtTime(0, absoluteStartTime);
-            gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
-            gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
-            scheduleFreqEnvelope(absoluteStartTime, frequency);
+            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
+            gainNode.gain.setValueAtTime(0, absoluteNoteStart);
+            gainNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + duration / 4);
+            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
+            scheduleFreqEnvelope(absoluteNoteStart, frequency);
             setTimeout(() => {
                 releaseVoice();
             }, duration * 1000);
@@ -58,16 +53,11 @@ export class KickVoice {
 
         this.triggerPerc = (
             frequency: number,
-            relativeNoteStart: number,
+            absoluteStartTime: number,
             velocity: number
         ) => {
             this.inUse = true;
             let duration = velocity * 2.8;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
             gainNode.gain.setValueAtTime(velocity, absoluteStartTime);
             gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
@@ -139,13 +129,12 @@ export class KickSynth implements SynthInstance {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
+        absoluteNoteStart: number,
         velocity: number
     ) => {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new KickVoice(this.audioContext));
@@ -155,14 +144,13 @@ export class KickSynth implements SynthInstance {
         }
         voice.decayTime = this.decayTimeParam.value;
         voice.startOctave = this.startOctaveParam.value;
-        voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        voice.triggerAttackRelease(frequency, duration, absoluteNoteStart, velocity);
     };
 
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new KickVoice(this.audioContext));
@@ -172,7 +160,7 @@ export class KickSynth implements SynthInstance {
         }
         voice.decayTime = this.decayTimeParam.value;
         voice.startOctave = this.startOctaveParam.value;
-        voice.triggerPerc(frequency, relativeNoteStart, velocity);
+        voice.triggerPerc(frequency, absoluteNoteStart, velocity);
     };
 
     releaseAll = () => {

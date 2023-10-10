@@ -25,21 +25,16 @@ export class SineVoice {
         this.triggerAttackRelease = (
             frequency: number,
             duration: number,
-            relativeNoteStart: number,
+            absoluteNoteStart: number,
             velocity: number
         ) => {
             this.inUse = true;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteStartTime = audioContext.currentTime + relativeNoteStart;
-            gainNode.gain.cancelScheduledValues(absoluteStartTime);
-            gainNode.gain.setValueAtTime(0, absoluteStartTime);
-            gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + duration / 4);
-            gainNode.gain.linearRampToValueAtTime(0, absoluteStartTime + duration);
+            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
+            gainNode.gain.setValueAtTime(0, absoluteNoteStart);
+            gainNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + duration / 4);
+            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
             oscillator.frequency.value = frequency;
-            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime + relativeNoteStart);
+            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
             setTimeout(() => {
                 releaseVoice();
             }, duration * 1000);
@@ -48,16 +43,11 @@ export class SineVoice {
 
         this.triggerPerc = (
             frequency: number,
-            relativeNoteStart: number,
+            absoluteNoteStart: number,
             velocity: number
         ) => {
             this.inUse = true;
             let duration = velocity * 2.8;
-            if (relativeNoteStart < 0) {
-                duration += relativeNoteStart;
-                relativeNoteStart = 0;
-            }
-            const absoluteNoteStart = audioContext.currentTime + relativeNoteStart;
             gainNode.gain.cancelScheduledValues(absoluteNoteStart);
             gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
             gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
@@ -116,13 +106,12 @@ export class SineSynth implements SynthInstance {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
+        absoluteNoteStart: number,
         velocity: number
     ) => {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
@@ -130,13 +119,12 @@ export class SineSynth implements SynthInstance {
             voice.outputNode.connect(this.outputNode);
 
         }
-        voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        voice.triggerAttackRelease(frequency, duration, absoluteNoteStart, velocity);
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
@@ -144,7 +132,7 @@ export class SineSynth implements SynthInstance {
             voice.outputNode.connect(this.outputNode);
 
         }
-        voice.triggerPerc(frequency, relativeNoteStart, velocity);
+        voice.triggerPerc(frequency, absoluteNoteStart, velocity);
 
     };
     releaseAll = () => {
