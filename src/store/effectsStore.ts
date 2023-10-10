@@ -82,11 +82,16 @@ export const useEffectsStore = defineStore('playback-effects', () => {
         console.log("effects enabled", value, effectsChain);
     });
 
-    if(userSettingsStore.effectsEnabled) {
-        activateEffects();
-    }else{
-        deactivateEffects();
-    }
+    // actually this is in order to have the settings loaded
+    // at time of evaluation. might aswell used a timeout
+    // best would be to have an settings-loaded promise
+    audioContextStore.audioContextPromise.then(() => {
+        if(userSettingsStore.effectsEnabled) {
+            activateEffects();
+        }else{
+            deactivateEffects();
+        }
+    });
 
 
     return {

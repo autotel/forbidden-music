@@ -141,7 +141,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const view = useViewStore();
 
     const playbarPxPosition = ref(0);
-    const playFrameSizeMs = 300;
+    const playFrameSizeMs = 50;
 
     const paused = computed(() => (!playing.value) && currentScoreTime.value != 0);
     const stopped = computed(() => (!playing.value) && currentScoreTime.value == 0);
