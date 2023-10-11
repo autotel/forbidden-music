@@ -225,7 +225,7 @@ const refreshView = (time: number) => {
 
     const otherItemRects = view.visibleLoopRects;
     otherItemRects.forEach((rect) => {
-        graphics.beginFill(0x000000, 0.1);
+        graphics.beginFill(0xFF0000, 0.1);
         graphics.lineStyle(1, 0x000000, 1);
         graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
         graphics.endFill();

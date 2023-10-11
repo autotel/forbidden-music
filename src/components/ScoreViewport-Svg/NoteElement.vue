@@ -12,6 +12,7 @@ const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
     eventRect: NoteRect
+    text?: string
     interactionDisabled?: boolean
 }>();
 
@@ -54,15 +55,9 @@ const isEditable = computed(() => {
 })
 </script>
 <template>
-    <!-- <text class="texts" v-if="view.viewWidthTime < 5" :x="eventRect.x" :y="eventRect.cy + 10" font-size="20">
-        (2^{{
-            eventRect.event.octave.toFixed(3)
-        }})n = {{
-    eventRect.event.frequency.toFixed(3)
-}} hz {{
-    eventRect.event.group?.name
-}}
-    </text> -->
+     <text class="texts" v-if="text" :x="eventRect.x" :y="eventRect.cy - 10" font-size="14">
+        {{text}}
+    </text>
     <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
         <NoteElementRectangle v-if="eventRect.width/*hasDuration(eventRect.event)*/" :eventRect="eventRect"
             :isEditable="isEditable" :fill="myColor" />

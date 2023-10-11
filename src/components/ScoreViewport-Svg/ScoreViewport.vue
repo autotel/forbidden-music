@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { TraceType } from '../../dataTypes/Trace';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
+import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
 import { useViewStore } from '../../store/viewStore';
 import LoopRangeElement from './LoopRangeElement.vue';
@@ -10,13 +12,13 @@ import NoteElement from './NoteElement.vue';
 import RangeSelection from './RangeSelection.vue';
 import ToneGrid from './ToneGrid.vue';
 import ToneRelation from './ToneRelation.vue';
-import { TraceType } from '../../dataTypes/Trace';
 
 const project = useProjectStore();
 const tool = useToolStore();
 const playback = usePlaybackStore();
 const view = useViewStore();
 const timedEventsViewport = ref<SVGSVGElement>();
+const snap = useSnapStore();
 
 const props = defineProps<{
     width: number,
@@ -50,6 +52,7 @@ onBeforeUnmount(() => {
             <NoteElement 
                 v-if="tool.noteThatWouldBeCreated" 
                 :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
+                :text="snap.nonRelationalTimeSnapExplanation() + '\n' + snap.nonRelationalToneSnapExplanation()"
                 interactionDisabled />
         </g>
         <g id="loop-would-be-created">

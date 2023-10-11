@@ -11,14 +11,24 @@ import { useViewStore } from './viewStore';
 import { Loop } from '../dataTypes/Loop';
 import { useLayerStore } from './layerStore';
 import { useToolStore } from './toolStore';
+import { filterMap } from '../functions/filterMap';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
-export type SnapExplanation = {
+
+
+export type SnapExplanationAbs = {
     text: string;
-    relatedNote?: Trace;
-    relatedNumber?: number;
 };
+
+
+export type SnapExplanationRelative = {
+    text: string;
+    relatedNote: Trace;
+    relatedNumber: number;
+};
+
+export type SnapExplanation = SnapExplanationAbs | SnapExplanationRelative;
 
 class SnapTracker {
     /** the smallest distance to a snap value found thus far */
@@ -237,21 +247,15 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Time,
         active: false,
     },
-    timeQuarter: {
-        description: "Times which are multiples of 1/4 of a time unit.",
-        icon: "1/4\u00d7",
+    timeFraction: {
+        description: "Times which are simple fractions of 1 time unit",
+        icon: "T + 1/b",
         type: SnapType.Time,
         active: false,
     },
     sameStart: {
         description: "Start positions equal to the start positions of other notes.",
         icon: "=",
-        type: SnapType.Time,
-        active: false,
-    },
-    timeIntegerRelationFraction: {
-        description: "The time of the note is a simple fraction of the time of another note.",
-        icon: "T a/b",
         type: SnapType.Time,
         active: false,
     },
@@ -272,8 +276,10 @@ export const useSnapStore = defineStore("snap", () => {
     const simplify = ref<number>(0.12);
     const values = ref(snaps);
     const focusedTrace = ref(null as Trace | null);
+    
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
+
     const customOctavesTable = ref(colundi as number[]);
     const onlyWithMutednotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
@@ -652,19 +658,14 @@ export const useSnapStore = defineStore("snap", () => {
             }
         }
 
-        if (snapValues.timeQuarter.active === true) {
-            const relatedNumber = Math.round(subject.time * 4);
-            timeSnap.addSnappedValue(relatedNumber / 4, {
-                text: "Quarter snap",
-                relatedNumber,
+        if (snapValues.timeFraction.active === true) {
+            const closestStartFraction = new Fraction(subject.time % 1).simplify(simplify.value);
+            const closeStartRatio = closestStartFraction.valueOf();
+            const myCandidateStart = Math.floor(subject.time) + closeStartRatio;
+            timeSnap.addSnappedValue(myCandidateStart, {
+                text: `time fraction ${ closestStartFraction.toFraction(true)}`,
+                
             });
-            if (durationSnap) {
-                const relatedNumberd = Math.round(subjectDuration * 4) / 4
-                durationSnap.addSnappedValue(relatedNumberd, {
-                    text: "Quarter snap",
-                    relatedNumber: relatedNumberd,
-                });
-            }
         } else if (snapValues.timeInteger.active === true) {
             const relatedStart = Math.round(subject.time);
             timeSnap.addSnappedValue(relatedStart, {
@@ -691,21 +692,6 @@ export const useSnapStore = defineStore("snap", () => {
             }
         }
 
-        if (snapValues.timeIntegerRelationFraction.active === true) {
-            if (otherTraces) {
-                for (const otherNote of otherTraces) {
-                    const otherStart = otherNote.time;
-                    const closestStartFraction = new Fraction(subject.time).div(otherStart).simplify(simplify.value);
-                    const closeStartRatio = closestStartFraction.valueOf();
-                    // reintegrate rounded proportion back to the other's start value
-                    const myCandidateStart = closeStartRatio * otherStart;
-                    timeSnap.addSnappedValue(myCandidateStart, {
-                        text: `time fraction ${closestStartFraction.toString()}`,
-                        relatedNote: otherNote,
-                    });
-                }
-            }
-        }
         return { timeSnap };
     }
 
@@ -826,6 +812,23 @@ export const useSnapStore = defineStore("snap", () => {
         return output;
     }
 
+
+    const nonRelationalTimeSnapExplanation = ()=>{
+        return filterMap(timeSnapExplanation.value,(snexp)=>{
+            if(!('relatedNote' in snexp)){
+                return snexp.text
+            }
+        }).join();
+    };
+
+    const nonRelationalToneSnapExplanation = ()=>{
+        return filterMap(toneSnapExplanation.value,(snexp)=>{
+            if(!('relatedNote' in snexp)){
+                return snexp.text
+            }
+        }).join();
+    };
+
     return {
         simplify,
         values,
@@ -841,7 +844,8 @@ export const useSnapStore = defineStore("snap", () => {
         resetSnapExplanation,
         snap,
         snapTimeRange,
-
+        nonRelationalTimeSnapExplanation,
+        nonRelationalToneSnapExplanation,
     }
 
 });

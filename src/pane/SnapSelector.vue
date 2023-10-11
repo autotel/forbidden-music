@@ -59,7 +59,7 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
           <Pen/>
         </ButtonSub>
       </template>
-      <template v-else-if="snapName === 'hzRelationFraction'">
+      <template v-else-if="snapName === 'hzRelationFraction' || snapName === 'timeFraction'">
         <ButtonSub class="sub-button" :onClick="relationFractionEditButtonHandler" tooltip="define how much to round down">
           <Pen/>
         </ButtonSub>

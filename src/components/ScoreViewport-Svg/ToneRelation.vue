@@ -4,6 +4,8 @@ import { useSnapStore } from '../../store/snapStore';
 import { NoteRect, useViewStore } from '../../store/viewStore';
 import { TraceType } from '../../dataTypes/Trace';
 import { ScreenCoord } from '../../dataTypes/ScreenCoord';
+import { filterMap } from '../../functions/filterMap';
+import { I } from '@tauri-apps/api/path-c062430b';
 
 const snap = useSnapStore();
 const view = useViewStore();
@@ -11,6 +13,7 @@ const view = useViewStore();
 interface RelatedTraceDisp extends ReturnType<typeof view.locationOfTrace> {
     text: string,
     relatedNumber?: number
+    alreadyTexted: boolean
 }
 
 const focusedTraceRect = computed(() => {
@@ -20,13 +23,24 @@ const focusedTraceRect = computed(() => {
 });
 
 const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
-    return snap.toneSnapExplanation.map((relation) => {
-        return relation.relatedNote ? {
-            ...view.locationOfTrace(relation.relatedNote),
-            text: relation.text, 
-            relatedNumber: relation.relatedNumber,
-        } as RelatedTraceDisp: undefined;
-    });
+    const alreadyTextedPositions = new Set();
+    return filterMap(
+            snap.toneSnapExplanation,
+            (relation) => {
+                if('relatedNote' in relation){
+                    const ukey = relation.relatedNumber + relation.text;
+                    const alreadyTexted = alreadyTextedPositions.has(ukey)
+                    if(!alreadyTexted) {
+                        alreadyTextedPositions.add(ukey);
+                    }
+                    return relation.relatedNote ? {
+                        ...view.locationOfTrace(relation.relatedNote),
+                        text: relation.text, 
+                        relatedNumber: relation.relatedNumber,
+                        alreadyTexted,
+                    } as RelatedTraceDisp: false;
+                }
+        })
 });
 
 
@@ -50,7 +64,8 @@ const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
             <text
                 :x="5 + focusedTraceRect.x"
                 :y="5 + (focusedTraceRect.y + relatedTraceLoc.y) / 2" 
-                font-size="10"
+                font-size="13"
+                v-if="!relatedTraceLoc.alreadyTexted"
             >
                 {{ relatedTraceLoc.text }}
             </text>
@@ -59,7 +74,7 @@ const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
             <text
                 :x="5 + focusedTraceRect.x"
                 :y="24 + focusedTraceRect.y"
-                font-size="10"
+                font-size="13"
             >
                 {{ relatedTraceLoc.text }}
             </text>
@@ -68,7 +83,7 @@ const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
             <text
                 :x="5 + focusedTraceRect.x"
                 :y="24 + focusedTraceRect.y"
-                font-size="10"
+                font-size="13"
             >
                 {{ relatedTraceLoc?.text }}
             </text>
@@ -77,7 +92,7 @@ const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
             <text
                 :x="100"
                 :y="100" 
-                font-size="10"
+                font-size="13"
             >
                 []{{ relatedTraceLoc?.text }}{{ focusedTraceRect ? true : false }}
             </text>
