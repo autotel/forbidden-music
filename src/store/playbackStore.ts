@@ -134,7 +134,6 @@ export const usePlaybackStore = defineStore("playback", () => {
     /** in seconds */
     let previousClockTime = 0;
     /** how long in advance to request the scheduling of events */
-    const foresight = 1;
     const audioContextStore = useAudioContextStore();
     const effectsStore = useEffectsStore();
 
