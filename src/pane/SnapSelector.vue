@@ -52,6 +52,7 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
       tone: isnap.type === SnapType.Tone,
       toneRelation: isnap.type === SnapType.ToneRelation,
       toneRelationMulti: isnap.type === SnapType.ToneRelationMulti,
+      highlight: snap.currentlyInvolvedSnaps.includes(isnap),
     }" :tooltip="isnap.description">
       {{ isnap.icon }}
       <template v-if="snapName === 'customFrequencyTable'">
@@ -105,7 +106,6 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
 button:not(.active,:hover) {
   color: rgba(0,0,0,0.5);
 }
-
 .time {
   background-color: rgb(0, 99, 145);
 }
@@ -143,5 +143,15 @@ button:not(.active,:hover) {
 .toneRelationMulti:hover,
 .toneRelationMulti.active:hover {
   background-color: rgb(255, 119, 78);
+}
+
+
+button.highlight{
+  box-shadow: 0.3em 0.3em 0 black;
+  top: -0.3em;
+  left: -0.3em;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
 }
 </style>

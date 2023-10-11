@@ -19,6 +19,7 @@ console.log("fundamental", fundamental);
 
 export type SnapExplanationAbs = {
     text: string;
+    snapDefinition: SnapDefinition;
 };
 
 
@@ -26,6 +27,7 @@ export type SnapExplanationRelative = {
     text: string;
     relatedNote: Trace;
     relatedNumber: number;
+    snapDefinition: SnapDefinition;
 };
 
 export type SnapExplanation = SnapExplanationAbs | SnapExplanationRelative;
@@ -247,9 +249,27 @@ const snaps: { [key: string]: SnapDefinition } = {
         type: SnapType.Time,
         active: false,
     },
+    timeFourths: {
+        description: "Times which are multiple of 1/4 time units",
+        icon: "T × 1/4",
+        type: SnapType.Time,
+        active: false,
+    },
+    timeFifths: {
+        description: "Times which are multiple of 1/5 time units",
+        icon: "T × 1/5",
+        type: SnapType.Time,
+        active: false,
+    },
+    timeThirds: {
+        description: "Times which are multiple of 1/3 time units",
+        icon: "T × 1/3",
+        type: SnapType.Time,
+        active: false,
+    },
     timeFraction: {
         description: "Times which are simple fractions of 1 time unit",
-        icon: "T + 1/b",
+        icon: "T × 1/b",
         type: SnapType.Time,
         active: false,
     },
@@ -276,9 +296,10 @@ export const useSnapStore = defineStore("snap", () => {
     const simplify = ref<number>(0.12);
     const values = ref(snaps);
     const focusedTrace = ref(null as Trace | null);
-    
+
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
+    const currentlyInvolvedSnaps = ref([] as SnapDefinition[]);
 
     const customOctavesTable = ref(colundi as number[]);
     const onlyWithMutednotes = ref(false);
@@ -295,6 +316,7 @@ export const useSnapStore = defineStore("snap", () => {
     const resetSnapExplanation = () => {
         timeSnapExplanation.value = [];
         toneSnapExplanation.value = [];
+        currentlyInvolvedSnaps.value = [];
     };
     interface OctaveSnapParams {
         targetOctave: number,
@@ -303,11 +325,21 @@ export const useSnapStore = defineStore("snap", () => {
         snapValues: { [key: string]: SnapDefinition },
     }
 
-    const EDOSsnap = (edo: number, targetOctave: number, toneSnap: SnapTracker) => {
-        const relatedNumber = Math.round(targetOctave * edo) / edo;
+    const EDOSsnap = (divs: number, targetOctave: number, toneSnap: SnapTracker, snapDefinition: SnapDefinition) => {
+        const relatedNumber = Math.round(targetOctave * divs) / divs;
         toneSnap.addSnappedValue(relatedNumber, {
-            text: "EDO " + edo,
+            text: "EDO " + divs,
             relatedNumber,
+            snapDefinition,
+        });
+    }
+
+    const EDTSsnap = (divs: number, targetTime: number, timeSnap: SnapTracker, snapDefinition: SnapDefinition) => {
+        const relatedNumber = Math.round(targetTime * divs) / divs;
+        timeSnap.addSnappedValue(relatedNumber, {
+            text: "multiple of 1/" + divs,
+            relatedNumber,
+            snapDefinition,
         });
     }
 
@@ -381,6 +413,7 @@ export const useSnapStore = defineStore("snap", () => {
                 toneSnap.addSnappedValue(closestOctave, {
                     text: "custom frequency table",
                     relatedNumber: closestOctave,
+                    snapDefinition: snapValues.customFrequencyTable,
                 });
             }
         }
@@ -391,34 +424,35 @@ export const useSnapStore = defineStore("snap", () => {
             toneSnap.addSnappedValue(frequencyToOctave(frequencyValue), {
                 text: "hzFundamentalMultiple",
                 relatedNumber,
+                snapDefinition: snapValues.hzFundamentalMultiple,
             });
         }
         if (snapValues.equal1.active === true) {
             toneSnap.addSnappedValue(Math.round(targetOctave));
         }
         if (snapValues.equal7.active === true) {
-            EDOSsnap(7, targetOctave, toneSnap);
+            EDOSsnap(7, targetOctave, toneSnap, snapValues.equal7);
         }
         if (snapValues.equal10.active === true) {
-            EDOSsnap(10, targetOctave, toneSnap);
+            EDOSsnap(10, targetOctave, toneSnap, snapValues.equal10);
         }
         if (snapValues.equal12.active === true) {
-            EDOSsnap(12, targetOctave, toneSnap);
+            EDOSsnap(12, targetOctave, toneSnap, snapValues.equal12);
         }
         if (snapValues.equal19.active === true) {
-            EDOSsnap(19, targetOctave, toneSnap);
+            EDOSsnap(19, targetOctave, toneSnap, snapValues.equal19);
         }
         if (snapValues.equal22.active === true) {
-            EDOSsnap(22, targetOctave, toneSnap);
+            EDOSsnap(22, targetOctave, toneSnap, snapValues.equal22);
         }
         if (snapValues.equal24.active === true) {
-            EDOSsnap(24, targetOctave, toneSnap);
+            EDOSsnap(24, targetOctave, toneSnap, snapValues.equal24);
         }
         if (snapValues.equal31.active === true) {
-            EDOSsnap(31, targetOctave, toneSnap);
+            EDOSsnap(31, targetOctave, toneSnap, snapValues.equal31);
         }
         if (snapValues.equal48.active === true) {
-            EDOSsnap(48, targetOctave, toneSnap);
+            EDOSsnap(48, targetOctave, toneSnap, snapValues.equal48);
         }
 
 
@@ -459,12 +493,14 @@ export const useSnapStore = defineStore("snap", () => {
                             text: "lowest notes grid",
                             relatedNumber: candidateOctave,
                             relatedNote: lowestNote,
+                            snapDefinition: snapValues.arbitraryGridEDO,
                         });
 
                         toneSnap.addSnappedValue(candidateOctave, {
                             text: "",
                             relatedNumber: candidateOctave,
                             relatedNote: lowestTwoNotes[1],
+                            snapDefinition: snapValues.arbitraryGridEDO,
                         });
                     }
 
@@ -492,12 +528,14 @@ export const useSnapStore = defineStore("snap", () => {
                             text: "lowest notes grid",
                             relatedNumber: candidateOctave,
                             relatedNote: lowestNote,
+                            snapDefinition: snapValues.arbitraryGridHZ,
                         });
 
                         toneSnap.addSnappedValue(candidateOctave, {
                             text: "",
                             relatedNumber: candidateOctave,
                             relatedNote: lowestTwoNotes[1],
+                            snapDefinition: snapValues.arbitraryGridHZ,
                         });
                     }
 
@@ -516,6 +554,7 @@ export const useSnapStore = defineStore("snap", () => {
                     toneSnap.addSnappedValue(myCandidateOctave, {
                         text: `hz fraction ${fraction.toFraction(true)}`,
                         relatedNote: otherNote,
+                        snapDefinition: snapValues.hzRelationFraction,
                     });
                 }
             } else {
@@ -530,6 +569,7 @@ export const useSnapStore = defineStore("snap", () => {
                             text: txt + otherNote.frequency.toPrecision(3),
                             relatedNumber,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzRelationFraction,
                         });
                     }
                 };
@@ -546,14 +586,17 @@ export const useSnapStore = defineStore("snap", () => {
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
                             text: `double the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzHalfOrDouble,
                         });
                         toneSnap.addSnappedValue(myCandidateOctaveHalf, {
                             text: `half the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzHalfOrDouble,
                         });
                         toneSnap.addSnappedValue(myCandidateEqualOctave, {
                             text: `same tone`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzHalfOrDouble,
                         });
                     }
                 }
@@ -567,10 +610,12 @@ export const useSnapStore = defineStore("snap", () => {
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
                             text: `3x the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzThird,
                         });
                         toneSnap.addSnappedValue(myCandidateOctaveHalf, {
                             text: `1/3 the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzThird,
                         });
                     }
                 }
@@ -584,10 +629,12 @@ export const useSnapStore = defineStore("snap", () => {
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
                             text: `5x the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzFifth,
                         });
                         toneSnap.addSnappedValue(myCandidateOctaveHalf, {
                             text: `1/5 the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzFifth,
                         });
                     }
                 }
@@ -601,10 +648,12 @@ export const useSnapStore = defineStore("snap", () => {
                         toneSnap.addSnappedValue(myCandidateOctaveDouble, {
                             text: `7x the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzSeventh,
                         });
                         toneSnap.addSnappedValue(myCandidateOctaveHalf, {
                             text: `1/7 the frequency`,
                             relatedNote: otherNote,
+                            snapDefinition: snapValues.hzSeventh,
                         });
                     }
                 }
@@ -647,11 +696,13 @@ export const useSnapStore = defineStore("snap", () => {
                             text: "first notes grid",
                             relatedNumber: candidateTime,
                             relatedNote: earliestNote,
+                            snapDefinition: snapValues.arbitraryTimeGrid,
                         });
                         timeSnap.addSnappedValue(candidateTime, {
                             text: "",
                             relatedNumber: candidateTime,
                             relatedNote: earliestTwoNotes[1],
+                            snapDefinition: snapValues.arbitraryTimeGrid,
                         });
                     }
                 }
@@ -663,22 +714,22 @@ export const useSnapStore = defineStore("snap", () => {
             const closeStartRatio = closestStartFraction.valueOf();
             const myCandidateStart = Math.floor(subject.time) + closeStartRatio;
             timeSnap.addSnappedValue(myCandidateStart, {
-                text: `time fraction ${ closestStartFraction.toFraction(true)}`,
-                
+                text: `time fraction ${closestStartFraction.toFraction(true)}`,
+                snapDefinition: snapValues.timeFraction,
+
             });
-        } else if (snapValues.timeInteger.active === true) {
-            const relatedStart = Math.round(subject.time);
-            timeSnap.addSnappedValue(relatedStart, {
-                text: "Integer snap",
-                relatedNumber: relatedStart,
-            });
-            if (durationSnap) {
-                const relatedDuration = Math.round(subjectDuration);
-                durationSnap.addSnappedValue(relatedDuration, {
-                    text: "Integer snap",
-                    relatedNumber: relatedDuration,
-                });
-            }
+        }
+        if (snapValues.timeInteger.active === true) {
+            EDTSsnap(1, subject.time, timeSnap, snapValues.timeInteger);
+        }
+        if (snapValues.timeFourths.active === true) {
+            EDTSsnap(4, subject.time, timeSnap, snapValues.timeFourths);
+        }
+        if (snapValues.timeFifths.active === true) {
+            EDTSsnap(5, subject.time, timeSnap, snapValues.timeFifths);
+        }
+        if (snapValues.timeThirds.active === true) {
+            EDTSsnap(3, subject.time, timeSnap, snapValues.timeThirds);
         }
 
         if (snapValues.sameStart.active === true) {
@@ -687,6 +738,7 @@ export const useSnapStore = defineStore("snap", () => {
                     timeSnap.addSnappedValue(otherNote.time, {
                         text: "Same start",
                         relatedNote: otherNote,
+                        snapDefinition: snapValues.sameStart,
                     });
                 }
             }
@@ -736,7 +788,9 @@ export const useSnapStore = defineStore("snap", () => {
             });
             output.time = timeSnap.getResult();
             if (sideEffects) {
-                timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
+                const snapObjects = timeSnap.getSnapObjectsOfSnappedValue();
+                timeSnapExplanation.value.push(...snapObjects);
+                currentlyInvolvedSnaps.value.push(...snapObjects.map((snexp) => snexp.snapDefinition));
             }
         }
         if (targetOctave && output.type === TraceType.Note) {
@@ -751,7 +805,9 @@ export const useSnapStore = defineStore("snap", () => {
                 });
                 output.octave = toneSnap.getResult();
                 if (sideEffects) {
-                    toneSnapExplanation.value.push(...toneSnap.getSnapObjectsOfSnappedValue());
+                    const snapObjects = toneSnap.getSnapObjectsOfSnappedValue();
+                    toneSnapExplanation.value.push(...snapObjects);
+                    currentlyInvolvedSnaps.value.push(...snapObjects.map((snexp) => snexp.snapDefinition));
                 }
             }
         }
@@ -813,17 +869,17 @@ export const useSnapStore = defineStore("snap", () => {
     }
 
 
-    const nonRelationalTimeSnapExplanation = ()=>{
-        return filterMap(timeSnapExplanation.value,(snexp)=>{
-            if(!('relatedNote' in snexp)){
+    const nonRelationalTimeSnapExplanation = () => {
+        return filterMap(timeSnapExplanation.value, (snexp) => {
+            if (!('relatedNote' in snexp)) {
                 return snexp.text
             }
         }).join();
     };
 
-    const nonRelationalToneSnapExplanation = ()=>{
-        return filterMap(toneSnapExplanation.value,(snexp)=>{
-            if(!('relatedNote' in snexp)){
+    const nonRelationalToneSnapExplanation = () => {
+        return filterMap(toneSnapExplanation.value, (snexp) => {
+            if (!('relatedNote' in snexp)) {
                 return snexp.text
             }
         }).join();
@@ -835,6 +891,7 @@ export const useSnapStore = defineStore("snap", () => {
         focusedTrace,
         timeSnapExplanation,
         toneSnapExplanation,
+        currentlyInvolvedSnaps,
         customOctavesTable,
         onlyWithMutednotes,
         onlyWithSimultaneousNotes,

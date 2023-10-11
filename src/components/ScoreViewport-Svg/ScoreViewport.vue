@@ -37,7 +37,7 @@ onBeforeUnmount(() => {
 });
 
 
-
+//  :text="snap.nonRelationalTimeSnapExplanation() + '\n' + snap.nonRelationalToneSnapExplanation()"
 </script>
 <template>
     <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
@@ -52,7 +52,6 @@ onBeforeUnmount(() => {
             <NoteElement 
                 v-if="tool.noteThatWouldBeCreated" 
                 :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
-                :text="snap.nonRelationalTimeSnapExplanation() + '\n' + snap.nonRelationalToneSnapExplanation()"
                 interactionDisabled />
         </g>
         <g id="loop-would-be-created">
