@@ -20,9 +20,9 @@ export const useUndoStore = defineStore("undo history store", () => {
     }
 
     const undoStateWriter = watchPausable(project.getProjectDefintion, () => {
-        // so that it stores fewere steps
+        // so that it stores fewer steps
         undoStateWriter.pause();
-        console.log("store to undo history");
+        // console.log("store to undo history");
         const json = JSON.stringify(project.getProjectDefintion());
         const zipped = LZUTF8.compress(json, { outputEncoding: "Base64" });
         undoApplicator.pause();

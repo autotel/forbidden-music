@@ -11,9 +11,9 @@ const barSkip = (e: MouseEvent) => {
     if(e.buttons===1){
         const leftPx = e.offsetX;
         const time = view.pxToTimeWithOffset(leftPx);
-        playback.resetLoopRepetitions();
         playback.currentScoreTime = time;
         playback.timeReturnPoint = time;
+        playback.resetLoopRepetitions();
     }
 }
 

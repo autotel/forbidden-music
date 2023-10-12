@@ -237,7 +237,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const setToNextLoop = () => {
         console.log("set to next loop");
         if (loopNow?.repetitionsLeft === 0) lastFinishedLoop = loopNow;
-        let expectedLoopEnd = lastFinishedLoop?.timeEnd || 0;
+        let expectedLoopEnd = lastFinishedLoop?.timeEnd || currentScoreTime.value;
         loopNow = sortedLoops.value.find((loop) => {
             return (
                 loop.timeEnd > expectedLoopEnd
@@ -250,12 +250,13 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const resetLoopRepetitions = () => {
         lastFinishedLoop = undefined;
-        loopNow = undefined;
+        setToNextLoop();
         project.loops.forEach((loop) => {
             if (loop === loopNow) return;
             delete loop.repetitionsLeft;
         });
     }
+
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
         const events = project.score.filter((editNote) => {
             return (catchUp ? editNote.timeEnd : editNote.time) >= frameStartTime && editNote.time < frameEndTime;
