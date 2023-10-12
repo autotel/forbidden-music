@@ -1,56 +1,12 @@
-import { 
-    readTextFile, 
-    BaseDirectory, 
-    writeFile, 
-    writeTextFile 
-} from '@tauri-apps/api/fs';
-import {
-    appCacheDir,
-    appConfigDir,
-    appDataDir,
-    appLocalDataDir,
-    appLogDir,
-    audioDir,
-    basename,
-    cacheDir,
-    configDir,
-    dataDir,
-    delimiter,
-    desktopDir,
-    dirname,
-    documentDir,
-    downloadDir,
-    executableDir,
-    extname,
-    fontDir,
-    homeDir,
-    isAbsolute,
-    join,
-    localDataDir,
-    normalize,
-    pictureDir,
-    publicDir,
-    resolve,
-    resolveResource,
-    resourceDir,
-    runtimeDir,
-    sep,
-    templateDir,
-    videoDir
-} from '@tauri-apps/api/path';
-import { open, save } from '@tauri-apps/api/dialog';
+const tauriObjectPromise = (async () => {
+    const {
+        readTextFile,
+        BaseDirectory,
+        writeFile,
+        writeTextFile
+    } = await require('@tauri-apps/api/fs');
 
-// make sure to also allow whatever new capabilities in tauri config
-const tauriObject = () => ({
-    fs: {
-        readTextFile, BaseDirectory,
-        writeFile, writeTextFile,
-    },
-    dialog: {
-        open,
-        save,
-    },
-    path: {
+    const {
         appCacheDir,
         appConfigDir,
         appDataDir,
@@ -83,12 +39,71 @@ const tauriObject = () => ({
         sep,
         templateDir,
         videoDir
+    } = await require('@tauri-apps/api/path');
+    const { open, save } = await require('@tauri-apps/api/dialog');
+
+    const { invoke } = require("@tauri-apps/api");
+    const { listen } = require("@tauri-apps/api/event");
+
+    return {
+        invoke, listen,
+        fs: {
+            readTextFile, BaseDirectory,
+            writeFile, writeTextFile,
+        },
+        dialog: {
+            open,
+            save,
+        },
+        path: {
+            appCacheDir,
+            appConfigDir,
+            appDataDir,
+            appLocalDataDir,
+            appLogDir,
+            audioDir,
+            basename,
+            cacheDir,
+            configDir,
+            dataDir,
+            delimiter,
+            desktopDir,
+            dirname,
+            documentDir,
+            downloadDir,
+            executableDir,
+            extname,
+            fontDir,
+            homeDir,
+            isAbsolute,
+            join,
+            localDataDir,
+            normalize,
+            pictureDir,
+            publicDir,
+            resolve,
+            resolveResource,
+            resourceDir,
+            runtimeDir,
+            sep,
+            templateDir,
+            videoDir
+        }
     }
-})
+})();
+
+// make sure to also allow whatever new capabilities in tauri config
+export const tauriObject = async () => {
+    return await tauriObjectPromise;
+}
 
 export default function isTauri() {
-    // @ts-ignore
-    return window.__TAURI__ ? true : false;
+    try {
+        // @ts-ignore
+        return window.__TAURI__ ? true : false;
+    } catch (e) {
+        return false;
+    }
 }
 
 export function ifTauri(callback: (tauriInstance: ReturnType<typeof tauriObject>) => void) {

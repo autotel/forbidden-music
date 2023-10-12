@@ -1,19 +1,16 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import Button from "../components/Button.vue";
-import Archive from "../components/icons/Archive.vue";
+import FileOpen from "../components/icons/FileOpen.vue";
 import Folder from "../components/icons/Folder.vue";
 import Save from "../components/icons/Save.vue";
-import FileOpen from "../components/icons/FileOpen.vue";
-import CheckBoxChecked from "../components/icons/CheckBoxChecked.vue";
-import CheckBoxBlank from "../components/icons/CheckBoxBlank.vue";
 import SaveAs from "../components/icons/SaveAs.vue";
 import isTauri, { ifTauri } from "../functions/isTauri";
-import { KeyActions, getActionForKeys, getKeyCombinationString } from "../keyBindings";
+import { KeyActions, getActionForKeys } from "../keyBindings";
 import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { useProjectStore } from "../store/projectStore";
 import Collapsible from "./Collapsible.vue";
-import { ref } from "vue";
 
 const monoModeInteraction = useMonoModeInteraction();
 const project = useProjectStore();
@@ -72,7 +69,8 @@ const clear = () => {
 }
 
 const showJSONOpenDialog = () => {
-    ifTauri(async ({ fs, dialog, path }) => {
+    ifTauri(async (tauriPromise) => {
+        const { fs, dialog, path } = await tauriPromise;
         const dialogOptions = {
             filters: [{ name: 'JSON', extensions: ['json'] }],
             defaultPath: workingDirectory.value ? workingDirectory.value : './',
@@ -111,7 +109,8 @@ const showJSONOpenDialog = () => {
 }
 
 const showJSONSaveDialog = () => {
-    ifTauri(async ({ fs, dialog, path }) => {
+    ifTauri(async (tauriObjectPromise) => {
+        const { fs, dialog, path } = await tauriObjectPromise;
         const dialogOptions = {
             filters: [{ name: 'JSON', extensions: ['json'] }],
             defaultPath: workingDirectory.value ? workingDirectory.value : './',

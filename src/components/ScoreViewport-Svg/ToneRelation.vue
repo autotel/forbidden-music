@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useSnapStore } from '../../store/snapStore';
-import { NoteRect, useViewStore } from '../../store/viewStore';
-import { TraceType } from '../../dataTypes/Trace';
-import { ScreenCoord } from '../../dataTypes/ScreenCoord';
 import { filterMap } from '../../functions/filterMap';
-import { I } from '@tauri-apps/api/path-c062430b';
+import { useSnapStore } from '../../store/snapStore';
+import { useViewStore } from '../../store/viewStore';
 
 const snap = useSnapStore();
 const view = useViewStore();

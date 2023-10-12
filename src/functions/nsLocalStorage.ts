@@ -1,4 +1,25 @@
 const namespace = 'ndpr-87b834';
+
+const mockLocalStorage = new (class MStorage implements Storage {
+  length: number = 0;
+  key = (index: number) => null;
+  clear = () => { }
+  getItem = (key: string) => null;
+  removeItem = () => { }
+  setItem = () => { }
+})();
+
+const localStorageOrMock = () => {
+  try {
+    return localStorage
+  } catch (e) {
+    console.warn("using fake localStorage");
+    return mockLocalStorage;
+  }
+}
+
+const _storage = localStorageOrMock();
+
 class NsLocalStorage implements Storage {
   [name: string]: any;
   syncToLocalStorage() {
@@ -6,9 +27,9 @@ class NsLocalStorage implements Storage {
     for (const key of keys) {
       const result = this.getItem(key);
       if (result === null) {
-        localStorage.removeItem(`${namespace}/${key}`);
-      }else{
-        localStorage.setItem(`${namespace}/${key}`, result);
+        _storage.removeItem(`${namespace}/${key}`);
+      } else {
+        _storage.setItem(`${namespace}/${key}`, result);
       }
     }
   }
@@ -17,12 +38,12 @@ class NsLocalStorage implements Storage {
     // get items from actual localstorage, 
     // use it only at the beginning
     // perhaps at window re-focus too.
-    const keys = Object.keys(localStorage);
+    const keys = Object.keys(_storage);
     for (const key of keys) {
       const deNamespacedKey = key.replace(`${namespace}/`, '');
       if (key.startsWith(`${namespace}/`)) {
         // result is kinda guaranteed not to be null in this context
-        const result = localStorage.getItem(key);
+        const result = _storage.getItem(key);
         if (result !== this[deNamespacedKey] && result !== null) {
           this.setItem(deNamespacedKey, result);
         }

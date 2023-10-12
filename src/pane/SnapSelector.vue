@@ -147,9 +147,8 @@ button:not(.active,:hover) {
 
 
 button.highlight{
-  box-shadow: 0.3em 0.3em 0 black;
-  top: -0.3em;
-  left: -0.3em;
+  border:solid 2px rgb(255, 255, 255);
+  margin: -2px;
   box-sizing: border-box;
   position: relative;
   z-index: 2;

@@ -32,4 +32,11 @@ export default defineConfig(async () => ({
   optimizeDeps: {
     esbuildOptions: { target: "es2020", supported: { bigint: true } },
   },
+
+  test: {
+    browser: {
+      enabled: true,
+      name: 'chrome',
+    },
+  }
 }));

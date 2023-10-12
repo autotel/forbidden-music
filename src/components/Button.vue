@@ -49,6 +49,7 @@ button {
     background-color: rgb(241, 241, 241);
     box-shadow: 0 0 0px rgba(0, 0, 0, 1);
     transition: 0.1s ease-in-out;
+    transition-property: background-color, box-shadow;
 }
 
 button:hover {

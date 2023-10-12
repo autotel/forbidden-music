@@ -2,15 +2,16 @@ import { defineStore } from "pinia";
 import { computed, ref, watchEffect } from "vue";
 import { Loop } from "../dataTypes/Loop.js";
 import { Note, getDuration } from "../dataTypes/Note.js";
-import { TimeRange, sanitizeTimeRanges } from "../dataTypes/TimelineItem.js";
+import { TimeRange } from "../dataTypes/TimelineItem.js";
+import { Tool } from "../dataTypes/Tool.js";
 import { Trace } from "../dataTypes/Trace.js";
-import { getNotesInRange, getTracesInRange } from "../functions/getEventsInRange.js";
+import { getNotesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
 import { useToolStore } from "./toolStore.js";
-import { Tool } from "../dataTypes/Tool.js";
+
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
     g = g & 0xff;
@@ -74,20 +75,6 @@ export const layerNoteColors = [
 ];
 
 export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
-// const measureCallTime = (name:string, fn:Function)=>{
-//     const wrappedFn = (...p:any[])=>{
-//         const start = performance.now();
-//         const result = fn(...p);
-//         const end = performance.now();
-//         console.log("call time", name, end-start);
-//         return result;
-//     }
-//     return wrappedFn;
-// }
-
-// Function.prototype.measureTime = function (name:string) {
-//     return measureCallTime(this.name, this);
-// }
 
 export interface TimelineItemRect<T extends Trace = Trace> {
     event: T;
@@ -221,7 +208,7 @@ export const useViewStore = defineStore("view", () => {
             x: timeToPxWithOffset(item.time),
             y: 40,
             width: timeToPx(itemDuration),
-            height: isFullHeight?viewHeightPx.value: 40,
+            height: isFullHeight ? viewHeightPx.value : 40,
             event: item,
 
         } as TimelineItemRect<Loop>;

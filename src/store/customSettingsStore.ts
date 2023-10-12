@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { computed, onMounted, ref, watchEffect } from "vue";
-import isTauri from "../functions/isTauri";
 import nsLocalStorage from "../functions/nsLocalStorage";
 import { useExclusiveContentsStore } from "./exclusiveContentsStore";
 import { useViewStore } from "./viewStore";
@@ -11,11 +10,9 @@ export enum ViewportTech {
     Canvas, Pixi, Svg
 }
 
-const bool =  (v:unknown) => v === 'true' || v === true;
-
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
-    const view = useViewStore();
     const exclusives = useExclusiveContentsStore();
+    const view = useViewStore();
     const viewportTech = ref(ViewportTech.Svg);
     const showFPS = ref(false);
     const fontSize = ref(12);
