@@ -31,6 +31,12 @@ export const useProjectStore = defineStore("current project", () => {
         return [key, snaps.values[key].active];
     });
 
+    const sortLoops = () => {
+        loops.value.sort((a, b) => {
+            return a.time - b.time;
+        });
+    }
+
     const serializeNotes = (notes: Note[]) => notes.map((editNote) => ({
         octave: editNote.octave,
         time: editNote.time,
@@ -204,6 +210,7 @@ export const useProjectStore = defineStore("current project", () => {
         }).map(loop);
 
         loops.value = nLoops;
+        
 
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
@@ -318,11 +325,12 @@ export const useProjectStore = defineStore("current project", () => {
             originalLoop.count = 4;
             originalLoop.repetitionsLeft = 1;
         }
-
+        
     }
 
     return {
         score, loops, append,
+        sortLoops,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
         stringifyLoops, parseLoops,
