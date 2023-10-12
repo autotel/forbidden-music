@@ -69,13 +69,3 @@ export const noteDef = (note: Note): timeDefA & toneDefA & othersDef => {
 export const getFrequency = (note: Note): number => {
   return octaveToFrequency(note.octave);
 }
-export const getDuration = (note: Note): number => {
-  if (note.timeEnd < note.time) {
-    console.warn('Note has negative duration',note);
-    sanitizeTimeRanges(note);
-  }
-  return note.timeEnd - note.time;
-}
-export const hasDuration = (note: Note): boolean => {
-  return note.timeEnd !== note.time;
-}

@@ -5,7 +5,7 @@ import { dragEnd, dragStart } from '../dataTypes/Draggable';
 import { Loop, loop } from '../dataTypes/Loop';
 import { Note, note } from '../dataTypes/Note';
 import { ScreenCoord } from '../dataTypes/ScreenCoord';
-import { OctaveRange, TimeRange, VelocityRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
+import { OctaveRange, TimeRange, VelocityRange, getDuration, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Tool } from '../dataTypes/Tool';
 import { Trace, TraceType, cloneTrace, traceTypeSafetyCheck } from '../dataTypes/Trace';
 import { useProjectStore } from './projectStore';
@@ -126,22 +126,16 @@ const mouseDragSelectedTraces = ({
 
     preSnapDragTrace.octave = octaveWhenDragStarted + octaveDragDelta;
     preSnapDragTrace.time = drag.traceWhenDragStarted.time + timeDragDelta;
+    preSnapDragTrace.timeEnd = drag.traceWhenDragStarted.timeEnd + timeDragDelta;
 
-    const snapOptions = {
-        inNote: preSnapDragTrace,
-        otherTraces: project.score.filter(n => {
+    const snappedTrace = snap.filteredSnap(
+        preSnapDragTrace,
+        project.score.filter(n => {
             let ret = n !== drag.trace
             ret &&= !drag.traces.includes(n);
             return ret;
         }),
-        sideEffects: true,
-        targetOctave: preSnapDragTrace.octave,
-
-        skipOctaveSnap: disallowOctaveChange.value,
-        skipTimeSnap: disallowTimeChange.value,
-    } as typeof snap.snap.arguments[0];
-
-    const snappedTrace = snap.snap(snapOptions)
+        true)
     const timeDeltaAfterSnap = snappedTrace.time - drag.traceWhenDragStarted.time;
 
     let octaveDeltaAfterSnap = 0;
@@ -200,19 +194,21 @@ const mouseDragTracesRightEdge = ({
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
     const timeMovement = view.pxToTime(drag.delta.x);
     drag.trace.timeEnd = drag.traceWhenDragStarted.timeEnd + timeMovement;
-    const snapped = snap.snapTimeRange({
-        inTimeRange: drag.trace,
-        otherTraces: project.score,
-        sideEffects: true,
-    });
+    const snapped = snap.snapTimeRange(
+        drag.trace,
+        project.score,
+        true,
+    );
 
-    drag.trace.timeEnd = drag.trace.time + snapped.duration;
-    const changeDeltaAfterSnap = snapped.duration - drag.traceWhenDragStarted.duration;
+    const durationAfterSnap = getDuration(snapped);
+    drag.trace.timeEnd = drag.trace.time + durationAfterSnap;
+    const durationDeltaAfterSnap = durationAfterSnap - drag.traceWhenDragStarted.duration;
+
     const selectedTraces = selection.getTraces();
     selectedTraces.forEach((trace, index) => {
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
-        trace.timeEnd = correlativeDragStartClone.timeEnd + changeDeltaAfterSnap;
+        trace.timeEnd = correlativeDragStartClone.timeEnd + durationDeltaAfterSnap;
     });
 
     sanitizeTimeRanges(...selectedTraces);
@@ -621,12 +617,12 @@ export const useToolStore = defineStore("tool", () => {
 
     /** apply snaps modifying the target loop */
     const applySnapToLoop = (targetLoop: Loop, otherTraces: Trace[]) => {
-        const snappedLoop: Loop = snap.snapTimeRange({
-            inTimeRange: targetLoop,
-            otherTraces: project.score,
-            sideEffects: true,
-        });
-        if(snappedLoop.timeEnd < snappedLoop.time) {
+        const snappedLoop: Loop = snap.snapTimeRange(
+            targetLoop,
+            project.score,
+            true,
+        );
+        if (snappedLoop.timeEnd < snappedLoop.time) {
             snappedLoop.timeEnd = snappedLoop.time;
         }
 
@@ -649,12 +645,11 @@ export const useToolStore = defineStore("tool", () => {
             });
             snap.resetSnapExplanation();
 
-            const snapNote = snap.snap({
-                inNote: theNote,
-                targetOctave: view.pxToOctaveWithOffset(y),
-                otherTraces: project.score,
-                sideEffects: true,
-            });
+            const snapNote = snap.filteredSnap(
+                theNote,
+                project.score,
+                true,
+            );
 
             snapNote.timeEnd = snapNote.time;
             snap.focusedTrace = snapNote;

@@ -1,4 +1,7 @@
+const forever = () => new Promise(() => {});
+
 const tauriObjectPromise = (async () => {
+    if(!isTauri()) await forever();
     const {
         readTextFile,
         BaseDirectory,
@@ -41,7 +44,6 @@ const tauriObjectPromise = (async () => {
         videoDir
     } = await require('@tauri-apps/api/path');
     const { open, save } = await require('@tauri-apps/api/dialog');
-
     const { invoke } = require("@tauri-apps/api");
     const { listen } = require("@tauri-apps/api/event");
 

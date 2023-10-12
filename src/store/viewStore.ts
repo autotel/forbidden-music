@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
 import { computed, ref, watchEffect } from "vue";
 import { Loop } from "../dataTypes/Loop.js";
-import { Note, getDuration } from "../dataTypes/Note.js";
-import { TimeRange } from "../dataTypes/TimelineItem.js";
+import { Note } from "../dataTypes/Note.js";
+import { TimeRange, getDuration } from "../dataTypes/TimelineItem.js";
 import { Tool } from "../dataTypes/Tool.js";
 import { Trace } from "../dataTypes/Trace.js";
 import { getNotesInRange } from "../functions/getEventsInRange.js";

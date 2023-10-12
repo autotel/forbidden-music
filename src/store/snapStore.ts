@@ -1,17 +1,17 @@
 import Fraction from 'fraction.js';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { cloneVNode, ref } from 'vue';
+import { Loop } from '../dataTypes/Loop';
 import { Note } from '../dataTypes/Note';
-import { TimeRange } from '../dataTypes/TimelineItem';
+import { TimeRange, getDuration } from '../dataTypes/TimelineItem';
 import { Trace, TraceType, cloneTrace } from '../dataTypes/Trace';
+import { filterMap } from '../functions/filterMap';
 import { getTracesInRange } from '../functions/getEventsInRange';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import colundi from '../scales/colundi';
-import { useViewStore } from './viewStore';
-import { Loop } from '../dataTypes/Loop';
 import { useLayerStore } from './layerStore';
 import { useToolStore } from './toolStore';
-import { filterMap } from '../functions/filterMap';
+import { useViewStore } from './viewStore';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -318,12 +318,6 @@ export const useSnapStore = defineStore("snap", () => {
         toneSnapExplanation.value = [];
         currentlyInvolvedSnaps.value = [];
     };
-    interface OctaveSnapParams {
-        targetOctave: number,
-        otherTraces: Trace[] | undefined,
-        targetHz: number,
-        snapValues: { [key: string]: SnapDefinition },
-    }
 
     const EDOSsnap = (divs: number, targetOctave: number, toneSnap: SnapTracker, snapDefinition: SnapDefinition) => {
         const relatedNumber = Math.round(targetOctave * divs) / divs;
@@ -394,14 +388,17 @@ export const useSnapStore = defineStore("snap", () => {
     }
 
 
+    interface OctaveSnapParams {
+        targetOctave: number,
+        otherTraces: Trace[] | undefined,
+    }
     const octaveSnaps = ({
-        targetOctave,
         otherTraces,
-        targetHz,
-        snapValues,
+        targetOctave
     }: OctaveSnapParams) => {
         otherTraces = otherTraces ? filterSnapTraces(otherTraces) : undefined;
-
+        const snapValues = values.value as { [key: string]: SnapDefinition };
+        const targetHz = octaveToFrequency(targetOctave);
         const toneSnap = new SnapTracker(targetOctave);
 
         if (snapValues.customFrequencyTable.active === true) {
@@ -660,25 +657,29 @@ export const useSnapStore = defineStore("snap", () => {
 
             }
         }
-        return { toneSnap };
+        return toneSnap;
     }
 
     interface TimeSnapParams {
         otherTraces: Trace[] | undefined,
-        subject: TimeRange | Trace,
-        durationSnap: SnapTracker | false,
-        snapValues: { [key: string]: SnapDefinition },
+        targetTime: number,
     }
-
-    const timeSnaps = <T = Trace>({
+    /**
+     * 
+            targetOctave,
+            otherTraces,
+            targetHz,
+            snapValues,
+            */
+    // should be a function such that can be called for time and
+    // duration as numbers - the way presented here is too complex
+    const timeSnaps = ({
         otherTraces,
-        subject,
-        durationSnap,
-        snapValues,
+        targetTime,
     }: TimeSnapParams) => {
 
-        const timeSnap = new SnapTracker(subject.time);
-        const subjectDuration = subject.timeEnd - subject.time;
+        const snapValues = values.value as { [key: string]: SnapDefinition };
+        const timeSnap = new SnapTracker(targetTime);
 
         if (snapValues.arbitraryTimeGrid.active === true) {
             if (otherTraces) {
@@ -687,7 +688,7 @@ export const useSnapStore = defineStore("snap", () => {
                     const earliestNote: Trace | undefined = earliestTwoNotes[0];
                     const datumTime = earliestNote.time;
                     const timeInterval = earliestTwoNotes[1].time - earliestTwoNotes[0].time;
-                    const offsetTargetTime = subject.time - datumTime;
+                    const offsetTargetTime = targetTime - datumTime;
                     const candidateTime = datumTime + timeInterval * Math.round(offsetTargetTime / timeInterval);
 
                     if (acceptable(candidateTime)) {
@@ -710,26 +711,25 @@ export const useSnapStore = defineStore("snap", () => {
         }
 
         if (snapValues.timeFraction.active === true) {
-            const closestStartFraction = new Fraction(subject.time % 1).simplify(simplify.value);
+            const closestStartFraction = new Fraction(targetTime % 1).simplify(simplify.value);
             const closeStartRatio = closestStartFraction.valueOf();
-            const myCandidateStart = Math.floor(subject.time) + closeStartRatio;
+            const myCandidateStart = Math.floor(targetTime) + closeStartRatio;
             timeSnap.addSnappedValue(myCandidateStart, {
                 text: `time fraction ${closestStartFraction.toFraction(true)}`,
                 snapDefinition: snapValues.timeFraction,
-
             });
         }
         if (snapValues.timeInteger.active === true) {
-            EDTSsnap(1, subject.time, timeSnap, snapValues.timeInteger);
+            EDTSsnap(1, targetTime, timeSnap, snapValues.timeInteger);
         }
         if (snapValues.timeFourths.active === true) {
-            EDTSsnap(4, subject.time, timeSnap, snapValues.timeFourths);
+            EDTSsnap(4, targetTime, timeSnap, snapValues.timeFourths);
         }
         if (snapValues.timeFifths.active === true) {
-            EDTSsnap(5, subject.time, timeSnap, snapValues.timeFifths);
+            EDTSsnap(5, targetTime, timeSnap, snapValues.timeFifths);
         }
         if (snapValues.timeThirds.active === true) {
-            EDTSsnap(3, subject.time, timeSnap, snapValues.timeThirds);
+            EDTSsnap(3, targetTime, timeSnap, snapValues.timeThirds);
         }
 
         if (snapValues.sameStart.active === true) {
@@ -744,129 +744,110 @@ export const useSnapStore = defineStore("snap", () => {
             }
         }
 
-        return { timeSnap };
+        return timeSnap;
     }
 
-    /** has side effects to snap explanations */
-    /** TODO: these params are insane */
-    interface SnapParams<T extends Trace> {
-        inNote: T,
-        targetOctave?: number,
-        otherTraces?: Array<Trace>,
-        sideEffects?: boolean,
-        skipOctaveSnap?: boolean,
-        skipTimeSnap?: boolean,
-        snapDuration?: boolean,
-    }
 
-    const snap = <T extends (Loop | Note)>({
-        inNote,
-        targetOctave,
-        otherTraces,
+
+    const snapOctave = <T extends (Trace)>(
+        targetTrace: T,
+        otherTraces: Array<Trace> = [],
         sideEffects = true,
-        skipOctaveSnap = false,
-        skipTimeSnap = false,
-        snapDuration = false,
-    }: SnapParams<T>): T => {
-        otherTraces = otherTraces ? filterSnapTraces(otherTraces) : otherTraces;
-        /** outNote */
-        const output: T = cloneTrace(inNote);
+    ): T => {
 
-        const subjectDuration = output.timeEnd - output.time;
-        const durationSnap = snapDuration ? new SnapTracker(subjectDuration) : false;
+        if (!('octave' in targetTrace)) return targetTrace;
 
-        const snapValues = values.value as { [key: string]: SnapDefinition };
+        const clonedTrace = cloneTrace<T>(targetTrace);
+        if (!('octave' in clonedTrace)) throw new Error("clonedTrace.octave is undefined");
 
-        // Time snaps
-        if (!skipTimeSnap) {
-
-            const { timeSnap } = timeSnaps({
-                otherTraces,
-                subject: output,
-                durationSnap,
-                snapValues
-            });
-            output.time = timeSnap.getResult();
-            if (sideEffects) {
-                const snapObjects = timeSnap.getSnapObjectsOfSnappedValue();
-                timeSnapExplanation.value.push(...snapObjects);
-                currentlyInvolvedSnaps.value.push(...snapObjects.map((snexp) => snexp.snapDefinition));
-            }
-        }
-        if (targetOctave && output.type === TraceType.Note) {
-            const targetHz = octaveToFrequency(targetOctave);
-            // Tone snaps
-            if (!skipOctaveSnap) {
-                const { toneSnap } = octaveSnaps({
-                    otherTraces,
-                    targetOctave,
-                    targetHz,
-                    snapValues
-                });
-                output.octave = toneSnap.getResult();
-                if (sideEffects) {
-                    const snapObjects = toneSnap.getSnapObjectsOfSnappedValue();
-                    toneSnapExplanation.value.push(...snapObjects);
-                    currentlyInvolvedSnaps.value.push(...snapObjects.map((snexp) => snexp.snapDefinition));
-                }
-            }
-        }
-
-        if (snapDuration && durationSnap) {
-            // when snapping duration, we want to prevent shifting the start
-            // of the note, at least on all the current use cases
-            output.time = inNote.time;
-            output.timeEnd = output.time + durationSnap.getResult();
-        }
-
-        return output;
-    }
-
-
-
-
-    /** has side effects to snap explanations */
-    interface TimeRangeSnapParams<T extends TimeRange> {
-        inTimeRange: T,
-        otherTraces?: Array<Trace>,
-        sideEffects?: boolean,
-    }
-    const snapTimeRange = <T extends TimeRange>({
-        inTimeRange,
-        otherTraces,
-        sideEffects = true,
-    }: TimeRangeSnapParams<T>): T & { duration: number } => {
-        otherTraces = otherTraces ? filterSnapTraces(otherTraces) : otherTraces;
-
-        const output: T & { duration: number } = {
-            ...inTimeRange,
-            time: inTimeRange.time,
-            timeEnd: inTimeRange.timeEnd,
-            duration: inTimeRange.timeEnd - inTimeRange.time,
-        }
-
-        const durationSnap = output.duration ? new SnapTracker(output.duration) : false;
-        const snapValues = values.value as { [key: string]: SnapDefinition };
-
-        const { timeSnap } = timeSnaps({
+        const toneSnap = octaveSnaps({
             otherTraces,
-            subject: output,
-            durationSnap,
-            snapValues
+            targetOctave: targetTrace.octave,
+        });
+        const result = toneSnap.getResult();
+        clonedTrace.octave = result;
+        if (sideEffects) {
+            const snapObjects = toneSnap.getSnapObjectsOfSnappedValue();
+            toneSnapExplanation.value.push(...snapObjects);
+            currentlyInvolvedSnaps.value.push(...snapObjects.map((snexp) => snexp.snapDefinition));
+        }
+        const targetDuration = getDuration(targetTrace);
+
+        const timeSnap = timeSnaps({
+            otherTraces,
+            targetTime: clonedTrace.time,
         });
 
-        output.time = timeSnap.getResult();
+        const timeEndSnap = timeSnaps({
+            otherTraces,
+            targetTime: targetDuration,
+        });
+
+        const snappedDuration = timeEndSnap.getResult();
+        clonedTrace.time = timeSnap.getResult();
+        clonedTrace.timeEnd = clonedTrace.time + snappedDuration;
 
         if (sideEffects) {
-            timeSnapExplanation.value.push(...timeSnap.getSnapObjectsOfSnappedValue());
+            timeSnapExplanation.value.push(
+                ...timeSnap.getSnapObjectsOfSnappedValue(),
+                ...timeEndSnap.getSnapObjectsOfSnappedValue(),
+            );
         }
 
-        if (durationSnap) {
-            output.duration = durationSnap.getResult();
-        }
 
-        return output;
+        return clonedTrace;
     }
+
+    const snapTimeRange = <T extends (Trace)>(
+        targetTrace: T,
+        otherTraces: Array<Trace> = [],
+        sideEffects = true,
+    ): T => {
+        const clonedTimeRange = cloneTrace<T>(targetTrace);
+        const targetDuration = getDuration(targetTrace);
+        const timeSnap = timeSnaps({
+            otherTraces,
+            targetTime: clonedTimeRange.time,
+        });
+        const timeEndSnap = timeSnaps({
+            otherTraces,
+            targetTime: targetDuration,
+        });
+
+        const snappedDuration = timeEndSnap.getResult();
+
+        clonedTimeRange.time = timeSnap.getResult();
+        clonedTimeRange.timeEnd = clonedTimeRange.time + snappedDuration;
+
+        if (sideEffects) {
+            timeSnapExplanation.value.push(
+                ...timeSnap.getSnapObjectsOfSnappedValue(),
+                ...timeEndSnap.getSnapObjectsOfSnappedValue(),
+            );
+        }
+
+
+        return clonedTimeRange;
+    }
+
+    const filteredSnap = <T extends (Loop | Note)>(
+        targetTrace: T,
+        otherTraces: Array<Trace> = [],
+        sideEffects = true,
+    ): T => {
+        const filteredOtherTraces = filterSnapTraces(otherTraces);
+        return snapOctave(
+            snapTimeRange(
+                targetTrace,
+                filteredOtherTraces,
+                sideEffects
+            ),
+            filteredOtherTraces,
+            sideEffects
+        );
+
+    }
+
 
 
     const nonRelationalTimeSnapExplanation = () => {
@@ -899,7 +880,7 @@ export const useSnapStore = defineStore("snap", () => {
         onlyWithNotesInTheSameLayer,
         onlyWithNotesInDifferentLayer,
         resetSnapExplanation,
-        snap,
+        filteredSnap,
         snapTimeRange,
         nonRelationalTimeSnapExplanation,
         nonRelationalToneSnapExplanation,

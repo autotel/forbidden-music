@@ -35,7 +35,3 @@ export const transposeTime = <T extends Trace>(trace: T, time: number): T => {
     trace.timeEnd += time;
     return trace;
 }
-
-export const duration = (trace: Trace): number => {
-    return trace.timeEnd - trace.time;
-}

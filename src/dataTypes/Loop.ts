@@ -27,7 +27,6 @@ export type Loop = TimeRange & Selectable & Draggable  & {
 
 export const loop = (loopDef: LoopDefA | LoopDefB | Loop): Loop => {
     const deductedEnd = 'duration' in loopDef?loopDef.time + loopDef.duration:loopDef.timeEnd;
-
     return {
         type: TraceType.Loop,
         time: loopDef.time,
