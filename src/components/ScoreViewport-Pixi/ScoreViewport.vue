@@ -275,7 +275,8 @@ const refreshView = (time: number) => {
     if (snapFocusedItemLocation) {
         graphics.lineStyle(1, relationcolor, 0.5);
         for (const snapExplanation of snap.toneSnapExplanation) {
-            const relatedItemLocation = snapExplanation.relatedNote ? view.locationOfTrace(
+
+            const relatedItemLocation = 'relatedNote' in snapExplanation ? view.locationOfTrace(
                 snapExplanation.relatedNote
             ) : snapFocusedItemLocation;
             if (relatedItemLocation) {
