@@ -13,7 +13,7 @@ import Transport from './components/Transport.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
 import { Tool } from './dataTypes/Tool';
-import { ifDev } from './functions/isDev';
+import { Trace, transposeTime } from './dataTypes/Trace';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
 import Modal from './modals/Modal.vue';
@@ -29,8 +29,6 @@ import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useUndoStore } from './store/undoStore';
 import { useViewStore } from './store/viewStore';
-import { Trace } from './dataTypes/Trace';
-import { transposeTime } from './dataTypes/Trace';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -181,7 +179,7 @@ const keyDownListener = (e: KeyboardEvent) => {
             (async () => {
                 const text = await navigator.clipboard.readText();
                 const editNotes = project.parseNotes(text);
-                
+
                 const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
                 let timeDiff = view.pxToTimeWithOffset(tool.mouse.pos.x) - earliestPastedNote.time;
 
@@ -304,6 +302,16 @@ const keyDownListener = (e: KeyboardEvent) => {
     }
 }
 
+const tryLoadStart = async()=>{
+    try {
+        console.log("loading project");
+        libraryStore.loadFromLibraryItem(project.name);
+    } catch (e) {
+        console.log("no default project found",e);
+        project.loadEmptyProjectDefinition();
+    }
+}
+
 onMounted(() => {
     if (clickOutsideCatcher.value) {
         window.addEventListener('wheel', (e) => {
@@ -313,14 +321,12 @@ onMounted(() => {
             }
         });
     }
-
-
-    libraryStore.loadFromLibraryItem(project.name);
     let autosaveCall = () => {
         if (project.name === "unnamed (autosave)") {
             libraryStore.saveCurrent();
         }
     }
+    tryLoadStart();
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
     autosaveTimeout.value = setInterval(autosaveCall, 1000);
 

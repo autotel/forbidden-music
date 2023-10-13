@@ -14,6 +14,26 @@ import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { Trace, TraceType, traceTypeSafetyCheck, transposeTime } from '../dataTypes/Trace';
 import { useAudioContextStore } from './audioContextStore';
+import { SineSynth } from '../synth/SineSynth';
+
+const emptyProjectDefinition: LibraryItem = {
+    name: "unnamed (autosave)",
+    notes: [],
+    loops: [],
+    created: Date.now().valueOf(),
+    edited: Date.now().valueOf(),
+    snaps: [],
+    bpm: 120,
+    layers: [],
+    channels: [{
+        type: "Nylon_Strings",
+        params: [{
+            displayName: "volume",
+            value: 0.8,
+        }],
+    }],
+    version: LIBRARY_VERSION,
+};
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -176,7 +196,6 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const setFromListOfNoteDefinitions = (notes: NoteDef[]) => {
-        console.log("setFromListOfNoteDefinitions", notes);
         score.value = notes.map((noteDef) => {
             const noteLayer = noteDef.layer || 0;
             layers.getOrMakeLayerWithIndex(noteLayer);
@@ -185,7 +204,6 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const setFromProjectDefinition = (pDef: LibraryItem) => {
-        console.log("setFromProjectDefinition", pDef);
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
@@ -328,9 +346,15 @@ export const useProjectStore = defineStore("current project", () => {
         
     }
 
+
+    const loadEmptyProjectDefinition = () => {
+        setFromProjectDefinition(emptyProjectDefinition);
+    }
+
     return {
         score, loops, append,
         sortLoops,
+        loadEmptyProjectDefinition,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
         stringifyLoops, parseLoops,

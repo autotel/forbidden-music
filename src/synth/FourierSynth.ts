@@ -188,7 +188,6 @@ export class FourierSynth implements SynthInstance {
             options: Object.keys(templatesList).map((displayName, value) => ({ displayName, value })),
             selectedIndex: 0,
             set value(value: number) {
-                console.log("set val", value);
                 this.selectedIndex = value;
                 const contents = getTemplate(value);
                 parent.periodicWaveContents[0] = contents[0];

@@ -235,7 +235,6 @@ export const usePlaybackStore = defineStore("playback", () => {
     });
 
     const setToNextLoop = () => {
-        console.log("set to next loop");
         if (loopNow?.repetitionsLeft === 0) lastFinishedLoop = loopNow;
         let expectedLoopEnd = lastFinishedLoop?.timeEnd || currentScoreTime.value;
         loopNow = sortedLoops.value.find((loop) => {
@@ -244,8 +243,6 @@ export const usePlaybackStore = defineStore("playback", () => {
             );
         });
         if (loopNow) loopNow.repetitionsLeft = loopNow.count - 1;
-
-        console.log("set to next loop", loopNow?.time, loopNow?.count);
     }
 
     const resetLoopRepetitions = () => {
@@ -423,6 +420,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     const setSynthByName = (synthName: string, channel = 0) => new Promise<AdmissibleSynthType>((resolve, reject) => {
+        console.log("set synth by name", synthName);
         audioContextStore.audioContextPromise.then(() => {
             const foundSynth = availableSynths.value.find((s) => s.name === synthName);
             if (foundSynth) {

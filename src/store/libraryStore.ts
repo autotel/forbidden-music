@@ -213,19 +213,14 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const loadFromLibraryItem = (filename: string) => {
-        try {
-            clear();
-            const item = retrieveFromLocalStorage(filename);
-            console.log("opening", item);
-            importObject(item);
-            nextTick(() => {
-                inSyncWithStorage.value = true;
-            });
+        clear();
+        const item = retrieveFromLocalStorage(filename);
+        console.log("opening", item);
+        importObject(item);
+        nextTick(() => {
+            inSyncWithStorage.value = true;
+        });
 
-        } catch (e) {
-            console.error("coould not load", e);
-            errorMessage.value = String(e);
-        }
     }
 
     const deleteItemNamed = (filename: string) => {

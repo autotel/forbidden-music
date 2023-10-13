@@ -319,7 +319,6 @@ export class OneShotSampler implements SynthInstance {
                     return parent.adsr[i];
                 },
                 set value(value: number) {
-                    console.log("set", ['attack', 'decay', 'sustain', 'release'][i], value);
                     parent.adsr[i] = value;
                 },
                 curve: 'log',
