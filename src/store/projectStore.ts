@@ -26,7 +26,7 @@ const emptyProjectDefinition: LibraryItem = {
     bpm: 120,
     layers: [],
     channels: [{
-        type: "Nylon_Strings",
+        type: "(CPX)test-tone",
         params: [{
             displayName: "volume",
             value: 0.8,
@@ -228,7 +228,7 @@ export const useProjectStore = defineStore("current project", () => {
         }).map(loop);
 
         loops.value = nLoops;
-        
+
 
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
@@ -332,7 +332,7 @@ export const useProjectStore = defineStore("current project", () => {
             note.time += loopLength;
             note.timeEnd += loopLength;
         })
-        
+
         loops.value.push(loop({
             time: originalLoop.time + loopLength,
             timeEnd: originalLoop.timeEnd + loopLength,
@@ -343,7 +343,7 @@ export const useProjectStore = defineStore("current project", () => {
             originalLoop.count = 4;
             originalLoop.repetitionsLeft = 1;
         }
-        
+
     }
 
 
