@@ -304,7 +304,7 @@ export const useSnapStore = defineStore("snap", () => {
     const customOctavesTable = ref(colundi as number[]);
     const onlyWithMutednotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
-    const onlyWithNotesInView = ref(false);
+    const onlyWithNotesInView = ref(true);
     const onlyWithNotesInTheSameLayer = ref(false);
     const onlyWithNotesInDifferentLayer = ref(false);
 
