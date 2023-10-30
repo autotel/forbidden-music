@@ -566,7 +566,7 @@ export const useSnapStore = defineStore("snap", () => {
                             text: txt + otherNote.frequency.toPrecision(3),
                             relatedNumber,
                             relatedNote: otherNote,
-                            snapDefinition: snapValues.hzRelationFraction,
+                            snapDefinition: snapValues.hzMult,
                         });
                     }
                 };

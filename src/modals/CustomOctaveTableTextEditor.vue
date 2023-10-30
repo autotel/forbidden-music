@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref, watch, watchEffect } from 'vue';
-import { useSnapStore } from '../store/snapStore';
+import { onMounted, ref, watchEffect } from 'vue';
+import Button from '../components/Button.vue';
 import Toggle from '../components/inputs/Toggle.vue';
 import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
 import { useSelectStore } from '../store/selectStore';
-import Button from '../components/Button.vue';
-import { getFrequency } from '../dataTypes/Note';
+import { useSnapStore } from '../store/snapStore';
+import { watch } from 'fs';
+import { watchPausable } from '@vueuse/core';
+
+// TODO: could be improved, there is no point in having two textareas
 
 const snap = useSnapStore();
 const valid = ref(false);
@@ -14,14 +17,6 @@ const frequenciesTableText = ref("");
 const errorMsg = ref("");
 const frequencyMode = ref(true);
 const select = useSelectStore();
-
-const shaveNumber = (n: number) => {
-    const s = "" + n;
-    if (s.length > 8) {
-        return s.slice(0, 8);
-    }
-    return s;
-}
 
 const arrayUnique = (arr: any[]) => {
     return arr.filter((value, index, self) => {
@@ -39,54 +34,76 @@ const setFromSelectedNotes = () => {
 
 }
 
+
+const octavesTextControl = watchPausable(octavesTableText, () => {
+    if (frequencyMode.value) return;
+    try {
+        const octaves = octavesTableText.value.split(",")
+            .filter(l => l)
+            .map((f) => {
+                const nn = parseFloat(f)
+                if (isNaN(nn)) {
+                    throw `List includes non-number "${f}"`;
+                }
+                return nn;
+            });
+        snap.customOctavesTable = octaves;
+        frequenciesTableText.value = octaves.map(octaveToFrequency).join(", ");
+        valid.value = true;
+    } catch (e: any) {
+        errorMsg.value = "" + e;
+        valid.value = false;
+        console.error(e);
+    }
+});
+
+const frequenciesTextControl = watchPausable(frequenciesTableText, () => {
+    if (!frequencyMode.value) return;
+    // on edit frequencies, update octaves
+    try {
+        const frequencies = frequenciesTableText.value.split(",")
+            .filter(l => l)
+            .map((f) => {
+                const nn = parseFloat(f)
+                if (isNaN(nn)) {
+                    throw `List includes non-number "${f}"`;
+                }
+                return nn;
+            });
+        snap.customOctavesTable = frequencies.map(frequencyToOctave);
+        octavesTableText.value = snap.customOctavesTable.join(", ");
+        valid.value = true;
+    } catch (e: any) {
+        errorMsg.value = "" + e;
+        valid.value = false;
+        console.error(e);
+    }
+});
+
+
+watchEffect(() => {
+    if (frequencyMode) {
+        octavesTextControl.pause();
+        frequenciesTextControl.resume();
+    } else {
+        octavesTextControl.resume();
+        frequenciesTextControl.pause();
+    }
+});
 onMounted(() => {
+    octavesTextControl.pause();
+    frequenciesTextControl.pause();
+
     if (snap.customOctavesTable.length > 40) {
         octavesTableText.value = snap.customOctavesTable.join(",\n");
+        frequenciesTableText.value = snap.customOctavesTable.map(octaveToFrequency).join(",\n");
     } else {
         octavesTableText.value = snap.customOctavesTable.join(", ");
+        frequenciesTableText.value = snap.customOctavesTable.map(octaveToFrequency).join(", ");
     }
-    // on edit octaves, update frequencies
-    watchEffect(() => {
-        if (!frequencyMode.value) return;
-        try {
-            const octaves = octavesTableText.value.split(",")
-                .filter(l => l)
-                .map((f) => {
-                    const nn = parseFloat(f)
-                    if (isNaN(nn)) {
-                        throw `List includes non-number "${f}"`;
-                    }
-                    return nn;
-                });
-            snap.customOctavesTable = octaves;
-            frequenciesTableText.value = octaves.map(octaveToFrequency).join(", ");
-            valid.value = true;
-        } catch (e: any) {
-            errorMsg.value = "" + e;
-            valid.value = false;
-        }
-    });
-    // on edit frequencies, update octaves
-    watchEffect(() => {
-        if (frequencyMode.value) return;
-        try {
-            const frequencies = frequenciesTableText.value.split(",")
-                .filter(l => l)
-                .map((f) => {
-                    const nn = parseFloat(f)
-                    if (isNaN(nn)) {
-                        throw `List includes non-number "${f}"`;
-                    }
-                    return nn;
-                });
-            snap.customOctavesTable = frequencies.map(frequencyToOctave);
-            octavesTableText.value = snap.customOctavesTable.join(", ");
-            valid.value = true;
-        } catch (e: any) {
-            errorMsg.value = "" + e;
-            valid.value = false;
-        }
-    });
+    
+    octavesTextControl.resume();
+    frequenciesTextControl.resume();
 
 });
 
@@ -125,4 +142,5 @@ textarea {
 
 .line {
     margin: 1em 0;
-}</style>
+}
+</style>
