@@ -26,6 +26,10 @@ const exclusives = useExclusiveContentsStore();
         <MidiInputConfig />
         <Physical />
         <PerformanceSettings />
+        <div class="about padded" style="text-align:right">
+            <a href="https://autotel.co?goto=piano+roll" target="_blank">about</a>&nbsp;
+            <a href="https://github.com/autotel/forbidden-music" target="_blank">code</a>
+        </div>
     </div>
 </template>
 
@@ -50,4 +54,6 @@ const exclusives = useExclusiveContentsStore();
 .icon {
     font-size: 20px;
 }
+
+
 </style>
