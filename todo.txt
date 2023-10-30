@@ -2,6 +2,7 @@
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
 		load button + load progrss instead of autoload 
 		caching
+	make it possible to set the base frequency upon which octaves are calculated
 	on tauri, typographies mustn't be fetched from google
 	auto compile, maybe https://github.com/tauri-apps/tauri-action
 	Base Frequency selection
