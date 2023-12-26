@@ -859,10 +859,8 @@ export const useSnapStore = defineStore("snap", () => {
         sideEffects = true,
     ): SnappableTrace | Trace => {
         if (targetTrace.type === TraceType.Note || targetTrace.type === TraceType.Loop) {
-            console.log("snapping ", targetTrace);
             return filteredSnap(targetTrace, otherTraces, sideEffects);
         }
-        console.log("not snapping ", targetTrace);
         return targetTrace;
     }
 
