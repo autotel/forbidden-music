@@ -46,7 +46,7 @@ export const note = (noteDef: NoteDef | Note): Note => {
   const velocity = noteDef.velocity || 0.5;
   const mute = noteDef.mute || false;
 
-  return{
+  return {
     type: TraceType.Note,
     time: noteDef.time,
     timeEnd,
@@ -57,11 +57,13 @@ export const note = (noteDef: NoteDef | Note): Note => {
   };
 }
 
-export const noteDef = (note: Note): timeDefA & toneDefA & othersDef => {
+export const noteDef = (note: Note): NoteDef => {
   return {
-    time: note.time,
-    duration: note.timeEnd - note.time,
     octave: note.octave,
+    time: note.time,
+    mute: note.mute,
+    timeEnd: note.timeEnd,
+    velocity: note.velocity,
     layer: 'layer' in note ? note.layer : 0,
   }
 }

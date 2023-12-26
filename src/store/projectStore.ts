@@ -1,8 +1,8 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { Note, NoteDef, note } from '../dataTypes/Note';
-import { Loop, LoopDef, loop } from '../dataTypes/Loop';
+import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
+import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
 import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
@@ -15,6 +15,7 @@ import { useViewStore } from './viewStore';
 import { Trace, TraceType, traceTypeSafetyCheck, transposeTime } from '../dataTypes/Trace';
 import { useAudioContextStore } from './audioContextStore';
 import { SineSynth } from '../synth/SineSynth';
+import { AutomationPoint, AutomationPointDef, automationPoint, automationPointDef } from '../dataTypes/AutomationPoint';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",
@@ -44,8 +45,9 @@ export const useProjectStore = defineStore("current project", () => {
     const audioContextStore = useAudioContextStore();
     const name = ref("unnamed (autosave)" as string);
 
-    const score = ref<Note[]>([]);
+    const notes = ref<Note[]>([]);
     const loops = ref<Loop[]>([]);
+    const automations = ref<AutomationPoint[]>([]);
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
@@ -57,26 +59,14 @@ export const useProjectStore = defineStore("current project", () => {
         });
     }
 
-    const serializeNotes = (notes: Note[]) => notes.map((editNote) => ({
-        octave: editNote.octave,
-        time: editNote.time,
-        timeEnd: editNote.timeEnd,
-        mute: editNote.mute,
-        velocity: editNote.velocity,
-        layer: editNote.layer,
-    }))
+    const serializeNotes = (notes: Note[]) => notes.map(noteDef);
 
-    const serializeLoops = (loops: Loop[]): LoopDef[] => loops.filter(
+    const serializeLoops = (loops: Loop[]) => loops.filter(
         l => ((l.timeEnd - l.time > 0) && (l.count > 0))
-    ).map((loop) => {
-        const ret: LoopDef = {
-            time: loop.time,
-            timeEnd: loop.timeEnd,
-            count: loop.count,
-        };
-        if (loop.count === Infinity) delete ret.count;
-        return ret;
-    });
+    ).map(loopDef);
+
+    const serializeAutomationPoints = (automationPoints: AutomationPoint[]) =>
+        automationPoints.map(automationPointDef);
 
     const stringifyNotes = (notes: Note[], zip: boolean = false) => {
         let str = JSON.stringify(serializeNotes(notes));
@@ -84,92 +74,98 @@ export const useProjectStore = defineStore("current project", () => {
         return str;
     }
 
-
     const stringifyLoops = (loops: Loop[], zip: boolean = false) => {
         let str = JSON.stringify(serializeLoops(loops));
         if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
         return str;
     }
 
-    const parseNotes = (str: string): Note[] => {
+    const stringifyAutomationPoints = (automationPoints: AutomationPoint[], zip: boolean = false) => {
+        let str = JSON.stringify(serializeAutomationPoints(automationPoints));
+        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        return str;
+    }
+
+    type ItmFilter<T> = (itm: unknown | T) => boolean;
+    const tryDecompressAndParseArray = <T>(str: string, testFn:ItmFilter<T>): T[] => {
         let json = str;
-        let objNotes = [];
-
         try {
-            objNotes = JSON.parse(str);
+            json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
         } catch (_e) {
-            ifDev(() => console.log("cannot be parsed, trying to decompress"));
-            try {
-                json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
-            } catch (_e) {
-                ifDev(() => console.log("cannot be decompressed"));
-                return [];
-            }
-        }
-
-        try {
-            objNotes = JSON.parse(json);
-        } catch (_e) {
-            ifDev(() => console.log("cannot be parsed, giving up"));
+            ifDev(() => console.log("cannot be decompressed"));
             return [];
         }
 
+        try {
+            const parsed = JSON.parse(json);
+            if (!('length' in parsed)) {
+                console.warn("invalid notes string", str);
+                return [];
+            } else {
+                return parsed.filter(testFn) as T[];
+            }
+        } catch (_e) {
+            ifDev(() => console.log("cannot be parsed"));
+            return [];
+        }
+    }
 
-        const editNotes = objNotes.map((maybeNote: unknown | NoteDef) => {
+    const parseNotes = (str: string): Note[] => {
+        let noteDefs = tryDecompressAndParseArray<NoteDef>(str, (maybeNote) => {
             if (typeof maybeNote !== "object") return false;
             if (null === maybeNote) return false;
             if (!('time' in maybeNote)) return false;
-            if (!('timeEnd' in maybeNote)) return false;
+            if (!('timeEnd' in maybeNote || 'duration' in maybeNote)) return false;
             if (!('octave' in maybeNote)) return false;
             if (!('velocity' in maybeNote)) return false;
             if (!('mute' in maybeNote)) return false;
             if (!('layer' in maybeNote)) return false;
+            return true
+        });
 
-            return note({
-                ...maybeNote as NoteDef,
-            });
-        }).filter((on: unknown) => on) as Note[];
+        const editNotes = noteDefs.map(note);
+
         if (editNotes.length === 0) {
             console.log("no notes found in parsed text");
             return [];
         }
+
         sanitizeTimeRanges(...editNotes);
         return editNotes;
     }
 
     const parseLoops = (str: string): Loop[] => {
-        let json = str;
-        let objLoops = [];
+        let loopDefs = tryDecompressAndParseArray<LoopDef>(str, (maybeLoop) => {
+            if (typeof maybeLoop !== "object") return false;
+            if (null === maybeLoop) return false;
+            if (!('timeEnd' in maybeLoop)) return false;
+            if (!('time' in maybeLoop)) return false;
+            if (!('count' in maybeLoop)) return false;
+            return true;
+        });
+        const loops = loopDefs.map(loop)
+        sanitizeTimeRanges(...loops);
+        return loops;
+    }
 
-        try {
-            objLoops = JSON.parse(str);
-        } catch (_e) {
-            ifDev(() => console.log("cannot be parsed, trying to decompress"));
-            try {
-                json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
-            } catch (_e) {
-                ifDev(() => console.log("cannot be decompressed"));
-                return [];
-            }
-        }
-
-        try {
-            objLoops = JSON.parse(json);
-        } catch (_e) {
-            ifDev(() => console.log("cannot be parsed, giving up"));
-            return [];
-        }
-
-        objLoops = objLoops.map((maybeLoop: LoopDef) => loop(maybeLoop))
-        sanitizeTimeRanges(...objLoops);
-        return objLoops
+    const parseAutomationPoints = (str: string): AutomationPoint[] => {
+        let automationPointDefs = tryDecompressAndParseArray<AutomationPointDef>(str, (maybeAutomationPoint) => {
+            if (typeof maybeAutomationPoint !== "object") return false;
+            if (null === maybeAutomationPoint) return false;
+            if (!('time' in maybeAutomationPoint)) return false;
+            if (!('value' in maybeAutomationPoint)) return false;
+            return true;
+        });
+        const automationPoints = automationPointDefs.map(automationPoint)
+        return automationPoints;
     }
 
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: serializeNotes(score.value),
+            notes: serializeNotes(notes.value),
             loops: serializeLoops(loops.value),
+            automations: serializeAutomationPoints(automations.value),
             customOctavesTable: snaps.customOctavesTable,
             snap_simplify: snaps.simplify,
             created: created.value,
@@ -194,41 +190,20 @@ export const useProjectStore = defineStore("current project", () => {
         return ret;
     }
 
-
-    const setFromListOfNoteDefinitions = (notes: NoteDef[]) => {
-        score.value = notes.map((noteDef) => {
-            const noteLayer = noteDef.layer || 0;
-            layers.getOrMakeLayerWithIndex(noteLayer);
-            return note(noteDef)
-        });
-    }
-
     const setFromProjectDefinition = (pDef: LibraryItem) => {
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
 
-        setFromListOfNoteDefinitions(pDef.notes);
+        notes.value = pDef.notes.map(note);
+        notes.value.forEach((note) => {
+            layers.getOrMakeLayerWithIndex(note.layer);
+        });
 
-
-        const nLoops: Loop[] = pDef.loops.map((loop: LoopDef) => {
-            if (!('count' in loop)) {
-                loop.count = Infinity;
-            }
-            if (('time' in loop) && ('timeEnd' in loop)) {
-                return loop as unknown as Loop;
-            }
-
-            console.error("invalid loop definition", loop);
-            return {
-                time: 0,
-                timeEnd: 0,
-                count: 0,
-            } as Loop;
-        }).map(loop);
-
+        const nLoops: Loop[] = pDef.loops.map(loop);
         loops.value = nLoops;
 
+        if(pDef.automations) automations.value = pDef.automations.map(automationPoint);
 
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
@@ -274,12 +249,12 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const clearScore = () => {
-        score.value = [];
+        notes.value = [];
         loops.value = [];
     }
 
-    const appendNote = (...notes: Note[]) => {
-        score.value.push(...notes);
+    const appendNote = (...newNotes: Note[]) => {
+        notes.value.push(...newNotes);
     }
 
     const append = (...traces: Trace[]) => {
@@ -300,12 +275,12 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const magicLoopDuplicator = (originalLoop: Loop) => {
-        const notesInLoop = getNotesInRange(score.value, originalLoop).filter((note) => {
+        const notesInLoop = getNotesInRange(notes.value, originalLoop).filter((note) => {
             // dont copy notes that started earlier bc. we are already copying notes that end after
             // also dont copy notes that start right at the end of originalLoop
             return note.time >= originalLoop.time && note.time < originalLoop.timeEnd
         });
-        const notesAfterLoop = getNotesInRange(score.value, {
+        const notesAfterLoop = getNotesInRange(notes.value, {
             time: originalLoop.timeEnd,
             timeEnd: Infinity,
         }).filter((note) => {
@@ -326,7 +301,7 @@ export const useProjectStore = defineStore("current project", () => {
         })
 
         // clone all notes in originalLoop
-        score.value.push(...notesInLoop.map(note));
+        notes.value.push(...notesInLoop.map(note));
 
         notesInLoop.forEach((note) => {
             note.time += loopLength;
@@ -352,14 +327,15 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     return {
-        score, loops, append,
+        notes, loops, automations,
+        append,
         sortLoops,
         loadEmptyProjectDefinition,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
         stringifyLoops, parseLoops,
         getProjectDefintion,
-        setFromProjectDefinition, setFromListOfNoteDefinitions,
+        setFromProjectDefinition,
         clearScore, appendNote,
         magicLoopDuplicator,
     }

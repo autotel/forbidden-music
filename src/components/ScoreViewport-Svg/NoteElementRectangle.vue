@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
+import { Note } from '../../dataTypes/Note';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, useViewStore } from '../../store/viewStore';
+import { TimelineRect, useViewStore } from '../../store/viewStore';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    eventRect: NoteRect
+    eventRect: TimelineRect<Note>
     isEditable?: boolean
 }>();
 

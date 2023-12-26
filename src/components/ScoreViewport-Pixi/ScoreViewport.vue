@@ -11,7 +11,7 @@ import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineItemRect, layerNoteColors, useViewStore } from '../../store/viewStore';
+import { TimelineDot, layerNoteColors, useViewStore } from '../../store/viewStore';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -36,14 +36,14 @@ const props = defineProps<{
     height: number,
 }>();
 
-let thingBeingHovered: TimelineItemRect | null = null;
+let thingBeingHovered: TimelineDot | null = null;
 let isHoverRightEdge = false;
 
-const didHoverChange = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
+const didHoverChange = (hoveredThing: TimelineDot | null, isRightEdge: boolean) => {
     if (hoveredThing === thingBeingHovered && isRightEdge === isHoverRightEdge) return false;
     return true;
 }
-const hoverChanged = (hoveredThing: TimelineItemRect | null, isRightEdge: boolean) => {
+const hoverChanged = (hoveredThing: TimelineDot | null, isRightEdge: boolean) => {
     thingBeingHovered = hoveredThing;
     isHoverRightEdge = isRightEdge;
 }

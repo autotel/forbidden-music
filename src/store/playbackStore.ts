@@ -255,7 +255,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     const _getEventsBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
-        const events = project.score.filter((editNote) => {
+        const events = project.notes.filter((editNote) => {
             return (catchUp ? editNote.timeEnd : editNote.time) >= frameStartTime && editNote.time < frameEndTime;
         });
         return events;
@@ -285,7 +285,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         const tickTime = audioContext.currentTime;
         const deltaTime = tickTime - previousClockTime;
 
-        // score time with respect to which we measure -t towards each event
+        // notes time with respect to which we measure -t towards each event
         const scoreTimeFrameStart = currentScoreTime.value;
         const scoreTimeFrameEnd = currentScoreTime.value += webAudioTimeToMusicalTime(deltaTime);
 

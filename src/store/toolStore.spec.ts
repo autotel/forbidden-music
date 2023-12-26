@@ -64,8 +64,8 @@ describe('AudioContextStore', () => {
     }
 
     it('can select and drag-move a note horizontally', () => {
-        for (let i = 0; i < project.score.length; i++) {
-            const noteToMove = project.score[i];
+        for (let i = 0; i < project.notes.length; i++) {
+            const noteToMove = project.notes[i];
             const origintalNoteTime = noteToMove.time;
             const timeDelta = i* 1.2 - 5;
             noteMover(noteToMove, 0, timeDelta);
@@ -76,8 +76,8 @@ describe('AudioContextStore', () => {
         }
     });
     it('can select and drag-move a note vertically', () => {
-        for (let i = 0; i < project.score.length; i++) {
-            const noteToMove = project.score[i];
+        for (let i = 0; i < project.notes.length; i++) {
+            const noteToMove = project.notes[i];
             const origintalNoteOctave = noteToMove.octave;
             const octaveDelta = i* 1.2 - 5;
             noteMover(noteToMove, octaveDelta, 0);
@@ -88,8 +88,8 @@ describe('AudioContextStore', () => {
         }
     });
     it('drags the note end along with the note start', () => {
-        for (let i = 0; i < project.score.length; i++) {
-            const noteToMove = project.score[i];
+        for (let i = 0; i < project.notes.length; i++) {
+            const noteToMove = project.notes[i];
             const origintalNoteTime = noteToMove.time;
             const originalNoteDuration = getDuration(noteToMove);
             const timeDelta = i* 1.2 - 5;

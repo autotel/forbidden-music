@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Note } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
+import { TimelineRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
@@ -11,7 +12,7 @@ import NoteVeloLine from './NoteVeloLine.vue';
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    eventRect: NoteRect
+    eventRect: TimelineRect<Note>
     text?: string
     interactionDisabled?: boolean
 }>();

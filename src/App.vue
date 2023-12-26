@@ -164,7 +164,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         case KeyActions.Cut: {
             console.log("cut");
             const selected = selection.getNotes();
-            project.score = project.score.filter(note => !note.selected);
+            project.notes = project.notes.filter(note => !note.selected);
             navigator.clipboard.writeText(project.stringifyNotes(selected));
             break;
         }
@@ -192,14 +192,14 @@ const keyDownListener = (e: KeyboardEvent) => {
                     transposeTime(note, timeDiff);
                 })
 
-                project.score.push(...editNotes);
+                project.notes.push(...editNotes);
                 selection.select(...editNotes);
 
             })();
             break;
         }
         case KeyActions.Delete: {
-            project.score = project.score.filter(note => !note.selected)
+            project.notes = project.notes.filter(note => !note.selected)
             project.loops = project.loops.filter(note => !note.selected)
             // minimalistic option:
             // tool.noteBeingHovered = false;

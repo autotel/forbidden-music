@@ -3,7 +3,7 @@ import { Tool } from '../../dataTypes/Tool';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { NoteRect, useViewStore } from '../../store/viewStore';
+import { TimelineRect, useViewStore } from '../../store/viewStore';
 import { onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 const project = useProjectStore();
 const tool = useToolStore();
@@ -49,7 +49,7 @@ const refreshView = () => {
     const playbackPxPosition = playback.playbarPxPosition;
     const ctx = canvas.value?.getContext("2d");
     
-    const perspNudge = (rect:NoteRect) => {
+    const perspNudge = (rect:TimelineRect) => {
         return  (rect.event.time - view.timeOffset ) * (1 - rect.event.velocity) * view.timeToPx(1);
     }
 

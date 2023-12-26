@@ -55,5 +55,4 @@ const exclusives = useExclusiveContentsStore();
     font-size: 20px;
 }
 
-
 </style>

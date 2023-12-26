@@ -26,7 +26,7 @@ export const useSelectStore = defineStore("select", () => {
     };
     const refreshTraceSelectionState = () => {
         // TODO: is it really necessary?
-        project.score.forEach(n => setSelection(n, isSelected(n)));
+        project.notes.forEach(n => setSelection(n, isSelected(n)));
         project.loops.forEach(n => setSelection(n, isSelected(n)));
     }
     /**
@@ -72,12 +72,12 @@ export const useSelectStore = defineStore("select", () => {
     };
     const getRangeSelectableTraces = (): Trace[] => {
         // if(tool.current === Tool.Edit || tool.current === Tool.Modulation) {
-        //     return project.score.filter(({ layer }) => layers.isVisible(layer));
+        //     return project.notes.filter(({ layer }) => layers.isVisible(layer));
         // } else if(tool.current === Tool.Loop) {
         //     return project.loops;
         // }
         // return [];
-        return [...project.score, ...project.loops];
+        return [...project.notes, ...project.loops];
     }
     const selectRange = (range: SelectableRange) => {
         // let notesInRange:Trace[] = getTracesInRange(
@@ -134,7 +134,7 @@ export const useSelectStore = defineStore("select", () => {
     };
     const addRange = (range: SelectableRange) => {
         const newNotes = getTracesInRange(
-            project.score,
+            project.notes,
             range
         );
         add(...newNotes);
@@ -143,7 +143,7 @@ export const useSelectStore = defineStore("select", () => {
         selected.value.clear();
     };
     const selectAll = () => {
-        select(...project.score, ...project.loops);
+        select(...project.notes, ...project.loops);
     };
     throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 

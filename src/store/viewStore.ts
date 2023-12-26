@@ -76,30 +76,24 @@ export const layerNoteColors = [
 
 export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16).padStart(6, '0')}`);
 
-export interface TimelineItemRect<T extends Trace = Trace> {
+export interface TimelineDot<T extends Trace = Trace> {
     event: T;
-
-    // key: number;
-
+    cx: number;
+    cy: number;
+    radius: number;
+}
+export interface TimelineRect<T extends Trace = Trace> extends TimelineDot<T> {
     x: number;
     y: number;
     width: number;
     height: number;
 
-    radius?: number;
-    cx?: number;
-    cy?: number;
-
-    rightEdge?: {
+    rightEdge: {
         x: number;
         y: number;
     };
 }
-export interface NoteRect extends TimelineItemRect {
-    event: Note;
-    cx: number;
-    cy: number;
-}
+export type Drawable<T extends Trace = Trace> = TimelineRect<T> | TimelineDot<T>;
 
 const probe = (v: any) => {
     console.log(v);
@@ -125,9 +119,13 @@ export const useViewStore = defineStore("view", () => {
     const followPlayback = ref(false);
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
-    const memoizedNoteRects: NoteRect[] = [];
+    const memoizedNoteRects: Drawable<Note>[] = [];
     const layers = useLayerStore();
     const tool = useToolStore();
+
+    const memoizedNoteHeight = computed(() => {
+        return Math.abs(octaveToPx(1 / 12));
+    });
 
     // TODO: maybe doesn't need to be a computed, 
     // we don't need to recalc every note when one note is dragged
@@ -136,7 +134,7 @@ export const useViewStore = defineStore("view", () => {
     // they could be calculated only when asked, memoized too.
     const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
-        const layerVisibleNotes = project.score.filter(({ layer }) => layers.isVisible(layer));
+        const layerVisibleNotes = project.notes.filter(({ layer }) => layers.isVisible(layer));
         return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
@@ -155,7 +153,7 @@ export const useViewStore = defineStore("view", () => {
 
     });
 
-    const visibleNoteRects = computed((): NoteRect[] => {
+    const visibleNoteRects = computed((): Drawable<Note>[] => {
         memoizedNoteRects.length = 0;
         return visibleNotes.value.map((note) => {
             let r = rectOfNote(note);
@@ -164,9 +162,9 @@ export const useViewStore = defineStore("view", () => {
         })
     });
 
-    const visibleLoopRects = computed((): TimelineItemRect<Loop>[] => {
+    const visibleLoopRects = computed((): TimelineRect<Loop>[] => {
         return visibleLoops.value.map((item) => {
-            let r = rectOfLoop(item) as TimelineItemRect<Loop>;
+            let r = rectOfLoop(item) as TimelineRect<Loop>;
             return r;
         })
     });
@@ -174,33 +172,45 @@ export const useViewStore = defineStore("view", () => {
     // todo: un-hardcode this everywhere
     const rightEdgeWidth = 10;
 
-    const rectOfNote = (note: Note): NoteRect => {
-        const duration = getDuration(note);
-        let rect = {
-            x: timeToPxWithOffset(note.time) || 0,
-            y: octaveToPxWithOffset(note.octave) || 0,
-            width: timeToPx(duration) || 0,
-            height: Math.abs(octaveToPx(1 / 12)) || 0,
-            radius: 0,
-            event: note,
-            // key: tkey++,
-        } as NoteRect
+    const rectOfNote = (event: Note): Drawable<Note> => {
+        const duration = getDuration(event);
+        const x = timeToPxWithOffset(event.time) || 0;
+        const height = memoizedNoteHeight.value || 0;
+        const radius = height / 2;
+        const cx = x;
+        const cy = octaveToPxWithOffset(event.octave) || 0;
+        const y = (cy) - radius;
 
-        rect.radius = rect.height / 2;
-        rect.cx = rect.x;
-        rect.cy = rect.y;
-        rect.y -= rect.radius;
+        const returnVal = {
+            radius,
+            cx,
+            cy,
+            event,
+        } as TimelineDot<Note>;
 
         if (duration) {
-            rect.rightEdge = {
-                x: rect.x + rect.width - rightEdgeWidth,
-                y: rect.y,
-            };
+            const width = timeToPx(duration) || 0;
+
+            return {
+                ...returnVal,
+
+                x,
+                y,
+                width,
+                height,
+
+                rightEdge: {
+                    x: x + width - rightEdgeWidth,
+                    y: y,
+                }
+            } as TimelineRect<Note>;
         }
-        return rect;
+
+        return returnVal;
+
     };
 
-    const rectOfLoop = (item: TimeRange): TimelineItemRect<Loop> => {
+    const rectOfLoop = (item: TimeRange): TimelineRect<Loop> => {
         let itemDuration = item.timeEnd - item.time;
         const isFullHeight = tool.current === Tool.Loop;
 
@@ -211,7 +221,7 @@ export const useViewStore = defineStore("view", () => {
             height: isFullHeight ? viewHeightPx.value : 40,
             event: item,
 
-        } as TimelineItemRect<Loop>;
+        } as TimelineRect<Loop>;
 
         rect.rightEdge = {
             x: rect.x + rect.width - rightEdgeWidth,
@@ -275,46 +285,51 @@ export const useViewStore = defineStore("view", () => {
         }
     }
 
-    const everyNoteAtCoordinates = (x: number, y: number, considerVeloLines: boolean): NoteRect[] => {
+    const everyNoteAtCoordinates = (x: number, y: number, considerVeloLines: boolean): Drawable[] => {
         const noteRects = visibleNoteRects.value;
         const items = noteRects.filter((noteRect) => {
             const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
-            const isThin = noteRect.width === 0;
+            const isThin = !('width' in noteRect);
 
-            if (!noteRect.radius) throw new Error("no radius");
+            if (!isThin && noteRect.width === 0) {
+                throw new Error('oops! noteRect.width is 0');
+            }
 
             if (isThin && (
-                x >= noteRect.x - noteRect.radius &&
-                x <= noteRect.x + noteRect.radius &&
-                // note theh/v asymmetry
-                y >= noteRect.y &&
-                y <= noteRect.y + noteRect.height
+                x >= noteRect.cx - noteRect.radius &&
+                x <= noteRect.cx + noteRect.radius &&
+                // note the vertical asymmetry
+                y >= noteRect.cy &&
+                y <= noteRect.cy + memoizedNoteHeight.value
             )) {
                 return true;
-            } else
-
+            } else {
+                const noteIsRect = noteRect as TimelineRect<Note>;
+                
                 if (
                     (
-                        x >= noteRect.x &&
-                        x <= noteRect.x + noteRect.width &&
-                        y >= noteRect.y &&
-                        y <= noteRect.y + noteRect.height
+                        x >= noteIsRect.x &&
+                        x <= noteIsRect.x + noteIsRect.width &&
+                        y >= noteIsRect.y &&
+                        y <= noteIsRect.y + noteIsRect.height
                     ) || (
                         considerVeloLines &&
-                        noteRect.x - 7 <= x &&
-                        noteRect.x + 7 >= x &&
+                        noteIsRect.x - 7 <= x &&
+                        noteIsRect.x + 7 >= x &&
                         veloPy - 7 <= y &&
                         veloPy + 7 >= y
                     )
                 ) {
                     return true;
+                } else {
+                    return false;
                 }
-            return false;
+            }
         });
         return items;
     };
 
-    const everyLoopAtCoordinates = (x: number, y: number): TimelineItemRect[] => {
+    const everyLoopAtCoordinates = (x: number, y: number): TimelineRect<Loop>[] => {
         let itemRects = visibleLoopRects.value;
         itemRects = itemRects.filter((itemRect) => {
             if (
@@ -408,6 +423,23 @@ export const useViewStore = defineStore("view", () => {
         return pxToVelocity(viewHeightPx.value - px);
     };
 
+    // Automation vals
+    const valuePXK = 4;
+    const valueToPx = (value: number): number => {
+        // if(valuePXK === 0) return 0;
+        return (value * viewHeightPx.value) / valuePXK;
+    };
+    const pxToValue = (px: number): number => {
+        if (viewHeightPx.value === 0) return 0;
+        return (px * valuePXK) / viewHeightPx.value;
+    };
+    const valueToPxWithOffset = (value: number): number => {
+        return viewHeightPx.value - valueToPx(value);
+    };
+    const pxToValueWithOffset = (px: number): number => {
+        return pxToValue(viewHeightPx.value - px);
+    };
+
     let ratio = 1;
     const applyRatioToTime = () => {
         if (viewWidthPx.value === 0) return 0;
@@ -445,15 +477,23 @@ export const useViewStore = defineStore("view", () => {
         timeToPx,
         timeToPxWithOffset,
         pxToTimeWithOffset,
+        
         pxToOctave,
         octaveToPx,
         pxToOctaveWithOffset,
         octaveToPxWithOffset,
+        
         frequencyToPxWithOffset,
+
         velocityToPx,
         pxToVelocity,
         velocityToPxWithOffset,
         pxToVelocityWithOffset,
+
+        valueToPx,
+        pxToValue,
+        valueToPxWithOffset,
+        pxToValueWithOffset,
 
         pxToBounds,
         boundsToTime,

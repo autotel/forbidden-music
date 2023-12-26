@@ -16,6 +16,7 @@ const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
 
+export type SnappableTrace = Note | Loop;
 
 export type SnapExplanationAbs = {
     text: string;
@@ -337,9 +338,12 @@ export const useSnapStore = defineStore("snap", () => {
         });
     }
 
-    const filterSnapTraces = (list: Trace[]): (Trace[]) | undefined => {
+    const filterSnapTraces = (list: Trace[]): (SnappableTrace[]) | undefined => {
         if (list === undefined) return;
-        let returnValue = list
+
+        let returnValue: SnappableTrace[] = list.filter((trace) => {
+            return trace.type === TraceType.Note || trace.type === TraceType.Loop;
+        }) as SnappableTrace[];
 
         // remove traces in groups which aren't visible
         returnValue = returnValue.filter((trace) => {
@@ -362,7 +366,7 @@ export const useSnapStore = defineStore("snap", () => {
                 octaveEnd: -view.octaveOffset + view.viewHeightOctaves,
             });
         }
-        if (onlyWithSimultaneousNotes.value && focusedTrace.value) {
+        if (onlyWithSimultaneousNotes.value && focusedTrace.value && 'timeEnd' in focusedTrace.value) {
             returnValue = getTracesInRange(returnValue, {
                 time: focusedTrace.value.time,
                 timeEnd: focusedTrace.value.timeEnd,
@@ -798,7 +802,7 @@ export const useSnapStore = defineStore("snap", () => {
         return clonedTrace;
     }
 
-    const snapTimeRange = <T extends (Trace)>(
+    const snapTimeRange = <T extends (SnappableTrace)>(
         targetTrace: T,
         otherTraces: Array<Trace> = [],
         sideEffects = true,
@@ -830,7 +834,7 @@ export const useSnapStore = defineStore("snap", () => {
         return clonedTimeRange;
     }
 
-    const filteredSnap = <T extends (Loop | Note)>(
+    const filteredSnap = <T extends (SnappableTrace)>(
         targetTrace: T,
         otherTraces: Array<Trace> = [],
         sideEffects = true,
@@ -848,6 +852,19 @@ export const useSnapStore = defineStore("snap", () => {
 
     }
 
+
+    const snapIfSnappable = <T extends (Trace)>(
+        targetTrace: T,
+        otherTraces: Array<Trace> = [],
+        sideEffects = true,
+    ): SnappableTrace | Trace => {
+        if (targetTrace.type === TraceType.Note || targetTrace.type === TraceType.Loop) {
+            console.log("snapping ", targetTrace);
+            return filteredSnap(targetTrace, otherTraces, sideEffects);
+        }
+        console.log("not snapping ", targetTrace);
+        return targetTrace;
+    }
 
 
     const nonRelationalTimeSnapExplanation = () => {
@@ -880,7 +897,7 @@ export const useSnapStore = defineStore("snap", () => {
         onlyWithNotesInTheSameLayer,
         onlyWithNotesInDifferentLayer,
         resetSnapExplanation,
-        filteredSnap,
+        filteredSnap, snapIfSnappable,
         snapTimeRange,
         nonRelationalTimeSnapExplanation,
         nonRelationalToneSnapExplanation,

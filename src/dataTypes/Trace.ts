@@ -3,14 +3,16 @@
 import isDev from "../functions/isDev";
 import { Loop, loop } from "./Loop";
 import { Note, note } from "./Note";
+import { AutomationPoint, automationPoint } from "./AutomationPoint";
 
 export enum TraceType {
     None,
     Note,
     Loop,
+    AutomationPoint,
 }
 
-export type Trace = Note | Loop;
+export type Trace = Note | Loop | AutomationPoint;
 
 export const cloneTrace = <T extends Trace>(trace: T): T => {
     switch (trace.type) {
@@ -18,6 +20,8 @@ export const cloneTrace = <T extends Trace>(trace: T): T => {
             return note(trace) as T;
         case TraceType.Loop:
             return loop(trace) as T;
+        case TraceType.AutomationPoint:
+            return automationPoint(trace) as T;
         default:
             throw new Error(`Unknown trace type ${JSON.stringify(trace)}`);
     }
@@ -32,6 +36,6 @@ export const traceTypeSafetyCheck = isDev() ? (trace: Trace) => {
 
 export const transposeTime = <T extends Trace>(trace: T, time: number): T => {
     trace.time += time;
-    trace.timeEnd += time;
+    if('timeEnd' in trace) trace.timeEnd += time;
     return trace;
 }

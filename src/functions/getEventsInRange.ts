@@ -20,8 +20,8 @@ export const getNotesInRange = (
     });
 };
 
-export const getTracesInRange = (
-    traces: Trace[],
+export const getTracesInRange = <T extends Trace>(
+    traces: T[],
     range: SelectableRange
 ) => {
     // range is expected to come in positive ranges
@@ -30,11 +30,14 @@ export const getTracesInRange = (
     const octaveStart = 'octave' in range ? range.octave : undefined;
     const octaveEnd = 'octaveEnd' in range ? range.octaveEnd : undefined;
 
-    return traces.filter((editNote) => {
+    return traces.filter((trace) => {
         const octaveInRange = (octaveStart === undefined)
-            || !('octave' in editNote)
-            || (editNote.octave >= octaveStart && editNote.octave <= octaveEnd!);
-        const timeInRange = editNote.timeEnd >= timeStart && editNote.time <= timeEnd;
+            || !('octave' in trace)
+            || (trace.octave >= octaveStart && trace.octave <= octaveEnd!);
+
+        const traceTimeEnd = 'timeEnd' in trace ? trace.timeEnd : trace.time;
+        
+        const timeInRange = traceTimeEnd >= timeStart && trace.time <= timeEnd;
         return octaveInRange && timeInRange;
     });
 };

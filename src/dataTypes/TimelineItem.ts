@@ -1,5 +1,7 @@
 //stuff placed in timeline
 
+import { Trace } from "./Trace";
+
 export interface TimePosition {
     time: number;
 }
@@ -22,6 +24,10 @@ export interface VelocityPosition {
     velocity: number,
 }
 
+export interface ValuePosition {
+    value: number,
+}
+
 export interface VelocityRange {
     velocity: number,
     velocityEnd: number,
@@ -35,14 +41,19 @@ export const sanitizeTimeRanges = (...items: TimeRange[]) => {
     });
 }
 
-export const getDuration = (timeRange: TimeRange): number => {
+export const getDuration = (timeRange: Trace): number => {
+    if (!('timeEnd' in timeRange)) {
+        return 0;
+    }
     if (timeRange.timeEnd < timeRange.time) {
-        console.warn('timeRange has negative duration', timeRange);
-        sanitizeTimeRanges(timeRange);
+        return 0;
     }
     return timeRange.timeEnd - timeRange.time;
 }
 
-export const hasDuration = (timeRange: TimeRange): boolean => {
+export const hasDuration = (timeRange: Trace): boolean => {
+    if (!('timeEnd' in timeRange)) {
+        return false;
+    }
     return timeRange.timeEnd !== timeRange.time;
 }

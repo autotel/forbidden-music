@@ -60,7 +60,6 @@ interface Stores {
 }
 
 const polyfillTrace = (trace: Trace): PolyfillTrace => {
-    traceTypeSafetyCheck(trace);
     return Object.assign({
         octave: 0,
         octaveEnd: 0,
@@ -68,17 +67,16 @@ const polyfillTrace = (trace: Trace): PolyfillTrace => {
         timeEnd: 0,
         velocity: 0,
         velocityEnd: 0,
-        duration: trace.timeEnd - trace.time,
+        duration: getDuration(trace),
     }, trace);
 }
 
 
 
-const mouseDuplicateNotes = ({
+const mouseDuplicateTraces = ({
     drag,
-    tracesBeingCreated,
 }: ToolMouse, {
-    view, snap, project, selection,
+    snap, project, selection,
 }: Stores
 ) => {
     if (!drag) throw new Error('misused drag handler');
@@ -110,9 +108,7 @@ const mouseDragSelectedTraces = ({
     drag
 }: ToolMouse, {
     view, snap, project
-}: Stores,
-    disallowOctaveChange: Reference<boolean>, disallowTimeChange: Reference<boolean>
-) => {
+}: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
 
@@ -128,9 +124,9 @@ const mouseDragSelectedTraces = ({
     preSnapDragTrace.time = drag.traceWhenDragStarted.time + timeDragDelta;
     preSnapDragTrace.timeEnd = drag.traceWhenDragStarted.timeEnd + timeDragDelta;
 
-    const snappedTrace = snap.filteredSnap(
+    const snappedTrace = snap.snapIfSnappable(
         preSnapDragTrace,
-        project.score.filter(n => {
+        project.notes.filter(n => {
             let ret = n !== drag.trace
             ret &&= !drag.traces.includes(n);
             return ret;
@@ -196,7 +192,7 @@ const mouseDragTracesRightEdge = ({
     drag.trace.timeEnd = drag.traceWhenDragStarted.timeEnd + timeMovement;
     const snapped = snap.snapTimeRange(
         drag.trace,
-        project.score,
+        project.notes,
         true,
     );
 
@@ -619,7 +615,7 @@ export const useToolStore = defineStore("tool", () => {
     const applySnapToLoop = (targetLoop: Loop, otherTraces: Trace[]) => {
         const snappedLoop: Loop = snap.snapTimeRange(
             targetLoop,
-            project.score,
+            project.notes,
             true,
         );
         if (snappedLoop.timeEnd < snappedLoop.time) {
@@ -647,7 +643,7 @@ export const useToolStore = defineStore("tool", () => {
 
             const snapNote = snap.filteredSnap(
                 theNote,
-                project.score,
+                project.notes,
                 true,
             );
 
@@ -720,7 +716,7 @@ export const useToolStore = defineStore("tool", () => {
                 // once, and under these very specific conditions
                 // sets a threshold of movement before copying 
                 if (mouse.drag.trace && copyOnDrag.value && !mouse.drag.alreadyDuplicated) {
-                    mouseDuplicateNotes(
+                    mouseDuplicateTraces(
                         mouse, storesPill
                     );
                 } else if (mouse.drag.trace && mouse.drag.isRightEdge) {

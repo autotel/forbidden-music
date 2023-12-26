@@ -4,14 +4,14 @@ import { Loop } from '../../dataTypes/Loop';
 import { Tool } from '../../dataTypes/Tool';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineItemRect, useViewStore } from '../../store/viewStore';
+import { TimelineDot, useViewStore } from '../../store/viewStore';
 import SvgLittleButton from './SvgLittleButton.vue';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    eventRect: TimelineItemRect<Loop>
+    eventRect: TimelineDot<Loop>
     interactionDisabled?: boolean
 }>();
 const project = useProjectStore();

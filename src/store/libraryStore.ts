@@ -2,13 +2,14 @@ import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
 import { LoopDef } from '../dataTypes/Loop';
-import { Note, NoteDef } from '../dataTypes/Note';
+import { Note, NoteDef, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
 import { SynthParamStored } from '../synth/SynthInterface';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { userCustomPerformanceSettings } from './customSettingsStore';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
+import { AutomationPointDef } from '../dataTypes/AutomationPoint';
 
 const version = "0.3.0";
 export const LIBRARY_VERSION = version;
@@ -69,7 +70,8 @@ type LibraryItem_0_3_0 = {
     snap_simplify?: number;
 
     notes: NoteDef[];
-    loops: LoopDef[],
+    loops: LoopDef[];
+    automations?: AutomationPointDef[];
 }
 
 export type LibraryItem = LibraryItem_0_3_0;
@@ -265,7 +267,9 @@ export const useLibraryStore = defineStore("library store", () => {
             iobj = normalizeLibraryItem(iobj);
             project.setFromProjectDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
-            project.setFromListOfNoteDefinitions(iobj);
+            // assuming iobj is an array of notes
+            const newNotes = iobj.map(note);
+            project.appendNote(...newNotes);
         }
     }
 
