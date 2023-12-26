@@ -156,7 +156,8 @@ export const useProjectStore = defineStore("current project", () => {
             if (!('value' in maybeAutomationPoint)) return false;
             return true;
         });
-        const automationPoints = automationPointDefs.map(automationPoint)
+        
+        const automationPoints = automationPointDefs.map((d)=>automationPoint(d));
         return automationPoints;
     }
 

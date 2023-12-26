@@ -45,7 +45,7 @@ onBeforeUnmount(() => {
 });
 
 const refreshView = () => {
-    const visibleNotes = view.visibleNoteRects;
+    const visibleNotes = view.visibleNoteDrawables;
     const playbackPxPosition = playback.playbarPxPosition;
     const ctx = canvas.value?.getContext("2d");
     

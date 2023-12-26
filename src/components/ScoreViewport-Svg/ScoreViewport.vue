@@ -10,6 +10,7 @@ import NoteElement from './NoteElement.vue';
 import RangeSelection from './RangeSelection.vue';
 import ToneGrid from './ToneGrid.vue';
 import ToneRelation from './ToneRelation.vue';
+import AutomationCircle from './AutomationCircle.vue';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -59,12 +60,15 @@ onBeforeUnmount(() => {
         <!-- <g id="loops-being-created">
         </g> -->
         <g id="loop-range-container">
-            <LoopRangeElement v-for="loopRect in view.visibleLoopRects" :eventRect="loopRect" />
+            <LoopRangeElement v-for="loopRect in view.visibleLoopDrawables" :eventRect="loopRect" />
         </g>
         <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
             stroke-width="1" />
         <g id="edit-notes">
-            <NoteElement v-for="rect in view.visibleNoteRects" :eventRect="rect"  />
+            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect"  />
+        </g>
+        <g id="edit-automation">
+            <AutomationCircle v-for="circle in view.visibleAutomationPointDrawables" :circle="circle" />
         </g>
         <g id="traces-being-created">
             <template v-for="trace in tool.mouse.tracesBeingCreated">

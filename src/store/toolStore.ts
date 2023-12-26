@@ -12,8 +12,8 @@ import { useProjectStore } from './projectStore';
 import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
+import { SynthParam } from '../synth/SynthInterface';
 
-const clampToZero = (n: number) => n < 0 ? 0 : n;
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
 type ProjectStore = ReturnType<typeof useProjectStore>;
@@ -70,8 +70,6 @@ const polyfillTrace = (trace: Trace): PolyfillTrace => {
         duration: getDuration(trace),
     }, trace);
 }
-
-
 
 const mouseDuplicateTraces = ({
     drag,
@@ -245,6 +243,8 @@ export const useToolStore = defineStore("tool", () => {
     const currentLeftHand = ref(Tool.None);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
+    /** which parameter is currenly being shown on screen for automation */
+    const parameterBeingAutomated = ref<SynthParam | false>(false);
     let lastVelocitySet = { value: 0.7 };
     type ToolRange = SelectableRange & OctaveRange & TimeRange & { active: boolean };
 
@@ -770,6 +770,10 @@ export const useToolStore = defineStore("tool", () => {
         }
     })
 
+    watch(parameterBeingAutomated, (newValue) => {
+        console.log("parameterBeingAutomated", newValue?newValue.displayName:'false');
+    });
+
     return {
         mouseDown,
         mouseMove,
@@ -779,6 +783,8 @@ export const useToolStore = defineStore("tool", () => {
         timelineItemRightEdgeMouseEnter,
         timelineItemMouseLeave,
         timelineItemRightEdgeMouseLeave,
+
+        parameterBeingAutomated,
 
         resetState,
 

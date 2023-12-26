@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Note } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
+import { Drawable, TimelineDot, TimelineRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
@@ -12,7 +12,7 @@ import NoteVeloLine from './NoteVeloLine.vue';
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    eventRect: TimelineRect<Note>
+    eventRect: Drawable<Note>
     text?: string
     interactionDisabled?: boolean
 }>();
@@ -56,12 +56,11 @@ const isEditable = computed(() => {
 })
 </script>
 <template>
-     <text class="texts" v-if="text" :x="eventRect.x" :y="eventRect.cy - 10" font-size="14">
-        {{text}}
+    <text class="texts" v-if="text" :x="eventRect.cx" :y="eventRect.cy - 10" font-size="14">
+        {{ text }}
     </text>
     <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
-        <NoteElementRectangle v-if="eventRect.width/*hasDuration(eventRect.event)*/" :eventRect="eventRect"
-            :isEditable="isEditable" :fill="myColor" />
+        <NoteElementRectangle v-if="'width' in eventRect" :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
         <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
         <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.cx"
             :selected="eventRect.event.selected || false" :fill="myColor" />

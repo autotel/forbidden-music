@@ -188,7 +188,7 @@ const refreshView = (time: number) => {
 
     if (measureSteps) taskMark("1. gather facts")
     const visibleNotes = [
-        ...view.visibleNoteRects,
+        ...view.visibleNoteDrawables,
         ...tool.notesBeingCreated.map((t) => view.rectOfNote(t)),
     ];
     if (tool.noteThatWouldBeCreated) visibleNotes.push(
@@ -223,7 +223,7 @@ const refreshView = (time: number) => {
     //     graphics.endFill();
     // }
 
-    const otherItemRects = view.visibleLoopRects;
+    const otherItemRects = view.visibleLoopDrawables;
     otherItemRects.forEach((rect) => {
         graphics.beginFill(0xFF0000, 0.1);
         graphics.lineStyle(1, 0x000000, 1);

@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/SynthInterface';
+import { useToolStore } from '../../store/toolStore';
 
 // TODO: this could use a refactor
 
-
-const props = defineProps({
-    param: {
-        type: Object as () => NumberSynthParam,
-        required: true,
-    },
-});
+const props = defineProps<{
+    param: NumberSynthParam,
+}>();
 let mouseDownPos = {
     x: 0, y: 0,
 };
@@ -20,7 +17,8 @@ const dragging = ref(false);
 const valueDraggable = ref();
 const ww = 600;
 const displayValue = ref(props.param.value);
-
+const tool = useToolStore();
+const automated = computed(() => (tool.parameterBeingAutomated === props.param));
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -72,16 +70,21 @@ const mouseDown = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     dragging.value = true;
+
 }
 const mouseUp = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    if (dragging.value) {
+
+        tool.parameterBeingAutomated = props.param;
+    }
     dragging.value = false;
 }
-watch(props.param, (newVal) => {
-    displayValue.value = props.param.value;
-    const range = props.param.max - props.param.min;
-    preMapValue.value = props.param.value / range;
+watch(props.param, (newParam) => {
+    displayValue.value = newParam.value;
+    const range = newParam.max - newParam.min;
+    preMapValue.value = newParam.value / range;
 });
 onMounted(() => {
     const range = props.param.max - props.param.min;
@@ -108,7 +111,10 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <div class="number-knob-container" ref="valueDraggable" :class="{ active: dragging }" style="width:100%">
+    <div class="number-knob-container" ref="valueDraggable" :class="{
+        active: dragging,
+        automated: automated,
+    }" style="width:100%">
 
         <template v-if="props.param.max !== undefined && props.param.min !== undefined">
             <div class="prog-container">
@@ -142,10 +148,6 @@ onBeforeUnmount(() => {
     top: 0;
 }
 
-.active {
-    background-color: rgb(7, 77, 99);
-}
-
 .number-knob-container {
     user-select: none;
     display: inline-flex;
@@ -160,4 +162,14 @@ onBeforeUnmount(() => {
     justify-content: center;
     box-sizing: border-box;
 }
+
+
+.active {
+    background-color: rgb(7, 77, 99);
+}
+
+.automated {
+    border: solid 5px rgb(253, 152, 0);
+}
+
 </style>

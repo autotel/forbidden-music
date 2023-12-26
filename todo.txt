@@ -1,4 +1,6 @@
 # Piano roll to-do
+	ability to map from saved synth automation <-> param relationship as string
+	ability to create new automation points, when a param is selected, and maybe in modulation tool
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
 		load button + load progrss instead of autoload 
 		caching

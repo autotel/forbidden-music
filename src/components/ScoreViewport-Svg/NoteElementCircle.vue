@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Note } from '../../dataTypes/Note';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineRect, useViewStore } from '../../store/viewStore';
+import { TimelineDot, TimelineRect, useViewStore } from '../../store/viewStore';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    eventRect: TimelineRect<Note>
+    eventRect: TimelineDot<Note>
     isEditable?: boolean
 }>();
 

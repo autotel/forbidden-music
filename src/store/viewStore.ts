@@ -5,12 +5,13 @@ import { Note } from "../dataTypes/Note.js";
 import { TimeRange, getDuration } from "../dataTypes/TimelineItem.js";
 import { Tool } from "../dataTypes/Tool.js";
 import { Trace } from "../dataTypes/Trace.js";
-import { getNotesInRange } from "../functions/getEventsInRange.js";
+import { getNotesInRange, getTracesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
 import { useToolStore } from "./toolStore.js";
+import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
 
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -95,10 +96,6 @@ export interface TimelineRect<T extends Trace = Trace> extends TimelineDot<T> {
 }
 export type Drawable<T extends Trace = Trace> = TimelineRect<T> | TimelineDot<T>;
 
-const probe = (v: any) => {
-    console.log(v);
-    return v;
-}
 
 
 export const useViewStore = defineStore("view", () => {
@@ -132,6 +129,9 @@ export const useViewStore = defineStore("view", () => {
     // for example. Especially since the new canvas frame 
     // is going to ask for the coords anyways. 
     // they could be calculated only when asked, memoized too.
+    // also, why is the filtering method so inconsistent accross types?
+    // also, what is better: fiter by screen and then by type, or
+    // filter by type and then by screen?
     const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
         const layerVisibleNotes = project.notes.filter(({ layer }) => layers.isVisible(layer));
@@ -145,7 +145,7 @@ export const useViewStore = defineStore("view", () => {
 
     const visibleLoops = computed((): Loop[] => {
         visibleNotesRefreshKey.value;
-        const items = [...project.loops] as Loop[];
+        const items = [...project.loops];
 
         return items.filter((item) => {
             return item.timeEnd >= timeOffset.value && item.time <= timeOffset.value + viewWidthTime.value;
@@ -153,7 +153,17 @@ export const useViewStore = defineStore("view", () => {
 
     });
 
-    const visibleNoteRects = computed((): Drawable<Note>[] => {
+    const visibleAutomationPoints = computed((): AutomationPoint[] => {
+        const screenRange = {
+            time: timeOffset.value,
+            timeEnd: timeOffset.value + viewWidthTime.value,
+            value: -1,
+            valueEnd: 1,
+        };
+        return getTracesInRange(project.automations, screenRange);
+    });
+
+    const visibleNoteDrawables = computed((): Drawable<Note>[] => {
         memoizedNoteRects.length = 0;
         return visibleNotes.value.map((note) => {
             let r = rectOfNote(note);
@@ -162,10 +172,16 @@ export const useViewStore = defineStore("view", () => {
         })
     });
 
-    const visibleLoopRects = computed((): TimelineRect<Loop>[] => {
+    const visibleLoopDrawables = computed((): TimelineRect<Loop>[] => {
         return visibleLoops.value.map((item) => {
             let r = rectOfLoop(item) as TimelineRect<Loop>;
             return r;
+        })
+    });
+
+    const visibleAutomationPointDrawables = computed((): TimelineDot<AutomationPoint>[] => {
+        return visibleAutomationPoints.value.map((item) => {
+            return dotOfAutomationPoint(item);
         })
     });
 
@@ -231,6 +247,19 @@ export const useViewStore = defineStore("view", () => {
         return rect;
     }
 
+    const dotOfAutomationPoint = (item: AutomationPoint): TimelineDot<AutomationPoint> => {
+        const radius = 5;
+        const cx = timeToPxWithOffset(item.time);
+        const cy = valueToPxWithOffset(item.value);
+
+        return {
+            radius,
+            cx,
+            cy,
+            event: item,
+        } as TimelineDot<AutomationPoint>;
+    }
+
     const locationOfTrace = (trace: Trace): { trace: Trace, x: number, y: number } => {
         return {
             trace: trace,
@@ -286,7 +315,7 @@ export const useViewStore = defineStore("view", () => {
     }
 
     const everyNoteAtCoordinates = (x: number, y: number, considerVeloLines: boolean): Drawable[] => {
-        const noteRects = visibleNoteRects.value;
+        const noteRects = visibleNoteDrawables.value;
         const items = noteRects.filter((noteRect) => {
             const veloPy = considerVeloLines ? velocityToPxWithOffset(noteRect.event.velocity) : 0;
             const isThin = !('width' in noteRect);
@@ -330,7 +359,7 @@ export const useViewStore = defineStore("view", () => {
     };
 
     const everyLoopAtCoordinates = (x: number, y: number): TimelineRect<Loop>[] => {
-        let itemRects = visibleLoopRects.value;
+        let itemRects = visibleLoopDrawables.value;
         itemRects = itemRects.filter((itemRect) => {
             if (
                 x >= itemRect.x &&
@@ -522,8 +551,9 @@ export const useViewStore = defineStore("view", () => {
         _offsetPxY,
         visibleNotes,
 
-        visibleNoteRects,
-        visibleLoopRects,
+        visibleNoteDrawables,
+        visibleLoopDrawables,
+        visibleAutomationPointDrawables,
 
         everyNoteAtCoordinates,
         everyLoopAtCoordinates,
