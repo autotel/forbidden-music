@@ -20,6 +20,7 @@ type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
 type ProjectStore = ReturnType<typeof useProjectStore>;
 type SelectStore = ReturnType<typeof useSelectStore>;
+type AutomationLaneStore = ReturnType<typeof useAutomationLaneStore>;
 type Reference<T> = { value: T };
 
 type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & (Trace) & { duration: number };
@@ -59,6 +60,7 @@ interface Stores {
     snap: SnapStore,
     view: ViewStore,
     selection: SelectStore,
+    lanes: AutomationLaneStore,
 }
 
 const polyfillTrace = (trace: Trace): PolyfillTrace => {
@@ -157,7 +159,7 @@ const mouseDragSelectedTraces = ({
 
 const mouseDragModulationSelectedTraces = (
     { drag }: ToolMouse,
-    { view, snap, project }: Stores,
+    { view, snap, project, lanes }: Stores,
     /** provide this reference in order to set de initial velocity for new traces */
     lastVelocitySet: Reference<number> = { value: 0 }
 ) => {
@@ -718,6 +720,7 @@ export const useToolStore = defineStore("tool", () => {
         snap,
         view,
         selection,
+        lanes,
     } as Stores;
 
     const mouseMove = (e: MouseEvent) => {

@@ -3,6 +3,7 @@ import { ref, watchEffect } from "vue";
 import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
 import { SynthParam } from "../synth/SynthInterface";
 import { usePlaybackStore } from "./playbackStore";
+import { AutomationPoint } from "../dataTypes/AutomationPoint";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const playback = usePlaybackStore();
@@ -87,6 +88,12 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         defaultLane.displayName = "Default";
     }
 
+    const forEachAutomationPoint = (callback: (ap: AutomationPoint) => void) => {
+        lanes.value.forEach((lane) => {
+            lane.content.forEach(callback);
+        });
+    }
+
     return {
         lanes,
         addAutomationLane,
@@ -95,6 +102,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         getAutomationLaneDefs,
         applyAutomationLaneDefs,
         getOrCreateAutomationLaneForParameter,
+        forEachAutomationPoint,
         clear,
     };
 });

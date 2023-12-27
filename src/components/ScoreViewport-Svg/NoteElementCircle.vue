@@ -20,7 +20,7 @@ const props = defineProps<{
             selected: eventRect.event.selected,
             editable: isEditable,
             muted: eventRect.event.mute,
-        }" :cx="eventRect.cx" :cy="eventRect.cy" :r="eventRect.radius" 
+        }" :cx="eventRect.x" :cy="eventRect.y" :r="eventRect.radius" 
     />
 </template>
 <style scoped>

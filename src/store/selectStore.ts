@@ -12,6 +12,7 @@ import { useToolStore } from './toolStore';
 import { Tool } from '../dataTypes/Tool';
 import { useViewStore } from './viewStore';
 import { filterMap } from "../functions/filterMap";
+import { useAutomationLaneStore } from './automationLanesStore';
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
@@ -20,6 +21,7 @@ export const useSelectStore = defineStore("select", () => {
     const layers = useLayerStore();
     const tool = useToolStore();
     const view = useViewStore();
+    const lanes = useAutomationLaneStore();
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
     const isSelected = (item: Trace) => {
         return selected.value.has(item);
@@ -28,6 +30,7 @@ export const useSelectStore = defineStore("select", () => {
         // TODO: is it really necessary?
         project.notes.forEach(n => setSelection(n, isSelected(n)));
         project.loops.forEach(n => setSelection(n, isSelected(n)));
+        lanes.forEachAutomationPoint(n => setSelection(n, isSelected(n)));
     }
     /**
      * get selected notes
@@ -88,26 +91,29 @@ export const useSelectStore = defineStore("select", () => {
 
         const pxRange = view.pxRangeOf(range);
         const traceRects = [
-            ...view.visibleLoopDrawables, 
-            ...view.visibleNoteDrawables, 
+            ...view.visibleLoopDrawables,
+            ...view.visibleNoteDrawables,
             ...view.visibleAutomationPointDrawables
         ];
-        
+
         if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');
         const sureRange = pxRange as { x: number, y: number, x2: number, y2: number };
 
         const tracesWithinTimeRange = traceRects.filter(rect => {
+            const width = 'width' in rect ? rect.width : 0;
             return (
-                rect.width + rect.x > sureRange.x &&
+                width + rect.x > sureRange.x &&
                 rect.x < sureRange.x2
             )
         });
 
         const tracesWithinRange = tracesWithinTimeRange.filter(rect => {
+            const width = 'width' in rect ? rect.width : 0;
+            const height = 'height' in rect ? rect.height : 0;
             return (
-                rect.width + rect.x > sureRange.x &&
+                width + rect.x > sureRange.x &&
                 rect.x < sureRange.x2 &&
-                rect.height + rect.y > sureRange.y &&
+                height + rect.y > sureRange.y &&
                 rect.y < sureRange.y2
             )
         }).map(r => r.event);

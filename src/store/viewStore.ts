@@ -80,8 +80,8 @@ export const layerNoteColorStrings = layerNoteColors.map(c => `#${c.toString(16)
 
 export interface TimelineDot<T extends Trace = Trace> {
     event: T;
-    cx: number;
-    cy: number;
+    x: number;
+    y: number;
     radius: number;
 }
 export interface TimelineRect<T extends Trace = Trace> extends TimelineDot<T> {
@@ -205,8 +205,8 @@ export const useViewStore = defineStore("view", () => {
 
         const returnVal = {
             radius,
-            cx,
-            cy,
+            x,
+            y,
             event,
         } as TimelineDot<Note>;
 
@@ -255,13 +255,13 @@ export const useViewStore = defineStore("view", () => {
 
     const dotOfAutomationPoint = (item: AutomationPoint): TimelineDot<AutomationPoint> => {
         const radius = 5;
-        const cx = timeToPxWithOffset(item.time);
-        const cy = valueToPxWithOffset(item.value);
+        const x = timeToPxWithOffset(item.time);
+        const y = valueToPxWithOffset(item.value);
 
         return {
             radius,
-            cx,
-            cy,
+            x,
+            y,
             event: item,
         } as TimelineDot<AutomationPoint>;
     }
@@ -331,11 +331,11 @@ export const useViewStore = defineStore("view", () => {
             }
 
             if (isThin && (
-                x >= noteRect.cx - noteRect.radius &&
-                x <= noteRect.cx + noteRect.radius &&
+                x >= noteRect.x - noteRect.radius &&
+                x <= noteRect.x + noteRect.radius &&
                 // note the vertical asymmetry
-                y >= noteRect.cy &&
-                y <= noteRect.cy + memoizedNoteHeight.value
+                y >= noteRect.y &&
+                y <= noteRect.y + memoizedNoteHeight.value
             )) {
                 return true;
             } else {

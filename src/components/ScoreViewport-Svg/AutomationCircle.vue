@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { AutomationPoint } from '../../dataTypes/AutomationPoint';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineDot, useViewStore } from '../../store/viewStore';
+import { TimelineDot } from '../../store/viewStore';
 
 
 const tool = useToolStore();
@@ -16,21 +16,26 @@ const xy1 = computed(() => {
     const circle = props.circle;
     const nextCircle = props.nextCircle;
     let ret = {
-        x1: circle.cx,
-        y1: circle.cy,
+        x1: circle.x,
+        y1: circle.y,
         x2: 0,
         y2: 0,
     }
     if (nextCircle) {
         ret = {
             ...ret,
-            x2: nextCircle.cx,
-            y2: nextCircle.cy,
+            x2: nextCircle.x,
+            y2: nextCircle.y,
         }
     }
     return ret;
 });
 const textBits = computed(() => {
+    const show = tool.mouse.hovered?.trace === props.circle.event 
+        || props.circle.event.selected;
+    if(!show) {
+        return [];
+    }
     const strno = '' + props.circle.event.value;
     const dotPosition = strno.indexOf('.');
     if (dotPosition === -1) {
@@ -72,9 +77,7 @@ onBeforeUnmount(() => {
         <text :x="xy1.x1" :y="xy1.y1" v-bind="$attrs">{{ textBits[0] }}</text>
         <text :x="xy1.x1 + 30" :y="xy1.y1" font-size="0.6em" v-bind="$attrs">{{ textBits[1] }}</text>
 
-        <line v-if="nextCircle" v-bind="xy1" class="veloline" :class="{
-            selected: circle.event.selected,
-        }" />
+        <line v-if="nextCircle" v-bind="xy1" class="veloline" />
         <circle ref="noteBody" :cx="xy1.x1" :cy="xy1.y1" r="7" :class="{
             selected: circle.event.selected,
         }" v-bind="$attrs" />
@@ -91,6 +94,7 @@ circle {
 line.selected,
 circle.selected {
     stroke: rgb(253, 152, 0);
+    fill: rgba(253, 152, 0, 0.5);
     stroke-width: 3px;
 }
 </style>

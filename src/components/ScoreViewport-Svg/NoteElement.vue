@@ -56,13 +56,13 @@ const isEditable = computed(() => {
 })
 </script>
 <template>
-    <text class="texts" v-if="text" :x="eventRect.cx" :y="eventRect.cy - 10" font-size="14">
+    <text class="texts" v-if="text" :x="eventRect.x" :y="eventRect.y - 10" font-size="14">
         {{ text }}
     </text>
     <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
         <NoteElementRectangle v-if="'width' in eventRect" :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
         <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
-        <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.cx"
+        <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.x"
             :selected="eventRect.event.selected || false" :fill="myColor" />
     </g>
 </template>
