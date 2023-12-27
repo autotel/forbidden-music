@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/SynthInterface';
 import { useToolStore } from '../../store/toolStore';
+import { useAutomationLaneStore } from '../../store/automationLanesStore';
 
 // TODO: this could use a refactor
 
@@ -18,7 +19,16 @@ const valueDraggable = ref();
 const ww = 600;
 const displayValue = ref(props.param.value);
 const tool = useToolStore();
-const automated = computed(() => (tool.parameterBeingAutomated === props.param));
+const lanes = useAutomationLaneStore();
+const automated = computed(() => {
+    console.log(
+        "checking if automated",
+        tool.laneBeingEdited?.targetParameter?.displayName,
+        props.param.displayName,
+        tool.laneBeingEdited?.targetParameter === props.param
+    );
+    return tool.laneBeingEdited?.targetParameter === props.param
+});
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -71,14 +81,13 @@ const mouseDown = (e: MouseEvent) => {
     e.preventDefault();
     dragging.value = true;
 
+    const nl = lanes.getOrCreateAutomationLaneForParameter(props.param);
+    tool.laneBeingEdited = nl;
+
 }
 const mouseUp = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (dragging.value) {
-
-        tool.parameterBeingAutomated = props.param;
-    }
     dragging.value = false;
 }
 watch(props.param, (newParam) => {
@@ -171,5 +180,4 @@ onBeforeUnmount(() => {
 .automated {
     border: solid 5px rgb(253, 152, 0);
 }
-
 </style>

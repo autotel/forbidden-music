@@ -22,15 +22,17 @@ export const getNotesInRange = (
 
 export const getTracesInRange = <T extends Trace>(
     traces: T[],
-    range: SelectableRange
+    range: SelectableRange,
+    includePrevAndNext = false,
 ) => {
     // range is expected to come in positive ranges
     const timeStart = range.time;
     const timeEnd = range.timeEnd;
     const octaveStart = 'octave' in range ? range.octave : undefined;
     const octaveEnd = 'octaveEnd' in range ? range.octaveEnd : undefined;
-
-    return traces.filter((trace) => {
+    let firstTraceIndex = false as number | false;
+    let lastTraceIndex = false as number | false;
+    const filtered = traces.filter((trace, index) => {
         const octaveInRange = (octaveStart === undefined)
             || !('octave' in trace)
             || (trace.octave >= octaveStart && trace.octave <= octaveEnd!);
@@ -38,6 +40,20 @@ export const getTracesInRange = <T extends Trace>(
         const traceTimeEnd = 'timeEnd' in trace ? trace.timeEnd : trace.time;
         
         const timeInRange = traceTimeEnd >= timeStart && trace.time <= timeEnd;
-        return octaveInRange && timeInRange;
+        const pass = octaveInRange && timeInRange;
+        if(pass) {
+            if(firstTraceIndex === false) {
+                firstTraceIndex = index;
+            }
+            lastTraceIndex = index;
+        }
+        return pass;
     });
+    if(includePrevAndNext && firstTraceIndex !== false && lastTraceIndex !== false) {
+        const prevTrace = traces[firstTraceIndex - 1];
+        const nextTrace = traces[lastTraceIndex + 1];
+        if(prevTrace) filtered.unshift(prevTrace);
+        if(nextTrace) filtered.push(nextTrace);
+    }
+    return filtered;
 };

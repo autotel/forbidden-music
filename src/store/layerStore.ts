@@ -56,11 +56,17 @@ export const useLayerStore = defineStore("layer", () => {
         throw new Error("No layer 0");
     }
 
+    const clear = () => {
+        layers.value = [];
+        getOrMakeLayerWithIndex(0);
+    }
+
     return {
         layers,
         getOrMakeLayerWithIndex,
         getLayerChannel,
         isVisible,
         addLayer,
+        clear,
     };
 });

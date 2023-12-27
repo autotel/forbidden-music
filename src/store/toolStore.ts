@@ -1,18 +1,20 @@
 import { clamp, useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
+import { AutomationLane } from '../dataTypes/AutomationLane';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
 import { Loop, loop } from '../dataTypes/Loop';
 import { Note, note } from '../dataTypes/Note';
 import { ScreenCoord } from '../dataTypes/ScreenCoord';
-import { OctaveRange, TimeRange, VelocityRange, getDuration, hasDuration, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
+import { OctaveRange, TimeRange, VelocityRange, getDuration, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Tool } from '../dataTypes/Tool';
 import { Trace, TraceType, cloneTrace, traceTypeSafetyCheck } from '../dataTypes/Trace';
+import { useAutomationLaneStore } from './automationLanesStore';
 import { useProjectStore } from './projectStore';
 import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
-import { SynthParam } from '../synth/SynthInterface';
+import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -115,7 +117,6 @@ const mouseDragSelectedTraces = ({
     const octaveDragDelta = view.pxToOctave(drag.delta.y);
     const timeDragDelta = view.pxToTime(drag.delta.x);
     const octaveWhenDragStarted = 'octave' in drag.traceWhenDragStarted ? drag.traceWhenDragStarted.octave : 0;
-
     const preSnapDragTrace = cloneTrace(drag.traceWhenDragStarted);
 
     preSnapDragTrace.octave = octaveWhenDragStarted + octaveDragDelta;
@@ -218,6 +219,7 @@ export enum MouseDownActions {
     RemoveFromSelectionAndDrag,
     CreateNote,
     CreateLoop,
+    CreateAutomationPoint,
     LengthenTrace,
     DragNoteVelocity,
     CopyNote,
@@ -234,6 +236,7 @@ export const useToolStore = defineStore("tool", () => {
     const view = useViewStore();
     const project = useProjectStore();
     const snap = useSnapStore();
+    const lanes = useAutomationLaneStore();
     const tooltip = ref("");
     const tooltipOwner = ref<HTMLElement | SVGElement | null>(null);
     // TODO: probably not all these need to be refs
@@ -243,12 +246,14 @@ export const useToolStore = defineStore("tool", () => {
     const currentLeftHand = ref(Tool.None);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
-    /** which parameter is currenly being shown on screen for automation */
-    const parameterBeingAutomated = ref<SynthParam | false>(false);
     let lastVelocitySet = { value: 0.7 };
     type ToolRange = SelectableRange & OctaveRange & TimeRange & { active: boolean };
-
     const currentLayerNumber = ref(0);
+
+    /** which parameter is currenly being shown on screen for automation */
+    const laneBeingEdited = ref<AutomationLane | undefined>(
+        lanes.lanes.get(0) || undefined
+    );
 
     const selectRange = ref<ToolRange>({
         time: 0,
@@ -275,6 +280,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const noteThatWouldBeCreated = ref<Note | false>(false);
     const loopThatWouldBeCreated = ref<Loop | false>(false);
+    const automationPointThatWouldBeCreated = ref<AutomationPoint | false>(false);
 
     let mouse: ToolMouse = reactive({
         tracesBeingCreated: [] as Trace[],
@@ -299,7 +305,7 @@ export const useToolStore = defineStore("tool", () => {
         } else if (mouse.hovered?.trace) {
             trace = mouse.hovered?.trace;
         } else {
-            console.log("no trace hovered");
+            //
         }
 
         if (trace) {
@@ -358,6 +364,7 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.AreaSelectNotes:
                 return 'cursor-area-select';
             case MouseDownActions.CreateNote:
+            case MouseDownActions.CreateAutomationPoint:
             case MouseDownActions.CreateLoop:
             default:
                 return 'cursor-draw';
@@ -429,9 +436,10 @@ export const useToolStore = defineStore("tool", () => {
                 if (selection.isSelected(mouse.hovered.trace)) {
                     ret = MouseDownActions.DragNoteVelocity;
                 } else {
-                    // thus far no distinction needed
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
+            } else {
+                ret = MouseDownActions.CreateAutomationPoint;
             }
             currentMouseStringHelper.value = "⇅";
         } else if (
@@ -571,6 +579,14 @@ export const useToolStore = defineStore("tool", () => {
                 mouse.drag.isRightEdge = true;
                 break;
             }
+            case MouseDownActions.CreateAutomationPoint: {
+                if (!automationPointThatWouldBeCreated.value) throw new Error('no automationPointThatWouldBeCreated');
+                selection.clear();
+                laneBeingEdited.value?.content.push(
+                    automationPointThatWouldBeCreated.value
+                );
+                break;
+            }
             default:
                 console.log("-?- ", MouseDownActions[mouse.currentAction]);
         }
@@ -663,9 +679,18 @@ export const useToolStore = defineStore("tool", () => {
             applySnapToLoop(loopThatWouldBeCreated.value, project.loops);
 
             return;
-        } else {
+        } else if (whatWouldMouseDownDo() === MouseDownActions.CreateAutomationPoint) {
+            const mouseTime = view.pxToTimeWithOffset(x);
+            const thePoint = automationPoint({
+                time: mouseTime,
+                value: view.pxToValueWithOffset(y),
+                layer: currentLayerNumber.value,
+            });
+            automationPointThatWouldBeCreated.value = thePoint;
+        }else{
             noteThatWouldBeCreated.value = false;
             loopThatWouldBeCreated.value = false;
+            automationPointThatWouldBeCreated.value = false;
         }
     }
 
@@ -768,12 +793,10 @@ export const useToolStore = defineStore("tool", () => {
         if (whatWouldMouseDownDo() !== MouseDownActions.CreateLoop) {
             loopThatWouldBeCreated.value = false;
         }
+        if (whatWouldMouseDownDo() !== MouseDownActions.CreateAutomationPoint) {
+            automationPointThatWouldBeCreated.value = false;
+        }
     })
-
-    watch(parameterBeingAutomated, (newValue) => {
-        console.log("parameterBeingAutomated", newValue?newValue.displayName:'false');
-    });
-
     return {
         mouseDown,
         mouseMove,
@@ -784,7 +807,7 @@ export const useToolStore = defineStore("tool", () => {
         timelineItemMouseLeave,
         timelineItemRightEdgeMouseLeave,
 
-        parameterBeingAutomated,
+        laneBeingEdited,
 
         resetState,
 
@@ -811,6 +834,7 @@ export const useToolStore = defineStore("tool", () => {
 
         noteThatWouldBeCreated,
         loopThatWouldBeCreated,
+        automationPointThatWouldBeCreated,
 
         loopsBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Loop) as Loop[]),
         notesBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Note) as Note[]),

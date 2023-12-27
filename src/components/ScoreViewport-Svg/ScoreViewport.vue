@@ -57,6 +57,12 @@ onBeforeUnmount(() => {
                 :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
                 interactionDisabled /> 
         </g>
+        <g id="automation-point-would-be-created">
+            <AutomationCircle
+                v-if="tool.automationPointThatWouldBeCreated" 
+                :circle="view.dotOfAutomationPoint(tool.automationPointThatWouldBeCreated)"
+                interactionDisabled />
+        </g>
         <!-- <g id="loops-being-created">
         </g> -->
         <g id="loop-range-container">
@@ -68,7 +74,10 @@ onBeforeUnmount(() => {
             <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect"  />
         </g>
         <g id="edit-automation">
-            <AutomationCircle v-for="circle in view.visibleAutomationPointDrawables" :circle="circle" />
+            <AutomationCircle 
+                v-for="(circle, index) in view.visibleAutomationPointDrawables" :circle="circle" 
+                :nextCircle="view.visibleAutomationPointDrawables[index + 1]"    
+            />
         </g>
         <g id="traces-being-created">
             <template v-for="trace in tool.mouse.tracesBeingCreated">

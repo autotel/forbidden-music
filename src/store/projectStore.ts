@@ -1,26 +1,27 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
+import { AutomationPointDef, automationPoint, automationPointDef } from '../dataTypes/AutomationPoint';
+import { AutomationLane, automationLane } from '../dataTypes/AutomationLane';
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
-import { TimeRange, sanitizeTimeRanges } from '../dataTypes/TimelineItem';
-import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
+import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
+import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
+import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
+import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
-import { ExternalSynthInstance, SynthInstance, SynthParam } from '../synth/SynthInterface';
+import { SynthParam } from '../synth/SynthInterface';
+import { useAudioContextStore } from './audioContextStore';
 import { useLayerStore } from './layerStore';
 import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
 import { SynthChannel, usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
-import { useViewStore } from './viewStore';
-import { Trace, TraceType, traceTypeSafetyCheck, transposeTime } from '../dataTypes/Trace';
-import { useAudioContextStore } from './audioContextStore';
-import { SineSynth } from '../synth/SineSynth';
-import { AutomationPoint, AutomationPointDef, automationPoint, automationPointDef } from '../dataTypes/AutomationPoint';
+import { useAutomationLaneStore } from './automationLanesStore';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",
     notes: [],
     loops: [],
+    lanes: [],
     created: Date.now().valueOf(),
     edited: Date.now().valueOf(),
     snaps: [],
@@ -47,7 +48,7 @@ export const useProjectStore = defineStore("current project", () => {
 
     const notes = ref<Note[]>([]);
     const loops = ref<Loop[]>([]);
-    const automations = ref<AutomationPoint[]>([]);
+    const lanes = useAutomationLaneStore();
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
         return [key, snaps.values[key].active];
@@ -65,9 +66,6 @@ export const useProjectStore = defineStore("current project", () => {
         l => ((l.timeEnd - l.time > 0) && (l.count > 0))
     ).map(loopDef);
 
-    const serializeAutomationPoints = (automationPoints: AutomationPoint[]) =>
-        automationPoints.map(automationPointDef);
-
     const stringifyNotes = (notes: Note[], zip: boolean = false) => {
         let str = JSON.stringify(serializeNotes(notes));
         if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
@@ -80,14 +78,8 @@ export const useProjectStore = defineStore("current project", () => {
         return str;
     }
 
-    const stringifyAutomationPoints = (automationPoints: AutomationPoint[], zip: boolean = false) => {
-        let str = JSON.stringify(serializeAutomationPoints(automationPoints));
-        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
-        return str;
-    }
-
     type ItmFilter<T> = (itm: unknown | T) => boolean;
-    const tryDecompressAndParseArray = <T>(str: string, testFn:ItmFilter<T>): T[] => {
+    const tryDecompressAndParseArray = <T>(str: string, testFn: ItmFilter<T>): T[] => {
         let json = str;
         try {
             json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
@@ -148,25 +140,12 @@ export const useProjectStore = defineStore("current project", () => {
         return loops;
     }
 
-    const parseAutomationPoints = (str: string): AutomationPoint[] => {
-        let automationPointDefs = tryDecompressAndParseArray<AutomationPointDef>(str, (maybeAutomationPoint) => {
-            if (typeof maybeAutomationPoint !== "object") return false;
-            if (null === maybeAutomationPoint) return false;
-            if (!('time' in maybeAutomationPoint)) return false;
-            if (!('value' in maybeAutomationPoint)) return false;
-            return true;
-        });
-        
-        const automationPoints = automationPointDefs.map((d)=>automationPoint(d));
-        return automationPoints;
-    }
-
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
             notes: serializeNotes(notes.value),
             loops: serializeLoops(loops.value),
-            automations: serializeAutomationPoints(automations.value),
+            lanes: lanes.getAutomationLaneDefs(),
             customOctavesTable: snaps.customOctavesTable,
             snap_simplify: snaps.simplify,
             created: created.value,
@@ -203,9 +182,7 @@ export const useProjectStore = defineStore("current project", () => {
 
         const nLoops: Loop[] = pDef.loops.map(loop);
         loops.value = nLoops;
-
-        if(pDef.automations) automations.value = pDef.automations.map(automationPoint);
-
+        
         if (pDef.bpm) playbackStore.bpm = pDef.bpm;
 
         pDef.snaps.forEach(([name, activeState]) => {
@@ -219,6 +196,8 @@ export const useProjectStore = defineStore("current project", () => {
             layer.locked = locked;
             layer.channelSlot = channelSlot;
         });
+
+        lanes.applyAutomationLaneDefs(pDef.lanes);
 
         if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
         if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
@@ -252,6 +231,8 @@ export const useProjectStore = defineStore("current project", () => {
     const clearScore = () => {
         notes.value = [];
         loops.value = [];
+        lanes.clear();
+        layers.clear();
     }
 
     const appendNote = (...newNotes: Note[]) => {
@@ -328,7 +309,7 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     return {
-        notes, loops, automations,
+        notes, loops, lanes,
         append,
         sortLoops,
         loadEmptyProjectDefinition,

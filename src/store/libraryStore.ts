@@ -1,17 +1,18 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
+import { AutomationLane } from '../dataTypes/AutomationLane';
+import { AutomationPointDef } from '../dataTypes/AutomationPoint';
 import { LoopDef } from '../dataTypes/Loop';
 import { Note, NoteDef, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
 import { SynthParamStored } from '../synth/SynthInterface';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
-import { userCustomPerformanceSettings } from './customSettingsStore';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';
-import { AutomationPointDef } from '../dataTypes/AutomationPoint';
+import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 
-const version = "0.3.0";
+const version = "0.4.0";
 export const LIBRARY_VERSION = version;
 
 interface LibraryItem_0_1_0 {
@@ -74,7 +75,36 @@ type LibraryItem_0_3_0 = {
     automations?: AutomationPointDef[];
 }
 
-export type LibraryItem = LibraryItem_0_3_0;
+type LibraryItem_0_4_0 = {
+
+    version: string;
+    name: string;
+    created: Number;
+    edited: Number;
+    snaps: Array<[string, boolean]>;
+    instrument?: {
+        type: string;
+        params: Array<SynthParamStored>;
+    };
+    bpm?: number;
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    channels: {
+        type: string;
+        params: Array<SynthParamStored>;
+    }[];
+    customOctavesTable?: number[];
+    snap_simplify?: number;
+
+    notes: NoteDef[];
+    loops: LoopDef[];
+    lanes: AutomationLane[];
+}
+
+export type LibraryItem = LibraryItem_0_4_0;
 
 const migrators = {
     "0.0.0": (obj: any) => {
@@ -113,6 +143,15 @@ const migrators = {
         newObj.version = "0.3.0";
         return newObj;
     },
+    "0.3.0": (obj: LibraryItem_0_1_0): LibraryItem_0_4_0 => {
+        const newObj = Object.assign({
+            lanes: [],
+        }, obj) as unknown as LibraryItem_0_4_0 & {
+            lanes: [],
+        };
+        newObj.version = "0.4.0";
+        return newObj;
+    },
 }
 
 
@@ -122,7 +161,7 @@ type PossibleImportObjects = LibraryItem | Array<Note>
 const reservedEntryNames = [
     "forbidden-music",
     userShownDisclaimerLocalStorageKey,
-    userCustomPerformanceSettings,
+    userCustomPerformanceSettingsKey,
 ];
 
 const normalizeLibraryItem = (obj: any): LibraryItem => {

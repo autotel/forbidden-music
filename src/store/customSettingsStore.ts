@@ -3,8 +3,7 @@ import { computed, onMounted, ref, watchEffect } from "vue";
 import nsLocalStorage from "../functions/nsLocalStorage";
 import { useExclusiveContentsStore } from "./exclusiveContentsStore";
 import { useViewStore } from "./viewStore";
-
-export const userCustomPerformanceSettings = 'RbftAFPvQd-zGucC2xGaS-performance-settings';
+import userCustomPerformanceSettingsKey from "./userCustomPerformanceSettingsKey";
 
 export enum ViewportTech {
     Canvas, Pixi, Svg
@@ -42,7 +41,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
     const physicalEnabled = ref(false);
 
     const deleteSettings = () => {
-        nsLocalStorage.removeItem(userCustomPerformanceSettings);
+        nsLocalStorage.removeItem(userCustomPerformanceSettingsKey);
         viewportTech.value = ViewportTech.Svg;
         showFPS.value = false;
         fontSize.value = 12;
@@ -56,7 +55,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
     }
 
     onMounted(() => {
-        const savedSettings = nsLocalStorage.getItem(userCustomPerformanceSettings);
+        const savedSettings = nsLocalStorage.getItem(userCustomPerformanceSettingsKey);
         try {
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
@@ -78,7 +77,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
 
 
         watchEffect(() => {
-            nsLocalStorage.setItem(userCustomPerformanceSettings, JSON.stringify({
+            nsLocalStorage.setItem(userCustomPerformanceSettingsKey, JSON.stringify({
                 viewportTech: viewportTech.value,
                 showFPS: showFPS.value,
                 fontSize: fontSize.value,

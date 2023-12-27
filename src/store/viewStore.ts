@@ -12,6 +12,7 @@ import { usePlaybackStore } from "./playbackStore.js";
 import { useProjectStore } from "./projectStore.js";
 import { useToolStore } from "./toolStore.js";
 import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
+import { useAutomationLaneStore } from "./automationLanesStore.js";
 
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -119,7 +120,7 @@ export const useViewStore = defineStore("view", () => {
     const memoizedNoteRects: Drawable<Note>[] = [];
     const layers = useLayerStore();
     const tool = useToolStore();
-
+    const lanes = useAutomationLaneStore();
     const memoizedNoteHeight = computed(() => {
         return Math.abs(octaveToPx(1 / 12));
     });
@@ -160,7 +161,12 @@ export const useViewStore = defineStore("view", () => {
             value: -1,
             valueEnd: 1,
         };
-        return getTracesInRange(project.automations, screenRange);
+        if(!tool.laneBeingEdited) return [];
+
+        return getTracesInRange(
+            tool.laneBeingEdited.content, 
+            screenRange, true
+        );
     });
 
     const visibleNoteDrawables = computed((): Drawable<Note>[] => {
@@ -532,6 +538,7 @@ export const useViewStore = defineStore("view", () => {
         rangeToStrictRect,
         rectOfNote,
         rectOfLoop,
+        dotOfAutomationPoint,
         locationOfTrace,
 
         isOctaveInView,
