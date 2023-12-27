@@ -163,17 +163,27 @@ const mouseDragModulationSelectedTraces = (
 ) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) return;
-    if (drag.traceWhenDragStarted.type !== TraceType.Note) return;
-
+    // negative y bc. inverted by offset, but in this case we don't want the offset amt, only sign
     const velocityDelta = view.pxToVelocity(-drag.delta.y);
+    const valueDelta = view.pxToValue(-drag.delta.y);
+    const timeDelta = view.pxToTime(drag.delta.x);
     drag.traces.forEach((trace, index) => {
-        if (trace.type !== TraceType.Note) return;
-        const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
-        if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
-        if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
-        const velocityWhenDragStarted = traceWhenDragStarted.velocity;
-        trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
-        lastVelocitySet.value = trace.velocity;
+        console.log("drag action for",trace.type);
+        if(trace.type === TraceType.Note) {
+            const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
+            if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
+            if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
+            const velocityWhenDragStarted = traceWhenDragStarted.velocity;
+            trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
+            lastVelocitySet.value = trace.velocity;
+        }else if(trace.type === TraceType.AutomationPoint) {
+            const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
+            if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
+            if (!('value' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.value');
+            const valueWhenDragStarted = traceWhenDragStarted.value;
+            trace.value = valueWhenDragStarted + valueDelta;
+            trace.time = traceWhenDragStarted.time + timeDelta;
+        }
     });
 }
 
@@ -205,7 +215,7 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, project, se
         if (trace === drag.trace) return;
         trace.timeEnd = correlativeDragStartClone.timeEnd + durationDeltaAfterSnap;
     });
-    const selectedTimeRanges = selectedTraces.filter((t)=>'timeEnd' in t) as TimeRange[];
+    const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
 
@@ -375,6 +385,7 @@ export const useToolStore = defineStore("tool", () => {
         traceTypeSafetyCheck(trace);
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
+        automationPointThatWouldBeCreated.value = false;
         mouse.hovered = {
             trace: trace,
         }
@@ -430,13 +441,20 @@ export const useToolStore = defineStore("tool", () => {
                 ret = MouseDownActions.AreaSelectNotes;
                 currentMouseStringHelper.value = "⃞";
             }
-
         } else if (current.value === Tool.Modulation) {
             if (mouse.hovered?.trace) {
                 if (selection.isSelected(mouse.hovered.trace)) {
-                    ret = MouseDownActions.DragNoteVelocity;
+                    if (mouse.hovered.trace.type === TraceType.Note) {
+                        ret = MouseDownActions.DragNoteVelocity;
+                    } else if (mouse.hovered.trace.type === TraceType.AutomationPoint) {
+                        ret = MouseDownActions.MoveNotes;
+                    }
                 } else {
-                    ret = MouseDownActions.SetSelectionAndDrag;
+                    if (mouse.hovered.trace.type === TraceType.Note) {
+                        ret = MouseDownActions.SetSelectionAndDrag;
+                    } else if (mouse.hovered.trace.type === TraceType.AutomationPoint) {
+                        ret = MouseDownActions.SetSelectionAndDrag;
+                    }
                 }
             } else {
                 ret = MouseDownActions.CreateAutomationPoint;
@@ -687,7 +705,7 @@ export const useToolStore = defineStore("tool", () => {
                 layer: currentLayerNumber.value,
             });
             automationPointThatWouldBeCreated.value = thePoint;
-        }else{
+        } else {
             noteThatWouldBeCreated.value = false;
             loopThatWouldBeCreated.value = false;
             automationPointThatWouldBeCreated.value = false;

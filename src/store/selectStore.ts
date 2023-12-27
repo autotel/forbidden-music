@@ -87,7 +87,12 @@ export const useSelectStore = defineStore("select", () => {
         select();
 
         const pxRange = view.pxRangeOf(range);
-        const traceRects = [...view.visibleLoopDrawables, ...view.visibleNoteDrawables];
+        const traceRects = [
+            ...view.visibleLoopDrawables, 
+            ...view.visibleNoteDrawables, 
+            ...view.visibleAutomationPointDrawables
+        ];
+        
         if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');
         const sureRange = pxRange as { x: number, y: number, x2: number, y2: number };
 
