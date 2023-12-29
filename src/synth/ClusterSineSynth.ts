@@ -1,6 +1,5 @@
-import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
-import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 import { frequencyToOctave } from "../functions/toneConverters";
+import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
 
 export class ClusterSineVoice {
     inUse: boolean = false;
@@ -215,8 +214,6 @@ export class ClusterSineSynth implements SynthInstance {
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
-
-
         const synth = this;
         this.params.push({
             displayName: "oscillators count",
@@ -278,13 +275,12 @@ export class ClusterSineSynth implements SynthInstance {
     triggerAttackRelease = (
         frequency: number,
         duration: number,
-        relativeNoteStart: number,
+        startTime: number,
         velocity: number
     ) => {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new ClusterSineVoice(this.audioContext));
@@ -297,13 +293,13 @@ export class ClusterSineSynth implements SynthInstance {
         // TODO: stupid conversion back to octave, of a value which probably was converted from octave?
         voice.pan = this.octaveToPan(frequencyToOctave(frequency));
         voice.imprecision = this.imprecision;
-        voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
+        voice.triggerAttackRelease(frequency, duration, startTime, velocity);
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
+    triggerPerc = (frequency: number, startTime: number, velocity: number) => {
         let voice = this.voices.find((voice) => {
             return !voice.inUse;
         });
-        if (relativeNoteStart < 0) relativeNoteStart = 0;
+        if (startTime < 0) startTime = 0;
         if (!voice) {
             const voiceIndex = this.voices.length;
             this.voices.push(new ClusterSineVoice(this.audioContext));
@@ -315,7 +311,7 @@ export class ClusterSineSynth implements SynthInstance {
         const { relativeOctaves, gains } = this.getCluster();
         voice.pan = this.octaveToPan(frequencyToOctave(frequency));
         voice.setValues(relativeOctaves, gains);
-        voice.triggerPerc(frequency, relativeNoteStart, velocity);
+        voice.triggerPerc(frequency, startTime, velocity);
 
     };
     releaseAll = () => {

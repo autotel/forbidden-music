@@ -233,6 +233,7 @@ export const useProjectStore = defineStore("current project", () => {
         loops.value = [];
         lanes.clear();
         layers.clear();
+        setFromProjectDefinition(emptyProjectDefinition);
     }
 
     const appendNote = (...newNotes: Note[]) => {

@@ -20,7 +20,9 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         }
         return i;
     }
-
+    const canParameterBeAutomated = (parameter: SynthParam) => {
+        return parameter.animate !== undefined
+    }
     const sortPointsByTime = (lane: AutomationLane) => {
         lane.content.sort((a, b) => a.time - b.time);
         lane.sizeWhenLastSorted = lane.content.length;
@@ -34,7 +36,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
     })
 
-
     const addAutomationLane = (targetParameter?: SynthParam) => {
         const newLane = automationLane({
             displayName: "New Automation Lane",
@@ -46,6 +47,9 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         return newLane;
     }
     const getOrCreateAutomationLaneForParameter = (targetParameter: SynthParam) => {
+        if(!canParameterBeAutomated(targetParameter)) {
+            return undefined;
+        }
         const lanesArray = Array.from(lanes.value.values());
         let lane = lanesArray.find((lane) => lane.targetParameter === targetParameter);
         if (!lane) {
@@ -104,6 +108,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         applyAutomationLaneDef,
         getAutomationLaneDef,
         getAutomationLaneDefs,
+        canParameterBeAutomated,
         applyAutomationLaneDefs,
         getOrCreateAutomationLaneForParameter,
         forEachAutomationPoint,

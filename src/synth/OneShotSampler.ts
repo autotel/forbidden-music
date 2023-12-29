@@ -271,6 +271,7 @@ export class OneShotSampler implements SynthInstance {
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
+        
         this.enable = () => {
             this.sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;

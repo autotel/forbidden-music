@@ -82,7 +82,7 @@ const mouseDown = (e: MouseEvent) => {
     dragging.value = true;
 
     const nl = lanes.getOrCreateAutomationLaneForParameter(props.param);
-    tool.laneBeingEdited = nl;
+    if(nl) tool.laneBeingEdited = nl;
 
 }
 const mouseUp = (e: MouseEvent) => {

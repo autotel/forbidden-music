@@ -4,7 +4,7 @@ import { computed, ref, watch, watchEffect } from 'vue';
 import { Loop } from "../dataTypes/Loop";
 import { Note, note } from "../dataTypes/Note";
 import { getDuration } from "../dataTypes/TimelineItem";
-import { transposeTime } from "../dataTypes/Trace";
+import { TraceType, transposeTime } from "../dataTypes/Trace";
 import isTauri, { tauriObject } from '../functions/isTauri';
 import devMidiInputHandler from '../midiInputHandlers/log';
 import octatrackMidiInputHandler from '../midiInputHandlers/octatrack';
@@ -13,6 +13,10 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useProjectStore } from './projectStore';
 import { useSynthStore } from './synthStore';
 import { useViewStore } from './viewStore';
+import { useAutomationLaneStore } from './automationLanesStore';
+import { AutomationPoint } from '../dataTypes/AutomationPoint';
+import { SynthParam } from '../synth/SynthInterface';
+import { filterMap } from '../functions/filterMap';
 
 
 interface MidiInputInterface {
@@ -101,6 +105,7 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
 
 export const usePlaybackStore = defineStore("playback", () => {
     const project = useProjectStore();
+    const automation = useAutomationLaneStore();
     const audioContextStore = useAudioContextStore();
     const synth = useSynthStore();
     // TODO: many of these need not to be refs nor be exported.
@@ -200,12 +205,70 @@ export const usePlaybackStore = defineStore("playback", () => {
         });
     }
 
-    const _getEventsBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
+    const getNotesBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
         const events = project.notes.filter((editNote) => {
             return (catchUp ? editNote.timeEnd : editNote.time) >= frameStartTime && editNote.time < frameEndTime;
         });
         return events;
     };
+    /** 
+     * Get the automation points corresponding to the given playback frame timerange
+     */
+    const gatAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
+        /* 
+          The return of this function is a bit counterintuitive:
+          it returns the automation that follows whichever automation falls within the given range (fig 1.)
+          and if catch-up is set to true, it also retuns the last automation before the range end
+          
+          This is because we want to animate towards the following automation, but we want to get only the 
+          next automation on the first frame after the previous animation ended (fig 2) 
+          so that we don't schedule destinations redundantly.
+          
+          fig 1:
+          ----a--------a---------------a-------a--------
+                       |               |       
+                    in this moment     |
+                                      return this one
+                     
+          
+          fig 2:
+          ----a--------a--------a-------a--------
+                           |       
+                     in this moment, return nothing (unless catch-up)
+        */
+        const returnValue: {
+            param: SynthParam,
+            point: AutomationPoint,
+        }[] = [];
+
+        automation.lanes.forEach((lane) => {
+            const param = lane.targetParameter;
+            if (!param) return;
+            if (!lane.content.length) return;
+            const selectedIndexes = filterMap(lane.content, (point, index) => {
+                if (point.time >= frameStartTime && point.time < frameEndTime) {
+                    return index + 1;
+                }
+                return false;
+            })
+            if (catchUp) {
+                const prevPointIndex = selectedIndexes[0] - 1;
+                if (prevPointIndex >= 0) {
+                    selectedIndexes.unshift(prevPointIndex);
+                }
+            }
+
+            returnValue.push(...filterMap(selectedIndexes, (index) => {
+                const point = lane.content[index];
+                if (!point) return false;
+                return {
+                    param,
+                    point,
+                }
+            }))
+        });
+        return returnValue;
+    }
 
     let isFirtClockAfterPlay = true;
     let loopNow: Loop | undefined;
@@ -244,12 +307,12 @@ export const usePlaybackStore = defineStore("playback", () => {
 
         let playRangeEnd = currentScoreTime.value;
         if (loopRestarted) playRangeEnd = loopRestarted.timeEnd;
-        playNotes = _getEventsBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
+        playNotes = getNotesBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
 
         if (loopRestarted) {
             const remainder = scoreTimeFrameEnd - loopRestarted.timeEnd;
             const transposeNoteTime = getDuration(loopRestarted);
-            const loopStartNotes = _getEventsBetween(loopRestarted.time, loopRestarted.time + remainder)
+            const loopStartNotes = getNotesBetween(loopRestarted.time, loopRestarted.time + remainder)
                 .map(inote => {
                     const noteClone = note(inote);
                     transposeTime(noteClone, transposeNoteTime);
@@ -267,11 +330,34 @@ export const usePlaybackStore = defineStore("playback", () => {
             if (noteStartRelative < 0) {
                 noteStartRelative = 0;
             }
-            const noteStartAbsolute = tickTime + noteStartRelative;
-            const noteDuration = musicalTimeToWebAudioTime(getDuration(editNote));
+            const eventStartAbsolute = tickTime + noteStartRelative;
+            let noteDuration = 0;
+            if (editNote.type === TraceType.Note) {
+                noteDuration = musicalTimeToWebAudioTime(getDuration(editNote));
+            }
 
-            synth.scheduleEvent(editNote, noteStartAbsolute, noteDuration);
+            try {
+                synth.scheduleNote(editNote, eventStartAbsolute, noteDuration);
+            } catch (e) {
+                console.error("could not schedule event", editNote, e);
+            }
         });
+
+        gatAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
+            .forEach((automation) => {
+                const { param, point } = automation;
+                let eventStartAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
+                if (eventStartAbsolute < 0) {
+                    // TODO: could lerp for more precision
+                    eventStartAbsolute = 0;
+                }
+                try {
+                    // synth.scheduleAutomation(point, eventStartAbsolute, param);
+                    param.animate?.(point.value, eventStartAbsolute);
+                } catch (e) {
+                    console.error("could not schedule event", point, e);
+                }
+            });
 
         previousClockTime = tickTime;
 

@@ -20,6 +20,8 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
+import { AutomationPoint } from '../dataTypes/AutomationPoint';
+import { TraceType } from '../dataTypes/Trace';
 
 type AdmissibleSynthType = SynthInstance | ExternalSynthInstance;
 
@@ -28,6 +30,59 @@ export interface SynthChannel {
     params: SynthParam[];
 }
 
+const createSynths = (audioContext: AudioContext, includeExclusives: boolean) => {
+
+    const samplers = [] as (OneShotSampler | ComplexSampler)[];
+    const exclusiveSamplers = [] as (OneShotSampler | ComplexSampler)[];
+    const localOnlySamplers = [] as (OneShotSampler | ComplexSampler)[];
+    let returnArray = [] as AdmissibleSynthType[];
+
+    sampleDefinitions.forEach((sampleDefinition) => {
+        const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
+        if (sampleDefinition.isComplexSampler) {
+            arrayWhereToPush.push(new ComplexSampler(
+                audioContext,
+                sampleDefinition.samples,
+                "(CPX)" + sampleDefinition.name,
+                sampleDefinition.readme
+            ))
+        } else {
+            arrayWhereToPush.push(new OneShotSampler(
+                audioContext,
+                sampleDefinition.samples,
+                sampleDefinition.name,
+                sampleDefinition.readme
+            ))
+        }
+    });
+
+    returnArray = [
+        new SineSynth(audioContext),
+        new ExternalMidiSynth(audioContext),
+        ...samplers
+    ];
+
+    if (includeExclusives) {
+        returnArray.push(...exclusiveSamplers);
+        returnArray.unshift(new FourierSynth(audioContext));
+        returnArray.unshift(new KickSynth(audioContext));
+        returnArray.unshift(new ClusterSineSynth(audioContext));
+    } else {
+        console.log("exclusives disabled");
+    }
+
+    if (isDev()) {
+        // bc. unfinished
+        returnArray.push(new FmSynth(audioContext));
+        returnArray.push(new KarplusSynth(audioContext));
+        // bc. pirate
+        returnArray.push(...localOnlySamplers);
+    } else {
+        console.log("local only samples disabled");
+    }
+    console.log("available channels", returnArray.map(s => s.name));
+    return returnArray;
+}
 
 export const useSynthStore = defineStore("synthesizers", () => {
     const layerStore = useLayerStore();
@@ -35,9 +90,10 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const audioContextStore = useAudioContextStore();
     const effectsStore = useEffectsStore();
 
-    const availableSynths = ref([] as AdmissibleSynthType[]);
+    const availableSynths = ref(
+        createSynths(audioContextStore.audioContext, exclusives.enabled) as AdmissibleSynthType[]
+    );
     const channels = ref<SynthChannel[]>([]);
-
 
     const addChannel = (index?: number) => {
         const newChannel = {
@@ -54,6 +110,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return newChannel;
     }
 
+
     const removeChannel = (index: number) => {
         channels.value.splice(index, 1);
     }
@@ -65,31 +122,39 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return channels.value[index];
     }
 
-    const scheduleEvent = (editNote: Note, noteStartAbsolute: number, noteDuration: number) => {
-        const synth = getLayerSynth(editNote.layer)
+    getOrCreateChannel(0);
+
+    const scheduleNote = (
+        event: Note,
+        eventStartAbsolute: number,
+        eventDuration?: number,
+    ) => {
+        const synth = getLayerSynth(event.layer);
         if (!synth) return;
+        const frequency = getFrequency(event);
+        if (eventDuration) {
+            synth.triggerAttackRelease(
+                frequency,
+                eventDuration,
+                eventStartAbsolute,
+                event.velocity
+            );
+        } else {
+            synth.triggerPerc(
+                frequency,
+                eventStartAbsolute,
+                event.velocity
+            );
 
-        try {
-            const frequency = getFrequency(editNote);
-            const duration = getDuration(editNote);
-            if (duration) {
-                synth.triggerAttackRelease(
-                    frequency,
-                    noteDuration,
-                    noteStartAbsolute,
-                    editNote.velocity
-                );
-            } else {
-                synth.triggerPerc(
-                    frequency,
-                    noteStartAbsolute,
-                    editNote.velocity
-                );
-
-            }
-        } catch (e) {
-            console.warn("note play error", e);
         }
+    }
+    const scheduleAutomation = (
+        event: AutomationPoint,
+        detinationTime: number,
+        destinationParameter: SynthParam,
+    ) => {
+        if (!destinationParameter.animate) throw new Error("destination parameter is not animatable");
+        destinationParameter.animate(event.value, detinationTime);
     }
     const releaseAll = () => channels.value.forEach(({ synth }) => synth.releaseAll());
     /**
@@ -216,65 +281,13 @@ export const useSynthStore = defineStore("synthesizers", () => {
 
 
     audioContextStore.audioContextPromise.then((audioContext: AudioContext) => {
-        const samplers = [] as (OneShotSampler | ComplexSampler)[];
-        const exclusiveSamplers = [] as (OneShotSampler | ComplexSampler)[];
-        const localOnlySamplers = [] as (OneShotSampler | ComplexSampler)[];
-
-
-        sampleDefinitions.forEach((sampleDefinition) => {
-            const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
-            if (sampleDefinition.isComplexSampler) {
-                arrayWhereToPush.push(new ComplexSampler(
-                    audioContext,
-                    sampleDefinition.samples,
-                    "(CPX)" + sampleDefinition.name,
-                    sampleDefinition.readme
-                ))
-            } else {
-                arrayWhereToPush.push(new OneShotSampler(
-                    audioContext,
-                    sampleDefinition.samples,
-                    sampleDefinition.name,
-                    sampleDefinition.readme
-                ))
-            }
-        });
-
-        availableSynths.value = [
-            new SineSynth(audioContext),
-            new ExternalMidiSynth(audioContext),
-            ...samplers
-        ];
-
-        if (exclusives.enabled) {
-            availableSynths.value.push(...exclusiveSamplers);
-            availableSynths.value.unshift(new FourierSynth(audioContext));
-            availableSynths.value.unshift(new KickSynth(audioContext));
-            availableSynths.value.unshift(new ClusterSineSynth(audioContext));
-        } else {
-            console.log("exclusives disabled");
-        }
-
-        if (isDev()) {
-            // bc. unfinished
-            availableSynths.value.push(new FmSynth(audioContext));
-            availableSynths.value.push(new KarplusSynth(audioContext));
-            // bc. pirate
-            availableSynths.value.push(...localOnlySamplers);
-        } else {
-            console.log("local only samples disabled");
-        }
-        console.log("available channels", availableSynths.value.map(s => s.name));
-        channels.value = [{
-            synth: availableSynths.value[0],
-            params: [],
-        }];
     });
 
     return {
         availableSynths,
         channels,
-        scheduleEvent,
+        scheduleNote,
+        scheduleAutomation,
         releaseAll,
         setSynthByName,
         getOrCreateChannel,

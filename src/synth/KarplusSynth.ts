@@ -74,6 +74,7 @@ export class KarplusSynth implements SynthInstance {
 
         enginePromise.then((engine) => {
             this.engine = engine;
+            console.log("new karplus audio worklet", engine);
             this.engine.connect(this.outputNode);
         });
 
@@ -81,6 +82,7 @@ export class KarplusSynth implements SynthInstance {
             const target = await promise;
             return target.port.postMessage(message);
         };
+
 
 
         // TODO... or not
@@ -132,9 +134,20 @@ export class KarplusSynth implements SynthInstance {
             _v: 1,
             set value(v: number) {
                 this._v = v;
-                postToPromised(enginePromise, {
-                    ff: v,
-                } as KarplusParamsChangeMessage);
+                // postToPromised(enginePromise, {
+                //     ff: v,
+                // } as KarplusParamsChangeMessage);
+                enginePromise.then((engine) => {
+                    // @ts-ignore
+                    engine.parameters.get("delayFeedback").setValueAtTime(v, 0);
+                })
+            },
+            animate: (v: number, t: number) => {
+                enginePromise.then((engine) => {
+                    // console.log("animating", v, t, t - audioContext.currentTime );
+                    // @ts-ignore
+                    engine.parameters.get("delayFeedback").linearRampToValueAtTime(v, t);
+                })
             },
             get value() {
                 return this._v;

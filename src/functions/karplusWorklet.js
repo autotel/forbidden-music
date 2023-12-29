@@ -11,7 +11,6 @@ const liveParameters = {
     exciter_level: 0.6,
     exciter_att: 0.3,
     exciter_decay: 1,
-    delay_feedback: 1,
     cross_feedback: 0,
     level_to_feedback: -1,
     exciter_detuning: 0,
@@ -26,7 +25,11 @@ class SampleBySampleOperator {
 }
 
 class Voice {
-    getBlock(size) { }
+    /**
+     * @param {number} size
+     * @param {Object} params
+     */
+    getBlock(size, params) { }
     /**
      * @param {Object} trigSettings
      */
@@ -454,7 +457,7 @@ class Exciter extends SampleBySampleOperator {
      * decay, seconds
      * @type {number} 
      */
-    decay = 0.3;
+    decay = 0;
 
     /** 
      * duration, seconds
@@ -472,7 +475,7 @@ class Exciter extends SampleBySampleOperator {
 
 class NoiseExciter extends Exciter {
     attack = 0.1;
-    decay = 0.3;
+    decay = 0;
     duration = 0;
 
     /**
@@ -497,6 +500,7 @@ class NoiseExciter extends Exciter {
     operation = () => {
         let aLevel = this.envelope.step();
         let n = this.noise.operation();
+        if(this.decay === 0) this.decay = Infinity;
         if (this.envelope.life < 1) {
             this.currentStage++;
             if (this.currentStage == 1) {
@@ -569,12 +573,11 @@ class KarplusVoice extends Voice {
     /**  @type {Exciter} */
     exciter = new (KarplusVoice.getExciterConstructor())();
     syncExciterType = () => {
-        if(KarplusVoice.getExciterConstructor() !== this.exciter.constructor) {
+        if (KarplusVoice.getExciterConstructor() !== this.exciter.constructor) {
             this.exciter = new (KarplusVoice.getExciterConstructor())();
         }
     }
-            
-    
+
     filter1 = new LpBoxcar(0.1);
     dcRemover = new DCRemover();
 
@@ -593,6 +596,7 @@ class KarplusVoice extends Voice {
         this.noiseEnvVal = amp;
         this.currentNormalSamplingPeriod = samplingRate / freq;
         this.delayLine1.delaySamples = this.currentNormalSamplingPeriod;
+        // to be removed
         this.delayLine1.feedback = liveParameters.delay_feedback;
         this.isBusy = true;
         this.engaged = true;
@@ -620,13 +624,15 @@ class KarplusVoice extends Voice {
 
     }
     /** 
-     * @param {number} blockSize *
+     * @param {number} blockSize 
+     * @param {KarplusParameters} parameters 
      * @returns {Float32Array} 
      */
-    getBlock(blockSize) {
+    getBlock(blockSize, parameters) {
         const output = new Float32Array(blockSize);
         const aWet = 1 - this.filterWet;
-        let probe = 0;
+        const { delayFeedback } = parameters;
+        const delayFeedback0 = delayFeedback[0];
         if (!this.engaged) return output;
 
         for (let splN = 0; splN < blockSize; splN++) {
@@ -647,21 +653,12 @@ class KarplusVoice extends Voice {
              * delay line
              */
             sampleNow += this.delayLine1.operation(exciter, (dry) => {
+                let paramDelayFeedback = delayFeedback0;
+                if(delayFeedback.length > 1) {
+                    paramDelayFeedback = delayFeedback[splN];
+                }
                 let w = this.filter1.operation(dry)
                 w = w * this.filterWet + dry * aWet;
-
-                // this.measuredOutputLevel -= 0.001;
-                // if (this.measuredOutputLevel < 0) {
-                //     this.measuredOutputLevel = 0;
-                // }
-                // if (w > this.measuredOutputLevel) {
-                //     this.measuredOutputLevel += w / 10;
-                // }
-                // if (this.measuredOutputLevel > 1 / this.ampToFeedback) {  
-                //     probe = this.measuredOutputLevel * this.ampToFeedback
-                //     w /= probe;
-                // }
-
                 const lv = Math.abs(w);
                 this.measuredOutputLevel -= 0.00001
                 if (lv > this.measuredOutputLevel) {
@@ -669,7 +666,7 @@ class KarplusVoice extends Voice {
                 }
 
                 const amplification = clamp(1 / this.measuredOutputLevel, 0, 1.01);
-                this.delayLine1.feedback = this.delayLine1.feedback * (1 - this.ampToFeedback) + amplification * this.ampToFeedback;
+                this.delayLine1.feedback = paramDelayFeedback * (1 - this.ampToFeedback) + amplification * this.ampToFeedback;
 
                 return w;
             });
@@ -787,7 +784,10 @@ class PoliManager {
  * @property {number?} exd exciter decay
  * @property {ExciterTypeName?} extype exciter type
 */
-
+/**
+ * @typedef {Object} KarplusParameters
+ * @property {number[]} parameters.delayFeedback
+ */
 /* to make ts work */
 if (false) {
     function registerProcessor(arg0, arg1) {
@@ -802,6 +802,17 @@ const clamp = (v, min, max) => {
 }
 // @ts-ignore
 registerProcessor('karplus', class extends AudioWorkletProcessor {
+    static get parameterDescriptors() {
+        return [
+            {
+                name: "delayFeedback",
+                defaultValue: 1,
+                minValue: 0,
+                maxValue: 1,
+                automationRate: "a-rate",
+            },
+        ];
+    }
     constructor() {
         super();
         /** @type {Array<Voice>} */
@@ -876,13 +887,17 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
         };
     }
     polimanager = new PoliManager((...p) => new KarplusVoice(...p));
-
+    /**
+     * @param {Float32Array[][]} inputs
+     * @param {Float32Array[][]} outputs
+     * @param {KarplusParameters} parameters
+     */
     process(inputs, outputs, parameters) {
         const output = outputs[0];
         const blockSize = outputs[0][0].length;
         const mix = new Float32Array(blockSize);
         this.polimanager.list.forEach((voice) => {
-            const voiceResults = voice.getBlock(blockSize);
+            const voiceResults = voice.getBlock(blockSize, parameters);
             for (let sampleN = 0; sampleN < blockSize; sampleN++) {
                 mix[sampleN] += voiceResults[sampleN] / 10;
             }

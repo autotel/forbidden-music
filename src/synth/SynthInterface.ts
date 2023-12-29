@@ -12,14 +12,14 @@ export interface ExternalSynthInstance extends AudioModule {
         /** absolute note start time, in web audio api time */
         absoluteNoteStart: number,
         velocity: number,
-        noteStartedTimeAgo?:number
+        noteStartedTimeAgo?: number
     ) => void,
     triggerPerc: (
         frequency: number,
         /** absolute note start time, in web audio api time */
         absoluteNoteStart: number,
         velocity: number,
-        noteStartedTimeAgo?:number
+        noteStartedTimeAgo?: number
     ) => void,
     releaseAll: () => void,
 }
@@ -32,14 +32,14 @@ export interface SynthInstance extends AudioModule {
         /** absolute note start time, in web audio api time */
         absoluteNoteStart: number,
         velocity: number,
-        noteStartedTimeAgo?:number
+        noteStartedTimeAgo?: number
     ) => void,
     triggerPerc: (
         frequency: number,
         /** absolute note start time, in web audio api time */
         absoluteNoteStart: number,
         velocity: number,
-        noteStartedTimeAgo?:number
+        noteStartedTimeAgo?: number
     ) => void,
     releaseAll: () => void,
 }
@@ -77,6 +77,8 @@ export interface NumberSynthParam extends SynthParamMinimum<number> {
     displayName: string,
     min: number,
     max: number,
+    schedule?: (destTime: number, destValue: number) => void,
+    animate?: (destTime: number, destValue: number) => void,
     curve?: 'linear' | 'log',
 }
 
@@ -92,6 +94,7 @@ export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
     type: ParamType.boolean,
     value: boolean,
     displayName: string,
+    schedule?: (destTime: number, destValue: number) => void,
 }
 
 export interface OptionSynthParam extends SynthParamMinimum<number> {
