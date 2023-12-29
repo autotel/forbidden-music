@@ -7,7 +7,8 @@ import { useAudioContextStore } from "../store/audioContextStore";
 import { useCustomSettingsStore } from "../store/customSettingsStore";
 import { useLayerStore } from "../store/layerStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
-import { SynthChannel, usePlaybackStore } from "../store/playbackStore";
+import { usePlaybackStore } from "../store/playbackStore";
+import { SynthChannel, useSynthStore } from "../store/synthStore";
 import { useToolStore } from "../store/toolStore";
 import { layerNoteColorStrings } from "../store/viewStore";
 import Collapsible from "./Collapsible.vue";
@@ -19,6 +20,7 @@ const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
 const playback = usePlaybackStore();
 const effects = useEffectsStore();
+const synth = useSynthStore();
 const audioReady = ref(false);
 const userSettings = useCustomSettingsStore();
 const tool = useToolStore();
@@ -74,9 +76,9 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
             <div v-if="audioReady" class="controls-container">
                 <h2 class="padded">Synth</h2>
 
-                <template v-if="userSettings.polyphonyEnabled">
+                <template v-if="userSettings.multiTimbralityEnabled">
                     <h3 class="padded">Layer polyphony</h3>
-                    <template v-for="(synthChan, chanNo) in playback.channels">
+                    <template v-for="(synthChan, chanNo) in synth.channels">
                         <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan === activeLayerChan"
                             style="width:calc(100% - 2em); display:flex; justify-content: space-between;" :style="chanNo ? 'padding-left:2em' : ''"
                             :active-color="layerNoteColorStrings[1]" class="padded"
@@ -89,12 +91,12 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
                             </template>
                             {{ synthChan.synth.name }}
 
-                            <ButtonSub class="sub-button" :onClick="() => { playback.channels.splice(chanNo, 1) }">
+                            <ButtonSub class="sub-button" :onClick="() => { synth.channels.splice(chanNo, 1) }">
                                 ×
                             </ButtonSub>
                         </Button>
                     </template>
-                    <Button v-if="userSettings.polyphonyEnabled" :on-click="() => { playback.addChannel() }" class="padded"
+                    <Button v-if="userSettings.multiTimbralityEnabled" :on-click="() => { synth.addChannel() }" class="padded"
                         tooltip="Add a new synth channel">
                         + Channel
                     </Button>
@@ -102,7 +104,7 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
                 </template>
 
                 <template v-if="activeLayerChan">
-                    <PropOption :param="playback.synthSelector(activeLayerChan)" />
+                    <PropOption :param="synth.synthSelector(activeLayerChan)" />
                     <ParamsSliderList :synthParams="activeLayerChan.params" />
                     <Button class="padded" v-if="activeLayerChan.synth.credits"
                         :on-click="() => activeLayerChan ? showCredits(activeLayerChan.synth.credits!) : null">

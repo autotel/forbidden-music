@@ -68,8 +68,8 @@ const fullReset = () => {
             </div>
 
             <div class="form-row" :class="{ disabled: !userSettings.layersEnabled }">
-                <Toggle v-model="userSettings.polyphonyEnabled" />
-                <label>Polyphony</label>
+                <Toggle v-model="userSettings.multiTimbralityEnabled" />
+                <label>Multi-timbre</label>
             </div>
 
             <div class="form-section">Experimental</div>

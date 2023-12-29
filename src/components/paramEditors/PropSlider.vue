@@ -178,6 +178,8 @@ onBeforeUnmount(() => {
 }
 
 .automated {
-    border: solid 5px rgb(253, 152, 0);
+    border: solid 1px rgb(253, 152, 0);
+    box-shadow: 0 0 10px rgb(253, 152, 0);
+    z-index: 1;
 }
 </style>

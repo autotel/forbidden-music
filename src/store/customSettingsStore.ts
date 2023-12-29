@@ -17,13 +17,13 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
     const fontSize = ref(12);
     const octaveToTimeRatio = ref(2.8);
     // polyphony cannot be undertood or used without layers thus far
-    const _polyphonyEnabled = ref(false);
-    const polyphonyEnabled = computed<boolean>({
+    const _multiTimbralityEnabled = ref(false);
+    const multiTimbralityEnabled = computed<boolean>({
         get() {
-            return _polyphonyEnabled.value && layersEnabled.value;
+            return _multiTimbralityEnabled.value && layersEnabled.value;
         },
         set(value) {
-            _polyphonyEnabled.value = value;
+            _multiTimbralityEnabled.value = value;
         }
     });
     const effectsEnabled = ref(true);
@@ -45,7 +45,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         viewportTech.value = ViewportTech.Svg;
         showFPS.value = false;
         fontSize.value = 12;
-        polyphonyEnabled.value = false;
+        multiTimbralityEnabled.value = false;
         layersEnabled.value = false;
         midiInputEnabled.value = false;
         performanceSettingsEnabled.value = true;
@@ -62,7 +62,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 viewportTech.value = parsed.viewportTech;
                 showFPS.value = parsed.showFPS;
                 fontSize.value = parsed.fontSize;
-                polyphonyEnabled.value = parsed.polyphonyEnabled;
+                multiTimbralityEnabled.value = parsed.multiTimbralityEnabled;
                 layersEnabled.value = parsed.layersEnabled;
                 midiInputEnabled.value = parsed.midiInputEnabled;
                 performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
@@ -81,7 +81,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 viewportTech: viewportTech.value,
                 showFPS: showFPS.value,
                 fontSize: fontSize.value,
-                polyphonyEnabled: polyphonyEnabled.value,
+                multiTimbralityEnabled: multiTimbralityEnabled.value,
                 layersEnabled: layersEnabled.value,
                 midiInputEnabled: midiInputEnabled.value,
                 performanceSettingsEnabled: performanceSettingsEnabled.value,
@@ -106,7 +106,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         viewportTech,
         showFPS,
         fontSize,
-        polyphonyEnabled,
+        multiTimbralityEnabled,
         effectsEnabled,
         layersEnabled,
         midiInputEnabled,

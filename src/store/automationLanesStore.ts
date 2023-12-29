@@ -4,9 +4,11 @@ import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } 
 import { SynthParam } from "../synth/SynthInterface";
 import { usePlaybackStore } from "./playbackStore";
 import { AutomationPoint } from "../dataTypes/AutomationPoint";
+import { useSynthStore } from "./synthStore";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const playback = usePlaybackStore();
+    const synth = useSynthStore();
     const lanes = ref<Map<number, AutomationLane>>(new Map());
 
     /** which parameter is currenly being shown on screen for automation */
@@ -53,13 +55,13 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     }
     const applyAutomationLaneDef = (automationLaneDef: AutomationLaneDef) => {
         let targetParameter = automationLaneDef.targetParameter;
-        if (typeof targetParameter === "string") {
-            targetParameter = playback.accessorStringToSynthParam(targetParameter);
+        if (typeof targetParameter === 'string') {
+            targetParameter = synth.accessorStringToSynthParam(targetParameter);
         }
         addAutomationLane(targetParameter);
     }
     const getAutomationLaneDef = (automationLane: AutomationLane): AutomationLaneDef => {
-        const parameterAccessorString = playback.synthParamToAccessorString(
+        const parameterAccessorString = synth.synthParamToAccessorString(
             automationLane.targetParameter
         );
         return {
@@ -70,7 +72,9 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const getAutomationLaneDefs = () => {
         const automationLaneDefs: AutomationLaneDef[] = [];
         lanes.value.forEach((lane) => {
-            automationLaneDefs.push(getAutomationLaneDef(lane));
+            if (lane.content.length) {
+                automationLaneDefs.push(getAutomationLaneDef(lane));
+            }
         });
         return automationLaneDefs;
     }

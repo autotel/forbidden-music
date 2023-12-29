@@ -48,7 +48,7 @@ const setSelectedNotesLayerToCurrent = () => {
                 <Button inline tooltip="Set selection's layer to this layer" :onClick="setSelectedNotesLayerToCurrent">
                     <SquarePlus />
                 </Button>
-                <Tooltip tooltip="Assign a synth channel to this layer." v-if="settings.polyphonyEnabled">
+                <Tooltip tooltip="Assign a synth channel to this layer." v-if="settings.multiTimbralityEnabled">
                     <input type="number" step="1" style="width: 2em; overflow: hidden;" v-model="layer.channelSlot"/>
                 </Tooltip>
                 <span v-on:click="switchLayerVisibility(layerNo)">

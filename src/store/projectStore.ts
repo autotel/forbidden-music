@@ -1,8 +1,6 @@
 import LZUTF8 from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { AutomationPointDef, automationPoint, automationPointDef } from '../dataTypes/AutomationPoint';
-import { AutomationLane, automationLane } from '../dataTypes/AutomationLane';
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
 import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
 import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
@@ -11,11 +9,12 @@ import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
 import { SynthParam } from '../synth/SynthInterface';
 import { useAudioContextStore } from './audioContextStore';
+import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
 import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
-import { SynthChannel, usePlaybackStore } from './playbackStore';
+import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
-import { useAutomationLaneStore } from './automationLanesStore';
+import { SynthChannel, useSynthStore } from './synthStore';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",
@@ -42,7 +41,8 @@ export const useProjectStore = defineStore("current project", () => {
     const snaps = useSnapStore();
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
-    const playbackStore = usePlaybackStore();
+    const playback = usePlaybackStore();
+    const synth = useSynthStore();
     const audioContextStore = useAudioContextStore();
     const name = ref("unnamed (autosave)" as string);
 
@@ -151,13 +151,13 @@ export const useProjectStore = defineStore("current project", () => {
             created: created.value,
             edited: edited.value,
             snaps: getSnapsList(),
-            bpm: playbackStore.bpm,
+            bpm: playback.bpm,
             layers: layers.layers,
             channels: [],
             version: LIBRARY_VERSION,
         } as LibraryItem;
-        if (playbackStore.channels.length) {
-            ret.channels = playbackStore.channels.map((channel: SynthChannel) => ({
+        if (synth.channels.length) {
+            ret.channels = synth.channels.map((channel: SynthChannel) => ({
                 type: channel.synth.name,
                 params: channel.params.filter((param: SynthParam) => {
                     return param.exportable;
@@ -183,7 +183,7 @@ export const useProjectStore = defineStore("current project", () => {
         const nLoops: Loop[] = pDef.loops.map(loop);
         loops.value = nLoops;
         
-        if (pDef.bpm) playbackStore.bpm = pDef.bpm;
+        if (pDef.bpm) playback.bpm = pDef.bpm;
 
         pDef.snaps.forEach(([name, activeState]) => {
             if (!snaps.values[name]) return;
@@ -205,7 +205,7 @@ export const useProjectStore = defineStore("current project", () => {
         (async () => {
             await audioContextStore.audioContextPromise;
             pDef.channels.forEach(({ type, params }, index) => {
-                playbackStore.setSynthByName(type, index).then((synth) => {
+                synth.setSynthByName(type, index).then((synth) => {
                     params.forEach((param) => {
                         try {
                             const foundNamedParam = synth.params.find(({ displayName }) => {
