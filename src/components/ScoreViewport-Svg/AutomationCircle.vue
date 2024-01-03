@@ -45,13 +45,14 @@ const textBits = computed(() => {
     return [strno.slice(0, cutPosition), strno.slice(cutPosition)];
 });
 
-
 const noteBody = ref<SVGCircleElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
+    console.log('bodyMouseEnterListener')
     tool.timelineItemMouseEnter(props.circle.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
+    console.log('bodyMouseLeaveListener')
     tool.timelineItemMouseLeave();
 }
 
@@ -73,15 +74,13 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
-    <template v-if="tool.current === Tool.Modulation">
-        <text :x="xy1.x1" :y="xy1.y1" v-bind="$attrs">{{ textBits[0] }}</text>
-        <text :x="xy1.x1 + 30" :y="xy1.y1" font-size="0.6em" v-bind="$attrs">{{ textBits[1] }}</text>
+    <text :x="xy1.x1" :y="xy1.y1" v-bind="$attrs">{{ textBits[0] }}</text>
+    <text :x="xy1.x1 + 30" :y="xy1.y1" font-size="0.6em" v-bind="$attrs">{{ textBits[1] }}</text>
 
-        <line v-if="nextCircle" v-bind="xy1" class="veloline" />
-        <circle ref="noteBody" :cx="xy1.x1" :cy="xy1.y1" r="7" :class="{
-            selected: circle.event.selected,
-        }" v-bind="$attrs" />
-    </template>
+    <line v-if="nextCircle" v-bind="xy1" class="veloline" />
+    <circle ref="noteBody" :cx="xy1.x1" :cy="xy1.y1" r="7" :class="{
+        selected: circle.event.selected,
+    }" v-bind="$attrs" />
 </template>
 <style scoped>
 line,

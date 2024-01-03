@@ -248,19 +248,17 @@ export const useSynthStore = defineStore("synthesizers", () => {
         console.log("accessor string to synth param", accessorString);
         if (!accessorString) return undefined;
         const [synthName, paramName] = accessorString.split(".");
-        console.log("synth name", synthName, "param name", paramName, 'in', availableSynths.value.map(s => s.name));
         const synth = availableSynths.value.find((s) => s.name === synthName);
-        console.log("synth", synth);
         if (!synth) {
             console.warn("synth not found", synthName);
             return undefined;
         }
         const param = synth.params.find((p) => p.displayName === paramName);
-        console.log("param", param);
         if (!param) {
             console.warn("param not found", paramName);
             return undefined;
         }
+        console.log("found automated param ", param);
         return param;
     }
 

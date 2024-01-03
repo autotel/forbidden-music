@@ -631,8 +631,9 @@ class KarplusVoice extends Voice {
     getBlock(blockSize, parameters) {
         const output = new Float32Array(blockSize);
         const aWet = 1 - this.filterWet;
-        const { delayFeedback } = parameters;
+        const { delayFeedback, filterK } = parameters;
         const delayFeedback0 = delayFeedback[0];
+        const filterK0 = filterK[0];
         if (!this.engaged) return output;
 
         for (let splN = 0; splN < blockSize; splN++) {
@@ -648,15 +649,20 @@ class KarplusVoice extends Voice {
             continue
 
             /**/
-
+            let paramDelayFeedback = delayFeedback0;
+            if(delayFeedback.length > 1) {
+                paramDelayFeedback = delayFeedback[splN];
+            }
+            /* set filter K for this sample to the maybe modulated filterK parameter */
+            let paramFilterK = filterK0;
+            if(filterK.length > 1) {
+                paramFilterK = filterK[splN];
+            }
+            this.filter1.k = paramFilterK;
             /**
              * delay line
              */
             sampleNow += this.delayLine1.operation(exciter, (dry) => {
-                let paramDelayFeedback = delayFeedback0;
-                if(delayFeedback.length > 1) {
-                    paramDelayFeedback = delayFeedback[splN];
-                }
                 let w = this.filter1.operation(dry)
                 w = w * this.filterWet + dry * aWet;
                 const lv = Math.abs(w);
@@ -787,6 +793,7 @@ class PoliManager {
 /**
  * @typedef {Object} KarplusParameters
  * @property {number[]} parameters.delayFeedback
+ * @property {number[]} parameters.filterK
  */
 /* to make ts work */
 if (false) {
@@ -806,6 +813,13 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
         return [
             {
                 name: "delayFeedback",
+                defaultValue: 1,
+                minValue: 0,
+                maxValue: 1,
+                automationRate: "a-rate",
+            },
+            {
+                name: "filterK",
                 defaultValue: 1,
                 minValue: 0,
                 maxValue: 1,

@@ -77,6 +77,7 @@ export interface NumberSynthParam extends SynthParamMinimum<number> {
     displayName: string,
     min: number,
     max: number,
+    default?: number,
     schedule?: (destTime: number, destValue: number) => void,
     animate?: (destTime: number, destValue: number) => void,
     curve?: 'linear' | 'log',
@@ -95,6 +96,7 @@ export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
     value: boolean,
     displayName: string,
     schedule?: (destTime: number, destValue: number) => void,
+    default?: boolean,
 }
 
 export interface OptionSynthParam extends SynthParamMinimum<number> {
@@ -106,6 +108,7 @@ export interface OptionSynthParam extends SynthParamMinimum<number> {
         displayName: string,
     }[]
     displayName: string,
+    default?:number
 }
 
 export interface InfoTextSynthParam extends SynthParamMinimum<string> {
@@ -119,8 +122,9 @@ export interface ArraySynthParam extends SynthParamMinimum<number[]> {
     value: number[],
     displayName: string,
     updateFlag?: string,
-    min: number
-    max: number
+    min: number,
+    max: number,
+    default: number[],
 }
 
 

@@ -101,6 +101,12 @@ export class KarplusSynth implements SynthInstance {
             get value() {
                 return this._v;
             },
+            animate: (v: number, t: number) => {
+                enginePromise.then((engine) => {
+                    // @ts-ignore
+                    engine.parameters.get("filterK").linearRampToValueAtTime(v, t);
+                })
+            },
             displayName: "boxcar K",
             min: 0,
             max: 1,
@@ -142,6 +148,9 @@ export class KarplusSynth implements SynthInstance {
                     engine.parameters.get("delayFeedback").setValueAtTime(v, 0);
                 })
             },
+            get value() {
+                return this._v;
+            },
             animate: (v: number, t: number) => {
                 enginePromise.then((engine) => {
                     // console.log("animating", v, t, t - audioContext.currentTime );
@@ -149,12 +158,10 @@ export class KarplusSynth implements SynthInstance {
                     engine.parameters.get("delayFeedback").linearRampToValueAtTime(v, t);
                 })
             },
-            get value() {
-                return this._v;
-            },
             displayName: "feedback",
             min: -1.5,
             max: 1.5,
+            default: 0,
             exportable: true,
         } as NumberSynthParam;
         this.params.push(ffParam)
@@ -258,6 +265,7 @@ export class KarplusSynth implements SynthInstance {
             displayName: "exciter -> detune",
             min: -0.01,
             max: 0.01,
+            default: 0,
             exportable: true,
         } as NumberSynthParam;
         this.params.push(exdetParam)
@@ -279,6 +287,7 @@ export class KarplusSynth implements SynthInstance {
             displayName: "amp -> detune",
             min: -0.01,
             max: 0.01,
+            default: 0,
             exportable: true,
         } as NumberSynthParam;
         this.params.push(adetParam)

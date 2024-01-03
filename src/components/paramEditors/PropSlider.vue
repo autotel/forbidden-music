@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/SynthInterface';
 import { useToolStore } from '../../store/toolStore';
 import { useAutomationLaneStore } from '../../store/automationLanesStore';
+import Tooltip from '../Tooltip.vue';
 
 // TODO: this could use a refactor
 
@@ -21,12 +22,6 @@ const displayValue = ref(props.param.value);
 const tool = useToolStore();
 const lanes = useAutomationLaneStore();
 const automated = computed(() => {
-    console.log(
-        "checking if automated",
-        tool.laneBeingEdited?.targetParameter?.displayName,
-        props.param.displayName,
-        tool.laneBeingEdited?.targetParameter === props.param
-    );
     return tool.laneBeingEdited?.targetParameter === props.param
 });
 const mouseDrag = (e: MouseEvent) => {
@@ -79,10 +74,22 @@ const mouseDown = (e: MouseEvent) => {
     preMapValueOnDragStart = preMapValue.value;
     e.stopPropagation();
     e.preventDefault();
-    dragging.value = true;
+    console.log(e.button)
+    switch (e.button) {
+        case 1: {
+            if (props.param.default !== undefined) {
+                props.param.value = props.param.default
+                break;
+            }
+        }
+        default: {
 
-    const nl = lanes.getOrCreateAutomationLaneForParameter(props.param);
-    if(nl) tool.laneBeingEdited = nl;
+            dragging.value = true;
+
+            const nl = lanes.getOrCreateAutomationLaneForParameter(props.param);
+            if (nl) tool.laneBeingEdited = nl;
+        }
+    }
 
 }
 const mouseUp = (e: MouseEvent) => {
@@ -120,23 +127,29 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <div class="number-knob-container" ref="valueDraggable" :class="{
-        active: dragging,
-        automated: automated,
-    }" style="width:100%">
+    <Tooltip :tooltip="props.param.default !== undefined? `middle button click sets it to ${props.param.default}`: 'drag to set'">
+        <div class="number-knob-container" ref="valueDraggable" :class="
+            {
+                active: dragging,
+                    automated: automated,
+            }
+        " style="width:100%">
 
-        <template v-if="props.param.max !== undefined && props.param.min !== undefined">
-            <div class="prog-container">
-                <div class="prog-bar" :class="{ negative: preMapValue < 0 }" :style="{
-                    width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
-                    left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
-                }"></div>
-            </div>
-        </template>
-        <span style="{position: absolute; z-index: 2;}">
-            {{ props.param.displayName }} &nbsp; {{ displayValue.toFixed(3) }}
-        </span>
-    </div>
+            <template v-if=" props.param.max !== undefined && props.param.min !== undefined ">
+                <div class="prog-container">
+                    <div class="prog-bar" :class=" { negative: preMapValue < 0 } " :style="
+                        {
+                            width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
+                                left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
+                                    }
+                    "></div>
+                </div>
+            </template>
+            <span style="{position: absolute; z-index: 2;}">
+                {{ props.param.displayName }} &nbsp; {{ displayValue.toFixed(3) }}
+            </span>
+        </div>
+    </Tooltip>
 </template>
 <style>
 .prog-bar {

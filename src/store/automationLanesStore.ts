@@ -3,7 +3,7 @@ import { ref, watchEffect } from "vue";
 import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
 import { SynthParam } from "../synth/SynthInterface";
 import { usePlaybackStore } from "./playbackStore";
-import { AutomationPoint } from "../dataTypes/AutomationPoint";
+import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
 import { useSynthStore } from "./synthStore";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
@@ -36,7 +36,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
     })
 
-    const addAutomationLane = (targetParameter?: SynthParam) => {
+    const addAutomationLane = (targetParameter?: SynthParam, automationPoints: AutomationPoint[] = []) => {
         const newLane = automationLane({
             displayName: "New Automation Lane",
             content: [],
@@ -44,6 +44,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
         if (targetParameter) newLane.targetParameter = targetParameter;
         lanes.value.set(getUnusedMapKey(), newLane);
+        newLane.content = automationPoints;
         return newLane;
     }
     const getOrCreateAutomationLaneForParameter = (targetParameter: SynthParam) => {
@@ -62,7 +63,8 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         if (typeof targetParameter === 'string') {
             targetParameter = synth.accessorStringToSynthParam(targetParameter);
         }
-        addAutomationLane(targetParameter);
+        const automationPoints = automationLaneDef.content.map(automationPoint)
+        addAutomationLane(targetParameter, automationPoints);
     }
     const getAutomationLaneDef = (automationLane: AutomationLane): AutomationLaneDef => {
         const parameterAccessorString = synth.synthParamToAccessorString(

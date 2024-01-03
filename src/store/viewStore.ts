@@ -155,16 +155,20 @@ export const useViewStore = defineStore("view", () => {
     });
 
     const visibleAutomationPoints = computed((): AutomationPoint[] => {
+        if (tool.current !== Tool.Modulation) {
+            return [];
+        }
+
         const screenRange = {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             value: -1,
             valueEnd: 1,
         };
-        if(!tool.laneBeingEdited) return [];
+        if (!tool.laneBeingEdited) return [];
 
         return getTracesInRange(
-            tool.laneBeingEdited.content, 
+            tool.laneBeingEdited.content,
             screenRange, true
         );
     });
@@ -186,6 +190,7 @@ export const useViewStore = defineStore("view", () => {
     });
 
     const visibleAutomationPointDrawables = computed((): TimelineDot<AutomationPoint>[] => {
+
         return visibleAutomationPoints.value.map((item) => {
             return dotOfAutomationPoint(item);
         })
@@ -340,7 +345,7 @@ export const useViewStore = defineStore("view", () => {
                 return true;
             } else {
                 const noteIsRect = noteRect as TimelineRect<Note>;
-                
+
                 if (
                     (
                         x >= noteIsRect.x &&
@@ -512,12 +517,12 @@ export const useViewStore = defineStore("view", () => {
         timeToPx,
         timeToPxWithOffset,
         pxToTimeWithOffset,
-        
+
         pxToOctave,
         octaveToPx,
         pxToOctaveWithOffset,
         octaveToPxWithOffset,
-        
+
         frequencyToPxWithOffset,
 
         velocityToPx,

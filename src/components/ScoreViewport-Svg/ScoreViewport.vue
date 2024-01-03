@@ -59,7 +59,7 @@ onBeforeUnmount(() => {
         </g>
         <g id="automation-point-would-be-created">
             <AutomationCircle
-                v-if="tool.automationPointThatWouldBeCreated" 
+                v-if="tool.automationPointThatWouldBeCreated"
                 :circle="view.dotOfAutomationPoint(tool.automationPointThatWouldBeCreated)"
                 interactionDisabled />
         </g>
@@ -76,7 +76,8 @@ onBeforeUnmount(() => {
         <g id="edit-automation">
             <AutomationCircle 
                 v-for="(circle, index) in view.visibleAutomationPointDrawables" :circle="circle" 
-                :nextCircle="view.visibleAutomationPointDrawables[index + 1]"    
+                :nextCircle="view.visibleAutomationPointDrawables[index + 1]"
+                :key="index"
             />
         </g>
         <g id="traces-being-created">
