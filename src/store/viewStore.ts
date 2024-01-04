@@ -210,8 +210,8 @@ export const useViewStore = defineStore("view", () => {
 
         const returnVal = {
             radius,
-            x,
-            y,
+            x: cx,
+            y: cy,
             event,
         } as TimelineDot<Note>;
 
@@ -220,7 +220,6 @@ export const useViewStore = defineStore("view", () => {
 
             return {
                 ...returnVal,
-
                 x,
                 y,
                 width,

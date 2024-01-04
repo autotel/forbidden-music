@@ -201,6 +201,7 @@ const keyDownListener = (e: KeyboardEvent) => {
         case KeyActions.Delete: {
             project.notes = project.notes.filter(note => !note.selected)
             project.loops = project.loops.filter(note => !note.selected)
+            project.lanes.lanes.forEach((lane)=>lane.content = lane.content.filter(p=> !p.selected))
             // minimalistic option:
             // tool.noteBeingHovered = false;
             // programmatic option:

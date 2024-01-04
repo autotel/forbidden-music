@@ -9,17 +9,11 @@ import { useSynthStore } from "./synthStore";
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const playback = usePlaybackStore();
     const synth = useSynthStore();
-    const lanes = ref<Map<number, AutomationLane>>(new Map());
+    const lanes = ref<Map<string, AutomationLane>>(new Map());
 
     /** which parameter is currenly being shown on screen for automation */
     const parameterBeingAutomated = ref<SynthParam | false>(false);
-    const getUnusedMapKey = () => {
-        let i = 0;
-        while (lanes.value.has(i)) {
-            i++;
-        }
-        return i;
-    }
+
     const canParameterBeAutomated = (parameter: SynthParam) => {
         return parameter.animate !== undefined
     }
@@ -43,16 +37,17 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             targetParameter,
         });
         if (targetParameter) newLane.targetParameter = targetParameter;
-        lanes.value.set(getUnusedMapKey(), newLane);
+        const key = synth.synthParamToAccessorString(targetParameter) || 'undefined'
+        lanes.value.set(key, newLane);
         newLane.content = automationPoints;
         return newLane;
     }
     const getOrCreateAutomationLaneForParameter = (targetParameter: SynthParam) => {
-        if(!canParameterBeAutomated(targetParameter)) {
+        if (!canParameterBeAutomated(targetParameter)) {
             return undefined;
         }
-        const lanesArray = Array.from(lanes.value.values());
-        let lane = lanesArray.find((lane) => lane.targetParameter === targetParameter);
+        const paramName = synth.synthParamToAccessorString(targetParameter) || 'undefined'
+        let lane = lanes.value.get(paramName)
         if (!lane) {
             lane = addAutomationLane(targetParameter);
         }
@@ -97,6 +92,24 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         const defaultLane = addAutomationLane();
         defaultLane.displayName = "Default";
     }
+    const deleteAutomationPoint = (point: AutomationPoint, lane?: AutomationLane) => {
+        let containerLane: AutomationLane
+        let atIndex = -1;
+        if (lane === undefined) {
+            const found = [...lanes.value.values()].find((l, i) => {
+                atIndex = l.content.indexOf(point)
+                if (atIndex !== -1) return true;
+                return false;
+            });
+            if (!found) throw new Error('no lane contains point requested for deletion')
+            containerLane = found;
+        } else {
+            containerLane = lane;
+            atIndex = containerLane.content.indexOf(point)
+        }
+        if (atIndex === -1) throw new Error('could not delete point as it was not found on lane\'s content')
+        containerLane.content.splice(atIndex, 1);
+    }
 
     const forEachAutomationPoint = (callback: (ap: AutomationPoint) => void) => {
         lanes.value.forEach((lane) => {
@@ -114,6 +127,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         applyAutomationLaneDefs,
         getOrCreateAutomationLaneForParameter,
         forEachAutomationPoint,
+        deleteAutomationPoint,
         clear,
     };
 });

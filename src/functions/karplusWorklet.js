@@ -814,8 +814,8 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
             {
                 name: "delayFeedback",
                 defaultValue: 1,
-                minValue: 0,
-                maxValue: 1,
+                minValue: -1.5,
+                maxValue: 1.5,
                 automationRate: "a-rate",
             },
             {

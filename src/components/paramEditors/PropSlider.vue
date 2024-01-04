@@ -97,6 +97,12 @@ const mouseUp = (e: MouseEvent) => {
     e.preventDefault();
     dragging.value = false;
 }
+const doubleClick = (e: MouseEvent) => {
+    console.log("dblck")
+    if (props.param.default !== undefined) {
+        props.param.value = props.param.default
+    }
+}
 watch(props.param, (newParam) => {
     displayValue.value = newParam.value;
     const range = newParam.max - newParam.min;
@@ -111,6 +117,7 @@ onMounted(() => {
         return;
     }
     $valueDraggable.addEventListener('mousedown', mouseDown);
+    $valueDraggable.addEventListener('dblclick', doubleClick);
     window.addEventListener('mouseup', mouseUp);
     window.addEventListener('mousemove', windowMouseMove);
     displayValue.value = props.param.value;
@@ -122,27 +129,27 @@ onBeforeUnmount(() => {
         return;
     }
     $valueDraggable.removeEventListener('mousedown', mouseDown);
+    $valueDraggable.removeEventListener('dblclick', doubleClick);
     window.removeEventListener('mouseup', mouseUp);
     window.removeEventListener('mousemove', windowMouseMove);
 });
 </script>
 <template>
-    <Tooltip :tooltip="props.param.default !== undefined? `middle button click sets it to ${props.param.default}`: 'drag to set'">
-        <div class="number-knob-container" ref="valueDraggable" :class="
-            {
+    <Tooltip
+        :tooltip="props.param.default !== undefined ? `middle button or double click sets it to ${props.param.default}` : 'drag to set'">
+        <div class="number-knob-container" ref="valueDraggable" :class="{
                 active: dragging,
-                    automated: automated,
+                automated: automated,
             }
-        " style="width:100%">
+            " style="width:100%">
 
-            <template v-if=" props.param.max !== undefined && props.param.min !== undefined ">
+            <template v-if="props.param.max !== undefined && props.param.min !== undefined">
                 <div class="prog-container">
-                    <div class="prog-bar" :class=" { negative: preMapValue < 0 } " :style="
-                        {
+                    <div class="prog-bar" :class="{ negative: preMapValue < 0 }" :style="{
                             width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
-                                left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
-                                    }
-                    "></div>
+                            left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
+                        }
+                        "></div>
                 </div>
             </template>
             <span style="{position: absolute; z-index: 2;}">
