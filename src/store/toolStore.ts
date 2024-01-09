@@ -671,9 +671,13 @@ export const useToolStore = defineStore("tool", () => {
 
     const updateItemThatWouldBeCreated = (mouse: { x: number, y: number }) => {
         const { x, y } = mouse;
+        let keepNote = false;
+        let keepLoop = false;
+        let keepAutomationPoint = false;
+                
         // if out of view, false
         if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
-            noteThatWouldBeCreated.value = false;
+            
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateNote) {
             const mouseTime = view.pxToTimeWithOffset(x);
             const theNote = note({
@@ -695,7 +699,8 @@ export const useToolStore = defineStore("tool", () => {
             snap.focusedTrace = snapNote;
 
             noteThatWouldBeCreated.value = snapNote;
-            return;
+            keepNote = true;
+            
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateLoop) {
 
             const t = view.pxToTimeWithOffset(x);
@@ -706,7 +711,7 @@ export const useToolStore = defineStore("tool", () => {
             loopThatWouldBeCreated.value.timeEnd = t;
             applySnapToLoop(loopThatWouldBeCreated.value, project.loops);
 
-            return;
+            keepLoop = true;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateAutomationPoint) {
             const mouseTime = view.pxToTimeWithOffset(x);
             const thePoint = automationPoint({
@@ -715,11 +720,13 @@ export const useToolStore = defineStore("tool", () => {
                 layer: currentLayerNumber.value,
             });
             automationPointThatWouldBeCreated.value = thePoint;
-        } else {
-            noteThatWouldBeCreated.value = false;
-            loopThatWouldBeCreated.value = false;
-            automationPointThatWouldBeCreated.value = false;
+            keepAutomationPoint = true;
         }
+
+
+        if(!keepNote) noteThatWouldBeCreated.value = false;
+        if(!keepLoop) loopThatWouldBeCreated.value = false;
+        if(!keepAutomationPoint) automationPointThatWouldBeCreated.value = false;
     }
 
 
