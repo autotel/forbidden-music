@@ -11,7 +11,7 @@ import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineDot, layerNoteColors, useViewStore } from '../../store/viewStore';
+import { Drawable, TimelineDot, layerNoteColors, useViewStore } from '../../store/viewStore';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -36,16 +36,22 @@ const props = defineProps<{
     height: number,
 }>();
 
-let thingBeingHovered: TimelineDot | null = null;
+let thingBeingHovered: Drawable | null = null;
 let isHoverRightEdge = false;
 
-const didHoverChange = (hoveredThing: TimelineDot | null, isRightEdge: boolean) => {
+const didHoverChange = (hoveredThing: Drawable | null, isRightEdge: boolean) => {
     if (hoveredThing === thingBeingHovered && isRightEdge === isHoverRightEdge) return false;
     return true;
 }
-const hoverChanged = (hoveredThing: TimelineDot | null, isRightEdge: boolean) => {
+const hoverChanged = (hoveredThing: Drawable | null, isRightEdge: boolean) => {
     thingBeingHovered = hoveredThing;
     isHoverRightEdge = isRightEdge;
+}
+
+const rightEdge = (thing: Drawable) => {
+    if (!thing) return false;
+    if ('rightEdge' in thing) return thing.rightEdge;
+    return false;
 }
 
 const mouseMoveListener = (e: MouseEvent) => {
@@ -64,11 +70,11 @@ const mouseMoveListener = (e: MouseEvent) => {
     const firstItemRect = loopsAtCoords[0] || null;
 
     const hoveredThing = firstNoteRect || firstItemRect || null;
-    const isRightEdge = hoveredThing?.rightEdge ? (
-        (e.offsetX > hoveredThing.rightEdge?.x - rightEdgeWidth)
+    const re = rightEdge(hoveredThing);
+    const isRightEdge = re ? (
+        (e.offsetX > re.x - rightEdgeWidth)
     ) : false;
 
-    
     if (didHoverChange(hoveredThing, isRightEdge)) {
         if (firstNoteRect) {
             if (isRightEdge) {
@@ -187,11 +193,11 @@ const resetGetText = () => {
 const refreshView = (time: number) => {
 
     if (measureSteps) taskMark("1. gather facts")
-    const visibleNotes = [
+    const noteDrawables = [
         ...view.visibleNoteDrawables,
         ...tool.notesBeingCreated.map((t) => view.rectOfNote(t)),
     ];
-    if (tool.noteThatWouldBeCreated) visibleNotes.push(
+    if (tool.noteThatWouldBeCreated) noteDrawables.push(
         view.rectOfNote(tool.noteThatWouldBeCreated)
     );
 
@@ -214,25 +220,24 @@ const refreshView = (time: number) => {
     graphics.drawPolygon(path);
     graphics.endFill();
 
-    // draw loop range
-    // if (playback.loop) {
-    //     const loopRect = view.rectOfTimelineItem(playback.loop);
-    //     graphics.beginFill(0x000000, 0.1);
-    //     graphics.lineStyle(1, 0x000000, 1);
-    //     graphics.drawRect(loopRect.x, loopRect.y, loopRect.width, loopRect.height);
-    //     graphics.endFill();
-    // }
-
-    const otherItemRects = view.visibleLoopDrawables;
-    otherItemRects.forEach((rect) => {
-        graphics.beginFill(0xFF0000, 0.1);
-        graphics.lineStyle(1, 0x000000, 1);
+    const loopDraws = view.visibleLoopDrawables;
+    graphics.beginFill(0xFF0000, 0.1);
+    graphics.lineStyle(1, 0x000000, 1);
+    loopDraws.forEach((rect) => {
         graphics.drawRect(rect.x, rect.y, rect.width, rect.height);
-        graphics.endFill();
+    });
+    graphics.endFill();
 
+    const automationPointDraws = view.visibleAutomationPointDrawables;
+    graphics.lineStyle(1, 0xFD9800, 1);
+    const autoPolygon = [];
+    automationPointDraws.forEach((circle) => {
+        autoPolygon.push(circle.x, circle.y);
+        graphics.drawCircle(circle.x, circle.y, circle.radius);
     });
 
-
+    graphics.drawPolygon(path);
+    graphics.endFill();
 
     // could redraw lines only on view change, perhaps on an overlayed canvas
     if (measureSteps) taskMark("4. draw grids");
@@ -267,7 +272,7 @@ const refreshView = (time: number) => {
 
     // draw snap explanations
     let snapExplTextsStart = textToUse - 1;
-    
+
     const snapFocusedItemLocation = snap.focusedTrace ? view.locationOfTrace(
         snap.focusedTrace
     ) : null;
@@ -314,7 +319,7 @@ const refreshView = (time: number) => {
     const displayTexts = view.viewWidthTime < 3;
 
     if (measureSteps) taskMark("6. draw notes");
-    for (const nRect of visibleNotes) {
+    for (const nRect of noteDrawables) {
         const lcolor = layerNoteColors[nRect.event.layer];
         if (nRect.event.selected) {
             graphics.beginFill(lcolor, 1);
@@ -326,19 +331,19 @@ const refreshView = (time: number) => {
             graphics.beginFill(lcolor, 0.5);
             graphics.lineStyle(1, 0xAAAAAA, 0.5);
         }
-        if (nRect.width) {
+        if ('width' in nRect && nRect.width) {
             // ctx.fillRect(nRect.x, nRect.y, nRect.width, nRect.height);
             graphics.drawRect(nRect.x, nRect.y, nRect.width, nRect.height);
         } else {
             // ctx.arc(nRect.cx, nRect.cy, nRect.radius, 0, 2 * Math.PI);
-            graphics.drawCircle(nRect.cx, nRect.cy, nRect.radius || 12);
+            graphics.drawCircle(nRect.x, nRect.y, nRect.radius || 12);
         }
         if (displayTexts) {
             let text = getText();
             const oct = nRect.event.octave;
             text.text = `${baseFrequency}(2^${oct.toFixed(3)}) = ${octaveToFrequency(oct).toFixed(3)} hz`;
             text.x = nRect.x + 5;
-            text.y = nRect.y + nRect.height - userSettings.fontSize / 2;
+            text.y = nRect.y - userSettings.fontSize / 2;
             text.style.fontSize = userSettings.fontSize;
         }
 
@@ -347,7 +352,7 @@ const refreshView = (time: number) => {
             graphics.lineStyle(2, 0x000000, 2);
             graphics.moveTo(nRect.x, veloLinePositionY + 7);
             graphics.lineTo(nRect.x, view.viewHeightPx);
-            graphics.drawCircle(nRect.cx, veloLinePositionY, nRect.radius || 12);
+            graphics.drawCircle(nRect.x, veloLinePositionY, nRect.radius || 12);
         }
         graphics.endFill();
     }

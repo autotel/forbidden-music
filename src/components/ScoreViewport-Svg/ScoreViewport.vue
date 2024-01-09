@@ -145,7 +145,7 @@ g#notes-being-created rect.body {
 
 .traces-container .body.selected.editable {
     /* fill: rgba(255, 51, 0, 0.644); */
-    stroke: rgb(151, 151, 151);
+    stroke: rgb(203, 207, 209);
     stroke-width: 1px;
     opacity: 1;
 }

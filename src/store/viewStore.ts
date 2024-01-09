@@ -53,19 +53,12 @@ const desaturate = (color: number, amount: number) => {
     return rgbToHex(newR, newG, newB);
 };
 
-const gray = rgbToHex(200, 200, 200);
-
-const numberOr = (v: any, or: number): number => {
-    if (typeof v === 'number') return v;
-    return or;
-}
-
 const preparation = (r: number, g: number, b: number) => desaturate(averageColors(rgbToHex(r, g, b), 0xFFFFFF), 0.6);
 
 export const layerNoteColors = [
-    gray,
+    preparation(150, 150, 190),
     preparation(84, 125, 251),
-    preparation(217, 59, 59),
+    preparation(240, 100, 100),
     preparation(240, 197, 28),
     preparation(247, 119, 227),
     preparation(38, 107, 134),
