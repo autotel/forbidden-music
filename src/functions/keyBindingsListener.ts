@@ -151,6 +151,7 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
         case KeyActions.Exit: {
             selection.clear();
             tool.resetState();
+            tool.current = Tool.Edit;
             break;
         }
         case KeyActions.OnlyAllowHorizontalMovement: {
