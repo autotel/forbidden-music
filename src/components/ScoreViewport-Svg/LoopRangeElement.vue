@@ -71,9 +71,8 @@ const showButtons = computed(() => {
             greyed: greyed,
         }" :x="eventRect.x" :y="0" :width=eventRect.width :height="eventRect.height" />
 
-        <rect v-if="!interactionDisabled && eventRect.rightEdge && isEditable" ref="lengthHandle" class="length-handle"
+        <rect v-if="!interactionDisabled && eventRect.rightEdge && !greyed" ref="lengthHandle" class="length-handle"
             :class="{
-                editable: isEditable,
                 greyed: greyed
             }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
         <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black"

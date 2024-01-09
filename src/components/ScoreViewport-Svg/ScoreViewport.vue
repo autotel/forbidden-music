@@ -52,19 +52,19 @@ onBeforeUnmount(() => {
             <TimeGrid />
             <ToneGrid />
         </g>
-        <g id="tone-relations">
+        <g id="tone-relations" v-if="tool.current===Tool.Edit">
             <ToneRelation />
         </g>
         <!-- traces that would be created upon click -->
-        <g id="note-would-be-created">
+        <g id="note-would-be-created" v-if="tool.current===Tool.Edit">
             <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
-        <g id="loop-would-be-created">
+        <g id="loop-would-be-created" v-if="tool.current===Tool.Loop">
             <LoopRangeElement v-if="tool.loopThatWouldBeCreated" :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
                 interactionDisabled />
         </g>
-        <g id="automation-point-would-be-created">
+        <g id="automation-point-would-be-created" v-if="tool.current===Tool.Automation">
             <AutomationCircle v-if="tool.automationPointThatWouldBeCreated"
                 :circle="view.dotOfAutomationPoint(tool.automationPointThatWouldBeCreated)" interactionDisabled />
         </g>
@@ -178,6 +178,7 @@ g#notes-being-created rect.body {
     fill: rgb(255, 183, 164);
 }
 
+#automation-point-would-be-created circle,
 .automation line,
 .automation circle {
     stroke: rgba(253, 152, 0);

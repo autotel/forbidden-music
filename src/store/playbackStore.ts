@@ -355,8 +355,6 @@ export const usePlaybackStore = defineStore("playback", () => {
                     eventStartAbsolute = 0;
                 }
                 try {
-                    
-                    console.log(`param.animate?.(${mappedValue}, ${eventStartAbsolute});`); 
                     param.animate?.(mappedValue, eventStartAbsolute);
                 } catch (e) {
                     console.error("could not schedule event", point, e);
