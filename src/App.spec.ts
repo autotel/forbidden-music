@@ -9,7 +9,9 @@ import { note } from './dataTypes/Note';
 import { start } from 'repl';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { disclaimer } from './texts/userDisclaimer';
+import { useSelectStore } from './store/selectStore';
 
+let generalInterval = 500;
 
 const tweener = (
     start: number, end: number, duration: number, callback: (value: number) => void
@@ -53,7 +55,7 @@ class RoboMouse {
             x: to.x - from.x,
             y: to.y - from.y
         };
-        console.log({ from, to, range });
+        
         const tween = tweener(0, 1, duration, (value) => {
             const x = from.x + (range.x * value);
             const y = from.y + (range.y * value);
@@ -88,22 +90,25 @@ class RoboMouse {
     }
 }
 
-const waitSeconds = (seconds: number) => {
+const wait = (time: number) => {
     return new Promise<void>((resolve) => {
         setTimeout(() => {
             resolve();
-        }, seconds * 1000);
+        }, time);
     });
 }
 
 describe('app', () => {
 
     localStorage.clear();
-
+    
+    const document = window.document;
+    if(document.body.clientWidth < 800 || document.body.clientHeight < 600){
+        throw new Error("viewport too small");
+    }
     const pinia = createPinia();
     setActivePinia(pinia);
     const app = createApp(App).use(pinia)
-    const document = window.document;
     const body = document.body;
     const div = document.createElement('div');
     div.style.width = "100vw";
@@ -114,6 +119,7 @@ describe('app', () => {
     div.style.left = "0";
     // div.style.pointerEvents = "none";
     body.appendChild(div);
+
 
     const interactionProtectDiv = document.createElement('div');
     interactionProtectDiv.style.width = "100vw";
@@ -129,6 +135,7 @@ describe('app', () => {
 
     const project = useProjectStore();
     const view = useViewStore();
+    const selection = useSelectStore();
 
     let interactionTarget: HTMLElement | null;
     it('mounts', () => {
@@ -136,9 +143,9 @@ describe('app', () => {
         console.log(result);
 
         project.notes.push(note({
-            time: 0,
-            timeEnd: 1.4,
-            octave: 4,
+            time: 2,
+            timeEnd: 4,
+            octave: 3.5,
             layer: 0
         }));
         interactionTarget = div.querySelector("#viewport-selector");
@@ -152,8 +159,7 @@ describe('app', () => {
         expect (disclaimerFound).not.toBeNull();
         const disclaimerText = disclaimerFound?.innerHTML;
         expect(disclaimerText).toContain(expectedDisclaimer);
-        await waitSeconds(0.3);
-    })
+    }, generalInterval)
 
     it('closes disclaimer', async () => {
         const closeButton = div.querySelector("#start-disclaimer button");
@@ -162,10 +168,10 @@ describe('app', () => {
         }));
         roboMouse.mousedown();
         roboMouse.mouseup();
-        await waitSeconds(0.3);
+        await wait(10);
         const disclaimerFoundAfterClick = div.querySelector("#start-disclaimer");
         expect(disclaimerFoundAfterClick).toBeNull();
-    })
+    }, generalInterval)
 
     it('creates a note by clicking and dragging', async () => {
         const targetNoteDef = {
@@ -174,6 +180,7 @@ describe('app', () => {
             octave: 4,
             layer: 0
         };
+
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
         roboMouse.currentPosition = { x: 0, y: 0 };
@@ -181,22 +188,87 @@ describe('app', () => {
         const endX = view.timeToPxWithOffset(targetNoteDef.timeEnd);
         const y = view.octaveToPxWithOffset(targetNoteDef.octave);
 
-        if (div.clientWidth < endX) throw new Error("endX is outside of the div, enlarge the window");
-        if (div.clientWidth < startX) throw new Error("startX is outside of the div, enlarge the window");
-        if (div.clientHeight < y) throw new Error("y is outside of the div, enlarge the window");
 
-        console.log({ startX, endX, y });
-        await roboMouse.moveTo({ x: startX, y }, 200);
+        await roboMouse.moveTo({ x: startX, y }, generalInterval / 5);
         await roboMouse.mousedown();
-        await roboMouse.moveTo({ x: endX, y }, 200);
+        await roboMouse.moveTo({ x: endX, y }, generalInterval / 5);
         await roboMouse.mouseup();
-        await roboMouse.moveTo({ x: 0, y: 0 }, 200);
-        await waitSeconds(1);
+        await roboMouse.moveTo({ x: 0, y: 0 }, generalInterval / 5);
+        await wait(generalInterval / 5);
         expect(project.notes.length).toBe(2);
-    });
+    }, generalInterval);
 
     it('selects area', async () => {
-    });
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        roboMouse.eventTarget = interactionTarget;
+        roboMouse.currentPosition = { x: 0, y: 0 };
+
+        await roboMouse.moveTo({ 
+            x: view.timeToPxWithOffset(1),
+            y: view.octaveToPxWithOffset(3),
+        }, 100);
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Control",
+            bubbles: true,
+        }));
+        await roboMouse.mousedown();
+        await roboMouse.moveTo({ 
+            x: view.timeToPxWithOffset(5),
+            y: view.octaveToPxWithOffset(5),
+        }, generalInterval / 3);
+        await roboMouse.mouseup();
+
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Control",
+            bubbles: true,
+        }));
+        await wait(generalInterval / 3);
+        expect(selection.getNotes().length).toBe(2);
+    }, generalInterval);
+    
+    it('duplicates selected ', async () => {
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        const div = 4;
+        const locationOfOneNote = view.visibleNoteDrawables[0];
+
+        await roboMouse.moveTo({
+            x: locationOfOneNote.x + locationOfOneNote.radius,
+            y: locationOfOneNote.y + locationOfOneNote.radius,
+        }, generalInterval / div);
+
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Alt",
+            bubbles: true,
+        }));
+        
+        await roboMouse.mousedown();
+
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(0),
+            y: locationOfOneNote.x + view.octaveToPx(1),
+        }, generalInterval / div);
+
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Alt",
+            bubbles: true,
+        }));
+        
+        await roboMouse.mouseup();
+        await wait(generalInterval / div);
+
+        expect(project.notes.length).toBe(4);
+
+    }, generalInterval);
+
+    it('deselects', async () => {
+        await roboMouse.moveTo({
+            x: 0,
+            y: 0,
+        }, 100);
+        roboMouse.mousedown();
+        roboMouse.mouseup();
+        expect(selection.getNotes().length).toBe(0);
+    }, generalInterval);
 
     afterAll(async () => {
         app.unmount()
