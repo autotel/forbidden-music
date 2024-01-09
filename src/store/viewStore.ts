@@ -155,7 +155,7 @@ export const useViewStore = defineStore("view", () => {
     });
 
     const visibleAutomationPoints = computed((): AutomationPoint[] => {
-        if (tool.current !== Tool.Modulation) {
+        if (tool.current !== Tool.Automation) {
             return [];
         }
 
@@ -190,7 +190,6 @@ export const useViewStore = defineStore("view", () => {
     });
 
     const visibleAutomationPointDrawables = computed((): TimelineDot<AutomationPoint>[] => {
-
         return visibleAutomationPoints.value.map((item) => {
             return dotOfAutomationPoint(item);
         })

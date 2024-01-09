@@ -41,6 +41,6 @@ On automation mode, only the automation points can be edited.
 
 * Visible: The trace falls within the view in the screen, and is not made invisible due to layer invisiblity or different tool being chosen.
 * Displayable: The trace would be visible if it was in the view screen; meaning that it's displayed by layer and tool, but it's not necessarily rendered (it might be off-screen).
-* Editable: a non-editable trace cannot be clicked or dragged. It should be displayed in a grayed-out fashion.
+* Greyed
 
 

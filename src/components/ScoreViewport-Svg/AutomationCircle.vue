@@ -9,7 +9,8 @@ const tool = useToolStore();
 const props = defineProps<{
     circle: TimelineDot<AutomationPoint>
     nextCircle?: TimelineDot<AutomationPoint> | undefined
-    interactionDisabled?: boolean
+    interactionDisabled?: boolean,
+    greyed?:boolean,
 }>();
 const xy1 = computed(() => {
     const circle = props.circle;
@@ -85,22 +86,7 @@ onBeforeUnmount(() => {
     <text :x="xy1.x1 + 55" :y="xy1.y1 + circle.radius" font-size="0.6em" v-bind="$attrs">{{ textBits[1] }}</text>
 
     <line v-if="nextCircle" v-bind="xy1" class="veloline" />
-    <circle ref="noteBody" :cx="xy1.x1" :cy="xy1.y1" r="7" :class="{
+    <circle ref="noteBody" :cx="xy1.x1" :cy="xy1.y1" r="7" class="body" :class="{
         selected: circle.event.selected,
     }" v-bind="$attrs" />
 </template>
-<style scoped>
-line,
-circle {
-    stroke: rgba(253, 152, 0, 0.5);
-    fill: #0000;
-}
-
-
-line.selected,
-circle.selected {
-    stroke: rgb(253, 152, 0);
-    fill: rgba(253, 152, 0, 0.5);
-    stroke-width: 3px;
-}
-</style>

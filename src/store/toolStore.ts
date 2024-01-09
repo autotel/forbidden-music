@@ -2,6 +2,7 @@ import { clamp, useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { AutomationLane } from '../dataTypes/AutomationLane';
+import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
 import { Loop, loop } from '../dataTypes/Loop';
 import { Note, note } from '../dataTypes/Note';
@@ -14,7 +15,6 @@ import { useProjectStore } from './projectStore';
 import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
-import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -167,28 +167,40 @@ const mouseDragModulationSelectedTraces = (
     if (!drag.traceWhenDragStarted) return;
     // negative y bc. inverted by offset, but in this case we don't want the offset amt, only sign
     const velocityDelta = view.pxToVelocity(-drag.delta.y);
-    const valueDelta = view.pxToValue(-drag.delta.y);
-    const timeDelta = view.pxToTime(drag.delta.x);
     drag.traces.forEach((trace, index) => {
-        console.log("drag action for",trace.type);
-        if(trace.type === TraceType.Note) {
-            const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
-            if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
-            if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
-            const velocityWhenDragStarted = traceWhenDragStarted.velocity;
-            trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
-            lastVelocitySet.value = trace.velocity;
-        }else if(trace.type === TraceType.AutomationPoint) {
-            const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
-            if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
-            if (!('value' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.value');
-            const valueWhenDragStarted = traceWhenDragStarted.value;
-            trace.value = valueWhenDragStarted + valueDelta;
-            trace.time = traceWhenDragStarted.time + timeDelta;
-        }
+        if (trace.type !== TraceType.Note) return;
+        const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
+        if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
+        if (!('velocity' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.velocity');
+        const velocityWhenDragStarted = traceWhenDragStarted.velocity;
+        trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
+        lastVelocitySet.value = trace.velocity;
     });
 }
 
+
+const mouseDragAutomationSelectedTraces = (
+    { drag }: ToolMouse,
+    { view, snap, project, lanes }: Stores,
+    /** provide this reference in order to set de initial velocity for new traces */
+    lastVelocitySet: Reference<number> = { value: 0 }
+) => {
+    if (!drag) throw new Error('misused drag handler');
+    if (!drag.traceWhenDragStarted) return;
+    const valueDelta = view.pxToValue(-drag.delta.y);
+    const timeDelta = view.pxToTime(drag.delta.x);
+    drag.traces.forEach((trace, index) => {
+        console.log("drag action for", trace.type);
+        if (trace.type !== TraceType.AutomationPoint) return;
+        const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
+        if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
+        if (!('value' in traceWhenDragStarted)) throw new Error('no traceWhenDragStarted.value');
+        const valueWhenDragStarted = traceWhenDragStarted.value;
+        trace.value = valueWhenDragStarted + valueDelta;
+        trace.time = traceWhenDragStarted.time + timeDelta;
+
+    });
+}
 const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, project, selection }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
@@ -236,7 +248,7 @@ export enum MouseDownActions {
     DragNoteVelocity,
     CopyNote,
     AreaSelectNotes,
-    MoveNotes,
+    MoveTraces,
     LengthenItem,
     MoveItem,
 }
@@ -363,7 +375,7 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.SetSelection:
             case MouseDownActions.SetSelectionAndDrag:
             case MouseDownActions.RemoveFromSelectionAndDrag:
-            case MouseDownActions.MoveNotes:
+            case MouseDownActions.MoveTraces:
             case MouseDownActions.MoveItem: {
                 if (mouse.drag && mouse.drag.trace) {
                     return 'cursor-grabbing';
@@ -444,25 +456,16 @@ export const useToolStore = defineStore("tool", () => {
         } else if (current.value === Tool.Modulation) {
             if (mouse.hovered?.trace) {
                 if (selection.isSelected(mouse.hovered.trace)) {
-                    if (mouse.hovered.trace.type === TraceType.Note) {
-                        ret = MouseDownActions.DragNoteVelocity;
-                    } else if (mouse.hovered.trace.type === TraceType.AutomationPoint) {
-                        ret = MouseDownActions.MoveNotes;
-                    }
+                    ret = MouseDownActions.DragNoteVelocity;
                 } else {
-                    if (mouse.hovered.trace.type === TraceType.Note) {
-                        ret = MouseDownActions.SetSelectionAndDrag;
-                    } else if (mouse.hovered.trace.type === TraceType.AutomationPoint) {
-                        ret = MouseDownActions.SetSelectionAndDrag;
-                    }
+                    ret = MouseDownActions.SetSelectionAndDrag;
                 }
-            } else {
-                ret = MouseDownActions.CreateAutomationPoint;
             }
             currentMouseStringHelper.value = "⇅";
         } else if (
             current.value === Tool.Edit
             || current.value === Tool.Loop
+            || current.value === Tool.Automation
         ) {
             if (mouse.hovered?.traceRightEdge) {
                 ret = MouseDownActions.LengthenTrace;
@@ -472,14 +475,16 @@ export const useToolStore = defineStore("tool", () => {
                     currentMouseStringHelper.value = "⟷";
                 }
             } else if (mouse.hovered?.trace) {
-                ret = MouseDownActions.MoveNotes;
+                ret = MouseDownActions.MoveTraces;
                 if (selection.isSelected(mouse.hovered?.trace)) {
-                    ret = MouseDownActions.MoveNotes;
+                    ret = MouseDownActions.MoveTraces;
                 } else {
                     ret = MouseDownActions.SetSelectionAndDrag;
                 }
             } else if (current.value === Tool.Loop) {
                 ret = MouseDownActions.CreateLoop;
+            } else if (current.value === Tool.Automation) {
+                ret = MouseDownActions.CreateAutomationPoint;
             } else {
                 ret = MouseDownActions.CreateNote;
             }
@@ -551,7 +556,7 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.DragNoteVelocity:
             case MouseDownActions.MoveItem:
-            case MouseDownActions.MoveNotes:
+            case MouseDownActions.MoveTraces:
                 if (mouse.drag?.trace) {
                     snap.resetSnapExplanation();
                     snap.focusedTrace = mouse.drag.trace;
@@ -641,7 +646,12 @@ export const useToolStore = defineStore("tool", () => {
                 sortedRange.velocityEnd = velocitiesInOrder[1];
             }
 
-            selection.selectRange(sortedRange);
+            selection.selectRange(
+                sortedRange,
+                current.value === Tool.Edit || current.value === Tool.Modulation,
+                current.value === Tool.Automation,
+                current.value === Tool.Edit || current.value === Tool.Loop
+            );
         }
     }, 25);
 
@@ -747,6 +757,10 @@ export const useToolStore = defineStore("tool", () => {
                 mouseDragModulationSelectedTraces(
                     mouse, storesPill, lastVelocitySet
                 );
+            } else if (current.value === Tool.Automation) {
+                mouseDragAutomationSelectedTraces(
+                    mouse, storesPill, lastVelocitySet
+                );
             } else if (
                 mouse.tracesBeingCreated.length === 1
                 && !mouse.drag.traceWhenDragStarted
@@ -768,7 +782,7 @@ export const useToolStore = defineStore("tool", () => {
                         mouse, storesPill
                     );
                 } else if (
-                    mouse.currentAction === MouseDownActions.MoveNotes
+                    mouse.currentAction === MouseDownActions.MoveTraces
                     || mouse.currentAction === MouseDownActions.MoveItem
                     || mouse.currentAction === MouseDownActions.SetSelectionAndDrag
 

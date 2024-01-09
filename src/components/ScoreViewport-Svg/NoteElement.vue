@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Note } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
-import { Drawable, TimelineDot, TimelineRect, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
+import { Drawable, layerNoteColorStrings, useViewStore } from '../../store/viewStore';
 import NoteElementCircle from './NoteElementCircle.vue';
 import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
@@ -14,7 +14,8 @@ const tool = useToolStore();
 const props = defineProps<{
     eventRect: Drawable<Note>
     text?: string
-    interactionDisabled?: boolean
+    interactionDisabled?: boolean,
+    greyed?: boolean,
 }>();
 
 // TODO: there are two possible destinations for noteBody, this causes the problem that 
@@ -25,6 +26,7 @@ const props = defineProps<{
 const noteBody = ref<SVGRectElement>();
 
 const myColor = computed(() => {
+    if(props.greyed) return 'gray';
     const color = layerNoteColorStrings[props.eventRect.event.layer];
     return color;
 });
@@ -50,18 +52,19 @@ onBeforeUnmount(() => {
         noteBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
     }
 });
-
 const isEditable = computed(() => {
     return tool.current == Tool.Edit || tool.current == Tool.Modulation;
 })
+
 </script>
 <template>
     <text class="texts" v-if="text" :x="eventRect.x" :y="eventRect.y - 10" font-size="14">
         {{ text }}
     </text>
     <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
-        <NoteElementRectangle v-if="'width' in eventRect" :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
-        <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
+        <NoteElementRectangle v-if="'width' in eventRect" :eventRect="eventRect" :isEditable="isEditable" :fill="myColor"
+            :greyed="greyed" />
+        <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" :greyed="greyed" />
         <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.x"
             :selected="eventRect.event.selected || false" :fill="myColor" />
     </g>

@@ -4,7 +4,7 @@ import { defineStore } from 'pinia';
 import { nextTick, ref } from 'vue';
 import { useProjectStore } from './projectStore.js';
 
-export const useUndoStore = defineStore("undo history store", () => {
+export const useHistoryStore = defineStore("undo history store", () => {
     const project = useProjectStore();
     const currentResumeTimeout = ref<NodeJS.Timeout | null>(null);
 

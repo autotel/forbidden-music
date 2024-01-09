@@ -12,7 +12,7 @@ const tool = useToolStore();
 watch([view, snap.values], () => {
     linePositionsPx.value = [];
     switch (tool.current) {
-        case Tool.Modulation:{
+        case Tool.Automation:{
             const currentParameter = tool.laneBeingEdited?.targetParameter
             if(currentParameter && 'max' in currentParameter && 'min' in currentParameter) {
                 const mmx = {

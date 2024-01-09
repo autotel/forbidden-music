@@ -10,7 +10,7 @@ import { useLayerStore } from './layerStore';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { Tool } from '../dataTypes/Tool';
-import { useViewStore } from './viewStore';
+import { Drawable, TimelineRect, useViewStore } from './viewStore';
 import { filterMap } from "../functions/filterMap";
 import { useAutomationLaneStore } from './automationLanesStore';
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
@@ -73,28 +73,23 @@ export const useSelectStore = defineStore("select", () => {
         });
         refreshTraceSelectionState();
     };
-    const getRangeSelectableTraces = (): Trace[] => {
-        // if(tool.current === Tool.Edit || tool.current === Tool.Modulation) {
-        //     return project.notes.filter(({ layer }) => layers.isVisible(layer));
-        // } else if(tool.current === Tool.Loop) {
-        //     return project.loops;
-        // }
-        // return [];
-        return [...project.notes, ...project.loops];
-    }
-    const selectRange = (range: SelectableRange) => {
-        // let notesInRange:Trace[] = getTracesInRange(
-        //     getRangeSelectableTraces(),
-        //     range
-        // );
+    
+    const selectRange = (
+        range: SelectableRange,
+        selectNotes = true,
+        selectAutomationPoints = true,
+        selectLoops = true,
+    ) => {
         select();
 
         const pxRange = view.pxRangeOf(range);
-        const traceRects = [
-            ...view.visibleLoopDrawables,
-            ...view.visibleNoteDrawables,
-            ...view.visibleAutomationPointDrawables
-        ];
+
+        const traceRects = [];
+        
+        if(selectNotes) traceRects.push(...view.visibleLoopDrawables);
+        if(selectAutomationPoints) traceRects.push(...view.visibleAutomationPointDrawables);
+        if(selectLoops) traceRects.push(...view.visibleNoteDrawables);
+        if(!traceRects.length) return;
 
         if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');
         const sureRange = pxRange as { x: number, y: number, x2: number, y2: number };
@@ -159,15 +154,18 @@ export const useSelectStore = defineStore("select", () => {
             case Tool.Loop:
                 whatToSelect.push(...project.loops)
                 break;
-            case Tool.Modulation:
-                project.lanes.lanes.forEach(({content})=> whatToSelect.push(...content))
+            case Tool.Automation:{
+                const currentLane = tool.laneBeingEdited
+                if(currentLane) whatToSelect.push(...currentLane.content)
                 break;
+            }
             default:
                 whatToSelect.push(...project.notes)
         }
         
         select(...whatToSelect);
     };
+
     throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 
     return {

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Tool } from '../dataTypes/Tool';
 import { KeyActions, getKeyCombinationString } from '../keyBindings';
-import { MouseDownActions, useToolStore } from '../store/toolStore';
-import { useUndoStore } from '../store/undoStore';
+import { useHistoryStore } from '../store/historyStore';
+import { useToolStore } from '../store/toolStore';
 import Button from './Button.vue';
 const tool = useToolStore();
 const {
   history, undo, redo, canUndo, canRedo, undoStack, redoStack
-} = useUndoStore();
+} = useHistoryStore();
 const k = (key: KeyActions) => getKeyCombinationString(key)[0] || '';
 const toggleOctaveConstrain = () => {
   tool.disallowTimeChange = !tool.disallowTimeChange;
@@ -47,11 +47,12 @@ const toggleSelectTool = () => {
       ↷
     </Button>
 
-    <!-- 
-    <Button :onClick="toggleSelectTool" :active="tool.whatWouldMouseDownDo() === MouseDownActions.AreaSelect"
-      :tooltip="`Select [${k(KeyActions.ActivateAreaSelectionMode)}]`">
-      Select
-    </Button> -->
+    <Button :onClick="(e) => {
+      tool.current = tool.current === Tool.Automation ? Tool.Edit : Tool.Automation;
+    }" :active="tool.current == Tool.Automation"
+      :tooltip="`Automation mode [${k(KeyActions.ActivateAutomationMode)}]`">
+      Automation
+    </Button>
     <Button :onClick="(e) => {
       tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
     }" :active="tool.current == Tool.Modulation"

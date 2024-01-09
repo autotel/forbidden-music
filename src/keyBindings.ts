@@ -57,9 +57,9 @@ const keyBindings: KeyActionTuple[] = [
 export const logKeys = (e: KeyboardEvent) => {
     const ctrlKey = e.ctrlKey || e.metaKey;
     console.log(
-        "action:", getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey),
+        "action:", getActionForKeys(e.key, ctrlKey, e.shiftKey, e.altKey),
         "key:", e.key,
-        "ctrl:", e.ctrlKey,
+        "ctrl:", ctrlKey,
         "shift:", e.shiftKey,
         "alt:", e.altKey,
     );

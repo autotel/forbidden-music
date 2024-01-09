@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { TraceType } from '../../dataTypes/Trace';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Trace, TraceType } from '../../dataTypes/Trace';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useToolStore } from '../../store/toolStore';
 import { useViewStore } from '../../store/viewStore';
@@ -11,6 +11,8 @@ import RangeSelection from './RangeSelection.vue';
 import ToneGrid from './ToneGrid.vue';
 import ToneRelation from './ToneRelation.vue';
 import AutomationCircle from './AutomationCircle.vue';
+import { Tool } from '../../dataTypes/Tool';
+import { AutomationLane } from '../../dataTypes/AutomationLane';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -22,6 +24,11 @@ defineProps<{
     height: number,
 }>();
 
+
+const notesAreGreyed = computed(() => (tool.current !== Tool.Edit))
+const loopsAreGreyed = computed(() => (tool.current !== Tool.Edit && tool.current !== Tool.Loop))
+// when making other lanes visible, use (lane)=>(tool.current !== Tool.Automation || tool.laneBeingEdited !== lane)
+const automationLaneIsGreyed = false
 
 onMounted(() => {
     const $viewPort = timedEventsViewport.value;
@@ -38,6 +45,9 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <svg id="viewport" ref="timedEventsViewport" :class="tool.cursor">
+        <!-- graphic helpers -->
+        <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
+            stroke-width="1" />
         <g id="grid">
             <TimeGrid />
             <ToneGrid />
@@ -45,62 +55,53 @@ onBeforeUnmount(() => {
         <g id="tone-relations">
             <ToneRelation />
         </g>
+        <!-- traces that would be created upon click -->
         <g id="note-would-be-created">
-            <NoteElement 
-                v-if="tool.noteThatWouldBeCreated" 
-                :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
+            <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
         <g id="loop-would-be-created">
-            <LoopRangeElement
-                v-if="tool.loopThatWouldBeCreated" 
-                :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
-                interactionDisabled /> 
-        </g>
-        <g id="automation-point-would-be-created">
-            <AutomationCircle
-                v-if="tool.automationPointThatWouldBeCreated"
-                :circle="view.dotOfAutomationPoint(tool.automationPointThatWouldBeCreated)"
+            <LoopRangeElement v-if="tool.loopThatWouldBeCreated" :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
                 interactionDisabled />
         </g>
-        <!-- <g id="loops-being-created">
-        </g> -->
-        <g id="loop-range-container">
-            <LoopRangeElement v-for="loopRect in view.visibleLoopDrawables" :eventRect="loopRect" />
+        <g id="automation-point-would-be-created">
+            <AutomationCircle v-if="tool.automationPointThatWouldBeCreated"
+                :circle="view.dotOfAutomationPoint(tool.automationPointThatWouldBeCreated)" interactionDisabled />
         </g>
-        <line id="playbar" :x1=playback.playbarPxPosition y1="0" :x2=playback.playbarPxPosition y2="100%"
-            stroke-width="1" />
-        <g id="edit-notes">
-            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect"  />
+
+        <!-- traces that actually exist in the project -->
+        <g id="loop-ranges-container" class="traces-container loops">
+            <LoopRangeElement v-for="loopRect in view.visibleLoopDrawables" :eventRect="loopRect"
+                :greyed="loopsAreGreyed" />
         </g>
-        <g id="edit-automation">
-            <AutomationCircle 
-                v-for="(circle, index) in view.visibleAutomationPointDrawables" :circle="circle" 
-                :nextCircle="view.visibleAutomationPointDrawables[index + 1]"
-                :key="index"
-            />
+        <g id="notes-container" class="traces-container notes">
+            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect" :greyed="notesAreGreyed" />
         </g>
+        <g id="automation-container" class="traces-container automation">
+            <AutomationCircle v-for="(circle, index) in view.visibleAutomationPointDrawables" :circle="circle"
+                :nextCircle="view.visibleAutomationPointDrawables[index + 1]" :key="index"
+                :greyed="automationLaneIsGreyed" />
+        </g>
+
+        <!-- others -->
         <g id="traces-being-created">
             <template v-for="trace in tool.mouse.tracesBeingCreated">
-                <NoteElement
-                    v-if="trace.type === TraceType.Note" :eventRect="view.rectOfNote(trace)" />
+                <NoteElement v-if="trace.type === TraceType.Note" :eventRect="view.rectOfNote(trace)" />
 
-                <LoopRangeElement
-                    v-if="trace.type === TraceType.Loop"
-                    :eventRect="view.rectOfLoop(trace)"
-                    interactionDisabled /> 
+                <LoopRangeElement v-if="trace.type === TraceType.Loop" :eventRect="view.rectOfLoop(trace)"
+                    interactionDisabled />
             </template>
         </g>
+
         <RangeSelection />
     </svg>
 </template>
 <style>
-
-
-svg#viewport{
+svg#viewport {
     width: 100%;
     height: 100%;
 }
+
 svg#viewport.cursor-note-length {
     cursor: col-resize;
     cursor: ew-resize;
@@ -138,4 +139,54 @@ g#notes-being-created rect.body {
 }
 
 
+.traces-container .body {
+    opacity: 0.7;
+}
+
+.traces-container .body.selected.editable {
+    /* fill: rgba(255, 51, 0, 0.644); */
+    stroke: rgb(151, 151, 151);
+    stroke-width: 1px;
+    opacity: 1;
+}
+
+.traces-container .body.muted.selected {
+    opacity: 0.76;
+}
+
+.traces-container .body.greyed {
+    stroke: #0005;
+    fill: #0001;
+    opacity: 0.4;
+}
+
+.traces-container .body.muted {
+    opacity: 0.4;
+}
+
+.traces-container .length-handle {
+    fill: #f88a;
+    stroke: none;
+    opacity: 0.1;
+}
+
+.traces-container .body:hover {
+    opacity: 1;
+}
+
+.loops .body {
+    fill: rgb(255, 183, 164);
+}
+
+.automation line,
+.automation circle {
+    stroke: rgba(253, 152, 0);
+    fill: #0000;
+}
+
+
+.automation line.selected,
+.automation circle.selected {
+    stroke-width: 3px;
+}
 </style>

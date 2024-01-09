@@ -4,15 +4,16 @@ import { Loop } from '../../dataTypes/Loop';
 import { Tool } from '../../dataTypes/Tool';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineDot, useViewStore } from '../../store/viewStore';
+import { TimelineDot, TimelineRect, useViewStore } from '../../store/viewStore';
 import SvgLittleButton from './SvgLittleButton.vue';
 
 
 const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
-    eventRect: TimelineDot<Loop>
-    interactionDisabled?: boolean
+    eventRect: TimelineRect<Loop>
+    interactionDisabled?: boolean,
+    greyed?:boolean,
 }>();
 const project = useProjectStore();
 
@@ -59,25 +60,21 @@ onUnmounted(() => {
     }
 });
 
-const isEditable = true;
 const showButtons = computed(() => {
     return tool.current === Tool.Loop || props.eventRect.event.selected;
 })
 </script>
 <template>
     <g ref="noteBody">
-        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20"  v-if="!interactionDisabled && eventRect.rightEdge">
-            {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
-            {{ eventRect.event.count }}
-        </text>
         <rect class="body" v-bind="$attrs" :class="{
             selected: eventRect.event.selected,
-            editable: isEditable,
+            greyed: greyed,
         }" :x="eventRect.x" :y="0" :width=eventRect.width :height="eventRect.height" />
 
-        <rect v-if="!interactionDisabled && eventRect.rightEdge && isEditable" ref="lengthHandle" class="lengthHandle"
+        <rect v-if="!interactionDisabled && eventRect.rightEdge && isEditable" ref="lengthHandle" class="length-handle"
             :class="{
                 editable: isEditable,
+                greyed: greyed
             }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
         <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black"
             stroke-width="1" />
@@ -100,34 +97,10 @@ const showButtons = computed(() => {
             :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
         </SvgLittleButton>
         </template>
+
+        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20"  v-if="!interactionDisabled && eventRect.rightEdge">
+            {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
+            {{ eventRect.event.count }}
+        </text>
     </g>
 </template>
-<style scoped>
-.body {
-    stroke: #c42e0031;
-    fill: rgba(255, 51, 0, 0.219);
-    opacity: 0.3;
-}
-
-.body {
-    /* fill: #888a; */
-    opacity: 0.6;
-}
-
-.body.selected.editable {
-    fill: rgba(255, 51, 0, 0.644);
-    opacity: 1 !important
-}
-
-
-.lengthHandle {
-    fill: #f88a;
-    stroke: none;
-    opacity: 0.1;
-}
-
-
-.body:hover {
-    opacity: 1 !important
-}
-</style>
