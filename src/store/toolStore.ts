@@ -263,9 +263,7 @@ export const useToolStore = defineStore("tool", () => {
     const currentLayerNumber = ref(0);
 
     /** which parameter is currenly being shown on screen for automation */
-    const laneBeingEdited = ref<AutomationLane | undefined>(
-        lanes.lanes.get(0) || undefined
-    );
+    const laneBeingEdited = ref<AutomationLane | undefined>(undefined);
 
     const selectRange = ref<ToolRange>({
         time: 0,

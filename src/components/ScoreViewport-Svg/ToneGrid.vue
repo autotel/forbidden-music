@@ -2,29 +2,55 @@
 import { Ref, onMounted, ref, watch } from 'vue';
 import { useSnapStore } from '../../store/snapStore';
 import { useViewStore } from '../../store/viewStore';
+import { useToolStore } from '../../store/toolStore';
+import { Tool } from '../../dataTypes/Tool';
+import { paramRangeToAutomationRange } from '../../dataTypes/AutomationPoint';
 const view = useViewStore();
 const linePositionsPx = ref([]) as Ref<number[]>;
 const snap = useSnapStore();
-
+const tool = useToolStore();
 watch([view, snap.values], () => {
     linePositionsPx.value = [];
-    if (snap.values['customFrequencyTable']?.active) {
-        // display one line per frequency in the tableä
-        const octaves = snap.customOctavesTable;
-        for (let i = 0; i < octaves.length; i++) {
-            const octave = octaves[i];
-            if (!view.isOctaveInView(octave)) continue;
-            linePositionsPx.value.push(
-                view.octaveToPxWithOffset(octave)
-            );
-        }
-    } else {
-        for (let i = 1; i < 14; i++) {
-            if (!view.isOctaveInView(i)) continue;
-            linePositionsPx.value.push(
-                view.octaveToPxWithOffset(i)
-            );
-        }
+    switch (tool.current) {
+        case Tool.Modulation:{
+            const currentParameter = tool.laneBeingEdited?.targetParameter
+            if(currentParameter && 'max' in currentParameter && 'min' in currentParameter) {
+                const mmx = {
+                    max:currentParameter.max,
+                    min:currentParameter.min,
+                };
+                const vs = [
+                    paramRangeToAutomationRange(0,mmx),
+                    paramRangeToAutomationRange(1,mmx),
+                    paramRangeToAutomationRange(-1,mmx),
+                    paramRangeToAutomationRange(10,mmx),
+                    paramRangeToAutomationRange(-10,mmx),
+                ];
+                linePositionsPx.value.push(
+                    ...vs.map(view.valueToPxWithOffset)
+                )
+            }
+            break;
+       } 
+       default:
+            if (snap.values['customFrequencyTable']?.active) {
+                // display one line per frequency in the tableä
+                const octaves = snap.customOctavesTable;
+                for (let i = 0; i < octaves.length; i++) {
+                    const octave = octaves[i];
+                    if (!view.isOctaveInView(octave)) continue;
+                    linePositionsPx.value.push(
+                        view.octaveToPxWithOffset(octave)
+                    );
+                }
+            } else {
+                for (let i = 1; i < 14; i++) {
+                    if (!view.isOctaveInView(i)) continue;
+                    linePositionsPx.value.push(
+                        view.octaveToPxWithOffset(i)
+                    );
+                }
+            }
     }
 });
 onMounted(() => {

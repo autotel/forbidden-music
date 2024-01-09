@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { AutomationPoint } from '../../dataTypes/AutomationPoint';
+import { AutomationPoint, MinMax, automationRangeToParamRange } from '../../dataTypes/AutomationPoint';
 import { Tool } from '../../dataTypes/Tool';
 import { useToolStore } from '../../store/toolStore';
 import { TimelineDot } from '../../store/viewStore';
-
 
 const tool = useToolStore();
 const props = defineProps<{
@@ -31,12 +30,20 @@ const xy1 = computed(() => {
     return ret;
 });
 const textBits = computed(() => {
-    const show = tool.mouse.hovered?.trace === props.circle.event 
+    const show = tool.mouse.hovered?.trace === props.circle.event
         || props.circle.event.selected;
-    if(!show) {
+    if (!show) {
         return [];
     }
-    const strno = '' + props.circle.event.value;
+    if (!tool.laneBeingEdited) return []
+
+    const targetParameter: MinMax = tool.laneBeingEdited?.targetParameter as MinMax;
+
+    const mappedValue = automationRangeToParamRange(
+        props.circle.event.value,
+        targetParameter
+    )
+    const strno = '' + mappedValue;
     const dotPosition = strno.indexOf('.');
     if (dotPosition === -1) {
         return [strno, ''];
@@ -74,8 +81,8 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
-    <text :x="xy1.x1" :y="xy1.y1" v-bind="$attrs">{{ textBits[0] }}</text>
-    <text :x="xy1.x1 + 30" :y="xy1.y1" font-size="0.6em" v-bind="$attrs">{{ textBits[1] }}</text>
+    <text :x="xy1.x1 + 15" :y="xy1.y1 + circle.radius" v-bind="$attrs">{{ textBits[0] }}</text>
+    <text :x="xy1.x1 + 55" :y="xy1.y1 + circle.radius" font-size="0.6em" v-bind="$attrs">{{ textBits[1] }}</text>
 
     <line v-if="nextCircle" v-bind="xy1" class="veloline" />
     <circle ref="noteBody" :cx="xy1.x1" :cy="xy1.y1" r="7" :class="{

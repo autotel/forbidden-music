@@ -244,6 +244,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         const paramName = param.displayName;
         return `${synthName}.${paramName}`;
     }
+
     const accessorStringToSynthParam = (accessorString?: string) => {
         console.log("accessor string to synth param", accessorString);
         if (!accessorString) return undefined;
@@ -277,9 +278,6 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return channelIfExists.synth;
     }
 
-
-    audioContextStore.audioContextPromise.then((audioContext: AudioContext) => {
-    });
 
     return {
         availableSynths,

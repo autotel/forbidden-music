@@ -8,13 +8,14 @@ import { useSnapStore } from './snapStore';
 import { useSelectStore } from './selectStore';
 import { useViewStore } from './viewStore';
 import { getDuration } from '../dataTypes/TimelineItem';
+import { useSynthStore } from './synthStore';
 describe('AudioContextStore', () => {
     setActivePinia(createPinia());
-    const toolStore = useToolStore();
+    const synth = useSynthStore();
     const project = useProjectStore();
     const snap = useSnapStore();
-    const select = useSelectStore();
     const view = useViewStore();
+    const toolStore = useToolStore();
     const testScore = [
         { "octave": 4, "time": 1, "timeEnd": 3, "mute": false, "velocity": 0.7, "layer": 0 },
         { "octave": 4.3, "time": 1, "timeEnd": 3, "mute": false, "velocity": 0.7, "layer": 0 },

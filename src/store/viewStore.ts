@@ -463,14 +463,14 @@ export const useViewStore = defineStore("view", () => {
     };
 
     // Automation vals
-    const valuePXK = 4;
+    const valueRange = 1.1;
     const valueToPx = (value: number): number => {
-        // if(valuePXK === 0) return 0;
-        return (value * viewHeightPx.value) / valuePXK;
+        // if(valueRange === 0) return 0;
+        return (value * viewHeightPx.value) / valueRange;
     };
     const pxToValue = (px: number): number => {
         if (viewHeightPx.value === 0) return 0;
-        return (px * valuePXK) / viewHeightPx.value;
+        return (px * valueRange) / viewHeightPx.value;
     };
     const valueToPxWithOffset = (value: number): number => {
         return viewHeightPx.value - valueToPx(value);

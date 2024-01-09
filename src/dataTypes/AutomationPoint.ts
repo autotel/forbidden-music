@@ -1,3 +1,4 @@
+import { denormalize, normalize } from "../functions/rangeScale";
 import Draggable from "./Draggable";
 import Selectable from "./Selectable";
 import { TimePosition, ValuePosition } from "./TimelineItem";
@@ -40,4 +41,15 @@ export const automationPointDef = (ap: AutomationPoint): AutomationPointDef => {
     mute: ap.mute,
     layer: ap.layer,
   }
+}
+
+export type MinMax = { max: number, min: number }
+
+
+export const paramRangeToAutomationRange = (val: number, param: MinMax) => {
+  return normalize(val, param.min, param.max)
+}
+
+export const automationRangeToParamRange = (val: number, param: MinMax) => {
+  return denormalize(val, param.min, param.max)
 }

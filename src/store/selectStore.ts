@@ -154,7 +154,19 @@ export const useSelectStore = defineStore("select", () => {
         selected.value.clear();
     };
     const selectAll = () => {
-        select(...project.notes, ...project.loops);
+        const whatToSelect:Trace[] = []
+        switch (tool.current) {
+            case Tool.Loop:
+                whatToSelect.push(...project.loops)
+                break;
+            case Tool.Modulation:
+                project.lanes.lanes.forEach(({content})=> whatToSelect.push(...content))
+                break;
+            default:
+                whatToSelect.push(...project.notes)
+        }
+        
+        select(...whatToSelect);
     };
     throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 

@@ -14,7 +14,7 @@ import { useProjectStore } from './projectStore';
 import { useSynthStore } from './synthStore';
 import { useViewStore } from './viewStore';
 import { useAutomationLaneStore } from './automationLanesStore';
-import { AutomationPoint } from '../dataTypes/AutomationPoint';
+import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
 import { SynthParam } from '../synth/SynthInterface';
 import { filterMap } from '../functions/filterMap';
 
@@ -346,14 +346,18 @@ export const usePlaybackStore = defineStore("playback", () => {
         gatAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
             .forEach((automation) => {
                 const { param, point } = automation;
+                const mappedValue = automationRangeToParamRange(point.value, {
+                    min: param.min, max: param.max
+                })
                 let eventStartAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
                 if (eventStartAbsolute < 0) {
                     // TODO: could lerp for more precision
                     eventStartAbsolute = 0;
                 }
                 try {
-                    // synth.scheduleAutomation(point, eventStartAbsolute, param);
-                    param.animate?.(point.value, eventStartAbsolute);
+                    
+                    console.log(`param.animate?.(${mappedValue}, ${eventStartAbsolute});`); 
+                    param.animate?.(mappedValue, eventStartAbsolute);
                 } catch (e) {
                     console.error("could not schedule event", point, e);
                 }

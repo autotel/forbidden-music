@@ -1,15 +1,13 @@
 import { defineStore } from "pinia";
 import { ref, watchEffect } from "vue";
 import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
-import { SynthParam } from "../synth/SynthInterface";
-import { usePlaybackStore } from "./playbackStore";
 import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
+import { SynthParam } from "../synth/SynthInterface";
 import { useSynthStore } from "./synthStore";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
-    const playback = usePlaybackStore();
-    const synth = useSynthStore();
     const lanes = ref<Map<string, AutomationLane>>(new Map());
+    const synth = useSynthStore();
 
     /** which parameter is currenly being shown on screen for automation */
     const parameterBeingAutomated = ref<SynthParam | false>(false);

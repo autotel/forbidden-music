@@ -1,5 +1,10 @@
 # Piano roll to-do
-	maybe use a selectable-filtering approach instead of by tools, because it's getting very messy, like autocad perhaps
+	selectable-filtering approach instead of by tools, because it's getting very messy, like autocad perhaps	
+		selectable (displayable * type visible)
+		displayed (displayable * within screen range)
+		displayable (layer visible * type visible)
+		editable (type-visible)
+		
 
 	Throttle or otherwise reduce the amount of samples a visitor may download. ideas: 
 		load button + load progrss instead of autoload 
