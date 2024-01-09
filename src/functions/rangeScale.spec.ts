@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { denormalize, normalize, paramRangeToAutomationRange, rangeScale } from './rangeScale';
+import { denormalize, normalize, rangeScale } from './rangeScale';
+import { paramRangeToAutomationRange } from '../dataTypes/AutomationPoint';
 describe('range scaler', () => {
     it('scales range correclty 1', () => {
         expect(

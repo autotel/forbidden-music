@@ -12,7 +12,13 @@ const disclaimerOkButtonPressed = () => {
 
 </script>
 <template>
-    <Modal v-if="!disclaimerShown" name="user-disclaimer" :activateOnMount="true" :onClose="disclaimerOkButtonPressed" closeButton="ok">
+    <Modal v-if="!disclaimerShown" 
+        id="start-disclaimer"
+        name="user-disclaimer" 
+        :activateOnMount="true" 
+        :onClose="disclaimerOkButtonPressed" 
+        closeButton="ok"
+    >
         <div>
             <h1>Disclaimer</h1>
             <p>

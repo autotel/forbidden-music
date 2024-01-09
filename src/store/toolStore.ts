@@ -190,7 +190,6 @@ const mouseDragAutomationSelectedTraces = (
     const valueDelta = view.pxToValue(-drag.delta.y);
     const timeDelta = view.pxToTime(drag.delta.x);
     drag.traces.forEach((trace, index) => {
-        console.log("drag action for", trace.type);
         if (trace.type !== TraceType.AutomationPoint) return;
         const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
         if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');

@@ -1,17 +1,14 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
-import { useProjectStore } from './projectStore';
-import { useToolStore } from './toolStore';
-import { Note, note } from '../dataTypes/Note';
 import { loop } from '../dataTypes/Loop';
-import { useSnapStore } from './snapStore';
-import { useSelectStore } from './selectStore';
-import { useViewStore } from './viewStore';
+import { Note, note } from '../dataTypes/Note';
 import { getDuration } from '../dataTypes/TimelineItem';
-import { useSynthStore } from './synthStore';
-describe('AudioContextStore', () => {
+import { useProjectStore } from './projectStore';
+import { useSnapStore } from './snapStore';
+import { useToolStore } from './toolStore';
+import { useViewStore } from './viewStore';
+describe('toolStore', () => {
     setActivePinia(createPinia());
-    const synth = useSynthStore();
     const project = useProjectStore();
     const snap = useSnapStore();
     const view = useViewStore();
@@ -44,6 +41,7 @@ describe('AudioContextStore', () => {
                 clientY: 0
             })
         );
+
         const yPxDistanceMove = view.octaveToPx(octaveDelta);
         const xPxDistanceMove = view.timeToPx(timeDelta);
 
@@ -76,6 +74,7 @@ describe('AudioContextStore', () => {
             noteToMove.time = origintalNoteTime;
         }
     });
+
     it('can select and drag-move a note vertically', () => {
         for (let i = 0; i < project.notes.length; i++) {
             const noteToMove = project.notes[i];
@@ -88,17 +87,20 @@ describe('AudioContextStore', () => {
             noteToMove.octave = origintalNoteOctave;
         }
     });
-    it('drags the note end along with the note start', () => {
+
+    it('note lengths are not affected by drag', () => {
         for (let i = 0; i < project.notes.length; i++) {
+            const timeDelta = i* 1.2 - 5;
             const noteToMove = project.notes[i];
             const origintalNoteTime = noteToMove.time;
             const originalNoteDuration = getDuration(noteToMove);
-            const timeDelta = i* 1.2 - 5;
+            
             noteMover(noteToMove, 0, timeDelta);
-            expect(noteToMove.timeEnd).toBeCloseTo(
-                origintalNoteTime + timeDelta + originalNoteDuration, 1
+            expect(originalNoteDuration).toBeCloseTo(
+                getDuration(noteToMove), 1
             );
             noteToMove.time = origintalNoteTime;
         }
     });
+
 });

@@ -278,7 +278,6 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return channelIfExists.synth;
     }
 
-
     return {
         availableSynths,
         channels,

@@ -27,7 +27,7 @@ onMounted(() => {
 
 </script>
 <template  >
-    <div v-if="showing" class="main-modal">
+    <div v-if="showing" class="main-modal" v-bind="$attrs">
         <div class="click-outside-catcher" ref="clickOutsideCatcher" @click=close></div>
         <div class="modal-text-display">
             <slot></slot>

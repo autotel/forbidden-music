@@ -35,6 +35,9 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             targetParameter,
         });
         if (targetParameter) newLane.targetParameter = targetParameter;
+        // if(typeof synth.synthParamToAccessorString !== 'function') {
+        //     throw new Error('synth.synthParamToAccessorString is ' + typeof synth.synthParamToAccessorString + ' instead of function')
+        // }
         const key = synth.synthParamToAccessorString(targetParameter) || 'undefined'
         lanes.value.set(key, newLane);
         newLane.content = automationPoints;
@@ -86,10 +89,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
         lanes.value.clear();
     }
-    if (!lanes.value.size) {
-        const defaultLane = addAutomationLane();
-        defaultLane.displayName = "Default";
-    }
     const deleteAutomationPoint = (point: AutomationPoint, lane?: AutomationLane) => {
         let containerLane: AutomationLane
         let atIndex = -1;
@@ -114,6 +113,11 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             lane.content.forEach(callback);
         });
     }
+
+    // if (!lanes.value.size) {
+    //     const defaultLane = addAutomationLane();
+    //     defaultLane.displayName = "Default";
+    // }
 
     return {
         lanes,
