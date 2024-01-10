@@ -70,11 +70,11 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
     } else {
         console.log("exclusives disabled");
     }
+    returnArray.push(new KarplusSynth(audioContext));
 
     if (isDev()) {
         // bc. unfinished
         returnArray.push(new FmSynth(audioContext));
-        returnArray.push(new KarplusSynth(audioContext));
         // bc. pirate
         returnArray.push(...localOnlySamplers);
     } else {

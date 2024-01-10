@@ -20,7 +20,6 @@ const tool = useToolStore();
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
     { name: 'SVG', value: ViewportTech.Svg },
-    { name: 'Canvas', value: ViewportTech.Canvas },
 ]
 const fullReset = () => {
     window.localStorage.clear();

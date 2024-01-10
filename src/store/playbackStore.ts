@@ -367,8 +367,13 @@ export const usePlaybackStore = defineStore("playback", () => {
         currentTimeout.value = setTimeout(_clockAction, playFrameSizeMs);
 
     }
+    /**
+     * in order to indicate upon playback, whether its paused or stopped
+     */
+    let isPaused = false;
 
     const play = async () => {
+        if(!isPaused) resetLoopRepetitions();
         const audioContext = audioContextStore.audioContext;
         if (audioContext.state !== 'running') await audioContext.resume();
         playing.value = true;
@@ -386,11 +391,14 @@ export const usePlaybackStore = defineStore("playback", () => {
         currentScoreTime.value = timeReturnPoint.value;
         previousClockTime = 0;
         synth.releaseAll();
+        resetLoopRepetitions();
+        isPaused = false;
     }
 
     const pause = () => {
         clearTimeout(currentTimeout.value);
         currentTimeout.value = null;
+        isPaused = true;
         playing.value = false;
     }
 

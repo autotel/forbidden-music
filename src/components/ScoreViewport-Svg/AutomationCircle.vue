@@ -56,11 +56,9 @@ const textBits = computed(() => {
 const noteBody = ref<SVGCircleElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    console.log('bodyMouseEnterListener')
     tool.timelineItemMouseEnter(props.circle.event);
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
-    console.log('bodyMouseLeaveListener')
     tool.timelineItemMouseLeave();
 }
 

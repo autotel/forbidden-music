@@ -6,7 +6,7 @@ import { useViewStore } from "./viewStore";
 import userCustomPerformanceSettingsKey from "./userCustomPerformanceSettingsKey";
 
 export enum ViewportTech {
-    Canvas, Pixi, Svg
+    Pixi, Svg
 }
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {

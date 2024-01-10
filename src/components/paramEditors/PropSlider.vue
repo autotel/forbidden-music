@@ -67,28 +67,31 @@ const windowMouseMove = (e: MouseEvent) => {
     mouseDrag(e);
 }
 const mouseDown = (e: MouseEvent) => {
+    let taken = false;
     mouseDownPos = {
         x: e.clientX,
         y: e.clientY,
     };
     preMapValueOnDragStart = preMapValue.value;
-    e.stopPropagation();
-    e.preventDefault();
     console.log(e.button)
     switch (e.button) {
         case 1: {
             if (props.param.default !== undefined) {
                 props.param.value = props.param.default
+                taken = true;
                 break;
             }
         }
-        default: {
-
+        case 0: {
             dragging.value = true;
-
             const nl = lanes.getOrCreateAutomationLaneForParameter(props.param);
             if (nl) tool.laneBeingEdited = nl;
+            taken = true;
         }
+    }
+    if(taken) {
+        e.stopPropagation();
+        e.preventDefault();
     }
 
 }

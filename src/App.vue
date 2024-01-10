@@ -3,7 +3,6 @@ import Fraction from 'fraction.js';
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
-import ScoreViewportRawCanvas from './components/ScoreViewport-Canvas/ScoreViewport.vue';
 import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
@@ -234,8 +233,6 @@ watch(paneWidth, () => {
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewport v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
                 :height="viewportSize.height" />
-            <ScoreViewportRawCanvas v-else-if="userSettings.viewportTech === ViewportTech.Canvas"
-                :width="viewportSize.width" :height="viewportSize.height" />
             <ScoreViewportOld v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
                 :height="viewportSize.height" />
         </div>

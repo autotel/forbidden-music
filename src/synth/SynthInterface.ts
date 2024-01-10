@@ -124,7 +124,7 @@ export interface ArraySynthParam extends SynthParamMinimum<number[]> {
     updateFlag?: string,
     min: number,
     max: number,
-    default: number[],
+    default?: number[],
 }
 
 
