@@ -214,7 +214,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     /** 
      * Get the automation points corresponding to the given playback frame timerange
      */
-    const gatAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
+    const getAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
         /* 
           The return of this function is a bit counterintuitive:
           it returns the automation that follows whichever automation falls within the given range (fig 1.)
@@ -343,7 +343,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             }
         });
 
-        gatAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
+        getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
             .forEach((automation) => {
                 const { param, point } = automation;
                 const mappedValue = automationRangeToParamRange(point.value, {

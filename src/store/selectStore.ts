@@ -86,9 +86,9 @@ export const useSelectStore = defineStore("select", () => {
 
         const traceRects = [];
         
-        if(selectNotes) traceRects.push(...view.visibleLoopDrawables);
+        if(selectNotes) traceRects.push(...view.visibleNoteDrawables);
         if(selectAutomationPoints) traceRects.push(...view.visibleAutomationPointDrawables);
-        if(selectLoops) traceRects.push(...view.visibleNoteDrawables);
+        if(selectLoops) traceRects.push(...view.visibleLoopDrawables);
         if(!traceRects.length) return;
 
         if (!('x' in pxRange && 'y' in pxRange && 'x2' in pxRange && 'y2' in pxRange)) throw new Error('incomplete selection range');

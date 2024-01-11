@@ -31,3 +31,7 @@ dist-ssr
 # certificates and secret stuff
 *.key
 *.crt
+
+# vuepress
+.temp
+.cache

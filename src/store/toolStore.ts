@@ -262,13 +262,16 @@ export const useToolStore = defineStore("tool", () => {
     const lanes = useAutomationLaneStore();
     const tooltip = ref("");
     const tooltipOwner = ref<HTMLElement | SVGElement | null>(null);
-    // TODO: probably not all these need to be refs
+
+    // TODO: should rename into currentMode and currentTool instead of current and currentLeftHand
     /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
     /** tool that might have been activated temporarily by holding a key */
     const currentLeftHand = ref(Tool.None);
     const simplify = ref(0.1);
     const copyOnDrag = ref(false);
+    // TODO: rename to velocityForNewNotes
+    /** Last velocity set, which is used as velocity on new notes (makes things easier in general) */
     let lastVelocitySet = { value: 0.7 };
     type ToolRange = SelectableRange & OctaveRange & TimeRange & { active: boolean };
     const currentLayerNumber = ref(0);
@@ -615,43 +618,40 @@ export const useToolStore = defineStore("tool", () => {
     }
 
     const refreshAndApplyRangeSelection = useThrottleFn((e: MouseEvent) => {
-        if (selectRange.value.active) {
+        const x = e.clientX;
+        const y = e.clientY;
 
-            const x = e.clientX;
-            const y = e.clientY;
+        selectRange.value.timeEnd = view.pxToTimeWithOffset(x);
+        selectRange.value.octaveEnd = view.pxToOctaveWithOffset(y);
 
-            selectRange.value.timeEnd = view.pxToTimeWithOffset(x);
-            selectRange.value.octaveEnd = view.pxToOctaveWithOffset(y);
+        const timesInOrder = [selectRange.value.time, selectRange.value.timeEnd].sort((a, b) => a - b);
+        const octavesInOrder = [selectRange.value.octave, selectRange.value.octaveEnd].sort((a, b) => a - b);
 
-            const timesInOrder = [selectRange.value.time, selectRange.value.timeEnd].sort((a, b) => a - b);
-            const octavesInOrder = [selectRange.value.octave, selectRange.value.octaveEnd].sort((a, b) => a - b);
+        const sortedRange = {
+            time: timesInOrder[0],
+            timeEnd: timesInOrder[1],
+            octave: octavesInOrder[0],
+            octaveEnd: octavesInOrder[1],
+        } as any;
 
-            const sortedRange = {
-                time: timesInOrder[0],
-                timeEnd: timesInOrder[1],
-                octave: octavesInOrder[0],
-                octaveEnd: octavesInOrder[1],
-            } as any;
+        if ('velocity' in selectRange.value) {
+            selectRange.value.velocityEnd = view.pxToVelocityWithOffset(y);
 
-            if ('velocity' in selectRange.value) {
-                selectRange.value.velocityEnd = view.pxToVelocityWithOffset(y);
+            const velocitiesInOrder = [
+                selectRange.value.velocity,
+                selectRange.value.velocityEnd
+            ].sort((a, b) => a - b);
 
-                const velocitiesInOrder = [
-                    selectRange.value.velocity,
-                    selectRange.value.velocityEnd
-                ].sort((a, b) => a - b);
-
-                sortedRange.velocity = velocitiesInOrder[0];
-                sortedRange.velocityEnd = velocitiesInOrder[1];
-            }
-
-            selection.selectRange(
-                sortedRange,
-                current.value === Tool.Edit || current.value === Tool.Modulation,
-                current.value === Tool.Automation,
-                current.value === Tool.Edit || current.value === Tool.Loop
-            );
+            sortedRange.velocity = velocitiesInOrder[0];
+            sortedRange.velocityEnd = velocitiesInOrder[1];
         }
+        
+        selection.selectRange(
+            sortedRange,
+            current.value === Tool.Edit || current.value === Tool.Modulation,
+            current.value === Tool.Automation,
+            current.value === Tool.Edit || current.value === Tool.Loop
+        );
     }, 25);
 
     /** apply snaps modifying the target loop */
@@ -673,10 +673,10 @@ export const useToolStore = defineStore("tool", () => {
         let keepNote = false;
         let keepLoop = false;
         let keepAutomationPoint = false;
-                
+
         // if out of view, false
         if (x < 0 || x > view.viewWidthPx || y < 0 || y > view.viewHeightPx) {
-            
+
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateNote) {
             const mouseTime = view.pxToTimeWithOffset(x);
             const theNote = note({
@@ -699,7 +699,7 @@ export const useToolStore = defineStore("tool", () => {
 
             noteThatWouldBeCreated.value = snapNote;
             keepNote = true;
-            
+
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateLoop) {
 
             const t = view.pxToTimeWithOffset(x);
@@ -723,9 +723,9 @@ export const useToolStore = defineStore("tool", () => {
         }
 
 
-        if(!keepNote) noteThatWouldBeCreated.value = false;
-        if(!keepLoop) loopThatWouldBeCreated.value = false;
-        if(!keepAutomationPoint) automationPointThatWouldBeCreated.value = false;
+        if (!keepNote) noteThatWouldBeCreated.value = false;
+        if (!keepLoop) loopThatWouldBeCreated.value = false;
+        if (!keepAutomationPoint) automationPointThatWouldBeCreated.value = false;
     }
 
 
