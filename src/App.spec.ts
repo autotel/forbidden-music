@@ -179,7 +179,7 @@ describe('app', () => {
     }, generalInterval)
 
     it('creates a note by clicking and dragging', async () => {
-        const timeDiv = 6;
+        const timeDiv = 7;
         const targetNoteDef = {
             time: 2,
             timeEnd: 4,

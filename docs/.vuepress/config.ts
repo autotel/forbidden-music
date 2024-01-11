@@ -48,6 +48,7 @@ export default defineUserConfig({
     lang: 'en-UK',
     title: 'doc',
     description: 'Documentation for nondiscrete piano roll',
+    base: '/forbidden-music/docs/',
     theme: defaultTheme({
         docsDir: 'docs',
         sidebar,

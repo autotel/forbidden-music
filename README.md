@@ -1,8 +1,7 @@
 # microtonal piano roll
 
-More info about the project is still in my to-do
-
-for now, read from https://autotel.co/portfolio/2022-12-19-piano-roll
+* How-to's and few implementation details: https://autotel.co/forbidden-music/docs/
+* More theoretical info: https://autotel.co/portfolio/2022-12-19-piano-roll
 
 dev usage:
 

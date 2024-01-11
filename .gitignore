@@ -10,9 +10,12 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 *.local
+
+
+## dist folder
+forbidden-music/**
 
 # Editor directories and files
 .vscode/*
@@ -35,3 +38,4 @@ dist-ssr
 # vuepress
 .temp
 .cache
+.vuepress

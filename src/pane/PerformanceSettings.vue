@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { ViewportTech } from '../store/customSettingsStore';
-import { useCustomSettingsStore } from '../store/customSettingsStore';
-import Cog from '../components/icons/Cog.vue';
-import Collapsible from './Collapsible.vue';
-import Toggle from '../components/inputs/Toggle.vue';
 import Button from '../components/Button.vue';
+import Cog from '../components/icons/Cog.vue';
+import Toggle from '../components/inputs/Toggle.vue';
 import isDev from '../functions/isDev';
-import { usePlaybackStore } from '../store/playbackStore';
 import isTauri from '../functions/isTauri';
+import { ViewportTech, useCustomSettingsStore } from '../store/customSettingsStore';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
-import { useViewStore } from '../store/viewStore';
+import { usePlaybackStore } from '../store/playbackStore';
 import { useToolStore } from '../store/toolStore';
+import { useViewStore } from '../store/viewStore';
+import Collapsible from './Collapsible.vue';
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();

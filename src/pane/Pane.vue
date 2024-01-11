@@ -28,7 +28,8 @@ const exclusives = useExclusiveContentsStore();
         <PerformanceSettings />
         <div class="about padded" style="text-align:right">
             <a href="https://autotel.co?goto=piano+roll" target="_blank">about</a>&nbsp;
-            <a href="https://github.com/autotel/forbidden-music" target="_blank">code</a>
+            <a href="https://github.com/autotel/forbidden-music" target="_blank">code</a>&nbsp;
+            <a href="docs/" target="_blank">manual</a>
         </div>
     </div>
 </template>
