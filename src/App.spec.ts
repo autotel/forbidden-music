@@ -11,6 +11,8 @@ import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { disclaimer } from './texts/userDisclaimer';
 import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
+import { useToolStore } from './store/toolStore';
+import { Tool } from './dataTypes/Tool';
 
 let generalInterval = 500;
 
@@ -138,6 +140,7 @@ describe('app', () => {
     const view = useViewStore();
     const selection = useSelectStore();
     const snap = useSnapStore();
+    const tool = useToolStore();
 
     let interactionTarget: HTMLElement | null;
     it('mounts', () => {
@@ -150,7 +153,7 @@ describe('app', () => {
             octave: 4,
             layer: 0
         }));
-        interactionTarget = div.querySelector("#viewport-selector");
+        interactionTarget = div.querySelector("#viewport");
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
     })
@@ -228,7 +231,6 @@ describe('app', () => {
         await wait(generalInterval / 3);
         expect(selection.getNotes().length).toBe(2);
     }, generalInterval);
-
     it('duplicates selected ', async () => {
         if (!interactionTarget) throw new Error("interactionTarget is null");
         const div = 4;
@@ -263,7 +265,6 @@ describe('app', () => {
 
     }, generalInterval);
 
-
     it('deselects', async () => {
         await roboMouse.moveTo({
             x: 0,
@@ -284,122 +285,171 @@ describe('app', () => {
         expect(selection.getNotes().length).toBe(0);
     }, generalInterval);
 
-    {
-        // const generalInterval = 10000;
-        it('selects all ', async () => {
-            const timeDiv = 4;
-            if (!interactionTarget) throw new Error("interactionTarget is null");
-            roboMouse.eventTarget = interactionTarget;
-            roboMouse.currentPosition = { x: 0, y: 0 };
+    // const generalInterval = 10000;
+    it('selects all ', async () => {
+        const timeDiv = 4;
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        roboMouse.eventTarget = interactionTarget;
+        roboMouse.currentPosition = { x: 0, y: 0 };
 
-            await roboMouse.moveTo({
-                x: view.timeToPxWithOffset(1),
-                y: view.octaveToPxWithOffset(3),
-            }, 100);
-            interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
-                key: "Control",
-                bubbles: true,
-            }));
-            interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
-                key: "a",
-                ctrlKey: true,
-                bubbles: true,
-            }));
-            interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
-                key: "Control",
-                bubbles: true,
-            }));
-            interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
-                key: "a",
-                bubbles: true,
-            }));
-            await wait(generalInterval / timeDiv);
-            expect(selection.getNotes().length).toBe(4);
-        }, generalInterval);
-        it('deletes selected ', async () => {
-            if (!interactionTarget) throw new Error("interactionTarget is null");
-            const timeDiv = 2;
-            interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
-                key: "Delete",
-                bubbles: true,
-            }));
-            interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
-                key: "Delete",
-                bubbles: true,
-            }));
-            await wait(generalInterval / timeDiv);
-            expect(project.notes.length).toBe(0);
-        },generalInterval);
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(1),
+            y: view.octaveToPxWithOffset(3),
+        }, 100);
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Control",
+            bubbles: true,
+        }));
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "a",
+            ctrlKey: true,
+            bubbles: true,
+        }));
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Control",
+            bubbles: true,
+        }));
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "a",
+            bubbles: true,
+        }));
+        await wait(generalInterval / timeDiv);
+        expect(selection.getNotes().length).toBe(4);
+    }, generalInterval);
+    it('deletes selected ', async () => {
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        const timeDiv = 2;
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Delete",
+            bubbles: true,
+        }));
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Delete",
+            bubbles: true,
+        }));
+        await wait(generalInterval / timeDiv);
+        expect(project.notes.length).toBe(0);
+    }, generalInterval);
 
-        it('snaps the created note to octave, if octave snap active', async () => {
-            const timeDiv = 4;
-            Object.keys(snap.values).forEach(key => {
-                snap.values[key].active = false;
-            });
-            // button with 1EDO text content
-            const buttons = document.querySelectorAll("button") 
-            let edo1Button = Array.from(buttons).filter((button:HTMLElement) => button.textContent?.match("1EDO"))[0];
-            if(!edo1Button) throw new Error("1EDO button not found");
-            edo1Button.dispatchEvent(new MouseEvent("click", {
-                bubbles: true,
-            }));
-            expect(snap.values.equal1?.active).toBe(true);
-            const expectedNote = {
-                time: 0,
-                timeEnd: 2,
-                octave: 4,
-                layer: 0
-            }
-            const noteToInsert = {
-                time: 0,
-                timeEnd: 2,
-                octave: 4.1,
-                layer: 0
-            }
-            roboMouse.currentPosition = { x: 0, y: 0 };
-            await roboMouse.moveTo({
-                x: view.timeToPxWithOffset(noteToInsert.time),
-                y: view.octaveToPxWithOffset(noteToInsert.octave),
-            }, generalInterval / timeDiv);
-            roboMouse.mousedown();
-            await roboMouse.moveTo({
-                x: view.timeToPxWithOffset(noteToInsert.timeEnd),
-                y: view.octaveToPxWithOffset(noteToInsert.octave),
-            }, generalInterval / timeDiv);
-            roboMouse.mouseup();
-            await wait(generalInterval / timeDiv);
-            expect(project.notes.length).toBe(1);
-            expect(project.notes[0].octave).toEqual(expectedNote.octave);
-        }, generalInterval);
 
-        it('creates a note without snapping if no snap is active', async () => {
-            const timeDiv = 4;
-            Object.keys(snap.values).forEach(key => {
-                snap.values[key].active = false;
-            });
-            project.notes.length = 0;
-            const noteToInsert = {
-                time: 0,
-                timeEnd: 2,
-                octave: 4.1,
-                layer: 0
-            }
-            roboMouse.currentPosition = { x: 0, y: 0 };
-            await roboMouse.moveTo({
-                x: view.timeToPxWithOffset(noteToInsert.time),
-                y: view.octaveToPxWithOffset(noteToInsert.octave),
-            }, generalInterval / timeDiv);
-            roboMouse.mousedown();
-            await roboMouse.moveTo({
-                x: view.timeToPxWithOffset(noteToInsert.timeEnd),
-                y: view.octaveToPxWithOffset(noteToInsert.octave),
-            }, generalInterval / timeDiv);
-            roboMouse.mouseup();
-            await wait(generalInterval / timeDiv);
-            expect(project.notes.length).toBe(1);
-            expect(project.notes[0].octave).toBeCloseTo(noteToInsert.octave);
-        }, generalInterval);
-    }
+
+
+    it('snaps the created note to octave, if octave snap active', async () => {
+        const timeDiv = 4;
+        Object.keys(snap.values).forEach(key => {
+            snap.values[key].active = false;
+        });
+        // button with 1EDO text content
+        const buttons = document.querySelectorAll("button")
+        let edo1Button = Array.from(buttons).filter((button: HTMLElement) => button.textContent?.match("1EDO"))[0];
+        if (!edo1Button) throw new Error("1EDO button not found");
+        edo1Button.dispatchEvent(new MouseEvent("click", {
+            bubbles: true,
+        }));
+        expect(snap.values.equal1?.active).toBe(true);
+        const expectedNote = {
+            time: 0,
+            timeEnd: 2,
+            octave: 4,
+            layer: 0
+        }
+        const noteToInsert = {
+            time: 0,
+            timeEnd: 2,
+            octave: 4.1,
+            layer: 0
+        }
+        roboMouse.currentPosition = { x: 0, y: 0 };
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(noteToInsert.time),
+            y: view.octaveToPxWithOffset(noteToInsert.octave),
+        }, generalInterval / timeDiv);
+        roboMouse.mousedown();
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(noteToInsert.timeEnd),
+            y: view.octaveToPxWithOffset(noteToInsert.octave),
+        }, generalInterval / timeDiv);
+        roboMouse.mouseup();
+        await wait(generalInterval / timeDiv);
+        expect(project.notes.length).toBe(1);
+        expect(project.notes[0].octave).toEqual(expectedNote.octave);
+    }, generalInterval);
+
+    it('creates a note without snapping if no snap is active', async () => {
+        const timeDiv = 4;
+        Object.keys(snap.values).forEach(key => {
+            snap.values[key].active = false;
+        });
+        project.notes.length = 0;
+        const noteToInsert = {
+            time: 0,
+            timeEnd: 2,
+            octave: 4.1,
+            layer: 0
+        }
+        roboMouse.currentPosition = { x: 0, y: 0 };
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(noteToInsert.time),
+            y: view.octaveToPxWithOffset(noteToInsert.octave),
+        }, generalInterval / timeDiv);
+        roboMouse.mousedown();
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(noteToInsert.timeEnd),
+            y: view.octaveToPxWithOffset(noteToInsert.octave),
+        }, generalInterval / timeDiv);
+        roboMouse.mouseup();
+        await wait(generalInterval / timeDiv);
+        expect(project.notes.length).toBe(1);
+        expect(project.notes[0].octave).toBeCloseTo(noteToInsert.octave);
+    }, generalInterval);
+
+
+    it('enters modulation tool', async () => {
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "m",
+            bubbles: true,
+        }));
+        expect(tool.current).toBe(Tool.Modulation);
+    }, generalInterval);
+    it('selects notes by area while on modulation tool', async () => {
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        roboMouse.eventTarget = interactionTarget;
+        roboMouse.currentPosition = { x: 0, y: 0 };
+
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(1),
+            y: view.octaveToPxWithOffset(3),
+        }, 100);
+        interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Control",
+            bubbles: true,
+        }));
+        await roboMouse.mousedown();
+        await roboMouse.moveTo({
+            x: view.timeToPxWithOffset(5),
+            y: view.octaveToPxWithOffset(5),
+        }, generalInterval / 3);
+        await roboMouse.mouseup();
+
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Control",
+            bubbles: true,
+        }));
+        await wait(generalInterval / 3);
+        const existingNotes = project.notes.length;
+        expect(selection.getNotes().length).toBe(existingNotes);
+
+        selection.select();
+    }, generalInterval);
+    it('exits modulation tool', async () => {
+        if (!interactionTarget) throw new Error("interactionTarget is null");
+        interactionTarget.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "m",
+            bubbles: true,
+        }));
+        expect(tool.current).not.toBe(Tool.Select);
+    });
 
 
     afterAll(async () => {

@@ -52,9 +52,6 @@ onBeforeUnmount(() => {
             <TimeGrid />
             <ToneGrid />
         </g>
-        <g id="tone-relations" v-if="tool.current===Tool.Edit">
-            <ToneRelation />
-        </g>
         <!-- traces that would be created upon click -->
         <g id="note-would-be-created" v-if="tool.current===Tool.Edit">
             <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
@@ -93,6 +90,9 @@ onBeforeUnmount(() => {
             </template>
         </g>
 
+        <g id="tone-relations" v-if="tool.current===Tool.Edit">
+            <ToneRelation />
+        </g>
         <RangeSelection />
     </svg>
 </template>
@@ -138,20 +138,19 @@ g#notes-being-created rect.body {
     fill: transparent;
 }
 
-
 .traces-container .body {
     opacity: 0.7;
 }
 
 .traces-container .body.selected.editable {
     /* fill: rgba(255, 51, 0, 0.644); */
-    stroke: rgb(203, 207, 209);
+    stroke: rgb(125, 125, 126);
     stroke-width: 1px;
     opacity: 1;
 }
 
 .traces-container .body.muted.selected {
-    opacity: 0.76;
+    opacity: 0.5;
 }
 
 .traces-container .body.greyed {
@@ -161,7 +160,7 @@ g#notes-being-created rect.body {
 }
 
 .traces-container .body.muted {
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
 .traces-container .length-handle {

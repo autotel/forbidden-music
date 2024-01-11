@@ -3,8 +3,8 @@ import Fraction from 'fraction.js';
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
-import ScoreViewport from './components/ScoreViewport-Pixi/ScoreViewport.vue';
-import ScoreViewportOld from './components/ScoreViewport-Svg/ScoreViewport.vue';
+import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
+import ScoreViewportSvg from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
@@ -229,11 +229,11 @@ watch(paneWidth, () => {
 </script>
 <template>
     <div id="app-container" oncontextmenu="return false;">
-        <div id="viewport-selector" ref="viewport"
+        <div id="viewport" ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
-            <ScoreViewport v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
+            <ScoreViewportPixi v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
                 :height="viewportSize.height" />
-            <ScoreViewportOld v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
+            <ScoreViewportSvg v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
                 :height="viewportSize.height" />
         </div>
         <TimeScrollBar />
