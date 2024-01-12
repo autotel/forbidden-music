@@ -97,6 +97,9 @@ onBeforeUnmount(() => {
     </svg>
 </template>
 <style>
+#tone-relations {
+    pointer-events: none;
+}
 svg#viewport {
     width: 100%;
     height: 100%;
