@@ -7,6 +7,7 @@ import { getDuration } from "../dataTypes/TimelineItem";
 import isDev from '../functions/isDev';
 import isTauri, { tauriObject } from '../functions/isTauri';
 import { ClusterSineSynth } from '../synth/ClusterSineSynth';
+import { GranularSampler } from '../synth/GranularSampler';
 import { ComplexSampler } from '../synth/ComplexSampler';
 import { ExternalMidiSynth } from '../synth/ExternalMidiSynth';
 import { FmSynth } from '../synth/FmSynth';
@@ -75,6 +76,10 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
     if (isDev()) {
         // bc. unfinished
         returnArray.push(new FmSynth(audioContext));
+        returnArray.push(new GranularSampler(
+            audioContext, sampleDefinitions[0].samples[2],
+            "Test Granular Sampler", sampleDefinitions[0].readme
+        ));
         // bc. pirate
         returnArray.push(...localOnlySamplers);
     } else {
