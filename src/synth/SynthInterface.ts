@@ -56,6 +56,7 @@ export enum ParamType {
     option = "option",
     infoText = "info text",
     nArray = "nArray",
+    readout = "readout",
 }
 
 export type SynthParamStored = {
@@ -69,6 +70,12 @@ export type SynthParamMinimum<T> = {
     value: T,
     exportable: boolean,
     [key: string]: any,
+}
+
+
+export interface ReadoutSynthParam extends SynthParamMinimum<string> {
+    type: ParamType.readout,
+    displayName: string,
 }
 
 export interface NumberSynthParam extends SynthParamMinimum<number> {
@@ -134,5 +141,6 @@ export type SynthParam =
     OptionSynthParam |
     InfoTextSynthParam |
     ProgressSynthParam |
+    ReadoutSynthParam |
     ArraySynthParam
 

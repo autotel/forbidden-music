@@ -7,6 +7,7 @@ import PropOption from "../components/paramEditors/PropOption.vue";
 import PropSlider from '../components/paramEditors/PropSlider.vue';
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { ParamType, SynthParam } from "../synth/SynthInterface";
+import PropReadout from "../components/paramEditors/PropReadout.vue";
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
 defineProps<{
@@ -27,5 +28,6 @@ const showInfo = (info: string) => {
         <NumberArrayEditor v-if="param.type === ParamType.nArray" :param="param" />
         <Button v-if="param.type === ParamType.infoText" :on-click="() => showInfo(param.value)">{{
             param.displayName }}</Button>
+        <PropReadout v-if="param.type === ParamType.readout" :param="param" />
     </template>
 </template>

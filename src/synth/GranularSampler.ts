@@ -1,6 +1,7 @@
-import { NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, ParamType, ProgressSynthParam, ReadoutSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
 import { filterMap } from "../functions/filterMap";
 import { createArrayOf, createFilteredArrayOf } from "../functions/createArrayOf";
+import { as } from "vitest/dist/reporters-5f784f42";
 interface SampleFileDefinition {
     name: string;
     frequency: number;
@@ -14,6 +15,12 @@ interface GrainRealtimeParams {
     fadeOutTime: number;
     grainsPerSecond: number;
     sampleOffsetTime: number;
+}
+interface GrainTriggerParams {
+    frequency: number;
+    duration: number;
+    absoluteStartTime: number;
+    velocity: number;
 }
 
 interface SoundGrain {
@@ -53,21 +60,15 @@ const getSoundGrain = (
         play(sampleStartTime: number, scheduleTime: number, targetFrequency: number, params: GrainRealtimeParams) {
             bufferSource.playbackRate.value = targetFrequency / inherentFrequency;
 
-            const t1 = params.fadeInTime;
-            const t2 = t1 + params.sustainTime;
-            const t3 = t2 + params.fadeOutTime;
+            const interval1 = params.fadeInTime;
+            const interval2 = interval1 + params.sustainTime;
+            const interval3 = interval2 + params.fadeOutTime;
 
-            bufferSource.start(scheduleTime, sampleStartTime, t3);
+            bufferSource.start(scheduleTime, sampleStartTime, interval3);
             gainNode.gain.setValueAtTime(0, scheduleTime);
-            gainNode.gain.linearRampToValueAtTime(1, scheduleTime + t1);
-            gainNode.gain.linearRampToValueAtTime(1, scheduleTime + t2);
-            gainNode.gain.linearRampToValueAtTime(0, scheduleTime + t3);
-
-            // const testTri = audioContext.createOscillator();
-            // testTri.type = "triangle";
-            // testTri.frequency.value = targetFrequency;
-            // testTri.start();
-            // this.output = testTri;
+            gainNode.gain.linearRampToValueAtTime(1, scheduleTime + interval1);
+            gainNode.gain.linearRampToValueAtTime(1, scheduleTime + interval2);
+            gainNode.gain.linearRampToValueAtTime(0, scheduleTime + interval3);
 
             bufferSource.addEventListener('ended', this.destroy);
         },
@@ -80,67 +81,148 @@ const getSoundGrain = (
     };
 }
 
+type DamnTimerType = ReturnType<typeof setTimeout> | NodeJS.Timeout | number;
+
+/**
+ * it would be possible to schedule all the grain start and end points at the start of the
+ * trigger event. However, being able to tweak a parameter mid-note is appreciated, which
+ * is why the notes are scheduled at small time intervals, using the latest parameter values.
+ */
+class GranulatedScheduler<TP extends { [key: string]: any, absoluteStartTime: number, duration: number }> {
+
+
+    private currentTimer: false | DamnTimerType = false;
+    /** in seconds */
+    frameLength: number = 0.1;
+    start: (triggerparams: TP) => void;
+    stop: () => void;
+    constructor(audioContext: AudioContext, schedulingFunction: (triggerParams: TP, frameStartTime: number, frameEndTime: number) => void) {
+        let isRunning = false;
+        let nextFrameStartTime = 0;
+        let endsAt = 0;
+
+
+        this.start = (triggerparams: TP) => {
+            this.stop();
+            nextFrameStartTime = triggerparams.absoluteStartTime;
+            endsAt = triggerparams.absoluteStartTime + triggerparams.duration;
+            isRunning = true;
+            frameFunction(triggerparams);
+        }
+
+        this.stop = () => {
+            isRunning = false;
+            clearTimeout(this.currentTimer as DamnTimerType);
+        }
+
+        const frameFunction = (triggerparams: TP) => {
+            if (!isRunning) return;
+            const currentFrameStart = nextFrameStartTime;
+            nextFrameStartTime += this.frameLength;
+            if(nextFrameStartTime > endsAt) {
+                nextFrameStartTime = endsAt;
+            }
+            schedulingFunction(triggerparams, currentFrameStart, nextFrameStartTime);
+
+            if (nextFrameStartTime >= endsAt) {
+                this.stop();
+                return;
+            }
+
+            const interval = (nextFrameStartTime - audioContext.currentTime) * 1000;
+            console.log("interval", interval);
+            this.currentTimer = setTimeout(frameFunction, interval, triggerparams);
+        }
+    }
+}
+
 class GranularSamplerVoice {
     inUse: boolean = false;
     sampleSource: SampleSource;
     outputNode: GainNode;
     audioContext: AudioContext;
     params: GrainRealtimeParams;
+    myScheduler: GranulatedScheduler<GrainTriggerParams>;
+
+    trigger: (
+        frequency: number,
+        duration: number,
+        absoluteStartTime: number,
+        velocity: number,
+        noteStartedTimeAgo: number
+    ) => void;
+
     constructor(audioContext: AudioContext, sampleSource: SampleSource, params: GrainRealtimeParams) {
         this.audioContext = audioContext;
         this.outputNode = this.audioContext.createGain();
         this.outputNode.gain.value = 0.5;
         this.sampleSource = sampleSource;
         this.params = params;
+        let latestGrainStartTime = 0;
+        this.myScheduler = new GranulatedScheduler(audioContext, (triggerParams, frameStartTime, frameEndTime) => {
+            const {
+                grainsPerSecond,
+                sampleOffsetTime,
+            } = params;
+
+            const {
+                frequency,
+                duration,
+                absoluteStartTime,
+            } = triggerParams;
+
+            const frameDuration = frameEndTime - frameStartTime;
+            const grainInterval = 1 / grainsPerSecond;
+            let iterNum = 0;
+
+            if (!this.sampleSource?.sampleBuffer) return;
+
+            for (let time = latestGrainStartTime; time < frameEndTime; time += grainInterval) {
+                const grain = getSoundGrain(
+                    this.audioContext,
+                    this.sampleSource.sampleBuffer,
+                    this.sampleSource.sampleInherentFrequency
+                );
+                if(time <= latestGrainStartTime) continue;
+                latestGrainStartTime = time;
+                grain.play(
+                    sampleOffsetTime,
+                    latestGrainStartTime,
+                    frequency,
+                    this.params
+                );
+                
+                grain.output.connect(this.outputNode);
+                iterNum++;
+            }
+
+        });
+
+
+        this.trigger = (
+            frequency: number,
+            duration: number,
+            absoluteStartTime: number,
+            velocity: number,
+            noteStartedTimeAgo: number = 0,
+        ) => {
+            if (this.inUse) throw new Error("Polyphony fail: voice already in use");
+            this.inUse = true;
+            const trigParams = {
+                frequency,
+                duration,
+                absoluteStartTime,
+                velocity,
+            }
+            latestGrainStartTime = absoluteStartTime;
+            this.myScheduler.start(trigParams);
+        };
+
     }
 
-    trigger = (
-        frequency: number,
-        duration: number,
-        absoluteStartTime: number,
-        velocity: number,
-        noteStartedTimeAgo: number = 0,
-    ) => {
-        const {
-            grainsPerSecond,
-            sampleOffsetTime,
-        } = this.params;
-        if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-        this.inUse = true;
-        const grainsCount = Math.floor(grainsPerSecond * duration);
-        const mkGrain = (grainNumber: number) => {
-            if (!this.sampleSource?.sampleBuffer) return;
-            const grain = getSoundGrain(
-                this.audioContext,
-                this.sampleSource.sampleBuffer,
-                this.sampleSource.sampleInherentFrequency
-            );
-            const relativeStartTime = grainNumber / grainsPerSecond;
-            grain.play(
-                sampleOffsetTime,
-                absoluteStartTime + relativeStartTime,
-                frequency,
-                this.params
-            );
-            grain.output.connect(this.outputNode);
-
-
-            // const testSquare = this.audioContext.createOscillator();
-            // testSquare.type = "square";
-            // testSquare.frequency.value = frequency;
-            // testSquare.start();
-            // testSquare.connect(this.outputNode);
-
-            return grain;
-        }
-
-
-        const eventGrains = createFilteredArrayOf(grainsCount, mkGrain);
-        
-
-    };
 
     stop = () => {
+        this.myScheduler.stop();
     };
 
 }
@@ -219,8 +301,16 @@ const createParameters = (sampler: GranularSampler) => {
         exportable: false,
     } as ProgressSynthParam);
 
+    const grainsReadout = {
+        displayName: "Potential load",
+        type: ParamType.readout,
+        value: "--",
+        exportable: false,
+    } as ReadoutSynthParam;
 
-    sampler.params.push({
+    sampler.params.push(grainsReadout);
+
+    const grainsPerSecond = {
         displayName: "Grains per second",
         type: ParamType.number,
         min: 1, max: 100,
@@ -229,11 +319,14 @@ const createParameters = (sampler: GranularSampler) => {
         },
         set value(value: number) {
             sampler.voiceParams.grainsPerSecond = value;
+            recalcGrainsReadout();
         },
         exportable: true,
-    } as NumberSynthParam);
+    } as NumberSynthParam
 
-    sampler.params.push({
+    sampler.params.push(grainsPerSecond);
+
+    const grainsFadeTime = {
         displayName: "Grain fade time",
         type: ParamType.number,
         min: 0, max: 2,
@@ -243,12 +336,14 @@ const createParameters = (sampler: GranularSampler) => {
         set value(value: number) {
             sampler.voiceParams.fadeInTime = value;
             sampler.voiceParams.fadeOutTime = value;
+            recalcGrainsReadout();
         },
         exportable: true,
-    } as NumberSynthParam);
+    } as NumberSynthParam
+    sampler.params.push(grainsFadeTime);
 
 
-    sampler.params.push({
+    const grainsSustainTime = {
         displayName: "Grain sustain time",
         type: ParamType.number,
         min: 0, max: 2,
@@ -257,9 +352,11 @@ const createParameters = (sampler: GranularSampler) => {
         },
         set value(value: number) {
             sampler.voiceParams.sustainTime = value;
+            recalcGrainsReadout();
         },
         exportable: true,
-    } as NumberSynthParam);
+    } as NumberSynthParam
+    sampler.params.push(grainsSustainTime);
 
     const relativeSampleStartTime = {
         displayName: "Sample start position",
@@ -278,10 +375,22 @@ const createParameters = (sampler: GranularSampler) => {
         exportable: true,
     } as NumberSynthParam
 
+    const recalcGrainsReadout = () => {
+        const overallDuration = sampler.voiceParams.fadeInTime + sampler.voiceParams.sustainTime + sampler.voiceParams.fadeOutTime;
+        const grainsPerSecond = sampler.voiceParams.grainsPerSecond;
+        const potentialGrains = overallDuration * grainsPerSecond;
+        if (potentialGrains > 30) {
+            grainsReadout.value = potentialGrains.toFixed(2) + "!!!!";
+        } else {
+            grainsReadout.value = potentialGrains.toFixed(2) + " grains per voice";
+        }
+    }
+
     sampler.params.push(relativeSampleStartTime);
 
     return {
-        relativeSampleStartTime
+        relativeSampleStartTime,
+        grainsReadout,
     };
 }
 
@@ -321,6 +430,7 @@ export class GranularSampler implements SynthInstance {
 
         const {
             relativeSampleStartTime,
+            grainsReadout,
         } = createParameters(this);
 
         this.enable = async () => {
