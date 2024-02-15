@@ -171,10 +171,10 @@ export const useSynthStore = defineStore("synthesizers", () => {
 
         const oldSynth = targetChannel.synth;
         console.log("channel", channel, "disabling old synth", oldSynth.name, "enabling", synth.name);
-        if ('outputNode' in oldSynth) {
+        if ('output' in oldSynth) {
             // TODO: doing this can cause a synth that is needed to get disconnected
             // in a multi timbral situation
-            // oldSynth.outputNode.disconnect();
+            // oldSynth.output.disconnect();
             console.log("disconnecting ", oldSynth.name, "from effects store input");
         }
         oldSynth.disable();
@@ -188,8 +188,8 @@ export const useSynthStore = defineStore("synthesizers", () => {
         })
 
         synth.enable();
-        if ('outputNode' in synth) {
-            synth.outputNode.connect(effectsStore.myInput);
+        if ('output' in synth) {
+            synth.output.connect(effectsStore.myInput);
             console.log("connecting ", synth.name, "to effects store input");
         }
     }

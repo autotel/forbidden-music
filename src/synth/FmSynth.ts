@@ -28,17 +28,17 @@ interface FmParamsChangeMessage {
 // TODO: make polyphonic
 export class FmSynth implements SynthInstance {
     private audioContext?: AudioContext;
-    outputNode: GainNode;
+    output: GainNode;
     engine?: AudioWorkletNode;
     enable: () => void
     disable: () => void
     constructor(audioContext: AudioContext) {
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.6;
+        this.output = audioContext.createGain();
+        this.output.gain.value = 0.6;
         this.audioContext = audioContext;
         createFmWorklet(audioContext).then((engine)=>{
             this.engine = engine;
-            this.engine.connect(this.outputNode);
+            this.engine.connect(this.output);
         });
 
         // TODO... or not

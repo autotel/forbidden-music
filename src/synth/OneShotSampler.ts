@@ -29,13 +29,13 @@ class SamplerVoice {
     sampleSoruces: SampleSource[] = [];
     velocityToStartPoint: number = 0;
     private bufferSource?: AudioBufferSourceNode;
-    outputNode: GainNode;
+    output: GainNode;
     audioContext: AudioContext;
     constructor(audioContext: AudioContext, sampleSources: SampleSource[]) {
         this.sampleSoruces = sampleSources;
         this.audioContext = audioContext;
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0;
         let countPerVelocityStep: { [key: number]: number } = {};
         sampleSources.forEach((sampleSource) => {
             if ('sampleInherentVelocity' in sampleSource) {
@@ -54,8 +54,8 @@ class SamplerVoice {
     }
 
     private cancelScheduledValues() {
-        this.outputNode.gain.cancelScheduledValues(0);
-        // this.outputNode.gain.value = 0;
+        this.output.gain.cancelScheduledValues(0);
+        // this.output.gain.value = 0;
     }
 
     private resetBufferSource(sampleSource?: SampleSource) {
@@ -73,7 +73,7 @@ class SamplerVoice {
 
         this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = sampleSource.sampleBuffer;
-        this.bufferSource.connect(this.outputNode);
+        this.bufferSource.connect(this.output);
     }
 
     private releaseVoice = () => {
@@ -148,17 +148,17 @@ class SamplerVoice {
         if (!this.bufferSource) throw new Error("bufferSource not created");
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
 
-        this.outputNode.gain.value = 0;
+        this.output.gain.value = 0;
         let timeAccumulator = absoluteNoteStart;
-        this.outputNode.gain.setValueAtTime(0, timeAccumulator);
+        this.output.gain.setValueAtTime(0, timeAccumulator);
         timeAccumulator += adsr[0];
-        this.outputNode.gain.linearRampToValueAtTime(velocity, timeAccumulator);
+        this.output.gain.linearRampToValueAtTime(velocity, timeAccumulator);
         timeAccumulator += adsr[1];
-        this.outputNode.gain.linearRampToValueAtTime(/**value!*/adsr[2], timeAccumulator);
+        this.output.gain.linearRampToValueAtTime(/**value!*/adsr[2], timeAccumulator);
         timeAccumulator = scoreNoteEnd;
-        // this.outputNode.gain.cancelAndHoldAtTime(timeAccumulator);
+        // this.output.gain.cancelAndHoldAtTime(timeAccumulator);
         timeAccumulator += adsr[3];
-        this.outputNode.gain.linearRampToValueAtTime(0, timeAccumulator);
+        this.output.gain.linearRampToValueAtTime(0, timeAccumulator);
 
         if (this.velocityToStartPoint) {
             if (velocity > 1) {
@@ -246,7 +246,7 @@ export class OneShotSampler implements SynthInstance {
     private audioContext: AudioContext;
     private sampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
-    outputNode: GainNode;
+    output: GainNode;
     private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
@@ -264,10 +264,10 @@ export class OneShotSampler implements SynthInstance {
         this.sampleSources = sampleDefinitions.map((sampleDefinition) => {
             return new SampleSource(audioContext, sampleDefinition);
         });
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0.3;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0.3;
         this.sampleVoices.forEach((sampleVoice) => {
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
@@ -288,15 +288,15 @@ export class OneShotSampler implements SynthInstance {
             type: ParamType.number,
             min: 0, max: 4,
             get value() {
-                if (!parent.outputNode) {
+                if (!parent.output) {
                     console.warn("output node not set");
                     return 1;
                 }
-                return parent.outputNode.gain.value;
+                return parent.output.gain.value;
             },
             set value(value: number) {
-                if (!parent.outputNode) return;
-                parent.outputNode.gain.value = value;
+                if (!parent.output) return;
+                parent.output.gain.value = value;
             },
             exportable: true,
         } as SynthParam);
@@ -357,7 +357,7 @@ export class OneShotSampler implements SynthInstance {
             const sampleVoiceIndex = this.sampleVoices.length;
             this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
 
         }
         sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
@@ -383,7 +383,7 @@ export class OneShotSampler implements SynthInstance {
             const sampleVoiceIndex = this.sampleVoices.length;
             this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
 
         }
         sampleVoice.velocityToStartPoint = this.velocityToStartPoint;

@@ -6,14 +6,14 @@ export class KickVoice {
     triggerAttackRelease: (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, absoluteNoteStart: number, velocity: number) => void;
     stop: () => void;
-    outputNode: any;
+    output: any;
     startOctave: number = 2;
     decayTime: number = 0.4;
     constructor(audioContext: AudioContext) {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         const distortion = audioContext.createWaveShaper();
-        this.outputNode = gainNode;
+        this.output = gainNode;
         oscillator.connect(gainNode);
         oscillator.start();
 
@@ -79,7 +79,7 @@ const PARAM_DECAY_TIME = 1;
 export class KickSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: KickVoice[] = [];
-    outputNode: GainNode;
+    output: GainNode;
     credits: string = "";
     name: string =  "Kick";
     enable: () => void;
@@ -107,14 +107,14 @@ export class KickSynth implements SynthInstance {
         this.audioContext = audioContext;
 
         this.voices.forEach((voice) => {
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
 
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.1;
+        this.output = audioContext.createGain();
+        this.output.gain.value = 0.1;
         
         this.params = [
             this.startOctaveParam,
@@ -139,7 +139,7 @@ export class KickSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new KickVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         voice.decayTime = this.decayTimeParam.value;
@@ -155,7 +155,7 @@ export class KickSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new KickVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         voice.decayTime = this.decayTimeParam.value;

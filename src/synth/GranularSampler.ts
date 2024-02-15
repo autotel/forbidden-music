@@ -1,7 +1,4 @@
 import { NumberSynthParam, ParamType, ProgressSynthParam, ReadoutSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
-import { filterMap } from "../functions/filterMap";
-import { createArrayOf, createFilteredArrayOf } from "../functions/createArrayOf";
-import { as } from "vitest/dist/reporters-5f784f42";
 interface SampleFileDefinition {
     name: string;
     frequency: number;
@@ -139,7 +136,7 @@ class GranulatedScheduler<TP extends { [key: string]: any, absoluteStartTime: nu
 class GranularSamplerVoice {
     inUse: boolean = false;
     sampleSource: SampleSource;
-    outputNode: GainNode;
+    output: GainNode;
     audioContext: AudioContext;
     params: GrainRealtimeParams;
     myScheduler: GranulatedScheduler<GrainTriggerParams>;
@@ -154,8 +151,8 @@ class GranularSamplerVoice {
 
     constructor(audioContext: AudioContext, sampleSource: SampleSource, params: GrainRealtimeParams) {
         this.audioContext = audioContext;
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0.5;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0.5;
         this.sampleSource = sampleSource;
         this.params = params;
         let latestGrainStartTime = 0;
@@ -167,11 +164,8 @@ class GranularSamplerVoice {
 
             const {
                 frequency,
-                duration,
-                absoluteStartTime,
             } = triggerParams;
 
-            const frameDuration = frameEndTime - frameStartTime;
             const grainInterval = 1 / grainsPerSecond;
             let iterNum = 0;
 
@@ -192,7 +186,7 @@ class GranularSamplerVoice {
                     this.params
                 );
                 
-                grain.output.connect(this.outputNode);
+                grain.output.connect(this.output);
                 iterNum++;
             }
 
@@ -278,15 +272,15 @@ const createParameters = (sampler: GranularSampler) => {
         type: ParamType.number,
         min: 0, max: 4,
         get value() {
-            if (!sampler.outputNode) {
+            if (!sampler.output) {
                 console.warn("output node not set");
                 return 1;
             }
-            return sampler.outputNode.gain.value;
+            return sampler.output.gain.value;
         },
         set value(value: number) {
-            if (!sampler.outputNode) return;
-            sampler.outputNode.gain.value = value;
+            if (!sampler.output) return;
+            sampler.output.gain.value = value;
         },
         exportable: true,
     } as SynthParam);
@@ -398,7 +392,7 @@ export class GranularSampler implements SynthInstance {
     private audioContext: AudioContext;
     private sampleVoices: GranularSamplerVoice[] = [];
     sampleSource: SampleSource;
-    outputNode: GainNode;
+    output: GainNode;
     voiceParams: GrainRealtimeParams = {
         fadeInTime: 0.5,
         sustainTime: 0,
@@ -420,10 +414,10 @@ export class GranularSampler implements SynthInstance {
         this.audioContext = audioContext;
         this.sampleSource = new SampleSource(audioContext, sampleDefinition);
 
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0.3;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0.3;
         this.sampleVoices.forEach((sampleVoice) => {
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
@@ -459,7 +453,7 @@ export class GranularSampler implements SynthInstance {
             const sampleVoiceIndex = this.sampleVoices.length;
             this.sampleVoices.push(new GranularSamplerVoice(this.audioContext, this.sampleSource, this.voiceParams));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
 
         }
         sampleVoice.trigger(

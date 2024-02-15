@@ -65,12 +65,12 @@ class FourierVoice {
     triggerAttackRelease: (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, absoluteNoteStart: number, velocity: number) => void;
     stop: () => void;
-    outputNode: any;
+    output: any;
     periodicWaveRef: SimpleRef<PeriodicWave>;
     constructor(audioContext: AudioContext, periodicWaveRef: SimpleRef<PeriodicWave>) {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        this.outputNode = gainNode;
+        this.output = gainNode;
         oscillator.connect(gainNode);
         oscillator.start();
         this.periodicWaveRef = periodicWaveRef;
@@ -131,7 +131,7 @@ class FourierVoice {
 export class FourierSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: FourierVoice[] = [];
-    outputNode: GainNode;
+    output: GainNode;
     periodicWaveRef: NullableRef<PeriodicWave> = {
         value: null
     }
@@ -152,13 +152,13 @@ export class FourierSynth implements SynthInstance {
         this.audioContext = audioContext;
 
         this.voices.forEach((voice) => {
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.1;
+        this.output = audioContext.createGain();
+        this.output.gain.value = 0.1;
         this.enable = async () => { 
         }
         this.disable = () => { }
@@ -237,15 +237,15 @@ export class FourierSynth implements SynthInstance {
             type: ParamType.number,
             min: 0, max: 4,
             get value() {
-                if (!parent.outputNode) {
+                if (!parent.output) {
                     console.warn("output node not set");
                     return 1;
                 }
-                return parent.outputNode.gain.value;
+                return parent.output.gain.value;
             },
             set value(value: number) {
-                if (!parent.outputNode) return;
-                parent.outputNode.gain.value = value;
+                if (!parent.output) return;
+                parent.output.gain.value = value;
             }
         } as SynthParam);
     }
@@ -277,7 +277,7 @@ export class FourierSynth implements SynthInstance {
             this.voices.push(new FourierVoice(this.audioContext, periodicWaveRef));
             voice = this.voices[voiceIndex];
             console.log("polyphony increased to", this.voices.length);
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         voice.triggerAttackRelease(frequency, duration, relativeNoteStart, velocity);
@@ -293,7 +293,7 @@ export class FourierSynth implements SynthInstance {
             this.voices.push(new FourierVoice(this.audioContext, periodicWaveRef));
             voice = this.voices[voiceIndex];
             console.log("polyphony increased to", this.voices.length);
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         voice.triggerPerc(frequency, relativeNoteStart, velocity);

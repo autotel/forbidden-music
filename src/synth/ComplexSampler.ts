@@ -22,7 +22,7 @@ class SamplerVoice {
 
     private bufferSource?: AudioBufferSourceNode;
     private bufferSource2?: AudioBufferSourceNode;
-    outputNode: GainNode;
+    output: GainNode;
     audioContext: AudioContext;
     constructor(
         audioContext: AudioContext,
@@ -32,13 +32,13 @@ class SamplerVoice {
         this.shiftedSampleSources = sampleSources;
         this.fixedSampleSources = sampleSources2;
         this.audioContext = audioContext;
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0;
     }
 
     private cancelScheduledValues() {
-        this.outputNode.gain.cancelScheduledValues(0);
-        // this.outputNode.gain.value = 0;
+        this.output.gain.cancelScheduledValues(0);
+        // this.output.gain.value = 0;
     }
 
     private resetBufferSource(sampleSource?: SampleSource, sampleSource2?: SampleSource) {
@@ -62,12 +62,12 @@ class SamplerVoice {
 
         this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = sampleSource.sampleBuffer;
-        this.bufferSource.connect(this.outputNode);
+        this.bufferSource.connect(this.output);
 
         if (!sampleSource2?.sampleBuffer) return;
         this.bufferSource2 = this.audioContext.createBufferSource();
         this.bufferSource2.buffer = sampleSource2.sampleBuffer;
-        this.bufferSource2.connect(this.outputNode);
+        this.bufferSource2.connect(this.output);
 
 
     }
@@ -117,9 +117,9 @@ class SamplerVoice {
         if (!this.bufferSource) throw new Error("bufferSource not created");
         this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
 
-        this.outputNode.gain.value = velocity;
-        this.outputNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart);
-        this.outputNode.gain.linearRampToValueAtTime(0, absoluteNoteEnd);
+        this.output.gain.value = velocity;
+        this.output.gain.linearRampToValueAtTime(velocity, absoluteNoteStart);
+        this.output.gain.linearRampToValueAtTime(0, absoluteNoteEnd);
         this.bufferSource.start(absoluteNoteStart, skipSample, duration);
         this.bufferSource.addEventListener("ended", this.releaseVoice);
         if (this.bufferSource2) {
@@ -184,7 +184,7 @@ export class ComplexSampler implements SynthInstance {
     private sampleSources: SampleSource[];
     private fixedSampleSources: SampleSource[];
     private sampleVoices: SamplerVoice[] = [];
-    outputNode: GainNode;
+    output: GainNode;
     credits: string = "";
     name: string = "ComplexSampler";
     enable: () => void;
@@ -207,10 +207,10 @@ export class ComplexSampler implements SynthInstance {
                 this.sampleSources.push(new SampleSource(audioContext, sampleDefinition));
             }
         });
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0.2;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0.2;
         this.sampleVoices.forEach((sampleVoice) => {
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
@@ -242,7 +242,7 @@ export class ComplexSampler implements SynthInstance {
                 ));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
             console.log("polyphony increased to", this.sampleVoices.length);
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
 
         }
         sampleVoice.triggerAttackRelease(
@@ -267,7 +267,7 @@ export class ComplexSampler implements SynthInstance {
                 ));
             sampleVoice = this.sampleVoices[sampleVoiceIndex];
             console.log("polyphony increased to", this.sampleVoices.length);
-            sampleVoice.outputNode.connect(this.outputNode);
+            sampleVoice.output.connect(this.output);
 
         }
         sampleVoice.triggerPerc(frequency, absoluteNoteStart, velocity, noteStartedTimeAgo);
@@ -278,10 +278,10 @@ export class ComplexSampler implements SynthInstance {
         });
     }
     connect = (destination: AudioNode) => {
-        this.outputNode.connect(destination);
+        this.output.connect(destination);
     }
     disconnect = () => {
-        this.outputNode.disconnect();
+        this.output.disconnect();
     }
     params = [] as SynthParam[];
 }

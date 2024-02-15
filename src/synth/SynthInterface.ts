@@ -1,51 +1,58 @@
 export interface AudioModule {
     name: string,
     params: SynthParam[],
+    /**
+     * in case a synth needs to do operations before first note is played
+     * such as loading samples, calculating something, etc.
+     */
     enable: () => void,
+    /**
+     * in case a synth can free memory when not in use
+     */
     disable: () => void,
     credits?: string,
 }
-export interface ExternalSynthInstance extends AudioModule {
-    triggerAttackRelease: (
-        frequency: number,
-        duration: number,
-        /** absolute note start time, in web audio api time */
-        absoluteNoteStart: number,
-        velocity: number,
-        noteStartedTimeAgo?: number
-    ) => void,
-    triggerPerc: (
-        frequency: number,
-        /** absolute note start time, in web audio api time */
-        absoluteNoteStart: number,
-        velocity: number,
-        noteStartedTimeAgo?: number
-    ) => void,
-    releaseAll: () => void,
-}
 
-export interface SynthInstance extends AudioModule {
-    outputNode: AudioNode,
-    triggerAttackRelease: (
+
+export interface SynthVoice<EventParamsTpl> {
+    output: AudioNode;
+    inUse: boolean;
+    scheduleStart: (
         frequency: number,
-        duration: number,
-        /** absolute note start time, in web audio api time */
-        absoluteNoteStart: number,
-        velocity: number,
-        noteStartedTimeAgo?: number
-    ) => void,
-    triggerPerc: (
+        absoluteStartTime: number,
+        /** parameters unique to this triggered event, such as velocity and whatnot */
+        noteParameters: EventParamsTpl
+    ) => {};
+    scheduleEnd: (
+        absoluteStopTime: number,
+    ) => {}
+    stop: () => void,
+}
+export type synthVoiceFactory<
+    VoiceType extends SynthVoice<EventParamsType>,
+    EventParamsType
+> = (audioContext: AudioContext) => VoiceType;
+
+export interface SynthInstance<
+    SynthVoiceTpl extends SynthVoice<TParamTpl>,
+    TParamTpl,
+> extends AudioModule {
+    output: AudioNode,
+    scheduleStart: (
         frequency: number,
-        /** absolute note start time, in web audio api time */
-        absoluteNoteStart: number,
-        velocity: number,
-        noteStartedTimeAgo?: number
-    ) => void,
-    releaseAll: () => void,
+        absoluteStartTime: number,
+        noteParameters: TParamTpl
+    ) => SynthVoiceTpl,
+    schedulePerc: (
+        frequency: number,
+        absoluteStartTime: number,
+        noteParameters: TParamTpl
+    ) => SynthVoiceTpl,
+    stop: () => void,
 }
 
 export interface EffectInstance extends AudioModule {
-    outputNode: AudioNode,
+    output: AudioNode,
     inputNode: AudioNode,
 }
 
@@ -115,7 +122,7 @@ export interface OptionSynthParam extends SynthParamMinimum<number> {
         displayName: string,
     }[]
     displayName: string,
-    default?:number
+    default?: number
 }
 
 export interface InfoTextSynthParam extends SynthParamMinimum<string> {

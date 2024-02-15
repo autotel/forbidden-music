@@ -6,7 +6,7 @@ export class ClusterSineVoice {
     triggerAttackRelease: (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => void;
     triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
     stop: () => void;
-    outputNode: any;
+    output: any;
     relativeOctaves = [-1.2, -0.6, 0, 0.6, 1.2];
     relativeGains = [0.25, 0.5, 1, 0.5, 0.25];
     frequencyMultipliers: Map<number, number> = new Map();
@@ -19,7 +19,7 @@ export class ClusterSineVoice {
         const gainNode = audioContext.createGain();
         const panner = audioContext.createStereoPanner();
         gainNode.connect(panner);
-        this.outputNode = panner;
+        this.output = panner;
 
         const getOrMakeOscillator = (index: number) => {
             if (oscillators[index]) return oscillators[index];
@@ -130,7 +130,7 @@ export class ClusterSineVoice {
 export class ClusterSineSynth implements SynthInstance {
     private audioContext: AudioContext;
     private voices: ClusterSineVoice[] = [];
-    outputNode: GainNode;
+    output: GainNode;
     credits: string = "";
     name: string = "ClusterSineSynth";
     enable: () => void;
@@ -206,10 +206,10 @@ export class ClusterSineSynth implements SynthInstance {
         credits?: string
     ) {
         this.audioContext = audioContext;
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.07;
+        this.output = audioContext.createGain();
+        this.output.gain.value = 0.07;
         this.voices.forEach((voice) => {
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
@@ -285,7 +285,7 @@ export class ClusterSineSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new ClusterSineVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         const { relativeOctaves, gains } = this.getCluster();
@@ -304,7 +304,7 @@ export class ClusterSineSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new ClusterSineVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         

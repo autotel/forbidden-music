@@ -1,73 +1,58 @@
-import { SynthInstance, SynthParam } from "./SynthInterface";
+import { SynthInstance, SynthParam, SynthVoice, synthVoiceFactory } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
+import { Synth } from "./super/Synth";
 
-export class SineVoice {
-    inUse: boolean = false;
-    triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
-    triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
-    stop: () => void;
-    outputNode: any;
-    constructor(audioContext: AudioContext) {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        this.outputNode = gainNode;
-        oscillator.connect(gainNode);
-        oscillator.start();
-
-        const releaseVoice = () => {
-            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-            // firefox has a bit of a hard time with this stuff
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.value = 0;
-            this.inUse = false;
-        }
-
-        this.triggerAttackRelease = (
-            frequency: number,
-            duration: number,
-            absoluteNoteStart: number,
-            velocity: number
-        ) => {
-            this.inUse = true;
-            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
-            gainNode.gain.setValueAtTime(0, absoluteNoteStart);
-            gainNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + duration / 4);
-            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
-            oscillator.frequency.value = frequency;
-            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
-            setTimeout(() => {
-                releaseVoice();
-            }, duration * 1000);
-        };
-
-
-        this.triggerPerc = (
-            frequency: number,
-            absoluteNoteStart: number,
-            velocity: number
-        ) => {
-            this.inUse = true;
-            let duration = velocity * 2.8;
-            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
-            gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
-            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
-            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
-            setTimeout(() => {
-                releaseVoice();
-            }, 3000);
-        }
-
-        this.stop = () => {
-            releaseVoice();
-        };
-    }
+type SineNoteParams = {
+    velocity: number,
+    att: number,
 }
 
+const sineVoice = (audioContext: AudioContext): SynthVoice<SineNoteParams> => {
 
-export class SineSynth implements SynthInstance {
-    private audioContext: AudioContext;
-    private voices: SineVoice[] = [];
-    outputNode: GainNode;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    oscillator.start();
+
+    return {
+        inUse: false,
+        output: gainNode,
+        scheduleStart(
+            frequency: number,
+            absoluteStartTime: number,
+            params: SineNoteParams
+        ) {
+            const { velocity, att } = params;
+            this.inUse = true;
+            gainNode.gain.cancelScheduledValues(absoluteStartTime);
+            gainNode.gain.setValueAtTime(0, absoluteStartTime);
+            gainNode.gain.linearRampToValueAtTime(velocity, absoluteStartTime + att);
+            oscillator.frequency.value = frequency;
+            oscillator.frequency.setValueAtTime(frequency, absoluteStartTime);
+            return this;
+        },
+        scheduleEnd(absoluteEndTime: number) {
+            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+            // firefox has a bit of a hard time with this stuff
+            gainNode.gain.linearRampToValueAtTime(absoluteEndTime, audioContext.currentTime);
+            gainNode.gain.value = 0;
+            this.inUse = false;
+            return this;
+        },
+        stop() {
+            const now = audioContext.currentTime;
+            this.scheduleEnd(now);
+        }
+    };
+
+}
+
+type SineVoice = ReturnType<typeof sineVoice>;
+
+export class SineSynth extends Synth<SineVoice, SineNoteParams> {
+    audioContext: AudioContext;
+    voices: SineVoice[] = [];
+    output: GainNode;
     credits: string = "";
     name: string = "Sine";
     enable: () => void;
@@ -77,24 +62,25 @@ export class SineSynth implements SynthInstance {
         name?: string,
         credits?: string
     ) {
+        super(audioContext, sineVoice);
         this.audioContext = audioContext;
         this.voices.forEach((voice) => {
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
         });
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.1;
-        
+        this.output = audioContext.createGain();
+        this.output.gain.value = 0.1;
+
         let maximizer: AudioNode | undefined;
 
         this.enable = async () => {
-            if(!maximizer) {
+            if (!maximizer) {
                 // TODO: move maximizer to an fx, and remove it from here
                 maximizer = await createMaximizerWorklet(audioContext);
             }
-            maximizer.connect(this.outputNode);
+            maximizer.connect(this.output);
         }
         this.disable = () => {
             if (maximizer) {
@@ -103,7 +89,7 @@ export class SineSynth implements SynthInstance {
         }
 
     }
-    triggerAttackRelease = (
+    scheduleStart = (
         frequency: number,
         duration: number,
         absoluteNoteStart: number,
@@ -116,7 +102,7 @@ export class SineSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         voice.triggerAttackRelease(frequency, duration, absoluteNoteStart, velocity);
@@ -129,7 +115,7 @@ export class SineSynth implements SynthInstance {
             const voiceIndex = this.voices.length;
             this.voices.push(new SineVoice(this.audioContext));
             voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
+            voice.output.connect(this.output);
 
         }
         voice.triggerPerc(frequency, absoluteNoteStart, velocity);

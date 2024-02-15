@@ -61,21 +61,21 @@ const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) 
 
 export class KarplusSynth implements SynthInstance {
     private audioContext?: AudioContext;
-    outputNode: GainNode;
+    output: GainNode;
     engine?: AudioWorkletNode;
     enable: () => void;
     disable: () => void;
     constructor(audioContext: AudioContext) {
         this.audioContext = audioContext;
-        this.outputNode = this.audioContext.createGain();
-        this.outputNode.gain.value = 0.5;
+        this.output = this.audioContext.createGain();
+        this.output.gain.value = 0.5;
 
         const enginePromise = createKarplusWorklet(audioContext)
 
         enginePromise.then((engine) => {
             this.engine = engine;
             console.log("new karplus audio worklet", engine);
-            this.engine.connect(this.outputNode);
+            this.engine.connect(this.output);
         });
 
         const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {

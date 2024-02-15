@@ -1,4 +1,5 @@
 # Piano roll to-do
+	change how triggering notes work in the synth interface
 	selectable-filtering approach instead of by tools, because it's getting very messy, like autocad perhaps	
 		selectable (displayable * type visible)
 		displayed (displayable * within screen range)
