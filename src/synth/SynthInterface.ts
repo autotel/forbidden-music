@@ -14,8 +14,8 @@ export interface AudioModule {
 }
 
 export type EventParamsBase = {
-    velocity: number,
     [key: string]: any,
+    velocity: number,
 }
 
 

@@ -6,7 +6,7 @@ type SineNoteParams = EventParamsBase & {
     perc: boolean,
 }
 
-const sineVoice = (audioContext: AudioContext):SynthVoice => {
+const sineVoice = (audioContext: AudioContext): SynthVoice => {
 
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -32,7 +32,11 @@ const sineVoice = (audioContext: AudioContext):SynthVoice => {
             oscillator.frequency.value = frequency;
             oscillator.frequency.setValueAtTime(frequency, absoluteStartTime);
             noteStarted = absoluteStartTime;
-            console.log("sine start", frequency, absoluteStartTime, params);
+            if (params.perc) {
+                gainNode.gain.setValueAtTime(
+                    noteVelocity, absoluteStartTime
+                );
+            }
             return this;
         },
         scheduleEnd(absoluteEndTime: number) {
@@ -85,16 +89,16 @@ export class SineSynth extends Synth<SineVoice> {
         }
 
         this.schedulePerc = (
-            frequency: number,
-            absoluteStartTime: number,
-            noteParameters: SineNoteParams
+            frequency,
+            absoluteStartTime,
+            noteParameters
         ) => {
             const voice = this.scheduleStart(
-                frequency, 
-                absoluteStartTime, 
-                noteParameters
+                frequency,
+                absoluteStartTime,
+                { perc: true, ...noteParameters }
             )
-            voice.scheduleEnd(absoluteStartTime + 1);
+            voice.scheduleEnd(absoluteStartTime + noteParameters.velocity);
             return voice;
         }
     }
