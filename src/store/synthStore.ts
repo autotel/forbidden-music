@@ -26,21 +26,22 @@ export interface SynthChannel {
 
 const createSynths = (audioContext: AudioContext, includeExclusives: boolean) => {
 
-    const samplers = [] as (OneShotSampler | ComplexSampler)[];
-    const exclusiveSamplers = [] as (OneShotSampler | ComplexSampler)[];
-    const localOnlySamplers = [] as (OneShotSampler | ComplexSampler)[];
+    const samplers = [] as (OneShotSampler )[];//| ComplexSampler
+    const exclusiveSamplers = [] as (OneShotSampler )[];//| ComplexSampler
+    const localOnlySamplers = [] as (OneShotSampler )[];//| ComplexSampler
     let returnArray = [] as AdmissibleSynthType[];
 
     sampleDefinitions.forEach((sampleDefinition) => {
         const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
-        if (sampleDefinition.isComplexSampler) {
-            arrayWhereToPush.push(new ComplexSampler(
-                audioContext,
-                sampleDefinition.samples,
-                "(CPX)" + sampleDefinition.name,
-                sampleDefinition.readme
-            ))
-        } else {
+        // if (sampleDefinition.isComplexSampler) {
+        //     arrayWhereToPush.push(new ComplexSampler(
+        //         audioContext,
+        //         sampleDefinition.samples,
+        //         "(CPX)" + sampleDefinition.name,
+        //         sampleDefinition.readme
+        //     ))
+        // } else 
+        {
             arrayWhereToPush.push(new OneShotSampler(
                 audioContext,
                 sampleDefinition.samples,
@@ -53,7 +54,7 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
     returnArray = [
         new SineSynth(audioContext),
         // new ExternalMidiSynth(audioContext),
-        // ...samplers
+        ...samplers
     ];
 
     if (includeExclusives) {

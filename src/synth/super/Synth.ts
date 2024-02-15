@@ -15,9 +15,11 @@ export class Synth<
     disable = () => { }
     output: GainNode;
     audioContext: AudioContext;
+    params: SynthParam[] = [];
     constructor(
         audioContext: AudioContext,
-        factory: synthVoiceFactory<V>
+        factory: synthVoiceFactory<V>,
+        ...args: any[]
     ) {
         this.createVoice = () => {
             const voice = factory(audioContext);
@@ -65,5 +67,4 @@ export class Synth<
             voice.stop();
         });
     }
-    params = [] as SynthParam[];
 }

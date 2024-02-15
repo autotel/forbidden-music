@@ -49,9 +49,7 @@ const sineVoice = (audioContext: AudioContext): SynthVoice => {
                 gainNode.gain.cancelScheduledValues(audioContext.currentTime);
                 gainNode.gain.setValueAtTime(0, audioContext.currentTime);
                 this.inUse = false;
-                console.log("sine free");
             }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
-            console.log("sine end", absoluteEndTime);
             return this;
         },
         stop() {

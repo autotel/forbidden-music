@@ -1,4 +1,5 @@
-import { NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
+import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam, SynthVoice } from "./SynthInterface";
+import { Synth } from "./super/Synth";
 
 class PerformanceChronometer {
     private startTime: number;
@@ -24,70 +25,70 @@ interface SampleFileDefinition {
     path: string;
 }
 
-class SamplerVoice {
-    inUse: boolean = false;
-    sampleSoruces: SampleSource[] = [];
-    velocityToStartPoint: number = 0;
-    private bufferSource?: AudioBufferSourceNode;
-    output: GainNode;
-    audioContext: AudioContext;
-    constructor(audioContext: AudioContext, sampleSources: SampleSource[]) {
-        this.sampleSoruces = sampleSources;
-        this.audioContext = audioContext;
-        this.output = this.audioContext.createGain();
-        this.output.gain.value = 0;
-        let countPerVelocityStep: { [key: number]: number } = {};
-        sampleSources.forEach((sampleSource) => {
-            if ('sampleInherentVelocity' in sampleSource) {
-                const velocity = sampleSource.sampleInherentVelocity as number;
-                if (!countPerVelocityStep[velocity]) {
-                    countPerVelocityStep[velocity] = 0;
-                }
-                countPerVelocityStep[velocity] += 1;
-            }
-        });
-        this.sampleSoruces.sort((a, b) => {
-            if (!a.sampleInherentVelocity) return -1;
-            if (!b.sampleInherentVelocity) return 1;
-            return a.sampleInherentVelocity - b.sampleInherentVelocity;
-        });
+const samplerVoice = (
+    audioContext: AudioContext,
+    sampleSources: SampleSource[] = []
+): SynthVoice => {
+    let sampleSoruces: SampleSource[] = sampleSources;
+    let velocityToStartPoint: number = 0;
+    let bufferSource: AudioBufferSourceNode | undefined;
+    const output = audioContext.createGain();
+    output.gain.value = 0;
+    let countPerVelocityStep: { [key: number]: number } = {};
+    let timeAccumulator = 0;
+    let currentAdsr = [0.01, 10, 0, 0.2];
+    const voiceState = {
+        inUse: false,
     }
 
-    private cancelScheduledValues() {
-        this.output.gain.cancelScheduledValues(0);
+    sampleSources.forEach((sampleSource) => {
+        if ('sampleInherentVelocity' in sampleSource) {
+            const velocity = sampleSource.sampleInherentVelocity as number;
+            if (!countPerVelocityStep[velocity]) {
+                countPerVelocityStep[velocity] = 0;
+            }
+            countPerVelocityStep[velocity] += 1;
+        }
+    });
+    sampleSoruces.sort((a, b) => {
+        if (!a.sampleInherentVelocity) return -1;
+        if (!b.sampleInherentVelocity) return 1;
+        return a.sampleInherentVelocity - b.sampleInherentVelocity;
+    });
+
+
+    const cancelScheduledValues = () => {
+        output.gain.cancelScheduledValues(0);
         // this.output.gain.value = 0;
     }
 
-    private resetBufferSource(sampleSource?: SampleSource) {
-        if (this.bufferSource) {
-            this.bufferSource.removeEventListener("ended", this.releaseVoice);
-            this.bufferSource.disconnect();
-            this.bufferSource.stop();
-            this.bufferSource = undefined;
+    const resetBufferSource = (sampleSource?: SampleSource) => {
+        if (bufferSource) {
+            bufferSource.removeEventListener("ended", releaseVoice);
+            bufferSource.disconnect();
+            bufferSource.stop();
+            bufferSource = undefined;
         }
 
         if (!sampleSource) return;
         if (!sampleSource.sampleBuffer) throw new Error("sample buffer not loaded");
 
-        this.cancelScheduledValues();
+        cancelScheduledValues();
 
-        this.bufferSource = this.audioContext.createBufferSource();
-        this.bufferSource.buffer = sampleSource.sampleBuffer;
-        this.bufferSource.connect(this.output);
+        bufferSource = audioContext.createBufferSource();
+        bufferSource.buffer = sampleSource.sampleBuffer;
+        bufferSource.connect(output);
     }
 
-    private releaseVoice = () => {
-        this.inUse = false;
-    }
 
-    private findSampleSourceClosestToFrequency = (frequency: number, velocity?: number) => {
-        let closestSampleSource = this.sampleSoruces[0];
-        if (this.sampleSoruces.length == 1) return closestSampleSource;
+    const findSampleSourceClosestToFrequency = (frequency: number, velocity?: number) => {
+        let closestSampleSource = sampleSoruces[0];
+        if (sampleSoruces.length == 1) return closestSampleSource;
 
         if (velocity == undefined) {
             let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
-            for (let i = 1; i < this.sampleSoruces.length; i++) {
-                const sampleSource = this.sampleSoruces[i];
+            for (let i = 1; i < sampleSoruces.length; i++) {
+                const sampleSource = sampleSoruces[i];
                 if (!sampleSource.isLoaded) continue;
                 const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
                 if (difference < closestSampleSourceDifference) {
@@ -96,13 +97,13 @@ class SamplerVoice {
                 }
             }
         } else {
-            const sampleSourcesWithVelocityAboveOrEqual = this.sampleSoruces.filter((sampleSource) => {
+            const sampleSourcesWithVelocityAboveOrEqual = sampleSoruces.filter((sampleSource) => {
                 if (!sampleSource.sampleInherentVelocity) return true;
                 return sampleSource.sampleInherentVelocity >= velocity;
             });
 
             if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
-                this.findSampleSourceClosestToFrequency(frequency);
+                findSampleSourceClosestToFrequency(frequency);
             }
 
             let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
@@ -122,81 +123,77 @@ class SamplerVoice {
         return closestSampleSource;
     }
 
-    triggerAttackRelease = (
-        frequency: number,
-        duration: number,
-        absoluteNoteStart: number,
+    interface SamplerEventParams extends EventParamsBase {
         velocity: number,
-        noteStartedTimeAgo: number = 0,
-        adsr: number[] = [0.01, 10, 0, 0.2],
-    ) => {
-        if (this.inUse) throw new Error("Polyphony fail: voice already in use");
-        let skipSample = 0;
-        if (noteStartedTimeAgo > 0) {
-            // allow catch up, but not for already ended notes.
-            if (noteStartedTimeAgo - duration < 0) return;
-            duration -= noteStartedTimeAgo;
-            skipSample = noteStartedTimeAgo;
-        }
-        const scoreNoteEnd = absoluteNoteStart + duration;
-        const durationWithRelease = duration + adsr[3];
-
-        this.inUse = true;
-        const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
-        this.resetBufferSource(sampleSource);
-
-        if (!this.bufferSource) throw new Error("bufferSource not created");
-        this.bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
-
-        this.output.gain.value = 0;
-        let timeAccumulator = absoluteNoteStart;
-        this.output.gain.setValueAtTime(0, timeAccumulator);
-        timeAccumulator += adsr[0];
-        this.output.gain.linearRampToValueAtTime(velocity, timeAccumulator);
-        timeAccumulator += adsr[1];
-        this.output.gain.linearRampToValueAtTime(/**value!*/adsr[2], timeAccumulator);
-        timeAccumulator = scoreNoteEnd;
-        // this.output.gain.cancelAndHoldAtTime(timeAccumulator);
-        timeAccumulator += adsr[3];
-        this.output.gain.linearRampToValueAtTime(0, timeAccumulator);
-
-        if (this.velocityToStartPoint) {
-            if (velocity > 1) {
-                console.error("velocity > 1");
-            }
-            skipSample += this.velocityToStartPoint * (1 - velocity);
-        }
-
-        this.bufferSource.start(absoluteNoteStart, skipSample, durationWithRelease);
-        this.bufferSource.addEventListener("ended", this.releaseVoice);
-    };
-
-    triggerPerc = (
-        frequency: number,
-        absoluteNoteStart: number,
-        velocity: number,
-        noteStartedTimeAgo: number = 0,
-        adsr: number[] = [0.01, 10, 0, 0.2],
-    ) => {
-        const sampleSource = this.findSampleSourceClosestToFrequency(frequency, velocity);
-        // TODO: duration might be innacurate bc. of play rate
-        const duration = sampleSource.sampleBuffer!.duration;
-        this.triggerAttackRelease(
-            frequency, 
-            duration, 
-            absoluteNoteStart, 
-            velocity, 
-            noteStartedTimeAgo, 
-            adsr
-        );
+        adsr: number[],
     }
 
-    stop = () => {
-        if (!this.bufferSource) return;
-        this.resetBufferSource();
-        this.releaseVoice();
-    };
 
+    const releaseVoice = () => {
+        voiceState.inUse = false;
+        resetBufferSource();
+    }
+    const stop = () => {
+        releaseVoice();
+    };
+    return {
+        scheduleStart(
+            frequency: number,
+            absoluteStartTime: number,
+            {
+                velocity, adsr = [0.01, 10, 0, 0.2],
+            }: SamplerEventParams
+        ) {
+            currentAdsr = adsr;
+            if (voiceState.inUse) throw new Error("Polyphony fail: voice already in use");
+            let noteStartedTimeAgo = audioContext.currentTime - absoluteStartTime;
+
+            let skipSample = 0;
+            if (noteStartedTimeAgo > 0) {
+                skipSample = noteStartedTimeAgo;
+            }
+
+            voiceState.inUse = true;
+            const sampleSource = findSampleSourceClosestToFrequency(frequency, velocity);
+            resetBufferSource(sampleSource);
+
+            if (!bufferSource) throw new Error("bufferSource not created");
+            bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
+
+            output.gain.value = 0;
+            timeAccumulator = absoluteStartTime;
+            output.gain.setValueAtTime(0, timeAccumulator);
+            timeAccumulator += currentAdsr[0];
+            output.gain.linearRampToValueAtTime(velocity, timeAccumulator);
+            timeAccumulator += currentAdsr[1];
+            output.gain.linearRampToValueAtTime(/**value!*/currentAdsr[2], timeAccumulator);
+
+            if (velocityToStartPoint) {
+                if (velocity > 1) {
+                    console.error("velocity > 1");
+                }
+                skipSample += velocityToStartPoint * (1 - velocity);
+            }
+
+            bufferSource.start(absoluteStartTime, skipSample);
+            bufferSource.addEventListener("ended", releaseVoice);
+            return this;
+        },
+        scheduleEnd(
+            absoluteEndTime: number,
+        ) {
+            output.gain.linearRampToValueAtTime(0, absoluteEndTime + currentAdsr[3]);
+            return this;
+        },
+        stop,
+        output,
+        get inUse() {
+            return voiceState.inUse;
+        },
+        set inUse(value: boolean) {
+            voiceState.inUse = value;
+        }
+    } as SynthVoice;
 }
 class SampleSource {
     private audioContext: AudioContext;
@@ -242,38 +239,34 @@ class SampleSource {
     }
 }
 
-export class OneShotSampler implements SynthInstance {
-    private audioContext: AudioContext;
-    private sampleSources: SampleSource[];
-    private sampleVoices: SamplerVoice[] = [];
-    output: GainNode;
+type SamplerVoice = ReturnType<typeof samplerVoice>;
+
+export class OneShotSampler extends Synth<SamplerVoice> {
     private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
-    credits: string = "";
-    name: string = "One Shot Sampler";
-    enable: () => void;
-    disable: () => void;
+    credits = "Web audio one shop sampler implementation by Autotel";
+    name = "One Shot Sampler";
     constructor(
         audioContext: AudioContext,
         sampleDefinitions: SampleFileDefinition[],
         name?: string,
         credits?: string
     ) {
-        this.audioContext = audioContext;
-        this.sampleSources = sampleDefinitions.map((sampleDefinition) => {
+        const sampleSources = sampleDefinitions.map((sampleDefinition) => {
             return new SampleSource(audioContext, sampleDefinition);
         });
+
+        super(audioContext, (a) => samplerVoice(a, sampleSources));
+
         this.output = this.audioContext.createGain();
         this.output.gain.value = 0.3;
-        this.sampleVoices.forEach((sampleVoice) => {
-            sampleVoice.output.connect(this.output);
-        });
+
         if (credits) this.credits = credits;
         if (name) this.name = name;
-        
+
         this.enable = () => {
-            this.sampleSources.forEach(async (sampleSource) => {
+            sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();
                 this.loadingProgress += 1;
@@ -343,64 +336,21 @@ export class OneShotSampler implements SynthInstance {
 
 
     }
-    triggerAttackRelease = (
+    scheduleStart = (
         frequency: number,
-        duration: number,
-        absoluteNoteStart: number,
-        velocity: number,
-        noteStartedTimeAgo: number = 0
-    ) => {
-        let sampleVoice = this.sampleVoices.find((sampleVoice) => {
-            return !sampleVoice.inUse;
-        });
-        if (!sampleVoice) {
-            const sampleVoiceIndex = this.sampleVoices.length;
-            this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
-            sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            sampleVoice.output.connect(this.output);
-
-        }
-        sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
-        sampleVoice.triggerAttackRelease(
-            frequency, 
-            duration, 
-            absoluteNoteStart, 
-            velocity, 
-            noteStartedTimeAgo,
-            this.adsr
-        );
-    };
-    triggerPerc = (
+        absoluteStartTime: number,
+        eventParams: EventParamsBase,
+    ) => super.scheduleStart(frequency, absoluteStartTime, {
+        adsr: this.adsr,
+        ...eventParams
+    });
+    schedulePerc(
         frequency: number, 
-        absoluteNoteStart: number, 
-        velocity: number, 
-        noteStartedTimeAgo: number = 0 
-    ) => {
-        let sampleVoice = this.sampleVoices.find((sampleVoice) => {
-            return !sampleVoice.inUse;
-        });
-        if (!sampleVoice) {
-            const sampleVoiceIndex = this.sampleVoices.length;
-            this.sampleVoices.push(new SamplerVoice(this.audioContext, this.sampleSources));
-            sampleVoice = this.sampleVoices[sampleVoiceIndex];
-            sampleVoice.output.connect(this.output);
-
-        }
-        sampleVoice.velocityToStartPoint = this.velocityToStartPoint;
-
-        sampleVoice.triggerPerc(
-            frequency, 
-            absoluteNoteStart, 
-            velocity, 
-            noteStartedTimeAgo, 
-            this.adsr
-        );
-
-    };
-    releaseAll = () => {
-        this.sampleVoices.forEach((sampleVoice) => {
-            sampleVoice.stop();
-        });
+        absoluteStartTime: number, 
+        noteParameters: EventParamsBase
+    ): SynthVoice<EventParamsBase> {
+        const voice = this.scheduleStart(frequency, absoluteStartTime, noteParameters);
+        voice.scheduleEnd(absoluteStartTime + this.adsr[0]);
+        return voice;
     }
-    params = [] as SynthParam[];
 }
