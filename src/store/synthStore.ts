@@ -15,9 +15,10 @@ import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { Synth } from '../synth/super/Synth';
+import { KickSynth } from '../synth/KickSynth';
 
 
-type AdmissibleSynthType = Synth;
+type AdmissibleSynthType = Synth<EventParamsBase, SynthVoice>;
 
 export interface SynthChannel {
     synth: AdmissibleSynthType;
@@ -60,7 +61,7 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
     if (includeExclusives) {
         // returnArray.push(...exclusiveSamplers);
         // returnArray.unshift(new FourierSynth(audioContext));
-        // returnArray.unshift(new KickSynth(audioContext));
+        returnArray.unshift(new KickSynth(audioContext));
         // returnArray.unshift(new ClusterSineSynth(audioContext));
     } else {
         console.log("exclusives disabled");

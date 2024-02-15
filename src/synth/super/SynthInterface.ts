@@ -13,7 +13,7 @@ export interface AudioModule {
     credits?: string,
 }
 
-export type EventParamsBase = {
+export interface EventParamsBase {
     [key: string]: any,
     velocity: number,
 }
@@ -26,7 +26,7 @@ export interface SynthVoice<A = EventParamsBase> {
         frequency: number,
         absoluteStartTime: number,
         /** parameters unique to this triggered event, such as velocity and whatnot */
-        noteParameters: any & A 
+        noteParameters: any & A
     ) => {};
     scheduleEnd: (
         absoluteStopTime: number,
@@ -35,8 +35,11 @@ export interface SynthVoice<A = EventParamsBase> {
 }
 export type synthVoiceFactory<
     VoiceGen extends SynthVoice<A>,
-    A extends EventParamsBase = EventParamsBase
-> = (audioContext: AudioContext) => VoiceGen;
+    A = EventParamsBase
+> = (
+    audioContext: AudioContext, 
+    synthParams: SynthParam[]
+) => VoiceGen;
 /**
  * apologies for the generics hell
  * The synth instance calls a factory to create voices

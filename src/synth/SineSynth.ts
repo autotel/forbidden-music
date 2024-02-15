@@ -62,7 +62,7 @@ const sineVoice = (audioContext: AudioContext): SynthVoice => {
 
 type SineVoice = ReturnType<typeof sineVoice>;
 
-export class SineSynth extends Synth<SineVoice> {
+export class SineSynth extends Synth<EventParamsBase, SineVoice> {
     voices: SineVoice[] = [];
     credits = "Simple sine synth by Autotel";
     constructor(

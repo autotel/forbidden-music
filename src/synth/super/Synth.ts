@@ -1,11 +1,9 @@
-import { EventParamsBase,  SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
+import { EventParamsBase, SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
 
-
-type SynthExtraParams = EventParamsBase & {
-}
 
 export class Synth<
-    V extends SynthVoice = SynthVoice,
+    A extends EventParamsBase = EventParamsBase,
+    V extends SynthVoice = SynthVoice<A>,
 > {
     name: string = "Synth";
     /** voice instances */
@@ -16,13 +14,16 @@ export class Synth<
     output: GainNode;
     audioContext: AudioContext;
     params: SynthParam[] = [];
+    transformTriggerParams?: (p: EventParamsBase) => A;
     constructor(
         audioContext: AudioContext,
         factory: synthVoiceFactory<V>,
-        ...args: any[]
     ) {
         this.createVoice = () => {
-            const voice = factory(audioContext);
+            const voice = factory(
+                audioContext,
+                this.params
+            );
             voice.output.connect(this.output);
             return voice;
         }
@@ -47,19 +48,28 @@ export class Synth<
     scheduleStart(
         frequency: number,
         absoluteStartTime: number,
-        noteParameters: SynthExtraParams
+        noteParameters: EventParamsBase
     ) {
         const voice = this.allocateVoice();
+        if (this.transformTriggerParams) {
+            noteParameters = this.transformTriggerParams(noteParameters);
+        }
         voice.scheduleStart(frequency, absoluteStartTime, noteParameters);
         return voice;
     }
     schedulePerc(
         frequency: number,
         absoluteStartTime: number,
-        noteParameters: SynthExtraParams
+        noteParameters: EventParamsBase
     ) {
+        if (this.transformTriggerParams) {
+            noteParameters = this.transformTriggerParams(noteParameters);
+        }
         const voice = this.scheduleStart(frequency, absoluteStartTime, noteParameters)
-        voice.scheduleEnd(absoluteStartTime);
+        const { velocity } = noteParameters;
+        voice.scheduleEnd(
+            absoluteStartTime + velocity * 2.8
+        );
         return voice;
     }
     stop = () => {
