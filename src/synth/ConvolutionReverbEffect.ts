@@ -44,8 +44,8 @@ export class ConvolutionReverbEffect implements EffectInstance {
         this.inputNode.connect(dry);
         dry.connect(this.output);
         this.inputNode.connect(wet);
-        wet.gain.value = 0.25;
-        dry.gain.value = 0.75;
+        wet.gain.value = 0;
+        dry.gain.value = 1;
 
         const changeImplulseResponseUrl = async (path: string) => {
             if (!this.alreadyBuiltReverbs[path]) {

@@ -1,22 +1,23 @@
-import { Interface } from "readline/promises";
-import { SynthInstance, SynthParam, SynthVoice, synthVoiceFactory } from "../SynthInterface";
+import { EventParamsBase,  SynthParam, SynthVoice, synthVoiceFactory } from "../SynthInterface";
 
+
+type SynthExtraParams = EventParamsBase & {
+}
 
 export class Synth<
-    VoiceTpl extends SynthVoice<EventParamsTpl>,
-    EventParamsTpl,
-> implements SynthInstance<VoiceTpl, EventParamsTpl> {
+    V extends SynthVoice = SynthVoice,
+> {
     name: string = "Synth";
     /** voice instances */
-    instances: VoiceTpl[] = [];
-    createVoice: () => VoiceTpl;
+    instances: V[] = [];
+    createVoice: () => V;
     enable = () => { }
     disable = () => { }
-    output: AudioNode;
+    output: GainNode;
     audioContext: AudioContext;
     constructor(
         audioContext: AudioContext,
-        factory: synthVoiceFactory<VoiceTpl, EventParamsTpl>
+        factory: synthVoiceFactory<V>
     ) {
         this.createVoice = () => {
             const voice = factory(audioContext);
@@ -44,7 +45,7 @@ export class Synth<
     scheduleStart(
         frequency: number,
         absoluteStartTime: number,
-        noteParameters: EventParamsTpl
+        noteParameters: SynthExtraParams
     ) {
         const voice = this.allocateVoice();
         voice.scheduleStart(frequency, absoluteStartTime, noteParameters);
@@ -53,7 +54,7 @@ export class Synth<
     schedulePerc(
         frequency: number,
         absoluteStartTime: number,
-        noteParameters: EventParamsTpl
+        noteParameters: SynthExtraParams
     ) {
         const voice = this.scheduleStart(frequency, absoluteStartTime, noteParameters)
         voice.scheduleEnd(absoluteStartTime);
