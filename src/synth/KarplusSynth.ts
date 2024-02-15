@@ -1,5 +1,6 @@
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
-import { NumberSynthParam, OptionSynthParam, ParamType, SynthInstance, SynthParam } from "./super/SynthInterface";
+import { Synth, SynthInterface } from "./super/Synth";
+import { NumberSynthParam, OptionSynthParam, ParamType, SynthParam, SynthVoice } from "./super/SynthInterface";
 
 // It's really difficult to measure the filter cutoff, though possible.
 // maybe we can use this approach to comb filter instead of the worklet
@@ -11,7 +12,7 @@ type KarplusExciterType = "noise" | "multiplux";
 interface KarplusStopVoiceMessage {
     stop: true;
     // identifier
-    i: string;
+    i: number;
 }
 
 interface KarplusStopAllMessage {
@@ -26,7 +27,7 @@ interface KarplusStartVoiceMessage {
     // length of the note
     s?: number;
     // identifier
-    i: string;
+    i?: number;
 }
 
 interface KarplusParamsChangeMessage {
@@ -54,22 +55,61 @@ interface KarplusParamsChangeMessage {
     extype?: KarplusExciterType
 }
 
-const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {
-    const target = await promise;
-    return target.port.postMessage(message);
+const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth):SynthVoice => {
+    let myVoiceIndex = synth.instances.length;
+    return {
+        inUse: false,
+        scheduleStart (
+            frequency: number,
+            absoluteStartTime: number,
+            { velocity }: { velocity: number }
+        ) {
+            this.inUse = true;
+            // TODO: somehow make the start time precise
+            setTimeout(() => {
+                if (!synth.engine) throw new Error("engine not created");
+                synth.engine.port.postMessage({
+                    f: frequency,
+                    a: velocity,
+                    i: myVoiceIndex,
+                } as KarplusStartVoiceMessage)
+            }, (absoluteStartTime - synth.audioContext.currentTime) * 1000);
+            return this;
+        },
+        scheduleEnd(absoluteStopTime: number) {
+            // TODO: somehow make the start time precise
+            setTimeout(() => {
+                if (!synth.engine) throw new Error("engine not created");
+                synth.engine.port.postMessage({
+                    stop: true,
+                    i: myVoiceIndex,
+                } as KarplusStopVoiceMessage);
+                this.inUse = false;
+            }, (absoluteStopTime - synth.audioContext.currentTime) * 1000);
+            return this;
+        },
+        stop() {
+            if (!synth.engine) throw new Error("engine not created");
+            synth.engine.port.postMessage({
+                stop: true,
+                i: myVoiceIndex,
+            } as KarplusStopVoiceMessage);
+            this.inUse = false;
+        }
+
+    }
 }
 
-export class KarplusSynth implements SynthInstance {
-    private audioContext?: AudioContext;
-    output: GainNode;
+// NOTE: implements instead of extends because it manages its own voices 
+// in a different way than usual
+export class KarplusSynth extends Synth {
     engine?: AudioWorkletNode;
-    enable: () => void;
-    disable: () => void;
+    enable = () => { };
+    disable = () => { };
     constructor(audioContext: AudioContext) {
-        this.audioContext = audioContext;
-        this.output = this.audioContext.createGain();
+        super(audioContext, karplusVoice);
         this.output.gain.value = 0.5;
-
+        this.name = "Karplus";
         const enginePromise = createKarplusWorklet(audioContext)
 
         enginePromise.then((engine) => {
@@ -82,12 +122,6 @@ export class KarplusSynth implements SynthInstance {
             const target = await promise;
             return target.port.postMessage(message);
         };
-
-
-
-        // TODO... or not
-        this.enable = () => { }
-        this.disable = () => { }
 
         const fffParam = {
             type: ParamType.number,
@@ -271,7 +305,6 @@ export class KarplusSynth implements SynthInstance {
         this.params.push(exdetParam)
         exdetParam.value = 0.001
 
-
         const adetParam = {
             type: ParamType.number,
             _v: 1,
@@ -318,46 +351,6 @@ export class KarplusSynth implements SynthInstance {
         this.params.push(extypeParam)
 
     }
-    releaseAll = () => {
-        console.log("stopping all notes");
-        if (this.engine) this.engine.port.postMessage({ stopall: true } as KarplusStopAllMessage);
-    };
-
-    name = "Karplus";
-    triggerAttackRelease = (
-        frequency: number,
-        duration: number,
-        absoluteNoteStart: number,
-        velocity: number
-    ) => {
-        if (!this.audioContext) throw new Error("audio context not created");
-        //TODO: make it precise
-
-        setTimeout(() => {
-            if(!this.engine) throw new Error("engine not created");
-            this.engine.port.postMessage({
-                f: frequency,
-                a: velocity,
-                s: duration,
-                i: frequency.toFixed(4)
-            } as KarplusStartVoiceMessage)
-        }, (absoluteNoteStart - this.audioContext.currentTime) * 1000);
-    };
-    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
-        if (!this.audioContext) throw new Error("audio context not created");
-        if (!this.audioContext) throw new Error("audio context not created");
-        //TODO: make it precise
-
-        setTimeout(() => {
-            if(!this.engine) throw new Error("engine not created");
-            this.engine.port.postMessage({
-                f: frequency,
-                a: velocity,
-                s: 4,
-                i: frequency.toFixed(4)
-            } as KarplusStartVoiceMessage)
-        }, (absoluteNoteStart - this.audioContext.currentTime) * 1000);
-    };
     params = [] as SynthParam[];
     credits = "Karplus strong synth implementation by Autotel.";
 

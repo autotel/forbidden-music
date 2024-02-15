@@ -1,5 +1,6 @@
 import { EventParamsBase, SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
 
+
 export interface SynthInterface {
     name: string;
     enable: () => void;
@@ -43,7 +44,7 @@ export class Synth<
                 audioContext,
                 this
             );
-            voice.output.connect(this.output);
+            if(voice.output) voice.output.connect(this.output);
             return voice;
         }
         this.output = audioContext.createGain();

@@ -16,6 +16,7 @@ import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { Synth, SynthInterface } from '../synth/super/Synth';
 import { KickSynth } from '../synth/KickSynth';
+import { KarplusSynth } from '../synth/KarplusSynth';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -66,7 +67,7 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
     } else {
         console.log("exclusives disabled");
     }
-    // returnArray.push(new KarplusSynth(audioContext));
+    returnArray.push(new KarplusSynth(audioContext));
 
     if (isDev()) {
         // bc. unfinished

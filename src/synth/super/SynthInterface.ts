@@ -20,7 +20,7 @@ export interface EventParamsBase {
 
 
 export interface SynthVoice<A = EventParamsBase> {
-    output: AudioNode;
+    output?: AudioNode;
     inUse: boolean;
     scheduleStart: (
         frequency: number,
@@ -40,32 +40,7 @@ export type synthVoiceFactory<
     audioContext: AudioContext, 
     synthParams: A
 ) => VoiceGen;
-/**
- * apologies for the generics hell
- * The synth instance calls a factory to create voices
- * the factory returns SynthVoice instances, and the
- * synt voices accept EventParam generic as parameters
- * 
- * note how the synth instance might add parameters
- * to its voices when triggering
- * 
- */
-export interface SynthInstance<
-    VoiceGn extends SynthVoice
-> extends AudioModule {
-    output: AudioNode,
-    scheduleStart: (
-        frequency: number,
-        absoluteStartTime: number,
-        noteParameters: EventParamsBase,
-    ) => VoiceGn,
-    schedulePerc: (
-        frequency: number,
-        absoluteStartTime: number,
-        noteParameters: EventParamsBase,
-    ) => VoiceGn,
-    stop: () => void,
-}
+
 
 export interface EffectInstance extends AudioModule {
     output: AudioNode,
