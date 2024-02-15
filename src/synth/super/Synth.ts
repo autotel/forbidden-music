@@ -1,10 +1,29 @@
 import { EventParamsBase, SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
 
+export interface SynthInterface {
+    name: string;
+    enable: () => void;
+    disable: () => void;
+    params: SynthParam[];
+    output: GainNode;
+    transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
+    scheduleStart: (
+        frequency: number,
+        absoluteStartTime: number,
+        noteParameters: EventParamsBase
+    ) => SynthVoice;
+    schedulePerc: (
+        frequency: number,
+        absoluteStartTime: number,
+        noteParameters: EventParamsBase
+    ) => SynthVoice;
+    stop: () => void;
+}
 
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
-> {
+> implements SynthInterface {
     name: string = "Synth";
     /** voice instances */
     instances: V[] = [];
@@ -22,7 +41,7 @@ export class Synth<
         this.createVoice = () => {
             const voice = factory(
                 audioContext,
-                this.params
+                this
             );
             voice.output.connect(this.output);
             return voice;

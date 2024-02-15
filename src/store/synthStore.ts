@@ -14,11 +14,11 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
-import { Synth } from '../synth/super/Synth';
+import { Synth, SynthInterface } from '../synth/super/Synth';
 import { KickSynth } from '../synth/KickSynth';
 
 
-type AdmissibleSynthType = Synth<EventParamsBase, SynthVoice>;
+type AdmissibleSynthType = SynthInterface;
 
 export interface SynthChannel {
     synth: AdmissibleSynthType;

@@ -35,10 +35,10 @@ export interface SynthVoice<A = EventParamsBase> {
 }
 export type synthVoiceFactory<
     VoiceGen extends SynthVoice<A>,
-    A = EventParamsBase
+    A = any
 > = (
     audioContext: AudioContext, 
-    synthParams: SynthParam[]
+    synthParams: A
 ) => VoiceGen;
 /**
  * apologies for the generics hell

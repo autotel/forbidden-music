@@ -1,20 +1,18 @@
 import { Synth } from "./super/Synth";
 import { EventParamsBase, NumberSynthParam, ParamType, SynthInstance, SynthParam, SynthVoice } from "./super/SynthInterface";
 
+interface KickSynthParams {
+    startOctave: {value: number},
+    decayTime: {value: number},
+}
 
-const kickVoice = (audioContext: AudioContext): SynthVoice<EventParamsBase> & {
-    decayTime: number,
-    startOctave: number,
-} => {
+const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): SynthVoice<EventParamsBase>  => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     const distortion = audioContext.createWaveShaper();
     const output = gainNode;
     let eventStartedTime: number;
     let currentTargetFrequency: number;
-    let currentEventParams = {
-        velocity: 0,
-    } as EventParamsBase;
     oscillator.connect(gainNode);
     oscillator.start();
 
@@ -31,38 +29,34 @@ const kickVoice = (audioContext: AudioContext): SynthVoice<EventParamsBase> & {
     return {
         inUse: false,
         output,
-        decayTime: 0.04,
-        startOctave: 2.273,
         scheduleStart(
             frequency: number,
             absoluteStartTime: number,
-            params: EventParamsBase
+            evtParams: EventParamsBase
         ) {
             this.inUse = true;
-            currentEventParams = params;
             eventStartedTime = absoluteStartTime;
             currentTargetFrequency = frequency;
             gainNode.gain.cancelScheduledValues(eventStartedTime);
             gainNode.gain.setValueAtTime(0, eventStartedTime);
             gainNode.gain.linearRampToValueAtTime(
-                params.velocity,
+                evtParams.velocity,
                 eventStartedTime + 0.01
             );
 
 
-            const ot = 2 ** (this.startOctave - 1);
+            const ot = 2 ** (synthParams.startOctave.value - 1);
             oscillator.frequency.cancelScheduledValues(eventStartedTime);
             oscillator.frequency.setValueAtTime(
                 frequency * ot, eventStartedTime
             );
             oscillator.frequency.linearRampToValueAtTime(
-                frequency, eventStartedTime + this.decayTime
+                frequency, eventStartedTime + synthParams.decayTime.value
             );
 
             return this;
         },
         scheduleEnd(absoluteStopTime: number) {
-            const { velocity } = currentEventParams;
             const duration = absoluteStopTime - eventStartedTime;
             gainNode.gain.linearRampToValueAtTime(0, eventStartedTime + duration);
             setTimeout(() => {
@@ -81,14 +75,14 @@ const kickVoice = (audioContext: AudioContext): SynthVoice<EventParamsBase> & {
 type KickVoice = ReturnType<typeof kickVoice>;
 
 export class KickSynth extends Synth<EventParamsBase, KickVoice>{
-    startOctaveParam: NumberSynthParam = {
+    startOctave: NumberSynthParam = {
         displayName: "start octave",
         type: ParamType.number,
         min: 0, max: 4,
         value: 2.273,
         exportable: true,
     }
-    decayTimeParam: NumberSynthParam = {
+    decayTime: NumberSynthParam = {
         displayName: "decay time",
         type: ParamType.number,
         min: 0, max: 2,
@@ -105,8 +99,8 @@ export class KickSynth extends Synth<EventParamsBase, KickVoice>{
         this.output.gain.value = 0.1;
 
         this.params = [
-            this.startOctaveParam,
-            this.decayTimeParam,
+            this.startOctave,
+            this.decayTime,
         ];
 
 
