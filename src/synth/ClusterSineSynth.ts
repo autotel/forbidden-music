@@ -1,5 +1,5 @@
 import { frequencyToOctave } from "../functions/toneConverters";
-import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./super/SynthInterface";
 
 export class ClusterSineVoice {
     inUse: boolean = false;

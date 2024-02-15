@@ -1,4 +1,4 @@
-import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, ParamType, SynthInstance, SynthParam } from "./super/SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 
 export class KickVoice {

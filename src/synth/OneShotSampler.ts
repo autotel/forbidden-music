@@ -1,4 +1,4 @@
-import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam, SynthVoice } from "./SynthInterface";
+import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam, SynthVoice } from "./super/SynthInterface";
 import { Synth } from "./super/Synth";
 
 class PerformanceChronometer {

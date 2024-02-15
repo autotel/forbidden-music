@@ -1,5 +1,5 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
-import { ParamType, SynthInstance, SynthParam, OptionSynthParam, ExternalSynthInstance } from './SynthInterface';
+import { ParamType, SynthInstance, SynthParam, OptionSynthParam, ExternalSynthInstance } from './super/SynthInterface';
 
 
 //@ts-ignore

@@ -6,7 +6,7 @@ import { AutomationPointDef } from '../dataTypes/AutomationPoint';
 import { LoopDef } from '../dataTypes/Loop';
 import { Note, NoteDef, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
-import { SynthParamStored } from '../synth/SynthInterface';
+import { SynthParamStored } from '../synth/super/SynthInterface';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
 import { useViewStore } from './viewStore';

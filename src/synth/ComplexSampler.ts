@@ -1,4 +1,4 @@
-import { SynthInstance, SynthParam } from "./SynthInterface";
+import { SynthInstance, SynthParam } from "./super/SynthInterface";
 
 interface SampleFileDefinition {
     name: string;

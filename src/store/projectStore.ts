@@ -7,7 +7,7 @@ import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
 import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
-import { SynthParam } from '../synth/SynthInterface';
+import { SynthParam } from '../synth/super/SynthInterface';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';

@@ -1,4 +1,4 @@
-import { EventParamsBase,  SynthParam, SynthVoice, synthVoiceFactory } from "../SynthInterface";
+import { EventParamsBase,  SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
 
 
 type SynthExtraParams = EventParamsBase & {

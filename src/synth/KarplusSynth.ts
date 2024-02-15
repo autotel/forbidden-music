@@ -1,5 +1,5 @@
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
-import { NumberSynthParam, OptionSynthParam, ParamType, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, OptionSynthParam, ParamType, SynthInstance, SynthParam } from "./super/SynthInterface";
 
 // It's really difficult to measure the filter cutoff, though possible.
 // maybe we can use this approach to comb filter instead of the worklet

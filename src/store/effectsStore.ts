@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ConvolutionReverbEffect } from "../synth/ConvolutionReverbEffect";
 import { AutoMaximizerEffect } from "../synth/AutoMaximizerEffect";
-import { EffectInstance } from "../synth/SynthInterface";
+import { EffectInstance } from "../synth/super/SynthInterface";
 import { usePlaybackStore } from "./playbackStore";
 import { useAudioContextStore } from "./audioContextStore";
 import { watch, watchEffect } from "vue";

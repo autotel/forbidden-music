@@ -15,7 +15,7 @@ import { useSynthStore } from './synthStore';
 import { useViewStore } from './viewStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
-import { SynthParam } from '../synth/SynthInterface';
+import { SynthParam } from '../synth/super/SynthInterface';
 import { filterMap } from '../functions/filterMap';
 
 

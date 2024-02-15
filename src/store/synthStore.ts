@@ -9,7 +9,7 @@ import isTauri, { tauriObject } from '../functions/isTauri';
 import { ComplexSampler } from '../synth/ComplexSampler';
 import { OneShotSampler } from '../synth/OneShotSampler';
 import { SineSynth } from '../synth/SineSynth';
-import { EventParamsBase, OptionSynthParam, ParamType, SynthParam, SynthVoice } from "../synth/SynthInterface";
+import { EventParamsBase, OptionSynthParam, ParamType, SynthParam, SynthVoice } from "../synth/super/SynthInterface";
 import { useAudioContextStore } from "./audioContextStore";
 import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';

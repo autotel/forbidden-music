@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { ArraySynthParam } from '../../synth/SynthInterface';
+import { ArraySynthParam } from '../../synth/super/SynthInterface';
 import NumberKnob from './NumberKnob.vue';
 const props = defineProps({
     param: {

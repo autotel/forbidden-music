@@ -1,5 +1,5 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { EventParamsBase, SynthParam, SynthVoice } from "./SynthInterface";
+import { EventParamsBase, SynthParam, SynthVoice } from "./super/SynthInterface";
 import { Synth } from "./super/Synth";
 
 type SineNoteParams = EventParamsBase & {

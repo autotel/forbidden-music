@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { NumberSynthParam } from '../../synth/SynthInterface';
+import { NumberSynthParam } from '../../synth/super/SynthInterface';
 import { useToolStore } from '../../store/toolStore';
 import { useAutomationLaneStore } from '../../store/automationLanesStore';
 import Tooltip from '../Tooltip.vue';

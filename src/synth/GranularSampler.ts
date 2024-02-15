@@ -1,4 +1,4 @@
-import { NumberSynthParam, ParamType, ProgressSynthParam, ReadoutSynthParam, SynthInstance, SynthParam } from "./SynthInterface";
+import { NumberSynthParam, ParamType, ProgressSynthParam, ReadoutSynthParam, SynthInstance, SynthParam } from "./super/SynthInterface";
 interface SampleFileDefinition {
     name: string;
     frequency: number;

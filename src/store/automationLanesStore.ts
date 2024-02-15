@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, watchEffect } from "vue";
 import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
 import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
-import { SynthParam } from "../synth/SynthInterface";
+import { SynthParam } from "../synth/super/SynthInterface";
 import { useSynthStore } from "./synthStore";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {

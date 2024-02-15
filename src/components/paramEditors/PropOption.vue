@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { OptionSynthParam } from '../../synth/SynthInterface';
+import { OptionSynthParam } from '../../synth/super/SynthInterface';
 import Tooltip from '../Tooltip.vue';
 
 const triangleLeft = '◀';
