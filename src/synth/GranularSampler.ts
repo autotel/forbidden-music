@@ -49,7 +49,7 @@ const granularSamplerVoice = (
     let triggerFrequency: number = 0;
     let triggerVelocity: number = 0;
 
-    const myScheduler = new GranulatedScheduler(audioContext, (_frameStartTime, frameEndTime) => {
+    const myScheduler = new Scheduler(audioContext, (_frameStartTime, frameEndTime) => {
         const {
             grainsPerSecond,
             sampleOffsetTime,
@@ -108,11 +108,7 @@ const granularSamplerVoice = (
             return this;
         },
         stop,
-
-
-
     }
-
 }
 
 
@@ -169,7 +165,7 @@ type DamnTimerType = ReturnType<typeof setTimeout> | NodeJS.Timeout | number;
  * trigger event. However, being able to tweak a parameter mid-note is appreciated, which
  * is why the notes are scheduled at small time intervals, using the latest parameter values.
  */
-class GranulatedScheduler {
+class Scheduler {
     private currentTimer: false | DamnTimerType = false;
     /** in seconds */
     frameLength: number = 0.1;
