@@ -17,6 +17,7 @@ import { useLayerStore } from "./layerStore";
 import { Synth, SynthInterface } from '../synth/super/Synth';
 import { KickSynth } from '../synth/KickSynth';
 import { KarplusSynth } from '../synth/KarplusSynth';
+import { GranularSampler } from '../synth/GranularSampler';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -28,9 +29,9 @@ export interface SynthChannel {
 
 const createSynths = (audioContext: AudioContext, includeExclusives: boolean) => {
 
-    const samplers = [] as (OneShotSampler )[];//| ComplexSampler
-    const exclusiveSamplers = [] as (OneShotSampler )[];//| ComplexSampler
-    const localOnlySamplers = [] as (OneShotSampler )[];//| ComplexSampler
+    const samplers = [] as (OneShotSampler)[];//| ComplexSampler
+    const exclusiveSamplers = [] as (OneShotSampler)[];//| ComplexSampler
+    const localOnlySamplers = [] as (OneShotSampler)[];//| ComplexSampler
     let returnArray = [] as AdmissibleSynthType[];
 
     sampleDefinitions.forEach((sampleDefinition) => {
@@ -72,10 +73,10 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
     if (isDev()) {
         // bc. unfinished
         // returnArray.push(new FmSynth(audioContext));
-        // returnArray.push(new GranularSampler(
-        // audioContext, sampleDefinitions[0].samples[2],
-        // "Test Granular Sampler", sampleDefinitions[0].readme
-        // ));
+        returnArray.push(new GranularSampler(
+            audioContext, sampleDefinitions[0].samples[2],
+            "Test Granular Sampler", sampleDefinitions[0].readme
+        ));
         // bc. pirate
         // returnArray.push(...localOnlySamplers);
     } else {
