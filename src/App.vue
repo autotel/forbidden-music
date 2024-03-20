@@ -163,10 +163,10 @@ const keyDownListener = (e: KeyboardEvent) => {
 
 const tryLoadStart = async () => {
     try {
-        console.log("loading project");
+        console.log("loading project "+project.name);
         libraryStore.loadFromLibraryItem(project.name);
     } catch (e) {
-        console.log("no default project found", e);
+        console.log("problem loading default project:", e);
         // project.loadEmptyProjectDefinition();
         project.loadDemoProjectDefinition();
     }

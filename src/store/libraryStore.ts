@@ -263,7 +263,7 @@ export const useLibraryStore = defineStore("library store", () => {
                 inSyncWithStorage.value = true;
             });
         // } catch (e) {
-            console.warn("could not load", e);
+            // console.warn("could not load", e);
         // }
 
     }
