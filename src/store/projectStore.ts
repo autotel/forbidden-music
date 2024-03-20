@@ -1,4 +1,4 @@
-import LZUTF8 from 'lzutf8';
+import {compress,decompress} from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
@@ -11,11 +11,11 @@ import { SynthParam } from '../synth/super/SynthInterface';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
-import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
+import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
 import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { SynthChannel, useSynthStore } from './synthStore';
-import defaultProject from '../assets/default-project.json';
+import demoProject from './project-default';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",
@@ -69,13 +69,13 @@ export const useProjectStore = defineStore("current project", () => {
 
     const stringifyNotes = (notes: Note[], zip: boolean = false) => {
         let str = JSON.stringify(serializeNotes(notes));
-        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        if (zip) str = compress(str, { outputEncoding: "Base64" });
         return str;
     }
 
     const stringifyLoops = (loops: Loop[], zip: boolean = false) => {
         let str = JSON.stringify(serializeLoops(loops));
-        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        if (zip) str = compress(str, { outputEncoding: "Base64" });
         return str;
     }
 
@@ -83,7 +83,7 @@ export const useProjectStore = defineStore("current project", () => {
     const tryDecompressAndParseArray = <T>(str: string, testFn: ItmFilter<T>): T[] => {
         let json = str;
         try {
-            json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
+            json = decompress(str, { inputEncoding: "Base64" });
         } catch (_e) {
             ifDev(() => console.log("cannot be decompressed"));
             return [];
@@ -312,7 +312,7 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const loadDemoProjectDefinition = () => {
-        setFromProjectDefinition(defaultProject);
+        setFromProjectDefinition(demoProject);
     }
 
     return {

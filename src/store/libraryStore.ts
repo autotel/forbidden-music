@@ -1,110 +1,14 @@
-import LZUTF8 from 'lzutf8';
+import {compress, decompress} from 'lzutf8';
 import { defineStore } from 'pinia';
-import { nextTick, ref, watch, watchEffect } from 'vue';
-import { AutomationLane } from '../dataTypes/AutomationLane';
-import { AutomationPointDef } from '../dataTypes/AutomationPoint';
-import { LoopDef } from '../dataTypes/Loop';
-import { Note, NoteDef, note } from '../dataTypes/Note';
+import { nextTick, ref, version, watch, watchEffect } from 'vue';
+import { LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0 } from '../dataTypes/LibraryItem';
+import { Note, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
 import { SynthParamStored } from '../synth/super/SynthInterface';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
-import { useViewStore } from './viewStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 
-const version = "0.4.0";
-export const LIBRARY_VERSION = version;
-
-interface LibraryItem_0_1_0 {
-    version: string;
-    name: string;
-    notes: Array<{ [key: string]: number | false } & { groupId: number }>;
-    created: Number;
-    edited: Number;
-    snaps: Array<[string, boolean]>;
-    instrument?: {
-        type: string;
-        params: Array<SynthParamStored>;
-    };
-    bpm?: number;
-}
-
-interface LibraryItem_0_2_0 extends LibraryItem_0_1_0 {
-    layers: {
-        channelSlot: number;
-        visible: boolean;
-        locked: boolean;
-    }[];
-    channels: {
-        type: string;
-        params: Array<SynthParamStored>;
-    }[];
-    customOctavesTable?: number[];
-    snap_simplify?: number;
-}
-
-
-type LibraryItem_0_3_0 = {
-
-    version: string;
-    name: string;
-    created: Number;
-    edited: Number;
-    snaps: Array<[string, boolean]>;
-    instrument?: {
-        type: string;
-        params: Array<SynthParamStored>;
-    };
-    bpm?: number;
-
-
-    layers: {
-        channelSlot: number;
-        visible: boolean;
-        locked: boolean;
-    }[];
-    channels: {
-        type: string;
-        params: Array<SynthParamStored>;
-    }[];
-    customOctavesTable?: number[];
-    snap_simplify?: number;
-
-    notes: NoteDef[];
-    loops: LoopDef[];
-    automations?: AutomationPointDef[];
-}
-
-type LibraryItem_0_4_0 = {
-
-    version: string;
-    name: string;
-    created: Number;
-    edited: Number;
-    snaps: Array<[string, boolean]>;
-    instrument?: {
-        type: string;
-        params: Array<SynthParamStored>;
-    };
-    bpm?: number;
-    layers: {
-        channelSlot: number;
-        visible: boolean;
-        locked: boolean;
-    }[];
-    channels: {
-        type: string;
-        params: Array<SynthParamStored>;
-    }[];
-    customOctavesTable?: number[];
-    snap_simplify?: number;
-
-    notes: NoteDef[];
-    loops: LoopDef[];
-    lanes: AutomationLane[];
-}
-
-export type LibraryItem = LibraryItem_0_4_0;
 
 const migrators = {
     "0.0.0": (obj: any) => {
@@ -179,13 +83,14 @@ const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
     inValue.version = version;
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
-    nsLocalStorage.setItem(filename, LZUTF8.compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
+    nsLocalStorage.setItem(filename, compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
+    console.log("saved to local storage", filename);
 }
 
 const retrieveFromLocalStorage = (filename: string) => {
     const storageItem = nsLocalStorage.getItem(filename);
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
-    let retrieved = JSON.parse(LZUTF8.decompress(storageItem, { inputEncoding: "BinaryString" }));
+    let retrieved = JSON.parse(decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
     retrieved = normalizeLibraryItem(retrieved);
     // retrieved.notes = retrieved.notes.map((note: any) => new Note(note));
@@ -205,14 +110,10 @@ const deleteItem = (filename: string) => {
 }
 
 export const useLibraryStore = defineStore("library store", () => {
-    const view = useViewStore();
     const project = useProjectStore();
-
-
     const filenamesList = ref([] as Array<string>);
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
-
 
     const saveToNewLibraryItem = () => {
         try {
@@ -256,16 +157,11 @@ export const useLibraryStore = defineStore("library store", () => {
     const loadFromLibraryItem = (filename: string) => {
         clear();
         console.log("opening", filename);
-        // try {
-            const item = retrieveFromLocalStorage(filename);
-            importObject(item);
-            nextTick(() => {
-                inSyncWithStorage.value = true;
-            });
-        // } catch (e) {
-            // console.warn("could not load", e);
-        // }
-
+        const item = retrieveFromLocalStorage(filename);
+        importObject(item);
+        nextTick(() => {
+            inSyncWithStorage.value = true;
+        });
     }
 
     const deleteItemNamed = (filename: string) => {

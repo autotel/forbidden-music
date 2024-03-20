@@ -1,4 +1,7 @@
-{
+import { LibraryItem } from "../dataTypes/LibraryItem";
+
+
+export default {
     "name": "unnamed (autosave)",
     "notes": [
         {
@@ -692,4 +695,4 @@
         }
     ],
     "version": "0.4.0"
-}
+} as LibraryItem;
