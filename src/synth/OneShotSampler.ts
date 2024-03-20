@@ -1,4 +1,4 @@
-import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam, SynthVoice } from "./super/SynthInterface";
+import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, SynthParam, SynthVoice } from "./super/SynthInterface";
 import { Synth } from "./super/Synth";
 
 class PerformanceChronometer {
@@ -25,11 +25,61 @@ interface SampleFileDefinition {
     path: string;
 }
 
+interface SamplerSourceBase {
+    sampleInherentFrequency: number;
+    sampleInherentVelocity?: number;
+    isLoaded: boolean;
+}
+
+export const findSampleSourceClosestToFrequency = <SSc extends SamplerSourceBase>(
+    sampleSources: SSc[],
+    frequency: number,
+    velocity?: number,
+): SSc => {
+    let closestSampleSource = sampleSources[0];
+    if (sampleSources.length == 1) return closestSampleSource;
+
+    if (velocity == undefined) {
+        let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
+        for (let i = 1; i < sampleSources.length; i++) {
+            const sampleSource = sampleSources[i];
+            if (!sampleSource.isLoaded) continue;
+            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
+            if (difference < closestSampleSourceDifference) {
+                closestSampleSource = sampleSource;
+                closestSampleSourceDifference = difference;
+            }
+        }
+    } else {
+        const sampleSourcesWithVelocityAboveOrEqual = sampleSources.filter((sampleSource) => {
+            if (!sampleSource.sampleInherentVelocity) return true;
+            return sampleSource.sampleInherentVelocity >= velocity;
+        });
+
+        if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
+            findSampleSourceClosestToFrequency(sampleSources, frequency);
+        }
+
+        let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
+        let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
+        for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
+            const sampleSource = sampleSourcesWithVelocityAboveOrEqual[i];
+            if (!sampleSource.isLoaded) continue;
+            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
+            if (difference < closestSampleWithLeastVelocityDifferenceDifference) {
+                closestSampleWithLeastVelocityDifference = sampleSource;
+                closestSampleWithLeastVelocityDifferenceDifference = difference;
+            }
+        }
+        closestSampleSource = closestSampleWithLeastVelocityDifference;
+    }
+    return closestSampleSource;
+}
+
 const samplerVoice = (
     audioContext: AudioContext,
     sampleSources: SampleSource[] = []
 ): SynthVoice => {
-    let sampleSoruces: SampleSource[] = sampleSources;
     let velocityToStartPoint: number = 0;
     let bufferSource: AudioBufferSourceNode | undefined;
     const output = audioContext.createGain();
@@ -50,7 +100,7 @@ const samplerVoice = (
             countPerVelocityStep[velocity] += 1;
         }
     });
-    sampleSoruces.sort((a, b) => {
+    sampleSources.sort((a, b) => {
         if (!a.sampleInherentVelocity) return -1;
         if (!b.sampleInherentVelocity) return 1;
         return a.sampleInherentVelocity - b.sampleInherentVelocity;
@@ -81,47 +131,6 @@ const samplerVoice = (
     }
 
 
-    const findSampleSourceClosestToFrequency = (frequency: number, velocity?: number) => {
-        let closestSampleSource = sampleSoruces[0];
-        if (sampleSoruces.length == 1) return closestSampleSource;
-
-        if (velocity == undefined) {
-            let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
-            for (let i = 1; i < sampleSoruces.length; i++) {
-                const sampleSource = sampleSoruces[i];
-                if (!sampleSource.isLoaded) continue;
-                const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-                if (difference < closestSampleSourceDifference) {
-                    closestSampleSource = sampleSource;
-                    closestSampleSourceDifference = difference;
-                }
-            }
-        } else {
-            const sampleSourcesWithVelocityAboveOrEqual = sampleSoruces.filter((sampleSource) => {
-                if (!sampleSource.sampleInherentVelocity) return true;
-                return sampleSource.sampleInherentVelocity >= velocity;
-            });
-
-            if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
-                findSampleSourceClosestToFrequency(frequency);
-            }
-
-            let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
-            let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
-            for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
-                const sampleSource = sampleSourcesWithVelocityAboveOrEqual[i];
-                if (!sampleSource.isLoaded) continue;
-                const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-                if (difference < closestSampleWithLeastVelocityDifferenceDifference) {
-                    closestSampleWithLeastVelocityDifference = sampleSource;
-                    closestSampleWithLeastVelocityDifferenceDifference = difference;
-                }
-            }
-            closestSampleSource = closestSampleWithLeastVelocityDifference;
-        }
-
-        return closestSampleSource;
-    }
 
     interface SamplerEventParams extends EventParamsBase {
         velocity: number,
@@ -154,7 +163,7 @@ const samplerVoice = (
             }
 
             voiceState.inUse = true;
-            const sampleSource = findSampleSourceClosestToFrequency(frequency, velocity);
+            const sampleSource = findSampleSourceClosestToFrequency(sampleSources, frequency, velocity);
             resetBufferSource(sampleSource);
 
             if (!bufferSource) throw new Error("bufferSource not created");
@@ -241,7 +250,7 @@ class SampleSource {
 
 type SamplerVoice = ReturnType<typeof samplerVoice>;
 
-export class OneShotSampler extends Synth<EventParamsBase,SamplerVoice> {
+export class OneShotSampler extends Synth<EventParamsBase, SamplerVoice> {
     private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
@@ -345,8 +354,8 @@ export class OneShotSampler extends Synth<EventParamsBase,SamplerVoice> {
         ...eventParams
     });
     schedulePerc(
-        frequency: number, 
-        absoluteStartTime: number, 
+        frequency: number,
+        absoluteStartTime: number,
         noteParameters: EventParamsBase
     ): SynthVoice<EventParamsBase> {
         const voice = this.scheduleStart(frequency, absoluteStartTime, noteParameters);

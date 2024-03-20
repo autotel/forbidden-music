@@ -6,21 +6,21 @@ import { AutomationPoint } from '../dataTypes/AutomationPoint';
 import { Note, getFrequency } from "../dataTypes/Note";
 import isDev from '../functions/isDev';
 import isTauri, { tauriObject } from '../functions/isTauri';
-import { ComplexSampler } from '../synth/ComplexSampler';
+import { ClusterSineSynth } from '../synth/ClusterSineSynth';
+import { FmSynth } from '../synth/FmSynth';
+import { FourierSynth } from '../synth/FourierSynth';
+import { GranularSampler } from '../synth/GranularSampler';
+import { KarplusSynth } from '../synth/KarplusSynth';
+import { KickSynth } from '../synth/KickSynth';
 import { OneShotSampler } from '../synth/OneShotSampler';
 import { SineSynth } from '../synth/SineSynth';
-import { EventParamsBase, OptionSynthParam, ParamType, SynthParam, SynthVoice } from "../synth/super/SynthInterface";
+import { SynthInterface } from '../synth/super/Synth';
+import { OptionSynthParam, ParamType, SynthParam } from "../synth/super/SynthInterface";
 import { useAudioContextStore } from "./audioContextStore";
 import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
-import { Synth, SynthInterface } from '../synth/super/Synth';
-import { KickSynth } from '../synth/KickSynth';
-import { KarplusSynth } from '../synth/KarplusSynth';
-import { GranularSampler } from '../synth/GranularSampler';
-import { FourierSynth } from '../synth/FourierSynth';
-import { FmSynth } from '../synth/FmSynth';
-import { ClusterSineSynth } from '../synth/ClusterSineSynth';
+import { filterMap } from '../functions/filterMap';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -32,29 +32,44 @@ export interface SynthChannel {
 
 const createSynths = (audioContext: AudioContext, includeExclusives: boolean) => {
 
-    const samplers = [] as (OneShotSampler)[];//| ComplexSampler
-    const exclusiveSamplers = [] as (OneShotSampler)[];//| ComplexSampler
-    const localOnlySamplers = [] as (OneShotSampler)[];//| ComplexSampler
+    const samplers = [] as (OneShotSampler | GranularSampler)[];
     let returnArray = [] as AdmissibleSynthType[];
 
     sampleDefinitions.forEach((sampleDefinition) => {
-        const arrayWhereToPush = sampleDefinition.onlyLocal ? localOnlySamplers : (sampleDefinition.exclusive ? exclusiveSamplers : samplers);
-        // if (sampleDefinition.isComplexSampler) {
-        //     arrayWhereToPush.push(new ComplexSampler(
-        //         audioContext,
-        //         sampleDefinition.samples,
-        //         "(CPX)" + sampleDefinition.name,
-        //         sampleDefinition.readme
-        //     ))
-        // } else 
-        {
-            arrayWhereToPush.push(new OneShotSampler(
-                audioContext,
-                sampleDefinition.samples,
-                sampleDefinition.name,
-                sampleDefinition.readme
-            ))
+        const newInstance: OneShotSampler | GranularSampler = (() => {
+            if (sampleDefinition.type === 'one shot') {
+                return new OneShotSampler(
+                    audioContext,
+                    sampleDefinition.samples,
+                    sampleDefinition.name,
+                    sampleDefinition.readme
+                )
+            } else if (sampleDefinition.type === 'granular') {
+                return new GranularSampler(
+                    audioContext,
+                    sampleDefinition.samples,
+                    sampleDefinition.name,
+                    sampleDefinition.readme
+                )
+            } else {
+                throw new Error("type not supported " + sampleDefinition.type)
+            }
+        })();
+
+        if (
+            sampleDefinition.exclusive || sampleDefinition.onlyLocal
+        ) {
+            if (sampleDefinition.exclusive && includeExclusives) {
+                samplers.push(newInstance);
+            }
+            if (sampleDefinition.onlyLocal && isDev()) {
+                samplers.push(newInstance);
+            }
+        } else {
+            samplers.push(newInstance);
         }
+
+
     });
 
     returnArray = [
@@ -63,28 +78,15 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
         ...samplers
     ];
 
-    if (includeExclusives) {
-        // returnArray.push(...exclusiveSamplers);
-        returnArray.unshift(new KickSynth(audioContext));
-    } else {
-        console.log("exclusives disabled");
-    }
+    returnArray.unshift(new KickSynth(audioContext));
     returnArray.push(new KarplusSynth(audioContext));
 
     if (isDev()) {
         // bc. unfinished
         returnArray.push(new FmSynth(audioContext));
         returnArray.unshift(new FourierSynth(audioContext));
-        returnArray.push(new GranularSampler(
-            audioContext, sampleDefinitions[0].samples[2],
-            "Test Granular Sampler", sampleDefinitions[0].readme
-        ));
         // notes sometimes stop before time, suspected poor use of timeouts
         returnArray.unshift(new ClusterSineSynth(audioContext));
-        // bc. pirate
-        // returnArray.push(...localOnlySamplers);
-    } else {
-        console.log("local only samples disabled");
     }
     console.log("available channels", returnArray.map(s => s.name));
     return returnArray;

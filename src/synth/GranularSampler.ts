@@ -1,4 +1,5 @@
-import { Synth, SynthInterface } from "./super/Synth";
+import { findSampleSourceClosestToFrequency } from "./OneShotSampler";
+import { Synth } from "./super/Synth";
 import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, ReadoutSynthParam, SynthParam, SynthVoice } from "./super/SynthInterface";
 interface SampleFileDefinition {
     name: string;
@@ -12,13 +13,10 @@ interface GrainRealtimeParams {
     sustainTime: number;
     fadeOutTime: number;
     grainsPerSecond: number;
+    /** offset start time within the spl length 
+     * (i.e. startTimeSeconds = sampleOffsetTime * sampleDuration) 
+     **/
     sampleOffsetTime: number;
-}
-interface GrainTriggerParams {
-    frequency: number;
-    duration: number;
-    absoluteStartTime: number;
-    velocity: number;
 }
 
 interface SoundGrain {
@@ -41,34 +39,34 @@ interface SoundGrain {
 const granularSamplerVoice = (
     audioContext: AudioContext,
     grainRealtimeParams: GrainRealtimeParams,
-    sampleSource: SampleSource
+    sampleSources: SampleSource[]
 ): SynthVoice<EventParamsBase> => {
     const output = audioContext.createGain();
     output.gain.value = 0.5;
     let latestGrainStartTime = 0;
     let triggerFrequency: number = 0;
     let triggerVelocity: number = 0;
-
+    let currentSampleSource: SampleSource | undefined;  
+    let currentSampleStartOffsetSeconds = 0;
     const myScheduler = new Scheduler(audioContext, (_frameStartTime, frameEndTime) => {
         const {
             grainsPerSecond,
-            sampleOffsetTime,
         } = grainRealtimeParams;
 
         const grainInterval = 1 / grainsPerSecond;
         let iterNum = 0;
-        if (!sampleSource?.sampleBuffer) return;
+        if (!currentSampleSource?.sampleBuffer) return;
 
         for (let time = latestGrainStartTime; time < frameEndTime; time += grainInterval) {
             const grain = getSoundGrain(
                 audioContext,
-                sampleSource.sampleBuffer,
-                sampleSource.sampleInherentFrequency
+                currentSampleSource.sampleBuffer,
+                currentSampleSource.sampleInherentFrequency
             );
             if (time <= latestGrainStartTime) continue;
             latestGrainStartTime = time;
             grain.play(
-                sampleOffsetTime,
+                currentSampleStartOffsetSeconds,
                 latestGrainStartTime,
                 triggerFrequency,
                 grainRealtimeParams
@@ -94,8 +92,17 @@ const granularSamplerVoice = (
         ) {
             triggerFrequency = frequency;
             triggerVelocity = velocity;
+            
             if (this.inUse) throw new Error("Polyphony fail: voice already in use");
+            
             this.inUse = true;
+            
+            currentSampleSource = findSampleSourceClosestToFrequency(sampleSources, frequency, velocity);
+
+            if(!currentSampleSource?.sampleBuffer) throw new Error("No sample source loaded");
+            // transform proportional start time to real start time
+            currentSampleStartOffsetSeconds = currentSampleSource.sampleBuffer.duration * grainRealtimeParams.sampleOffsetTime;
+
             latestGrainStartTime = absoluteStartTime;
             myScheduler.scheduleStart(absoluteStartTime);
             myScheduler.onStopCallback = () => {
@@ -360,9 +367,7 @@ const createParameters = (sampler: GranularSampler) => {
         },
         set value(value: number) {
             this._value = value;
-            if (sampler.sampleSource?.sampleBuffer) {
-                sampler.realtimeParams.sampleOffsetTime = value * sampler.sampleSource.sampleBuffer.duration;
-            }
+            sampler.realtimeParams.sampleOffsetTime = value
         },
         exportable: true,
     } as NumberSynthParam
@@ -387,7 +392,6 @@ const createParameters = (sampler: GranularSampler) => {
 }
 
 export class GranularSampler extends Synth {
-    sampleSource: SampleSource;
     realtimeParams: GrainRealtimeParams = {
         fadeInTime: 0.5,
         sustainTime: 0,
@@ -402,18 +406,22 @@ export class GranularSampler extends Synth {
     disable: () => void;
     constructor(
         audioContext: AudioContext,
-        sampleDefinition: SampleFileDefinition,
+        sampleDefinitions: SampleFileDefinition[],
         name?: string,
         credits?: string
     ) {
+
+        const sampleSources = sampleDefinitions.map((sampleDefinition) => {
+            return new SampleSource(audioContext, sampleDefinition);
+        });
+
         super(audioContext, () => granularSamplerVoice(
             audioContext,
             this.realtimeParams,
-            this.sampleSource
+            sampleSources,
         ))
-        this.sampleSource = new SampleSource(audioContext, sampleDefinition);
         this.output.gain.value = 0.3;
-        
+
         if (credits) this.credits = credits;
         if (name) this.name = name;
 
@@ -421,13 +429,12 @@ export class GranularSampler extends Synth {
             relativeSampleStartTime,
         } = createParameters(this);
 
-        this.enable = async () => {
-            const { sampleSource } = this;
-            if (sampleSource.isLoading || sampleSource.isLoaded) return;
-            await sampleSource.load();
-            this.loadingProgress += 1;
-            if (!sampleSource.sampleBuffer) throw new Error("sample buffer load failed");
-            this.realtimeParams.sampleOffsetTime = relativeSampleStartTime.value * sampleSource.sampleBuffer.duration;
+        this.enable = () => {
+            sampleSources.forEach(async (sampleSource) => {
+                if (sampleSource.isLoading || sampleSource.isLoaded) return;
+                await sampleSource.load();
+                this.loadingProgress += 1;
+            });
         }
         this.disable = () => {
         }
