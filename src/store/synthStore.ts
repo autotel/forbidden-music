@@ -18,6 +18,9 @@ import { Synth, SynthInterface } from '../synth/super/Synth';
 import { KickSynth } from '../synth/KickSynth';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { GranularSampler } from '../synth/GranularSampler';
+import { FourierSynth } from '../synth/FourierSynth';
+import { FmSynth } from '../synth/FmSynth';
+import { ClusterSineSynth } from '../synth/ClusterSineSynth';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -62,9 +65,7 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
 
     if (includeExclusives) {
         // returnArray.push(...exclusiveSamplers);
-        // returnArray.unshift(new FourierSynth(audioContext));
         returnArray.unshift(new KickSynth(audioContext));
-        // returnArray.unshift(new ClusterSineSynth(audioContext));
     } else {
         console.log("exclusives disabled");
     }
@@ -72,11 +73,14 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
 
     if (isDev()) {
         // bc. unfinished
-        // returnArray.push(new FmSynth(audioContext));
+        returnArray.push(new FmSynth(audioContext));
+        returnArray.unshift(new FourierSynth(audioContext));
         returnArray.push(new GranularSampler(
             audioContext, sampleDefinitions[0].samples[2],
             "Test Granular Sampler", sampleDefinitions[0].readme
         ));
+        // notes sometimes stop before time, suspected poor use of timeouts
+        returnArray.unshift(new ClusterSineSynth(audioContext));
         // bc. pirate
         // returnArray.push(...localOnlySamplers);
     } else {

@@ -146,7 +146,8 @@ describe('app', () => {
     it('mounts', () => {
         const result = app.mount(div)
         console.log(result);
-
+        // empty the project preventing default demo project interfering with tests
+        project.loadEmptyProjectDefinition();
         project.notes.push(note({
             time: 2,
             timeEnd: 4,

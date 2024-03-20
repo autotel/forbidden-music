@@ -15,6 +15,7 @@ import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
 import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { SynthChannel, useSynthStore } from './synthStore';
+import defaultProject from '../assets/default-project.json';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",
@@ -309,11 +310,17 @@ export const useProjectStore = defineStore("current project", () => {
         setFromProjectDefinition(emptyProjectDefinition);
     }
 
+
+    const loadDemoProjectDefinition = () => {
+        setFromProjectDefinition(defaultProject);
+    }
+
     return {
         notes, loops, lanes,
         append,
         sortLoops,
         loadEmptyProjectDefinition,
+        loadDemoProjectDefinition,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
         stringifyLoops, parseLoops,

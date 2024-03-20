@@ -256,15 +256,15 @@ export const useLibraryStore = defineStore("library store", () => {
     const loadFromLibraryItem = (filename: string) => {
         clear();
         console.log("opening", filename);
-        try {
+        // try {
             const item = retrieveFromLocalStorage(filename);
             importObject(item);
             nextTick(() => {
                 inSyncWithStorage.value = true;
             });
-        } catch (e) {
+        // } catch (e) {
             console.warn("could not load", e);
-        }
+        // }
 
     }
 

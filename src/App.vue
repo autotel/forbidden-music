@@ -167,7 +167,8 @@ const tryLoadStart = async () => {
         libraryStore.loadFromLibraryItem(project.name);
     } catch (e) {
         console.log("no default project found", e);
-        project.loadEmptyProjectDefinition();
+        // project.loadEmptyProjectDefinition();
+        project.loadDemoProjectDefinition();
     }
 }
 

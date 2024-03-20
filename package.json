@@ -34,6 +34,6 @@
     "vitest": "^0.34.6",
     "vue-tsc": "^1.0.11",
     "vuepress": "^2.0.0-rc.0",
-    "webdriverio": "^8.17.0"
+    "webdriverio": "^8.34.1"
   }
 }
