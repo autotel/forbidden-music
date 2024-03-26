@@ -72,6 +72,8 @@ const granularSamplerVoice = (
                 grainRealtimeParams
             );
 
+            output.gain.value = triggerVelocity;
+
             grain.output.connect(output);
             iterNum++;
         }

@@ -28,6 +28,9 @@ export const useLayerStore = defineStore("layer", () => {
     }
 
     const isVisible = (layer: number): boolean => {
+        if(!layers.value[layer]) {
+            return false;
+        }
         return layers.value[layer].visible;
     }
 

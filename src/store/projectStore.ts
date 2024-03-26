@@ -7,7 +7,7 @@ import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
 import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
-import { SynthParam } from '../synth/super/SynthInterface';
+import { SynthParam, SynthParamStored } from '../synth/super/SynthInterface';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
@@ -162,10 +162,15 @@ export const useProjectStore = defineStore("current project", () => {
                 type: channel.synth.name,
                 params: channel.params.filter((param: SynthParam) => {
                     return param.exportable;
-                }).map((param: SynthParam) => ({
-                    displayName: param.displayName,
-                    value: param.value,
-                }))
+                }).map((param: SynthParam) => {
+                    const ret = {
+                        value: param.value,
+                    } as SynthParamStored
+                    if(param.displayName){
+                        ret.displayName = param.displayName;
+                    }
+                    return ret;
+                })
             }));
         }
         return ret;
@@ -190,7 +195,7 @@ export const useProjectStore = defineStore("current project", () => {
             if (!snaps.values[name]) return;
             snaps.values[name].active = activeState;
         });
-
+        layers.clear();
         pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
             const layer = layers.getOrMakeLayerWithIndex(index);
             layer.visible = visible;

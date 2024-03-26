@@ -58,7 +58,7 @@ export enum ParamType {
 }
 
 export type SynthParamStored = {
-    displayName: string,
+    displayName?: string,
     value: any,
 }
 
