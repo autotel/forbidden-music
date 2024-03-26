@@ -424,7 +424,7 @@ export class GranularSampler extends Synth {
         this.output.gain.value = 0.3;
 
         if (credits) this.credits = credits;
-        if (name) this.name = name;
+        if (name) this.name = "Granular "+ name;
 
         const {
             relativeSampleStartTime,
@@ -446,4 +446,5 @@ export class GranularSampler extends Synth {
 
     }
     params = [] as SynthParam[];
+
 }

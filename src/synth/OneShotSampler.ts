@@ -273,7 +273,7 @@ export class OneShotSampler extends Synth<EventParamsBase, SamplerVoice> {
         this.output.gain.value = 0.3;
 
         if (credits) this.credits = credits;
-        if (name) this.name = name;
+        if (name) this.name = name + " Sampler";
 
         this.enable = () => {
             if (this.isReady) return;
@@ -364,7 +364,14 @@ export class OneShotSampler extends Synth<EventParamsBase, SamplerVoice> {
         absoluteStartTime: number,
         noteParameters: EventParamsBase
     ): SynthVoice<EventParamsBase> {
-        const voice = this.scheduleStart(frequency, absoluteStartTime, noteParameters);
+        const tweakedAdsr = [...this.adsr];
+        tweakedAdsr[3] *= 4 * noteParameters.velocity;
+        
+        const tweakedParam = {
+            ...noteParameters,
+            adsr: tweakedAdsr,
+        };
+        const voice = this.scheduleStart(frequency, absoluteStartTime, tweakedParam);
         voice.scheduleEnd(absoluteStartTime + this.adsr[0]);
         return voice;
     }

@@ -26,7 +26,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
             _multiTimbralityEnabled.value = value;
         }
     });
-    const effectsEnabled = ref(true);
+    const effectsEnabled = ref(false);
     const _layersEnabled = ref(false);
     const layersEnabled = computed<boolean>({
         get() {
