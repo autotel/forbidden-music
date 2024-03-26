@@ -85,6 +85,10 @@ const fullReset = () => {
                 <label>Calculate frets</label>
             </div>
 
+            <div class="form-row">
+                <Toggle v-model="userSettings.showHarp" />
+                <label>Harp overlay</label>
+            </div>
 
             <div class="form-row">
                 <select v-model="userSettings.viewportTech">

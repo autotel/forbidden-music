@@ -29,6 +29,8 @@ import { useToolStore } from './store/toolStore';
 import { useHistoryStore } from './store/historyStore';
 import { useViewStore } from './store/viewStore';
 import { keyBindingsListener } from './functions/keyBindingsListener';
+import Harp from './overlays/Harp.vue';
+import { settings } from 'pixi.js';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -259,6 +261,12 @@ watch(paneWidth, () => {
             <!-- <Autotel /> -->
             <ToolSelector />
             <SkipBar />
+        </div>
+
+        <div style="position:absolute; left:0px; top:0">
+            <template v-if="userSettings.showHarp">
+                <Harp/>
+            </template>
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
