@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { inject, Ref } from "vue";
-import Button from "../components/Button.vue";
-import NumberArrayEditor from "../components/paramEditors/NumberArrayEditor.vue";
-import PropLoadingProgress from "../components/paramEditors/PropLoadingProgress.vue";
-import PropOption from "../components/paramEditors/PropOption.vue";
-import PropSlider from '../components/paramEditors/PropSlider.vue';
-import { useMonoModeInteraction } from "../store/monoModeInteraction";
-import { ParamType, SynthParam } from "../synth/super/SynthInterface";
-import PropReadout from "../components/paramEditors/PropReadout.vue";
+import Button from "../../components/Button.vue";
+import NumberArrayEditor from "../../components/paramEditors/NumberArrayEditor.vue";
+import PropLoadingProgress from "../../components/paramEditors/PropLoadingProgress.vue";
+import PropOption from "../../components/paramEditors/PropOption.vue";
+import PropSlider from '../../components/paramEditors/PropSlider.vue';
+import { useMonoModeInteraction } from "../../store/monoModeInteraction";
+import { ParamType, SynthParam } from "../../synth/super/SynthInterface";
+import PropReadout from "../../components/paramEditors/PropReadout.vue";
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
 defineProps<{
@@ -22,9 +22,9 @@ const showInfo = (info: string) => {
 
 <template>
     <template v-for="param in synthParams">
+        <PropLoadingProgress v-if="param.type === ParamType.progress" :param="param" />
         <PropOption v-if="param.type === ParamType.option" :param="param" />
         <PropSlider v-if="param.type === ParamType.number" :param="param" />
-        <PropLoadingProgress v-if="param.type === ParamType.progress" :param="param" />
         <NumberArrayEditor v-if="param.type === ParamType.nArray" :param="param" />
         <Button v-if="param.type === ParamType.infoText" :on-click="() => showInfo(param.value)">{{
             param.displayName }}</Button>

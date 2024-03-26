@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, Ref, ref, watch } from "vue";
-import Button from "../components/Button.vue";
-import HeartPulse from "../components/icons/HeartPulse.vue";
-import PropOption from "../components/paramEditors/PropOption.vue";
-import { useAudioContextStore } from "../store/audioContextStore";
-import { useCustomSettingsStore } from "../store/customSettingsStore";
-import { useLayerStore } from "../store/layerStore";
-import { useMonoModeInteraction } from "../store/monoModeInteraction";
-import { usePlaybackStore } from "../store/playbackStore";
-import { SynthChannel, useSynthStore } from "../store/synthStore";
-import { useToolStore } from "../store/toolStore";
-import { layerNoteColorStrings } from "../store/viewStore";
-import Collapsible from "./Collapsible.vue";
+import Button from "../../components/Button.vue";
+import ButtonSub from "../../components/ButtonSub.vue";
+import HeartPulse from "../../components/icons/HeartPulse.vue";
+import { useAudioContextStore } from "../../store/audioContextStore";
+import { useCustomSettingsStore } from "../../store/customSettingsStore";
+import { useEffectsStore } from "../../store/effectsStore";
+import { useLayerStore } from "../../store/layerStore";
+import { useMonoModeInteraction } from "../../store/monoModeInteraction";
+import { SynthChannel, useSynthStore } from "../../store/synthStore";
+import { useToolStore } from "../../store/toolStore";
+import { layerNoteColorStrings } from "../../store/viewStore";
+import { SynthInterface } from "../../synth/super/Synth";
+import { EffectInstance } from "../../synth/super/SynthInterface";
+import SynthSelector from "./SynthSelector.vue";
+import Collapsible from "../Collapsible.vue";
 import ParamsSliderList from "./ParamsSliderList.vue";
-import { useEffectsStore } from "../store/effectsStore";
-import ButtonSub from "../components/ButtonSub.vue";
 
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
-const playback = usePlaybackStore();
 const effects = useEffectsStore();
 const synth = useSynthStore();
 const audioReady = ref(false);
@@ -26,8 +26,11 @@ const userSettings = useCustomSettingsStore();
 const tool = useToolStore();
 const layers = useLayerStore();
 const audioContextStore = useAudioContextStore();
-const showCredits = (credits: string) => {
+
+const showCredits = (ofSynth: SynthInterface | EffectInstance) => {
     if (!infoTextModal) throw new Error('infoTextModal not injected');
+    if (!('credits' in ofSynth)) return;
+    const credits = ofSynth.credits as string;
     infoTextModal.value = credits;
     monoModeInteraction.activate("credits modal");
 }
@@ -44,7 +47,7 @@ onBeforeUnmount(() => {
 
 
 
-const activeLayerChan = ref<SynthChannel | null>();
+const activeLayerChan = ref<SynthChannel | null>(null);
 
 const setActiveLayerChanToCurrentLayerTarget = () => {
     const activeLayer = tool.currentLayerNumber;
@@ -80,9 +83,9 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
                     <h3 class="padded">Layer polyphony</h3>
                     <template v-for="(synthChan, chanNo) in synth.channels">
                         <Button :onClick="() => activeLayerChan = synthChan" :active="synthChan === activeLayerChan"
-                            style="width:calc(100% - 2em); display:flex; justify-content: space-between;" :style="chanNo ? 'padding-left:2em' : ''"
-                            :active-color="layerNoteColorStrings[1]" class="padded"
-                            :tooltip="`open synth control channel ${chanNo} (assigned in layers)`">
+                            style="width:calc(100% - 2em); display:flex; justify-content: space-between;"
+                            :style="chanNo ? 'padding-left:2em' : ''" :active-color="layerNoteColorStrings[1]"
+                            class="padded" :tooltip="`open synth control channel ${chanNo} (assigned in layers)`">
                             <template v-if="chanNo === 0">
                                 default -
                             </template>
@@ -96,21 +99,13 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
                             </ButtonSub>
                         </Button>
                     </template>
-                    <Button v-if="userSettings.multiTimbralityEnabled" :on-click="() => { synth.addChannel() }" class="padded"
-                        tooltip="Add a new synth channel">
+                    <Button v-if="userSettings.multiTimbralityEnabled" :on-click="() => { synth.addChannel() }"
+                        class="padded" tooltip="Add a new synth channel">
                         + Channel
                     </Button>
 
                 </template>
-
-                <template v-if="activeLayerChan">
-                    <PropOption :param="synth.synthSelector(activeLayerChan)" />
-                    <ParamsSliderList :synthParams="activeLayerChan.params" />
-                    <Button class="padded" v-if="activeLayerChan.synth.credits"
-                        :on-click="() => activeLayerChan ? showCredits(activeLayerChan.synth.credits!) : null">
-                        Credits
-                    </Button>
-                </template>
+                <SynthSelector :activeLayerChan="activeLayerChan" :show-credits="showCredits" />
                 <br><br>
                 <template v-if="userSettings.effectsEnabled">
                     <h2 class="padded">Master effects</h2>
@@ -118,7 +113,7 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
                         <h3 class="padded">{{ effect.name }}</h3>
                         <ParamsSliderList :synthParams="effect.params" />
                         <Button class="padded" v-if="effect.credits"
-                            :on-click="() => activeLayerChan ? showCredits(effect.credits!) : null">
+                            :on-click="() => activeLayerChan ? showCredits(effect) : null">
                             Credits
                         </Button>
                     </template>

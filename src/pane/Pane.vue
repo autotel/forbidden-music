@@ -4,7 +4,7 @@ import FileManager from './FileManager.vue';
 import WorkingMemory from './WorkingMemory.vue';
 import MidiInputConfig from './MidiInputConfig.vue';
 import SnapSelector from './SnapSelector.vue';
-import SynthEdit from './SynthEdit.vue';
+import SynthEdit from './synth/SynthEdit.vue';
 import PerformanceSettings from './PerformanceSettings.vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import LayersManager from './LayersManager.vue';

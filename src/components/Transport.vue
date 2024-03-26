@@ -25,26 +25,26 @@ onUnmounted(() => {
         <template v-if="playback.stopped || playback.paused">
             <Button :onClick="playback.play">
                 <!-- play svg -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M8 5v14l11-7z" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"  fill="currentColor" >
+                    <path fill="none" stroke="none"  d="M0 0h24v24H0z" />
+                    <path d="M8 5v14l11-7z"  fill="currentColor" />
                 </svg>
             </Button>
         </template>
         <template v-else>
             <Button :onClick="playback.pause" :active="playback.paused">
                 <!-- pause svg -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" >
+                    <path fill="none" stroke="none" d="M0 0h24v24H0z" />
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"  fill="currentColor" />
                 </svg>
             </Button>
         </template>
         <Button :onClick="playback.stop">
             <!-- stop svg -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M6 6h12v12H6z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" >
+                <path fill="none" stroke="none" d="M0 0h24v24H0z" />
+                <path d="M6 6h12v12H6z"  fill="currentColor" />
             </svg>
         </Button>
         <!-- input that sets the bpm -->
@@ -55,7 +55,7 @@ onUnmounted(() => {
             tooltip="Follow playback: Keep moving the view to keep the current notes time at the center"
         >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <text x="0" y="19" font-size="24px"  >
+                <text x="0" y="19" font-size="24px" fill="currentColor"  >
                     ⇹
                 </text>
             </svg>
@@ -91,6 +91,19 @@ onUnmounted(() => {
     line-height: 0;
     font-size: 26px;
     width: 4em;
+
+    
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 #bpm:active {

@@ -79,11 +79,13 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
             maximizer.connect(this.output);
+            this.isReady = true;
         }
         this.disable = () => {
             if (maximizer) {
                 maximizer.disconnect();
             }
+            this.isReady = false;
         }
 
         this.schedulePerc = (

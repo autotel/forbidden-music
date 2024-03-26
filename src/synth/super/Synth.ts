@@ -1,12 +1,13 @@
 import { EventParamsBase, SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
 
-
-export interface SynthInterface {
+interface SynthBase {
     name: string;
     enable: () => void;
     disable: () => void;
     params: SynthParam[];
-    output: GainNode;
+    isReady: boolean;
+    /** indicates whether this synth needs to fetch something from server, thus incurring in costs */
+    needsFetching?: true;
     transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
     scheduleStart: (
         frequency: number,
@@ -21,16 +22,24 @@ export interface SynthInterface {
     stop: () => void;
 }
 
+export interface SynthInterface extends SynthBase {
+    output: GainNode;
+}
+
+export interface ExternalSynthInterface extends SynthBase{
+}
+
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
 > implements SynthInterface {
     name: string = "Synth";
+    isReady = false;
     /** voice instances */
     instances: V[] = [];
     createVoice: () => V;
-    enable = () => { }
-    disable = () => { }
+    enable = () => { this.isReady = true; }
+    disable = () => { this.isReady = false; }
     output: GainNode;
     audioContext: AudioContext;
     params: SynthParam[] = [];

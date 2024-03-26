@@ -68,12 +68,12 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
         </ButtonSub>
       </template>
     </Button>
-    <Button :onClick="() => snap.onlyWithMutednotes = !snap.onlyWithMutednotes" :class="{ active: snap.onlyWithMutednotes }"
-      tooltip="only with muted notes. Use CTRL+M to mute a note">
-      Monly
+    <Button :onClick="() => snap.onlyWithMutedNotes = !snap.onlyWithMutedNotes" :class="{ active: snap.onlyWithMutedNotes }"
+      tooltip="Snap only in relation to muted notes. Use CTRL+M to mute a note">
+      Muted
     </Button>
     <Button :onClick="() => snap.onlyWithSimultaneousNotes = !snap.onlyWithSimultaneousNotes"
-      :class="{ active: snap.onlyWithSimultaneousNotes }" tooltip="only with notes which overap in time">
+      :class="{ active: snap.onlyWithSimultaneousNotes }" tooltip="Snap only in relation to notes which overlap in time">
       Simultaneous
     </Button>
     <Button :onClick="() => snap.onlyWithNotesInView = !snap.onlyWithNotesInView"

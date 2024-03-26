@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { OptionSynthParam } from '../../synth/super/SynthInterface';
 import Tooltip from '../Tooltip.vue';
 
@@ -13,6 +13,12 @@ const props = defineProps({
     },
 });
 
+const readout = computed(() => {
+    if(props.param.displayName){
+        return props.param.displayName + ": " + currentValueName.value;
+    }
+    return currentValueName.value;
+});
 const currentValueName = ref("--");
 const dragging = ref(false);
 const minusButton = ref();
@@ -69,8 +75,8 @@ watch(() => props.param.value, (newValue) => {
         <div class="sw-button" ref="minusButton" @click="minusButtonClicked">
             {{ triangleLeft }}
         </div>
-        <span style="{position: absolute; z-index: 2;}">
-            {{ props.param.displayName }}: {{ currentValueName }}
+        <span>
+            {{ readout }}
         </span>
         <div class="sw-button" ref="plusButton" @click="plusButtonClicked">
             {{ triangleRight }}

@@ -254,6 +254,7 @@ export class OneShotSampler extends Synth<EventParamsBase, SamplerVoice> {
     private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
+    needsFetching = true;
     credits = "Web audio one shop sampler implementation by Autotel";
     name = "One Shot Sampler";
     constructor(
@@ -275,10 +276,15 @@ export class OneShotSampler extends Synth<EventParamsBase, SamplerVoice> {
         if (name) this.name = name;
 
         this.enable = () => {
+            if (this.isReady) return;
             sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();
                 this.loadingProgress += 1;
+                if (
+                    this.loadingProgress > 2 ||
+                    this.loadingProgress == sampleDefinitions.length
+                ) this.isReady = true;
             });
         }
         this.disable = () => {

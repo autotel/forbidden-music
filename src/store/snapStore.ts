@@ -303,7 +303,7 @@ export const useSnapStore = defineStore("snap", () => {
     const currentlyInvolvedSnaps = ref([] as SnapDefinition[]);
 
     const customOctavesTable = ref(colundi as number[]);
-    const onlyWithMutednotes = ref(false);
+    const onlyWithMutedNotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
     const onlyWithNotesInView = ref(true);
     const onlyWithNotesInTheSameLayer = ref(false);
@@ -355,7 +355,7 @@ export const useSnapStore = defineStore("snap", () => {
         });
 
 
-        if (onlyWithMutednotes.value) {
+        if (onlyWithMutedNotes.value) {
             returnValue = returnValue.filter((trace) => (trace.type === TraceType.Note && trace.mute));
         }
         if (onlyWithNotesInView.value) {
@@ -889,7 +889,7 @@ export const useSnapStore = defineStore("snap", () => {
         toneSnapExplanation,
         currentlyInvolvedSnaps,
         customOctavesTable,
-        onlyWithMutednotes,
+        onlyWithMutedNotes,
         onlyWithSimultaneousNotes,
         onlyWithNotesInView,
         onlyWithNotesInTheSameLayer,

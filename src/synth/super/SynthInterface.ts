@@ -63,7 +63,6 @@ export type SynthParamStored = {
 }
 
 export type SynthParamMinimum<T> = {
-    displayName: string,
     type: ParamType,
     value: T,
     exportable: boolean,
@@ -112,7 +111,7 @@ export interface OptionSynthParam extends SynthParamMinimum<number> {
         value: string | number,
         displayName: string,
     }[]
-    displayName: string,
+    displayName?: string,
     default?: number
 }
 

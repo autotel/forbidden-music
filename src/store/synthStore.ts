@@ -20,7 +20,6 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
-import { filterMap } from '../functions/filterMap';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -189,7 +188,20 @@ export const useSynthStore = defineStore("synthesizers", () => {
             params: synth.params,
         })
 
-        synth.enable();
+        // to reduce traffic
+        if (synth.needsFetching) {
+            console.log("synth needs fetching");
+            if (exclusives.enabled) {
+                synth.enable();
+            } else {
+                setTimeout(() => {
+                    synth.enable();
+                }, 5000);
+            }
+        } else {
+            synth.enable();
+        }
+
         if ('output' in synth) {
             synth.output.connect(effectsStore.myInput);
             console.log("connecting ", synth.name, "to effects store input");
@@ -214,7 +226,6 @@ export const useSynthStore = defineStore("synthesizers", () => {
 
     const synthSelector = (synthChannel: SynthChannel): OptionSynthParam => ({
         type: ParamType.option,
-        displayName: "Synth",
         getValue(synthChannel: SynthChannel) {
             const ret = synthChannel.synth ? availableSynths.value.indexOf(
                 synthChannel.synth

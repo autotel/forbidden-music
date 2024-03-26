@@ -401,6 +401,7 @@ export class GranularSampler extends Synth {
     };
     loadingProgress = 0;
     credits: string = "";
+    needsFetching=true;
     name: string = "Granular Sampler";
     enable: () => void;
     disable: () => void;
@@ -430,10 +431,14 @@ export class GranularSampler extends Synth {
         } = createParameters(this);
 
         this.enable = () => {
+            if(this.isReady) return;
             sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();
                 this.loadingProgress += 1;
+                if(this.loadingProgress >= sampleSources.length) {
+                    this.isReady = true;
+                }
             });
         }
         this.disable = () => {

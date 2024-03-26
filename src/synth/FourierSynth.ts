@@ -134,6 +134,7 @@ export class FourierSynth extends Synth {
     name =  "Fourier Synth";
     enable = () => {
         this.updatePeriodicWave();
+        this.isReady = true;
     }
     disable = () => {}
     constructor(

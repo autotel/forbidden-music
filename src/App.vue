@@ -298,6 +298,8 @@ watch(paneWidth, () => {
     <UserDisclaimer />
     <TooltipDisplayer />
 </template>
+<style>
+</style>
 <style scoped>
 .unclickable {
     pointer-events: none;

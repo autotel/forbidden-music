@@ -1,4 +1,4 @@
-import { EffectInstance, SynthInstance, SynthParam } from "./super/SynthInterface";
+import { EffectInstance,  SynthParam } from "./super/SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 export class AutoMaximizerEffect implements EffectInstance {
     output: GainNode;

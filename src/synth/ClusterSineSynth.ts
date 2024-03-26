@@ -277,11 +277,13 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
             maximizer.connect(this.output);
+            this.isReady = true;
         }
         this.disable = () => {
             if (maximizer) {
                 maximizer.disconnect();
             }
+            this.isReady = false;
         }
         buildParams(this);
         this.params.push(this.panCorrParam);

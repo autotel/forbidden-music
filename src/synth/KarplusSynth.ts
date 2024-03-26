@@ -104,8 +104,6 @@ const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth):SynthVoic
 // in a different way than usual
 export class KarplusSynth extends Synth {
     engine?: AudioWorkletNode;
-    enable = () => { };
-    disable = () => { };
     constructor(audioContext: AudioContext) {
         super(audioContext, karplusVoice);
         this.output.gain.value = 0.5;
