@@ -1,5 +1,5 @@
 # Piano roll to-do
-	suspend tone snaps if h-constraint and vice-versa
+	create test to assert that v-constraints do not cause v modifications on notes when v movement is constrained off
 	layers are not getting deleted
     granular: velocity to sample start
 	granular: automate some params (rel. sample start)

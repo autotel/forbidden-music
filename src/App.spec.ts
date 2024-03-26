@@ -5,7 +5,7 @@ import App from './App.vue';
 import './style.css';
 import { useProjectStore } from './store/projectStore';
 import { useViewStore } from './store/viewStore';
-import { note } from './dataTypes/Note';
+import { Note, note } from './dataTypes/Note';
 import { start } from 'repl';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { disclaimer } from './texts/userDisclaimer';
@@ -405,6 +405,7 @@ describe('app', () => {
     }, generalInterval);
 
 
+
     it('enters modulation tool', async () => {
         if (!interactionTarget) throw new Error("interactionTarget is null");
         interactionTarget.dispatchEvent(new KeyboardEvent("keydown", {
@@ -413,6 +414,7 @@ describe('app', () => {
         }));
         expect(tool.current).toBe(Tool.Modulation);
     }, generalInterval);
+
     it('selects notes by area while on modulation tool', async () => {
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
@@ -450,6 +452,41 @@ describe('app', () => {
             bubbles: true,
         }));
         expect(tool.current).not.toBe(Tool.Select);
+    });
+
+    it('can constrain note dragging to be only horizontal', async () => {
+        const timeDiv = 4;
+        Object.keys(snap.values).forEach(key => {
+            snap.values[key].active = false;
+        });
+        project.clearScore();
+        const noteToInsert = note({
+            time: 0,
+            timeEnd: 2,
+            octave: 4.1,
+            layer: 0
+        })
+        project.appendNote(noteToInsert);
+        roboMouse.currentPosition = { x: 0, y: 0 };
+        expect(project.notes.length).toBe(1);
+        expect(project.notes[0].octave).toBeCloseTo(noteToInsert.octave);
+        tool.disallowOctaveChange = true;
+        // preparation ended, test the thing
+        const noteToDrag = project.notes[0];
+        const start = {
+            x: view.timeToPxWithOffset(noteToDrag.time),
+            y: view.octaveToPxWithOffset(noteToDrag.octave),
+        }
+        const end = {
+            x: view.timeToPxWithOffset(noteToDrag.time + 1),
+            y: view.octaveToPxWithOffset(noteToDrag.octave + 1),
+        }
+        await roboMouse.moveTo(start, 0);
+        roboMouse.mousedown();
+        await roboMouse.moveTo(end, generalInterval / timeDiv);
+        roboMouse.mouseup();
+        await wait(generalInterval / timeDiv);
+        expect(project.notes[0].octave).toEqual(noteToInsert.octave);
     });
 
 
