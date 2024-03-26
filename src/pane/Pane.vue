@@ -11,13 +11,13 @@ import LayersManager from './LayersManager.vue';
 import Physical from './Physical.vue';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 const playback = usePlaybackStore();
-const props = defineProps<{
+defineProps<{
     paneWidth: number
 }>()
 const exclusives = useExclusiveContentsStore();
 </script>
 <template>
-    <div class="drawers-container" :style="{ width: paneWidth + 'px' }">
+    <div class="right-pane" :style="{ width: paneWidth + 'px' }">
         <WorkingMemory startExpanded />
         <FileManager />
         <LayersManager v-if="exclusives.enabled" />
@@ -35,7 +35,7 @@ const exclusives = useExclusiveContentsStore();
 </template>
 
 <style scoped>
-.drawers-container {
+.right-pane {
     position: absolute;
     top: 0;
     right: 0;
@@ -45,6 +45,7 @@ const exclusives = useExclusiveContentsStore();
     transition: width 0.2s;
     overflow-y: auto;
     overflow-x: hidden;
+    padding: 0.3em;
 }
 </style>
 <style>

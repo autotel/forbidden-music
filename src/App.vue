@@ -9,6 +9,7 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
+import SkipBar from './components/SkipBar.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
 import { Tool } from './dataTypes/Tool';
@@ -133,6 +134,8 @@ const mouseDownListener = (e: MouseEvent) => {
         viewDragStartTime = view.timeOffset;
         viewDragStartY = e.clientY;
         viewDragStartOctave = view.octaveOffset;
+    } else if (e.button === 2) {
+        console.log("right button");
     } else {
         // left button
         tool.mouseDown(e);
@@ -255,6 +258,7 @@ watch(paneWidth, () => {
             <Transport />
             <!-- <Autotel /> -->
             <ToolSelector />
+            <SkipBar />
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
@@ -292,41 +296,8 @@ watch(paneWidth, () => {
         </div>
     </Modal>
     <UserDisclaimer />
-
     <TooltipDisplayer />
 </template>
-<style>
-.padded {
-    margin-left: 1em;
-    margin-right: 1em;
-}
-
-.form-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 1em;
-}
-
-.form-section {
-    margin: 1em;
-    font-weight: 600;
-}
-
-.form-row.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
-
-.full-width {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-#viewport {
-    user-select: none;
-}
-</style>
 <style scoped>
 .unclickable {
     pointer-events: none;

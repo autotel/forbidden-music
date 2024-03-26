@@ -12,7 +12,7 @@ const props = defineProps<{
 const tool = useToolStore();
 const body = ref<SVGRectElement>();
 const bodyMouseEnterListener = (e: MouseEvent) => {
-    if(!props.tooltip) return;
+    if (!props.tooltip) return;
     e.stopImmediatePropagation();
     if (body.value) {
         tool.tooltip = props.tooltip;
@@ -20,7 +20,7 @@ const bodyMouseEnterListener = (e: MouseEvent) => {
     }
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
-    if(tool.tooltipOwner !== body.value) return;
+    if (tool.tooltipOwner !== body.value) return;
     e.stopImmediatePropagation();
     tool.tooltip = '';
     tool.tooltipOwner = null;
@@ -41,37 +41,34 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
-    <rect 
-        ref="body"
-        :x="x"
-        :y="y"
-        rx="6"
-        ry="6"
-        :onClick="onClick"
-        width="20" 
-        height="20"     
-    />
-    <text 
-    
-        :x="x + 10"
-        :y="y + 10"
-        v-bind="$attrs" 
-        text-anchor="middle" 
-        dominant-baseline="middle"
-        
-    >
-            <slot />
+    <rect ref="body" :x="x" :y="y" rx="6" ry="6" :onClick="onClick" width="20" height="20" stroke="currentColor" />
+    <text :x="x + 10" :y="y + 10" v-bind="$attrs" text-anchor="middle" dominant-baseline="middle" fill="currentColor">
+        <slot />
     </text>
 </template>
 <style scoped>
-    rect {
-        fill: rgba(0, 0, 0, 0.041);
-        stroke: #0005;
-        cursor: pointer;
+rect {
+    fill: rgba(0, 0, 0, 0.041);
+    /* stroke: #0005; */
+    cursor: pointer;
+}
+
+text {
+    font-size: 20px;
+    /* fill: #0005; */
+    pointer-events: none;
+}
+
+rect:hover,
+text:hover {
+    fill: #ffffff86;
+}
+
+@media (prefers-color-scheme: dark) {
+
+    rect:hover,
+    text:hover {
+        fill: #00000086;
     }
-    text {
-        font-size: 20px;
-        fill: #0005;
-        pointer-events: none;
-    }
+}
 </style>

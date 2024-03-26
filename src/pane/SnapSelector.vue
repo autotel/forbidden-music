@@ -26,14 +26,14 @@ const relationFractionEditButtonHandler = (e: MouseEvent) => {
 const onlyWithNotesInTheSameLayerToggle = (e: MouseEvent) => {
   e.stopImmediatePropagation()
   snap.onlyWithNotesInTheSameLayer = !snap.onlyWithNotesInTheSameLayer
-  if(snap.onlyWithNotesInTheSameLayer) {
+  if (snap.onlyWithNotesInTheSameLayer) {
     snap.onlyWithNotesInDifferentLayer = false
   }
 }
 const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
   e.stopImmediatePropagation()
   snap.onlyWithNotesInDifferentLayer = !snap.onlyWithNotesInDifferentLayer
-  if(snap.onlyWithNotesInDifferentLayer) {
+  if (snap.onlyWithNotesInDifferentLayer) {
     snap.onlyWithNotesInTheSameLayer = false
   }
 }
@@ -41,9 +41,10 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
 </script>
 
 <template>
-  <Collapsible tooltip="Select which constraints to enforce when adding new notes. Hover each button for a small explanation">
+  <Collapsible
+    tooltip="Select which constraints to enforce when adding new notes. Hover each button for a small explanation">
     <template v-slot:icon>
-      <Magnet clas="icon"/>
+      <Magnet clas="icon" />
       Constraints
     </template>
     <Button v-for="(isnap, snapName) in snap.values" :onClick="() => isnap.active = !isnap.active" :class="{
@@ -57,34 +58,35 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
       {{ isnap.icon }}
       <template v-if="snapName === 'customFrequencyTable'">
         <ButtonSub :onClick="frequencyTableEditButtonHandler" tooltip="Edit custom frequencies table">
-          <Pen/>
+          <Pen />
         </ButtonSub>
       </template>
       <template v-else-if="snapName === 'hzRelationFraction' || snapName === 'timeFraction'">
-        <ButtonSub class="sub-button" :onClick="relationFractionEditButtonHandler" tooltip="define how much to round down">
-          <Pen/>
+        <ButtonSub class="sub-button" :onClick="relationFractionEditButtonHandler"
+          tooltip="define how much to round down">
+          <Pen />
         </ButtonSub>
       </template>
     </Button>
-    <Button :onClick="()=>snap.onlyWithMutednotes = !snap.onlyWithMutednotes"
-      :class="{active: snap.onlyWithMutednotes}" tooltip="only with muted notes. Use CTRL+M to mute a note">
+    <Button :onClick="() => snap.onlyWithMutednotes = !snap.onlyWithMutednotes" :class="{ active: snap.onlyWithMutednotes }"
+      tooltip="only with muted notes. Use CTRL+M to mute a note">
       Monly
     </Button>
-    <Button :onClick="()=>snap.onlyWithSimultaneousNotes = !snap.onlyWithSimultaneousNotes"
-      :class="{active: snap.onlyWithSimultaneousNotes}" tooltip="only with notes which overap in time">
+    <Button :onClick="() => snap.onlyWithSimultaneousNotes = !snap.onlyWithSimultaneousNotes"
+      :class="{ active: snap.onlyWithSimultaneousNotes }" tooltip="only with notes which overap in time">
       Simultaneous
     </Button>
-    <Button :onClick="()=>snap.onlyWithNotesInView = !snap.onlyWithNotesInView"
-      :class="{active: snap.onlyWithNotesInView}" tooltip="only with notes in the screen's range">
+    <Button :onClick="() => snap.onlyWithNotesInView = !snap.onlyWithNotesInView"
+      :class="{ active: snap.onlyWithNotesInView }" tooltip="only with notes in the screen's range">
       In view
     </Button>
     <template v-if="userSettings.layersEnabled">
-      <Button :onClick="onlyWithNotesInTheSameLayerToggle"
-        :class="{active: snap.onlyWithNotesInTheSameLayer}" tooltip="only with notes in the same layer">
+      <Button :onClick="onlyWithNotesInTheSameLayerToggle" :class="{ active: snap.onlyWithNotesInTheSameLayer }"
+        tooltip="only with notes in the same layer">
         == layer
       </Button>
-      <Button :onClick="onlyWithyNotesInDifferentLayerToggle"
-        :class="{active: snap.onlyWithNotesInDifferentLayer}" tooltip="only with notes in a different layer">
+      <Button :onClick="onlyWithyNotesInDifferentLayerToggle" :class="{ active: snap.onlyWithNotesInDifferentLayer }"
+        tooltip="only with notes in a different layer">
         != layer
       </Button>
     </template>
@@ -92,7 +94,6 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
 </template>
 
 <style scoped>
-
 .active {
   /* border-bottom: solid 4px;
   padding-bottom: 0; */
@@ -103,13 +104,14 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
   /* text-decoration: underline; */
 
 }
-button:not(.active,:hover) {
-  color: rgba(0,0,0,0.5);
+
+.button:not(.active, :hover) {
+  color: rgba(0, 0, 0, 0.5);
 }
+
 .time {
   background-color: rgb(0, 99, 145);
 }
-
 
 
 .time.active,
@@ -121,6 +123,7 @@ button:not(.active,:hover) {
 .tone {
   background-color: rgb(187, 153, 0);
 }
+
 .tone.active,
 .tone:hover,
 .tone.active:hover {
@@ -130,6 +133,7 @@ button:not(.active,:hover) {
 .toneRelation {
   background-color: rgb(199, 139, 61);
 }
+
 .toneRelation.active,
 .toneRelation:hover,
 .toneRelation.active:hover {
@@ -139,6 +143,7 @@ button:not(.active,:hover) {
 .toneRelationMulti {
   background-color: rgb(233, 150, 125);
 }
+
 .toneRelationMulti.active,
 .toneRelationMulti:hover,
 .toneRelationMulti.active:hover {
@@ -146,11 +151,19 @@ button:not(.active,:hover) {
 }
 
 
-button.highlight{
-  border:solid 2px rgb(255, 255, 255);
-  margin: -2px;
-  box-sizing: border-box;
+.button.highlight {
+  border-color: rgb(255, 255, 255);
   position: relative;
   z-index: 2;
+}
+
+@media (prefers-color-scheme: dark) {
+  button.active {
+    color: black;
+  }
+
+  .button:not(.active, :hover) {
+    color: rgba(255, 255, 255, 0.747);
+  }
 }
 </style>

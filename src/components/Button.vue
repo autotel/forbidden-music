@@ -30,7 +30,8 @@ const mouseLeave = (e: MouseEvent) => {
 </script>
 
 <template>
-    <button 
+    <button
+        class="button"
         @mouseenter="mouseEnter" 
         @mouseleave="mouseLeave" 
         @click="onClick" 
@@ -40,41 +41,3 @@ const mouseLeave = (e: MouseEvent) => {
         <slot></slot>
     </button>
 </template>
-
-<style scoped>
-button {
-    padding: 0.3em 0.6em;
-    border: none;
-    cursor: pointer;
-    background-color: rgb(241, 241, 241);
-    box-shadow: 0 0 0px rgba(0, 0, 0, 1);
-    transition: 0.1s ease-in-out;
-    transition-property: background-color, box-shadow;
-}
-
-button:hover {
-    background-color: rgb(214, 214, 214);
-    box-shadow: 0 0 7px rgba(0, 0, 0, 0.466);
-    position: relative;
-}
-
-button.active {
-    background-color: rgb(235, 210, 229);
-}
-
-button.active:hover {
-    background-color: rgb(179, 161, 174);
-}
-
-button.danger:hover {
-    background-color: rgb(255, 90, 49);
-}
-
-button.inline {
-    padding: 0;
-    margin: 0;
-    background-color: transparent;
-    display: inline-block;
-    position: relative;
-}
-</style>

@@ -53,14 +53,6 @@ const plusButtonClicked = (e: MouseEvent) => {
     applyValueDelta(UpOrDown.Up);
 }
 
-const mouseDown = (e: MouseEvent) => {
-
-    e.stopPropagation();
-    e.preventDefault();
-
-    applyValueDelta(UpOrDown.Up);
-}
-
 onMounted(() => {
     const selectedOption = props.param.value;
     currentValueName.value = props.param.options[selectedOption]?.displayName;

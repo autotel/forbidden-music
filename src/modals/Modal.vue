@@ -46,7 +46,7 @@ onMounted(() => {
     height: 100vh;
     background-color: rgba(11, 0, 36, 0.205);
     z-index: 9;
-
+    backdrop-filter: blur(1px);
 }
 
 .modal-text-display {
@@ -82,5 +82,12 @@ onMounted(() => {
     position: absolute;
     bottom: 1em;
     right: 1em;
+}
+
+
+@media (prefers-color-scheme: dark) {
+    .modal-text-display {
+        background-color: rgb(75, 75, 75);
+    }
 }
 </style>

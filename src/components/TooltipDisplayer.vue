@@ -96,4 +96,12 @@ watch(() => tool.tooltipOwner, () => {
 .container.hidden {
     opacity: 0;
 }
+
+@media (prefers-color-scheme: dark) {
+    .container {
+        background-color: rgba(36, 44, 53, 0.712);
+        color: #fcfafc;
+    }
+
+}
 </style>

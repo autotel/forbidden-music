@@ -7,16 +7,6 @@ import Button from './Button.vue';
 const view = useViewStore();
 const playback = usePlaybackStore();
 const bpmSetter = ref<HTMLInputElement>();
-const barSkip = (e: MouseEvent) => {
-    if(e.buttons===1){
-        const leftPx = e.offsetX;
-        const time = view.pxToTimeWithOffset(leftPx);
-        playback.currentScoreTime = time;
-        playback.timeReturnPoint = time;
-        playback.resetLoopRepetitions();
-    }
-}
-
 const preventWheelPropagation = (e: WheelEvent) => {
     e.stopPropagation();
 }
@@ -32,10 +22,6 @@ onUnmounted(() => {
 
 <template>
     <div id="transport-controls">
-        <svg id="skip-bar" @mousedown="barSkip" @drag="barSkip" @mousemove="barSkip">
-            <line stroke-width="5" :x1="playback.playbarPxPosition" y1="0"
-                :x2="playback.playbarPxPosition" y2="20" />
-        </svg>
         <template v-if="playback.stopped || playback.paused">
             <Button :onClick="playback.play">
                 <!-- play svg -->
@@ -69,7 +55,7 @@ onUnmounted(() => {
             tooltip="Follow playback: Keep moving the view to keep the current notes time at the center"
         >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <text x="0" y="15" font-size="24px" baseline-shift="-8" >
+                <text x="0" y="19" font-size="24px"  >
                     ⇹
                 </text>
             </svg>
@@ -92,22 +78,12 @@ onUnmounted(() => {
     box-sizing: border-box;
 }
 
-#skip-bar {
-    position: fixed;
-    left: 0px;
-    top: 0px;
-    width: 100%;
-    height: 1.5em;
-    background: linear-gradient(#0000, #0005);
-    cursor: pointer;
-}
-
 #bpm {
     margin: 1px 1px;
     padding: 0.3em 0.6em;
     border: none;
     cursor: pointer;
-    background-color: rgb(241, 241, 241);
+    /* background-color: rgb(241, 241, 241); */
     border: none;
     font-family: monospace;
     display: inline-block;

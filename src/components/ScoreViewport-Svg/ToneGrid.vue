@@ -12,27 +12,27 @@ const tool = useToolStore();
 watch([view, snap.values], () => {
     linePositionsPx.value = [];
     switch (tool.current) {
-        case Tool.Automation:{
+        case Tool.Automation: {
             const currentParameter = tool.laneBeingEdited?.targetParameter
-            if(currentParameter && 'max' in currentParameter && 'min' in currentParameter) {
+            if (currentParameter && 'max' in currentParameter && 'min' in currentParameter) {
                 const mmx = {
-                    max:currentParameter.max,
-                    min:currentParameter.min,
+                    max: currentParameter.max,
+                    min: currentParameter.min,
                 };
                 const vs = [
-                    paramRangeToAutomationRange(0,mmx),
-                    paramRangeToAutomationRange(1,mmx),
-                    paramRangeToAutomationRange(-1,mmx),
-                    paramRangeToAutomationRange(10,mmx),
-                    paramRangeToAutomationRange(-10,mmx),
+                    paramRangeToAutomationRange(0, mmx),
+                    paramRangeToAutomationRange(1, mmx),
+                    paramRangeToAutomationRange(-1, mmx),
+                    paramRangeToAutomationRange(10, mmx),
+                    paramRangeToAutomationRange(-10, mmx),
                 ];
                 linePositionsPx.value.push(
                     ...vs.map(view.valueToPxWithOffset)
                 )
             }
             break;
-       } 
-       default:
+        }
+        default:
             if (snap.values['customFrequencyTable']?.active) {
                 // display one line per frequency in the tableä
                 const octaves = snap.customOctavesTable;
@@ -79,5 +79,11 @@ onMounted(() => {
     /* stroke: #250909; */
     stroke-width: 1px;
     /* stroke-dasharray: 3px */
+}
+
+@media (prefers-color-scheme: dark) {
+    .grid-line {
+        stroke: #e0e0e031;
+    }
 }
 </style>
