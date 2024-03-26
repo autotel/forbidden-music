@@ -91,6 +91,9 @@ watch(() => tool.tooltipOwner, () => {
     padding: 0.5em 1em;
     border: solid 1px;
     border-radius: 5px;
+    box-sizing: content-box;
+
+    backdrop-filter: blur(2px);
 }
 
 .container.hidden {
