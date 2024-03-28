@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { UserConfig, defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
@@ -40,4 +40,4 @@ export default defineConfig(async () => ({
       name: 'chrome',
     },
   }
-}));
+} as UserConfig));

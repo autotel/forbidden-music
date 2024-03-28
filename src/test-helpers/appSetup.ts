@@ -3,8 +3,8 @@ import { promisify } from 'util';
 import { expect, it } from 'vitest';
 import { createApp } from 'vue';
 import { note } from '../dataTypes/Note';
-import App from '../src/App.vue';
-import '../src/style.css';
+import App from '../App.vue';
+import '../style.css';
 import { useProjectStore } from '../store/projectStore';
 import { useSelectStore } from '../store/selectStore';
 import { useSnapStore } from '../store/snapStore';
@@ -15,7 +15,7 @@ import { TestRuntime } from './testRuntime';
 import { RoboMouse, wait } from './utils';
 export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) => {
 
-
+    console.log("appMount");
 
     localStorage.clear();
 
@@ -110,10 +110,10 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         const disclaimerFoundAfterClick = containerDiv.querySelector("#start-disclaimer");
         expect(disclaimerFoundAfterClick).toBeNull();
 
-        if(interactionTarget === null){
+        if (interactionTarget === null) {
             throw new Error("interactionTarget is null");
         }
-        
+
         ready(null, {
             ...preRuntime,
             interactionTarget

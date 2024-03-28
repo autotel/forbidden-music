@@ -8,7 +8,7 @@ import { appCleanup } from './test-helpers/appCleanup';
 let generalInterval = 500;
 
 
-describe('app', async () => {
+describe('app modulation mode', async () => {
 
     const testRuntime = await appMount();
 
