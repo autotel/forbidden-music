@@ -71,6 +71,13 @@ export class RoboMouse {
             bubbles: true,
         }));
     }
+    click = () => {
+        this.eventTarget.dispatchEvent(new MouseEvent("click", {
+            clientX: this.currentPosition.x,
+            clientY: this.currentPosition.y,
+            bubbles: true,
+        }));
+    }
     constructor(eventTarget: HTMLElement) {
         this.eventTarget = eventTarget;
     }

@@ -21,6 +21,15 @@ describe('app basic editing tools', async () => {
         toolStore,
         app,
     } = testRuntime;
+
+
+    projectStore.notes.push(note({
+        time: 2,
+        timeEnd: 4,
+        octave: 4,
+        layer: 0
+    }));
+    
     it('creates a note by clicking and dragging', async () => {
         const timeDiv = 7;
         const targetNoteDef = {

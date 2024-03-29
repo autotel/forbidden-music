@@ -22,6 +22,12 @@ describe('app horizontal and vertical constrained edits', async () => {
         app,
     } = testRuntime;
 
+        projectStore.notes.push(note({
+            time: 2,
+            timeEnd: 4,
+            octave: 4,
+            layer: 0
+        }));
 
     it('can constrain note dragging to be only horizontal', async () => {
         const timeDiv = 4;

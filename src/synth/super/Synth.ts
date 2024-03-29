@@ -7,7 +7,7 @@ interface SynthBase {
     params: SynthParam[];
     isReady: boolean;
     /** indicates whether this synth needs to fetch something from server, thus incurring in costs */
-    needsFetching?: true;
+    needsFetching?: boolean;
     transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
     scheduleStart: (
         frequency: number,

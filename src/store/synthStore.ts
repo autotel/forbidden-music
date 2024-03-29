@@ -60,14 +60,12 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
         ) {
             if (sampleDefinition.exclusive && includeExclusives) {
                 samplers.push(newInstance);
-            }
-            if (sampleDefinition.onlyLocal && isDev()) {
+            }else if (sampleDefinition.onlyLocal && isDev()) {
                 samplers.push(newInstance);
             }
         } else {
             samplers.push(newInstance);
         }
-
 
     });
 
