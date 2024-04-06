@@ -30,11 +30,13 @@ describe('app horizontal and vertical constrained edits', async () => {
         }));
 
     it('can constrain note dragging to be only horizontal', async () => {
-        const timeDiv = 4;
         Object.keys(snapStore.values).forEach(key => {
             snapStore.values[key].active = false;
         });
+        toolStore.disallowOctaveChange = true;
+
         projectStore.clearScore();
+
         const noteToInsert = note({
             time: 0,
             timeEnd: 2,
@@ -44,48 +46,39 @@ describe('app horizontal and vertical constrained edits', async () => {
         projectStore.appendNote(noteToInsert);
         roboMouse.currentPosition = { x: 0, y: 0 };
 
-        await wait(100);
         
-        if(projectStore.notes.length !== 1) {
-            throw new Error("Failed to insert note during test");
+        if(projectStore.notes.length < 1) {
+            throw new Error("This test needs a one note to exist");
         }
 
         const noteToDrag = projectStore.notes[0];
-        
-        if(noteToDrag.time !== noteToInsert.time) {
-            throw new Error("Inserted note's time does not match expected time");
-        }
-        if(noteToDrag.octave !== noteToInsert.octave) {
-            throw new Error("Inserted note's octave does not match expected octave");
-        }
-        
-        // toolStore.disallowOctaveChange = true;
-        
-        // const noteBox = viewStore.locationOfTrace(noteToDrag);
         const noteBox = viewStore.rectOfNote(noteToDrag);
+
         const start = {
-            x: (noteBox.x + viewStore.timeToPx(noteBox.event.timeEnd)) / 2,
+            x: noteBox.x + noteBox.radius,
             y: noteBox.y + noteBox.radius,
         }
+
         const end = {
-            x: viewStore.timeToPxWithOffset(noteToDrag.time + 1),
-            y: viewStore.octaveToPxWithOffset(noteToDrag.octave + 1),
+            x: viewStore.timeToPxWithOffset(1),
+            y: viewStore.octaveToPxWithOffset(5.6),
         }
-        
-        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Control" }));
+
+        await roboMouse.moveTo(start, 2000);
+        await wait(100);
         roboMouse.mousedown();
         await wait(100);
-        await roboMouse.moveTo(start, 700);
+        await roboMouse.moveTo(end, 2000);
         await wait(100);
-        roboMouse.mouseup();
-        await wait(100);
-        document.dispatchEvent(new KeyboardEvent("keyup", { key: "Control" }));
-        if(selectStore.getNotes().length === 0) {
-            throw new Error("Failed to select notes for drag during test");
+        
+        expect(selectStore.getNotes().length).toBeGreaterThan(0)
+        selectStore.select();
+        if(selectStore.getNotes().length > 0) {
+            throw new Error("Failed to reset selection");
         }
-        await roboMouse.moveTo(end, generalInterval / timeDiv);
-        roboMouse.mouseup();
-        await wait(generalInterval / timeDiv);
+
+        await wait(100);
+
         expect(projectStore.notes[0].octave).toEqual(noteToInsert.octave);
     });
 

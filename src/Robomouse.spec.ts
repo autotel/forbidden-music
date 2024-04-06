@@ -39,7 +39,7 @@ describe('robomouse', async () => {
         
         const noteBox = viewStore.rectOfNote(noteToDrag);
         const start = {
-            x: (noteBox.x + viewStore.timeToPx(noteBox.event.timeEnd)) / 2,
+            x: noteBox.x + noteBox.radius,
             y: noteBox.y + noteBox.radius,
         }
 

@@ -5,6 +5,7 @@ import './style.css';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
 import { appCleanup } from './test-helpers/appCleanup';
+import { MouseDownActions } from './store/toolStore';
 let generalInterval = 500;
 
 
@@ -63,17 +64,18 @@ describe('app basic editing tools', async () => {
         const noteToDrag = projectStore.notes[0];
         
         const noteBox = viewStore.rectOfNote(noteToDrag);
+
         const start = {
-            x: (noteBox.x + viewStore.timeToPx(noteBox.event.timeEnd)) / 2,
+            x: noteBox.x + noteBox.radius,
             y: noteBox.y + noteBox.radius,
         }
 
-        await roboMouse.moveTo(start, 700);
+        await roboMouse.moveTo(start, 200);
         await wait(100);
-        roboMouse.mousedown();
+        roboMouse.click();
         await wait(100);
-        roboMouse.mouseup();
-        await roboMouse.moveTo({x:0,y:0}, 700);
+        await roboMouse.moveTo({x:0,y:0}, 200);
+
         expect(selectStore.getNotes().length).toBeGreaterThan(0)
         selectStore.select();
         if(selectStore.getNotes().length > 0) {

@@ -60,6 +60,7 @@ export class RoboMouse {
     lastEnteredElement: Element | null = null;
     eventTarget: HTMLElement | null = null;
     inTween = false;
+    displayIcon: HTMLElement;
     moveTo = (
         to: { x: number, y: number },
         duration: number
@@ -72,6 +73,12 @@ export class RoboMouse {
             y: to.y - from.y
         };
 
+        if (!this.eventTarget) throw new Error("eventTarget is " + this.eventTarget);
+        
+        if(to.x > this.eventTarget.clientWidth || to.y > this.eventTarget.clientHeight) {
+            console.warn("mouse target coordinates are outside of eventTarget");
+        }
+        
         const tween = tweener(0, 1, duration, (value) => {
 
             if (!this.eventTarget) throw new Error("eventTarget is " + this.eventTarget);
@@ -83,9 +90,11 @@ export class RoboMouse {
             const hoveredElement = document.elementFromPoint(x, y);
 
             evt(this.eventTarget, "mousemove", { x, y });
+            this.displayIcon.style.left = x + "px";
+            this.displayIcon.style.top = y + "px";
 
             if (hoveredElement !== this.lastEnteredElement) {
-                console.log("entering", hoveredElement, "leaving", this.lastEnteredElement);
+                // console.log("entering", hoveredElement, "leaving", this.lastEnteredElement);
                 this.lastEnteredElement ? mouseLeft(this.lastEnteredElement, { x, y }) : null;
                 hoveredElement ? mouseEntered(hoveredElement, { x, y }) : null;
                 this.lastEnteredElement = hoveredElement;
@@ -117,6 +126,16 @@ export class RoboMouse {
         evt(this.eventTarget, "click", this.currentPosition);
     }
     constructor() {
+        this.displayIcon = document.createElement("div");
+        this.displayIcon.style.position = "fixed";
+        this.displayIcon.style.width = "10px";
+        this.displayIcon.style.height = "10px";
+        this.displayIcon.style.backgroundColor = "white";
+        this.displayIcon.style.borderTop = "1px solid black";
+        this.displayIcon.style.borderLeft = "1px solid black";
+        this.displayIcon.style.zIndex = "9";
+        this.displayIcon.style.pointerEvents = "none";
+        document.body.appendChild(this.displayIcon);
     }
 }
 
