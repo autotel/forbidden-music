@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { Trace, TraceType } from '../../dataTypes/Trace';
+import { Tool } from '../../dataTypes/Tool';
+import { TraceType } from '../../dataTypes/Trace';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useToolStore } from '../../store/toolStore';
 import { useViewStore } from '../../store/viewStore';
+import AutomationCircle from './AutomationCircle.vue';
 import LoopRangeElement from './LoopRangeElement.vue';
 import TimeGrid from './MusicTimeGrid.vue';
 import NoteElement from './NoteElement.vue';
 import RangeSelection from './RangeSelection.vue';
 import ToneGrid from './ToneGrid.vue';
 import ToneRelation from './ToneRelation.vue';
-import AutomationCircle from './AutomationCircle.vue';
-import { Tool } from '../../dataTypes/Tool';
-import { AutomationLane } from '../../dataTypes/AutomationLane';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -97,6 +96,9 @@ onBeforeUnmount(() => {
     </svg>
 </template>
 <style>
+#tone-relations {
+    pointer-events: none;
+}
 svg#viewport {
     width: 100%;
     height: 100%;
@@ -109,6 +111,12 @@ svg#viewport.cursor-note-length {
 
 svg #playbar {
     stroke: rgb(95, 0, 0);
+}
+@media (prefers-color-scheme: dark) {
+        
+    svg #playbar {
+        stroke: rgba(193, 167, 223, 0.479);
+    }
 }
 
 svg#viewport.cursor-draw {
@@ -134,6 +142,13 @@ svg#viewport {
     border: 1px solid rgb(230, 223, 215);
 }
 
+@media (prefers-color-scheme: dark) {
+    
+    svg#viewport {
+        border: 1px solid rgba(230, 223, 215, 0.527);
+    }
+
+}
 g#notes-being-created rect.body {
     fill: transparent;
 }

@@ -16,6 +16,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
     const showFPS = ref(false);
     const fontSize = ref(12);
     const octaveToTimeRatio = ref(2.8);
+    const showHarp = ref(false);
     // polyphony cannot be undertood or used without layers thus far
     const _multiTimbralityEnabled = ref(false);
     const multiTimbralityEnabled = computed<boolean>({
@@ -26,7 +27,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
             _multiTimbralityEnabled.value = value;
         }
     });
-    const effectsEnabled = ref(true);
+    const effectsEnabled = ref(false);
     const _layersEnabled = ref(false);
     const layersEnabled = computed<boolean>({
         get() {
@@ -52,6 +53,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         physicalEnabled.value = false;
         octaveToTimeRatio.value = 2.8;
         effectsEnabled.value = false;
+        showHarp.value = false;
     }
 
     onMounted(() => {
@@ -69,6 +71,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 physicalEnabled.value = parsed.physicalEnabled;
                 octaveToTimeRatio.value = parsed.octaveToTimeRatio || 2.8;
                 effectsEnabled.value = parsed.effectsEnabled || false;
+                showHarp.value = parsed.showHarp || false;
             }
         } catch (e) {
             console.error('could not recall user performance settings', e);
@@ -88,6 +91,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 physicalEnabled: physicalEnabled.value,
                 octaveToTimeRatio: octaveToTimeRatio.value,
                 effectsEnabled: effectsEnabled.value,
+                showHarp: showHarp.value,
             }));
             console.log('saved user performance settings');
         });
@@ -113,5 +117,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         performanceSettingsEnabled,
         physicalEnabled,
         octaveToTimeRatio,
+        showHarp,
     }
 });

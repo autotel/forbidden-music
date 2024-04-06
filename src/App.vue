@@ -5,6 +5,7 @@ import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
 import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportSvg from './components/ScoreViewport-Svg/ScoreViewport.vue';
+import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
@@ -12,22 +13,24 @@ import Transport from './components/Transport.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
 import { Tool } from './dataTypes/Tool';
+import { keyBindingsListener } from './functions/keyBindingsListener';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
 import Modal from './modals/Modal.vue';
 import UserDisclaimer from './modals/UserDisclaimer.vue';
+import Harp from './overlays/Harp.vue';
 import Pane from './pane/Pane.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
+import { useHistoryStore } from './store/historyStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
+import onePerRuntimeStore from './store/onePerRuntimeStore';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
-import { useHistoryStore } from './store/historyStore';
 import { useViewStore } from './store/viewStore';
-import { keyBindingsListener } from './functions/keyBindingsListener';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -133,6 +136,8 @@ const mouseDownListener = (e: MouseEvent) => {
         viewDragStartTime = view.timeOffset;
         viewDragStartY = e.clientY;
         viewDragStartOctave = view.octaveOffset;
+    } else if (e.button === 2) {
+        console.log("right button");
     } else {
         // left button
         tool.mouseDown(e);
@@ -163,11 +168,12 @@ const keyDownListener = (e: KeyboardEvent) => {
 
 const tryLoadStart = async () => {
     try {
-        console.log("loading project");
+        console.log("loading project " + project.name);
         libraryStore.loadFromLibraryItem(project.name);
     } catch (e) {
-        console.log("no default project found", e);
-        project.loadEmptyProjectDefinition();
+        console.log("problem loading default project:", e);
+        // project.loadEmptyProjectDefinition();
+        project.loadDemoProjectDefinition();
     }
 }
 
@@ -226,6 +232,39 @@ const viewportSize = ref({ width: 0, height: 0 });
 watch(paneWidth, () => {
     resize();
 })
+
+const oncePerRuntime = onePerRuntimeStore();
+if (!oncePerRuntime.keyExists("testmouse")) {
+    oncePerRuntime.add("testmouse", () => { });
+    console.log("mouse test");
+    let prevUnder = null as Element | null;
+    window.addEventListener("mousemove", (e) => {
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        if (under !== prevUnder) {
+            console.log(under);
+            prevUnder = under;
+        }
+    })
+
+    // const frame = (t: number) => {
+    //     console.log("f");
+    //     const x = Math.cos(t / 700) * 200 + window.innerWidth / 2
+    //     const y = Math.sin(t / 700) * 200 + window.innerHeight / 2
+    //     document.dispatchEvent(new MouseEvent("mousemove", {
+    //         clientX: x,
+    //         clientY: y,
+    //         bubbles: true,
+    //     }));
+    //     prevUnder?.dispatchEvent(new MouseEvent("mousemove", {
+    //         clientX: x,
+    //         clientY: y,
+    //         bubbles: true,
+    //     }));
+    //     requestAnimationFrame(frame)
+    // }
+    // requestAnimationFrame(frame)
+};
+
 </script>
 <template>
     <div id="app-container" oncontextmenu="return false;">
@@ -254,6 +293,13 @@ watch(paneWidth, () => {
             <Transport />
             <!-- <Autotel /> -->
             <ToolSelector />
+            <SkipBar />
+        </div>
+
+        <div style="position:absolute; left:0px; top:0">
+            <template v-if="userSettings.showHarp">
+                <Harp />
+            </template>
         </div>
     </div>
     <Modal name="credits modal" :onClose="() => modalText = ''">
@@ -273,59 +319,27 @@ watch(paneWidth, () => {
             <p> examples: </p>
             <ul>
                 <li v-for="fr in [
-                            1 / 2,
-                            2 / 3,
-                            3 / 4,
-                            4 / 5,
-                            5 / 6,
-                            6 / 7,
-                            7 / 8,
-                            8 / 9,
-                            9 / 10
-                        ]">
+                    1 / 2,
+                    2 / 3,
+                    3 / 4,
+                    4 / 5,
+                    5 / 6,
+                    6 / 7,
+                    7 / 8,
+                    8 / 9,
+                    9 / 10
+                ]">
                     {{ new Fraction(fr).toFraction() }} is rounded to {{
-                        new Fraction(fr).simplify(snap.simplify).toFraction()
-                    }}
+                new Fraction(fr).simplify(snap.simplify).toFraction()
+            }}
                 </li>
             </ul>
         </div>
     </Modal>
     <UserDisclaimer />
-
     <TooltipDisplayer />
 </template>
-<style>
-.padded {
-    margin-left: 1em;
-    margin-right: 1em;
-}
-
-.form-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 1em;
-}
-
-.form-section {
-    margin: 1em;
-    font-weight: 600;
-}
-
-.form-row.disabled {
-    opacity: 0.5;
-    pointer-events: none;
-}
-
-.full-width {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-#viewport {
-    user-select: none;
-}
-</style>
+<style></style>
 <style scoped>
 .unclickable {
     pointer-events: none;

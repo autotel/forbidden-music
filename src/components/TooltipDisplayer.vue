@@ -91,9 +91,20 @@ watch(() => tool.tooltipOwner, () => {
     padding: 0.5em 1em;
     border: solid 1px;
     border-radius: 5px;
+    box-sizing: content-box;
+
+    backdrop-filter: blur(2px);
 }
 
 .container.hidden {
     opacity: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .container {
+        background-color: rgba(36, 44, 53, 0.712);
+        color: #fcfafc;
+    }
+
 }
 </style>

@@ -75,7 +75,7 @@ const showButtons = computed(() => {
             :class="{
                 greyed: greyed
             }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
-        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="black"
+        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="currentColor"
             stroke-width="1" />
 
         <template v-if="!props.interactionDisabled && showButtons">

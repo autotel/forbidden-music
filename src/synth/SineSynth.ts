@@ -1,140 +1,107 @@
-import { SynthInstance, SynthParam } from "./SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
+import { EventParamsBase, SynthParam, SynthVoice } from "./super/SynthInterface";
+import { Synth } from "./super/Synth";
 
-export class SineVoice {
-    inUse: boolean = false;
-    triggerAttackRelease: (frequency: number, duration: number, relativeNoteStart: number, velocity: number) => void;
-    triggerPerc: (frequency: number, relativeNoteStart: number, velocity: number) => void;
-    stop: () => void;
-    outputNode: any;
-    constructor(audioContext: AudioContext) {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        this.outputNode = gainNode;
-        oscillator.connect(gainNode);
-        oscillator.start();
-
-        const releaseVoice = () => {
-            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-            // firefox has a bit of a hard time with this stuff
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.value = 0;
-            this.inUse = false;
-        }
-
-        this.triggerAttackRelease = (
-            frequency: number,
-            duration: number,
-            absoluteNoteStart: number,
-            velocity: number
-        ) => {
-            this.inUse = true;
-            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
-            gainNode.gain.setValueAtTime(0, absoluteNoteStart);
-            gainNode.gain.linearRampToValueAtTime(velocity, absoluteNoteStart + duration / 4);
-            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
-            oscillator.frequency.value = frequency;
-            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
-            setTimeout(() => {
-                releaseVoice();
-            }, duration * 1000);
-        };
-
-
-        this.triggerPerc = (
-            frequency: number,
-            absoluteNoteStart: number,
-            velocity: number
-        ) => {
-            this.inUse = true;
-            let duration = velocity * 2.8;
-            gainNode.gain.cancelScheduledValues(absoluteNoteStart);
-            gainNode.gain.setValueAtTime(velocity, absoluteNoteStart);
-            gainNode.gain.linearRampToValueAtTime(0, absoluteNoteStart + duration);
-            oscillator.frequency.setValueAtTime(frequency, absoluteNoteStart);
-            setTimeout(() => {
-                releaseVoice();
-            }, 3000);
-        }
-
-        this.stop = () => {
-            releaseVoice();
-        };
-    }
+type SineNoteParams = EventParamsBase & {
+    perc: boolean,
 }
 
+const sineVoice = (audioContext: AudioContext): SynthVoice => {
 
-export class SineSynth implements SynthInstance {
-    private audioContext: AudioContext;
-    private voices: SineVoice[] = [];
-    outputNode: GainNode;
-    credits: string = "";
-    name: string = "Sine";
-    enable: () => void;
-    disable: () => void;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    let noteStarted = 0;
+    let noteVelocity = 0;
+    oscillator.connect(gainNode);
+    oscillator.start();
+
+    return {
+        inUse: false,
+        output: gainNode,
+        scheduleStart(
+            frequency: number,
+            absoluteStartTime: number,
+            params: SineNoteParams
+        ) {
+            noteVelocity = params.velocity;
+            this.inUse = true;
+            gainNode.gain.cancelScheduledValues(absoluteStartTime);
+            // this synth is strange in the sense that the peak volume is 
+            // scheduled in relation to the note duration
+            gainNode.gain.setValueAtTime(0, absoluteStartTime);
+            oscillator.frequency.value = frequency;
+            oscillator.frequency.setValueAtTime(frequency, absoluteStartTime);
+            noteStarted = absoluteStartTime;
+            if (params.perc) {
+                gainNode.gain.setValueAtTime(
+                    noteVelocity, absoluteStartTime
+                );
+            }
+            return this;
+        },
+        scheduleEnd(absoluteEndTime: number) {
+            const noteDuration = absoluteEndTime - noteStarted;
+            gainNode.gain.cancelScheduledValues(absoluteEndTime);
+            gainNode.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
+            // firefox has a bit of a hard time with this stuff
+            gainNode.gain.linearRampToValueAtTime(0, absoluteEndTime);
+            setTimeout(() => {
+                gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                this.inUse = false;
+            }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
+            return this;
+        },
+        stop() {
+            const now = audioContext.currentTime;
+            this.scheduleEnd(now);
+        }
+    };
+
+}
+
+type SineVoice = ReturnType<typeof sineVoice>;
+
+export class SineSynth extends Synth<EventParamsBase, SineVoice> {
+    voices: SineVoice[] = [];
+    credits = "Simple sine synth by Autotel";
     constructor(
         audioContext: AudioContext,
-        name?: string,
-        credits?: string
     ) {
-        this.audioContext = audioContext;
-        this.voices.forEach((voice) => {
-            voice.outputNode.connect(this.outputNode);
-        });
-        if (credits) this.credits = credits;
-        if (name) this.name = name;
-
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.1;
-        
+        super(audioContext, sineVoice);
+        this.name = "Sine Synth";
+        this.output.gain.value = 0.1;
         let maximizer: AudioNode | undefined;
 
         this.enable = async () => {
-            if(!maximizer) {
-                // TODO: move maximizer to an fx, and remove it from here
+            if (!maximizer) {
+                // TODO: fix how FX work and move maximizer out of here
                 maximizer = await createMaximizerWorklet(audioContext);
             }
-            maximizer.connect(this.outputNode);
+            maximizer.connect(this.output);
+            this.isReady = true;
         }
         this.disable = () => {
             if (maximizer) {
                 maximizer.disconnect();
             }
+            this.isReady = false;
         }
 
+        this.schedulePerc = (
+            frequency,
+            absoluteStartTime,
+            noteParameters
+        ) => {
+            const voice = this.scheduleStart(
+                frequency,
+                absoluteStartTime,
+                { perc: true, ...noteParameters }
+            )
+            voice.scheduleEnd(absoluteStartTime + noteParameters.velocity);
+            return voice;
+        }
     }
-    triggerAttackRelease = (
-        frequency: number,
-        duration: number,
-        absoluteNoteStart: number,
-        velocity: number
-    ) => {
-        let voice = this.voices.find((voice) => {
-            return !voice.inUse;
-        });
-        if (!voice) {
-            const voiceIndex = this.voices.length;
-            this.voices.push(new SineVoice(this.audioContext));
-            voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
-
-        }
-        voice.triggerAttackRelease(frequency, duration, absoluteNoteStart, velocity);
-    };
-    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
-        let voice = this.voices.find((voice) => {
-            return !voice.inUse;
-        });
-        if (!voice) {
-            const voiceIndex = this.voices.length;
-            this.voices.push(new SineVoice(this.audioContext));
-            voice = this.voices[voiceIndex];
-            voice.outputNode.connect(this.outputNode);
-
-        }
-        voice.triggerPerc(frequency, absoluteNoteStart, velocity);
-
-    };
     releaseAll = () => {
         this.voices.forEach((voice) => {
             voice.stop();

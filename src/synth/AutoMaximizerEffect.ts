@@ -1,7 +1,7 @@
-import { EffectInstance, SynthInstance, SynthParam } from "./SynthInterface";
+import { EffectInstance,  SynthParam } from "./super/SynthInterface";
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 export class AutoMaximizerEffect implements EffectInstance {
-    outputNode: GainNode;
+    output: GainNode;
     inputNode: GainNode;
     name: string = "AutoMaximizer";
     enable: () => void;
@@ -11,9 +11,9 @@ export class AutoMaximizerEffect implements EffectInstance {
     ) {
         audioContext;
 
-        this.outputNode = audioContext.createGain();
+        this.output = audioContext.createGain();
         this.inputNode = audioContext.createGain();
-        this.inputNode.connect(this.outputNode);
+        this.inputNode.connect(this.output);
 
         let maximizer: AudioNode | undefined;
 
@@ -23,7 +23,7 @@ export class AutoMaximizerEffect implements EffectInstance {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
             this.inputNode.disconnect();
-            maximizer.connect(this.outputNode);
+            maximizer.connect(this.output);
             this.inputNode.connect(maximizer);
         }
         this.disable = () => {

@@ -31,4 +31,9 @@ onMounted(() => {
     stroke-width: 1px;
     stroke-dasharray: 3px
 }
+@media (prefers-color-scheme: dark) {
+    .grid-line {
+        stroke: #e0e0e031;
+    }
+}
 </style>

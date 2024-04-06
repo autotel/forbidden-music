@@ -1,4 +1,4 @@
-import LZUTF8 from 'lzutf8';
+import {compress,decompress} from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
@@ -7,14 +7,15 @@ import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
 import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
-import { SynthParam } from '../synth/SynthInterface';
+import { SynthParam, SynthParamStored } from '../synth/super/SynthInterface';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
-import { LIBRARY_VERSION, LibraryItem } from './libraryStore';
+import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
 import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { SynthChannel, useSynthStore } from './synthStore';
+import demoProject from './project-default';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",
@@ -68,13 +69,13 @@ export const useProjectStore = defineStore("current project", () => {
 
     const stringifyNotes = (notes: Note[], zip: boolean = false) => {
         let str = JSON.stringify(serializeNotes(notes));
-        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        if (zip) str = compress(str, { outputEncoding: "Base64" });
         return str;
     }
 
     const stringifyLoops = (loops: Loop[], zip: boolean = false) => {
         let str = JSON.stringify(serializeLoops(loops));
-        if (zip) str = LZUTF8.compress(str, { outputEncoding: "Base64" });
+        if (zip) str = compress(str, { outputEncoding: "Base64" });
         return str;
     }
 
@@ -82,7 +83,7 @@ export const useProjectStore = defineStore("current project", () => {
     const tryDecompressAndParseArray = <T>(str: string, testFn: ItmFilter<T>): T[] => {
         let json = str;
         try {
-            json = LZUTF8.decompress(str, { inputEncoding: "Base64" });
+            json = decompress(str, { inputEncoding: "Base64" });
         } catch (_e) {
             ifDev(() => console.log("cannot be decompressed"));
             return [];
@@ -161,10 +162,15 @@ export const useProjectStore = defineStore("current project", () => {
                 type: channel.synth.name,
                 params: channel.params.filter((param: SynthParam) => {
                     return param.exportable;
-                }).map((param: SynthParam) => ({
-                    displayName: param.displayName,
-                    value: param.value,
-                }))
+                }).map((param: SynthParam) => {
+                    const ret = {
+                        value: param.value,
+                    } as SynthParamStored
+                    if(param.displayName){
+                        ret.displayName = param.displayName;
+                    }
+                    return ret;
+                })
             }));
         }
         return ret;
@@ -189,7 +195,7 @@ export const useProjectStore = defineStore("current project", () => {
             if (!snaps.values[name]) return;
             snaps.values[name].active = activeState;
         });
-
+        layers.clear();
         pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
             const layer = layers.getOrMakeLayerWithIndex(index);
             layer.visible = visible;
@@ -309,11 +315,17 @@ export const useProjectStore = defineStore("current project", () => {
         setFromProjectDefinition(emptyProjectDefinition);
     }
 
+
+    const loadDemoProjectDefinition = () => {
+        setFromProjectDefinition(demoProject);
+    }
+
     return {
         notes, loops, lanes,
         append,
         sortLoops,
         loadEmptyProjectDefinition,
+        loadDemoProjectDefinition,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
         stringifyLoops, parseLoops,

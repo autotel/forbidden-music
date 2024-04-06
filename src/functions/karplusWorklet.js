@@ -600,7 +600,7 @@ class KarplusVoice extends Voice {
         this.delayLine1.feedback = liveParameters.delay_feedback;
         this.isBusy = true;
         this.engaged = true;
-        this.splsLeft = dur * samplingRate;
+        this.splsLeft = dur ? dur * samplingRate : Infinity;
         this.dcRemover.memory = 0;
         this.bleed = liveParameters.cross_feedback;
         this.filterWet = liveParameters.filter_wet;
@@ -778,7 +778,7 @@ class PoliManager {
   * @property {number} f frequency
   * @property {number} a amplitude or velocity
   * @property {number?} s length of the note
-  * @property {string} i identifier
+  * @property {number} i identifier
 */
 /**
  * @typedef {Object} KarplusParamsChangeMessage 
@@ -833,6 +833,7 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
         this.activeVoices = [];
         this.samples = [];
         this.totalSamples = 0;
+
         // @ts-ignore
         this.port.onmessage = ({ data }) => {
             if (data.stopall) {
@@ -848,10 +849,10 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
             }
             if (data.f) {
                 const freq = data.f;
-                const dur = data.s || 1;
+                const dur = data.s || 0;
                 const amp = data.a || 1;
                 const tVoice = this.polimanager.getVoice();
-
+                
                 if (data.i) {
                     this.activeVoices[data.i] = tVoice;
                 }

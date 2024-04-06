@@ -62,6 +62,7 @@ const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
                 :x="5 + focusedTraceRect.x"
                 :y="5 + (focusedTraceRect.y + relatedTraceLoc.y) / 2" 
                 font-size="13"
+                fill="currentColor"
                 v-if="!relatedTraceLoc.alreadyTexted"
             >
                 {{ relatedTraceLoc.text }}
@@ -101,5 +102,10 @@ const relatedTraceLocations = computed<(RelatedTraceDisp | undefined)[]>(() => {
     stroke: rgba(117, 37, 221, 0.884);
     stroke-width: 1;
     stroke-dasharray: 5, 5;
+}
+@media (prefers-color-scheme: dark) {
+    .relation {
+        stroke: rgb(196, 150, 255);
+    }
 }
 </style>

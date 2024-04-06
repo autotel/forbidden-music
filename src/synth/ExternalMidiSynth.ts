@@ -1,5 +1,6 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
-import { ParamType, SynthInstance, SynthParam, OptionSynthParam, ExternalSynthInstance } from './SynthInterface';
+import { ExternalSynthInterface } from './super/Synth';
+import { EventParamsBase, ParamType, SynthParam, SynthVoice } from './super/SynthInterface';
 
 
 //@ts-ignore
@@ -22,12 +23,60 @@ type HeldChannel = {
     identifier: any;
 }
 
-export class ExternalMidiSynth implements ExternalSynthInstance {
+const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
+    let triggerChannel = 0;
+    let noteOffMessage: number[] = [];
+    const midiOutput = synth.midiOutputs[synth.selectedMidiOutputIndex];
+    if (!midiOutput) throw new Error("no midi output");
+    
+    const ret = {
+        inUse: false,
+        scheduleStart(frequency: number, absoluteStartTime: number, noteParameters: EventParamsBase) {
+            const { velocity } = noteParameters;
+            const relativeNoteStart = absoluteStartTime - window.performance.now();
+            const { note, cents } = frequencyToMidiNote(frequency);
+            const channel = synth.getChannelAssignation(note)
+            console.log("triggering note", { note, cents, channel });
+            let channelNibble = channel & 0x0F;
+            const midiVelocity = Math.floor(velocity * 127);
+            const noteOnMessage = [0x90 | channelNibble, note, midiVelocity];
+            noteOffMessage = [0x80 | channelNibble, note, 0];
+            triggerChannel = channel;
+            // according to 
+            // https://sites.uci.edu/camp2014/2014/04/30/managing-midi-pitchbend-messages/
+            // pitch bend of 8192 means no pitch bend. Below that, it's negative pitch bend, and above, is positive.
+            // I don't know for sure whether the result is accurate
+            const midiPitchBendValue = Math.floor((cents / 100) * 8192 * pitchBendRangeOctaves + 8192);
+            const pitchBendMessage = [0xe0 | channelNibble, midiPitchBendValue & 0x7f, (midiPitchBendValue >> 7) & 0x7f];
+            midiOutput.send(pitchBendMessage);
+            midiOutput.send(noteOnMessage, relativeNoteStart); //omitting the timestamp means send immediately.
+            return this;
+        },
+        scheduleEnd(absoluteStopTime: number) {
+            // potential problem: note off migth get sent even if stopped all happened just before. 
+            midiOutput.send(noteOffMessage, absoluteStopTime);
+            setTimeout(() => {
+                synth.usedChannels[triggerChannel] = false;
+            }, absoluteStopTime * 1000);
+            return this;
+        },
+        stop() {
+            midiOutput.send(noteOffMessage);
+            synth.usedChannels[triggerChannel] = false;
+            return this;
+        }
+    }
+    return ret;
+}
+
+
+export class ExternalMidiSynth implements ExternalSynthInterface {
     constructor(audioContext: AudioContext) {
         this.updateParams();
 
     }
     name = "External midi Synth";
+    isReady = false;
     //@ts-ignore
     midiOutputs: MIDIOutput[] = [];
     selectedMidiOutputIndex = 0;
@@ -67,36 +116,19 @@ export class ExternalMidiSynth implements ExternalSynthInstance {
         }
     }
 
-    triggerAttackRelease = (frequency: number, duration: number, absoluteNoteStart: number, velocity: number) => {
-        const midiOutput = this.midiOutputs[this.selectedMidiOutputIndex];
-        
-        if (!midiOutput) return;
-        const relativeNoteStart = absoluteNoteStart - window.performance.now();
-        const { note, cents } = frequencyToMidiNote(frequency);
-        const channel = this.getChannelAssignation(note)
-        console.log("triggering note", { note, cents, channel });
-        let channelNibble = channel & 0x0F;
-        const midiVelocity = Math.floor(velocity * 127);
-        const noteOnMessage = [0x90 | channelNibble, note, midiVelocity];
-        const noteOffMessage = [0x80 | channelNibble, note, 0];
-        // according to 
-        // https://sites.uci.edu/camp2014/2014/04/30/managing-midi-pitchbend-messages/
-        // pitch bend of 8192 means no pitch bend. Below that, it's negative pitch bend, and above, is positive.
-        // I don't know for sure whether the result is accurate
-        const midiPitchBendValue = Math.floor((cents / 100) * 8192 * pitchBendRangeOctaves + 8192);
-        const pitchBendMessage = [0xe0 | channelNibble, midiPitchBendValue & 0x7f, (midiPitchBendValue >> 7) & 0x7f];
-        midiOutput.send(pitchBendMessage);
-        midiOutput.send(noteOnMessage, relativeNoteStart); //omitting the timestamp means send immediately.
-        // potential problem: note off migth get send even if stopped all happened just before. 
-        midiOutput.send(noteOffMessage, window.performance.now() + duration * 1000);
-        setTimeout(() => {
-            this.usedChannels[channel] = false;
-        }, duration * 1000);
+    scheduleStart = (frequency: number, absoluteStartTime: number, noteParameters: EventParamsBase) => {
+        const dummyVoice = createVoice(this);
+        dummyVoice.scheduleStart(frequency, absoluteStartTime, noteParameters);
+        return dummyVoice;
     };
-    triggerPerc = (frequency: number, relativeNoteStart: number, velocity: number) => {
-        this.triggerAttackRelease(frequency, 0.5, relativeNoteStart, velocity);
+    schedulePerc = (frequency: number, absoluteStartTime: number, noteParams: EventParamsBase) => {
+        const dummyVoice = createVoice(this);
+        const { velocity } = noteParams;
+        dummyVoice.scheduleStart(frequency, absoluteStartTime, { velocity });
+        dummyVoice.scheduleEnd(absoluteStartTime + velocity);
+        return dummyVoice;
     };
-    releaseAll = () => {
+    stop = () => {
         this.usedChannels.forEach((note, channel) => {
             if (note === false) return;
             const midiOutput = this.midiOutputs[this.selectedMidiOutputIndex];
@@ -183,6 +215,7 @@ export class ExternalMidiSynth implements ExternalSynthInstance {
             this.sendTestChord();
 
             this.updateParams();
+            this.isReady = true;
         })();
     }
     disable = () => { };

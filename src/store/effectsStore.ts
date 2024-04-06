@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ConvolutionReverbEffect } from "../synth/ConvolutionReverbEffect";
 import { AutoMaximizerEffect } from "../synth/AutoMaximizerEffect";
-import { EffectInstance } from "../synth/SynthInterface";
+import { EffectInstance } from "../synth/super/SynthInterface";
 import { usePlaybackStore } from "./playbackStore";
 import { useAudioContextStore } from "./audioContextStore";
 import { watch, watchEffect } from "vue";
@@ -19,7 +19,7 @@ export const useEffectsStore = defineStore('playback-effects', () => {
     const userSettingsStore = useCustomSettingsStore();
 
     const myInput = audioContextStore.audioContext.createGain();
-    const outputNode = audioContextStore.audioContext.destination;
+    const output = audioContextStore.audioContext.destination;
     const effectsChain = [] as admissibleEffectTypes[];
 
     const reconnectChain = () => {
@@ -28,9 +28,9 @@ export const useEffectsStore = defineStore('playback-effects', () => {
         for (let effect of effectsChain) {
             lastNode.disconnect();
             lastNode.connect(effect.inputNode);
-            lastNode = effect.outputNode;
+            lastNode = effect.output;
         }
-        lastNode.connect(outputNode);
+        lastNode.connect(output);
     }
 
     const addEffect = (effect: admissibleEffectTypes) => {

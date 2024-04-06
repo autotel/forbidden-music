@@ -1,6 +1,7 @@
 import { createFmWorklet } from '../functions/fmWorkletFactory';
 import { baseFrequency, frequencyToMidiNote, frequencyToNote12, frequencyToOctave } from '../functions/toneConverters';
-import { SynthInstance, SynthParam } from "./SynthInterface";
+import { Synth } from './super/Synth';
+import { EventParamsBase, SynthParam, SynthVoice } from "./super/SynthInterface";
 
 
 interface FmStopVoiceMessage {
@@ -25,25 +26,70 @@ interface FmParamsChangeMessage {
     impulseAttack?: number;
     delaysDetune?: number;
 }
-// TODO: make polyphonic
-export class FmSynth implements SynthInstance {
-    private audioContext?: AudioContext;
-    outputNode: GainNode;
-    engine?: AudioWorkletNode;
-    enable: () => void
-    disable: () => void
-    constructor(audioContext: AudioContext) {
-        this.outputNode = audioContext.createGain();
-        this.outputNode.gain.value = 0.6;
-        this.audioContext = audioContext;
-        createFmWorklet(audioContext).then((engine)=>{
-            this.engine = engine;
-            this.engine.connect(this.outputNode);
-        });
 
-        // TODO... or not
-        this.enable = () => { }
-        this.disable = () => { }
+const voiceFactory = ({ engine }: { engine: AudioWorkletNode }) => ({
+    inUse: false,
+    triggerStarted: 0,
+    triggeredVelocity: 0,
+    triggeredNote: 0,
+    currentReleaseTimeout: null as null | ReturnType<typeof setTimeout>,
+    scheduleStart(
+        frequency: number,
+        absoluteStartTime: number,
+        { velocity }: EventParamsBase
+    ) {
+        if (this.currentReleaseTimeout !== null) {
+            clearTimeout(this.currentReleaseTimeout);
+            this.currentReleaseTimeout = null;
+        }
+        this.inUse = true;
+        this.triggerStarted = absoluteStartTime;
+        this.triggeredVelocity = velocity;
+        const note = frequencyToNote12(frequency);
+        this.triggeredNote = note;
+        console.log("trig note", note);
+        // TODO: maybe use frequency directly, would need to edit the worklet
+        // TODO: schedule start, don't start right away
+        engine.port.postMessage({
+            noteOn: {
+                key: note,
+            }
+        });
+        return this;
+    },
+    scheduleEnd(absoluteStopTime: number) {
+        const duration = absoluteStopTime - this.triggerStarted;
+        this.currentReleaseTimeout = setTimeout(() => {
+            engine.port.postMessage({
+                noteOff: {
+                    key: frequencyToNote12(this.triggeredNote)
+                }
+            });
+            this.inUse = false;
+        }, duration * 1000);
+
+        return this;
+    },
+    stop() {
+        this.inUse = false;
+        return this;
+    }
+})
+// TODO: make polyphonic
+export class FmSynth extends Synth {
+    engine?: AudioWorkletNode;
+    constructor(audioContext: AudioContext) {
+        super(audioContext, () => {
+            if (!this.engine) throw new Error("No engine");
+            const engine = this.engine;
+            return voiceFactory({ engine })
+        });
+        this.output.gain.value = 0.6;
+        this.audioContext = audioContext;
+        createFmWorklet(audioContext).then((engine) => {
+            this.engine = engine;
+            this.engine.connect(this.output);
+        });
     }
     releaseAll = () => {
         console.log("stopping all notes");
@@ -51,38 +97,6 @@ export class FmSynth implements SynthInstance {
     };
 
     name = "Fm";
-    triggerAttackRelease = (
-        frequency: number,
-        duration: number,
-        absoluteNoteStart: number,
-        velocity: number
-    ) => {
-        if (!this.audioContext) throw new Error("audio context not created");
-        if (!this.engine) throw new Error("engine not created");
-        // const startTime = this.audioContext.currentTime + absoluteNoteStart;
-        const note = frequencyToNote12(frequency);
-        console.log("trig note", note);
-        // TODO: maybe use frequency directly, would need to edit the worklet
-        this.engine.port.postMessage({
-            noteOn: {
-                key: note,
-            }
-        });
-        setTimeout(() => {
-            if (!this.engine) throw new Error("engine not created");
-            this.engine.port.postMessage({
-                noteOff: {
-                    key: note,
-                }
-            });
-        }, duration * 1000);
-    };
-    triggerPerc = (frequency: number, absoluteNoteStart: number, velocity: number) => {
-        this.triggerAttackRelease(frequency, 0.7, absoluteNoteStart, velocity);
-    };
-
-
-    params = [] as SynthParam[];
     credits = `
     Worklet from https://github.com/kazssym/web-fm-sound
 

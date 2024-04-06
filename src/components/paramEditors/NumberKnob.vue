@@ -86,7 +86,7 @@ const mouseUp = (e: MouseEvent) => {
                     }"></div>
                 </div>
             </template>
-            <span class="text" style="{position: absolute; display:block; z-index: 2; height:100%}">
+            <span class="text" style="position: absolute; display:block; z-index: 2; height:100%">
                 {{ modelValue.toFixed(2) }}
             </span>
             <svg

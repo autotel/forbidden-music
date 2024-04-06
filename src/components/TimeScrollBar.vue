@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Store } from 'pinia';
 import { onMounted, ref } from 'vue'
 import { useViewStore } from '../store/viewStore';
 
@@ -7,7 +6,6 @@ import { useViewStore } from '../store/viewStore';
 const view = useViewStore();
 
 const hScrollBar = ref<HTMLDivElement>();
-// const resize = ref<HTMLDivElement>();
 
 onMounted(()=>{
     const $hScrollBar = hScrollBar.value;
@@ -33,21 +31,11 @@ onMounted(()=>{
         dragStartBounds = view.timeToBounds(view.timeOffset);
     });
 
-    // $resize.addEventListener('mousedown', (e) => {
-    //     e.stopImmediatePropagation();
-    //     isPanning = false;
-    //     isResizing = true;
-    //     dragStartX = e.clientX;
-    //     // dragStartOffset = view.timeOffset;
-    //     dragStartViewWidthTime = view.viewWidthTime;
-    // });
-
-
     window.addEventListener('mousemove', (e) => {
         if(!isPanning && !isResizing) return;
-        e.preventDefault();
         const delta = (e.clientX - dragStartX);
         if (isPanning) {
+            e.preventDefault();
             view.setTimeOffsetBounds(dragStartBounds + view.pxToBounds(delta));
             if (view.timeOffset < 0) {
                 view.timeOffset = 0;
@@ -56,6 +44,8 @@ onMounted(()=>{
                 view.timeOffset = view.scrollBound - view.viewWidthTime;
             }
         }else if(isResizing){
+            e.preventDefault();
+
             view.viewWidthTime = dragStartViewWidthTime 
                 + (view.pxToBounds(delta)) * view.viewWidthPx;
             if (view.viewWidthTime < 1) {

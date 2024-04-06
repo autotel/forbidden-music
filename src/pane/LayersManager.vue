@@ -52,7 +52,7 @@ const setSelectedNotesLayerToCurrent = () => {
                     <input type="number" step="1" style="width: 2em; overflow: hidden;" v-model="layer.channelSlot"/>
                 </Tooltip>
                 <span v-on:click="switchLayerVisibility(layerNo)">
-                <Eye v-if="layer.visible" />
+                <Eye v-if="layers.isVisible(layerNo)" />
                 <EyeNot v-else />
                 </span>
             </Button>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { OptionSynthParam } from '../../synth/SynthInterface';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { OptionSynthParam } from '../../synth/super/SynthInterface';
 import Tooltip from '../Tooltip.vue';
 
 const triangleLeft = '◀';
@@ -13,6 +13,12 @@ const props = defineProps({
     },
 });
 
+const readout = computed(() => {
+    if(props.param.displayName){
+        return props.param.displayName + ": " + currentValueName.value;
+    }
+    return currentValueName.value;
+});
 const currentValueName = ref("--");
 const dragging = ref(false);
 const minusButton = ref();
@@ -53,14 +59,6 @@ const plusButtonClicked = (e: MouseEvent) => {
     applyValueDelta(UpOrDown.Up);
 }
 
-const mouseDown = (e: MouseEvent) => {
-
-    e.stopPropagation();
-    e.preventDefault();
-
-    applyValueDelta(UpOrDown.Up);
-}
-
 onMounted(() => {
     const selectedOption = props.param.value;
     currentValueName.value = props.param.options[selectedOption]?.displayName;
@@ -77,8 +75,8 @@ watch(() => props.param.value, (newValue) => {
         <div class="sw-button" ref="minusButton" @click="minusButtonClicked">
             {{ triangleLeft }}
         </div>
-        <span style="{position: absolute; z-index: 2;}">
-            {{ props.param.displayName }}: {{ currentValueName }}
+        <span>
+            {{ readout }}
         </span>
         <div class="sw-button" ref="plusButton" @click="plusButtonClicked">
             {{ triangleRight }}

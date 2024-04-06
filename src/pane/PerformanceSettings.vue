@@ -13,7 +13,6 @@ import Collapsible from './Collapsible.vue';
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();
-const view = useViewStore();
 const tool = useToolStore();
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
@@ -54,6 +53,11 @@ const fullReset = () => {
 
             <div class="form-section">Advanced features</div>
 
+            <div v-if="isDev()" class="form-row">
+                <Toggle v-model="exclusives.enabled" />
+                <label>Exclusives mode</label>
+            </div>
+
             <div class="form-row">
                 <Toggle v-model="userSettings.midiInputEnabled" />
                 <label>MIDI Input</label>
@@ -82,6 +86,11 @@ const fullReset = () => {
             </div>
 
             <div class="form-row">
+                <Toggle v-model="userSettings.showHarp" />
+                <label>Harp overlay</label>
+            </div>
+
+            <div class="form-row">
                 <select v-model="userSettings.viewportTech">
                     <!-- <option :value="null">none</option> -->
                     <option v-for="(tech, k) in viewportTechs" :value="tech.value">{{ tech.name }}</option>
@@ -97,6 +106,8 @@ const fullReset = () => {
                 <Button @click="fullReset" tooltip="Reset locally stored settings to default values">
                     Full reset
                 </Button>
+
+                <label> Delete all settings, including projects </label>
             </div>
 
             <Button @click="userSettings.deleteSettings"

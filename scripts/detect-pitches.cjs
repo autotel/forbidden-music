@@ -2,27 +2,29 @@ const fs = require('fs')
 const WavDecoder = require('wav-decoder')
 const { YIN } = require('node-pitchfinder')
 const path = require('path')
+const scriptDir = "./"
+
+const samplesRelativetoSrc = 'audio';
+const samplesDir = path.join(scriptDir, "/public", samplesRelativetoSrc);
+const samplePacks = fs.readdirSync(samplesDir);
 
 // see below for option parameters.
 const detectPitch = YIN({ sampleRate: 44100 })
-const containerOfAll = path.resolve('/public/audio')
-//for each wav file in the directory
-const containers = fs.readdirSync(containerOfAll)
 
 
 
 /**
  * make sure that the script is being called from one dir up
  */
-if (!containers) {
+if (!samplePacks) {
     throw new Error("run this script from the root of the project");
 }
 
 
 let promises = [];
 
-containers.forEach(containerDir => {
-    const container = path.join(containerOfAll, containerDir)
+samplePacks.forEach(containerDir => {
+    const container = path.join(samplesDir, containerDir)
 
     //for each wav file in the directory
     const files = fs.readdirSync(container)
