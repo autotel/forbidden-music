@@ -128,8 +128,8 @@ interface SnapDefinition {
             EDOSsnap(31, targetOctave, toneSnap);
         }
         
-*/
-const snaps: { [key: string]: SnapDefinition } = {
+*///: { [key: string]: SnapDefinition } 
+const snaps= {
     customFrequencyTable: {
         description: "Snap to custom frequency table",
         icon: "Custom",
