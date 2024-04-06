@@ -233,38 +233,6 @@ watch(paneWidth, () => {
     resize();
 })
 
-const oncePerRuntime = onePerRuntimeStore();
-if (!oncePerRuntime.keyExists("testmouse")) {
-    oncePerRuntime.add("testmouse", () => { });
-    console.log("mouse test");
-    let prevUnder = null as Element | null;
-    window.addEventListener("mousemove", (e) => {
-        const under = document.elementFromPoint(e.clientX, e.clientY);
-        if (under !== prevUnder) {
-            console.log(under);
-            prevUnder = under;
-        }
-    })
-
-    // const frame = (t: number) => {
-    //     console.log("f");
-    //     const x = Math.cos(t / 700) * 200 + window.innerWidth / 2
-    //     const y = Math.sin(t / 700) * 200 + window.innerHeight / 2
-    //     document.dispatchEvent(new MouseEvent("mousemove", {
-    //         clientX: x,
-    //         clientY: y,
-    //         bubbles: true,
-    //     }));
-    //     prevUnder?.dispatchEvent(new MouseEvent("mousemove", {
-    //         clientX: x,
-    //         clientY: y,
-    //         bubbles: true,
-    //     }));
-    //     requestAnimationFrame(frame)
-    // }
-    // requestAnimationFrame(frame)
-};
-
 </script>
 <template>
     <div id="app-container" oncontextmenu="return false;">

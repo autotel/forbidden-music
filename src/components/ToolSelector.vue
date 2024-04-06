@@ -10,16 +10,16 @@ const {
 } = useHistoryStore();
 const k = (key: KeyActions) => getKeyCombinationString(key)[0] || '';
 const toggleOctaveConstrain = () => {
-  tool.disallowTimeChange = !tool.disallowTimeChange;
-  if (tool.disallowOctaveChange) {
-    tool.disallowOctaveChange = false;
+  tool.mouse.disallowTimeChange = !tool.mouse.disallowTimeChange;
+  if (tool.mouse.disallowOctaveChange) {
+    tool.mouse.disallowOctaveChange = false;
   }
 }
 
 const toggleTimeConstrain = () => {
-  tool.disallowOctaveChange = !tool.disallowOctaveChange;
-  if (tool.disallowTimeChange) {
-    tool.disallowTimeChange = false;
+  tool.mouse.disallowOctaveChange = !tool.mouse.disallowOctaveChange;
+  if (tool.mouse.disallowTimeChange) {
+    tool.mouse.disallowTimeChange = false;
   }
 }
 
@@ -67,12 +67,12 @@ const toggleSelectTool = () => {
     </Button>
     <div class="group">
       <label>Constrain</label>
-      <Button :tooltip="`prevent horizontal movement [${k(KeyActions.OnlyAllowVerticalMovement)}]`"
-        :active="tool.disallowTimeChange" :onClick="toggleOctaveConstrain">
+      <Button id="prevent-horizontal-movement" :tooltip="`prevent horizontal movement [${k(KeyActions.OnlyAllowVerticalMovement)}]`"
+        :active="tool.mouse.disallowTimeChange" :onClick="toggleOctaveConstrain">
         ↕
       </Button>
-      <Button :tooltip="`prevent vertical movement [${k(KeyActions.OnlyAllowHorizontalMovement)}]`"
-        :active="tool.disallowOctaveChange" :onClick="toggleTimeConstrain">
+      <Button id="prevent-vertical-movement" :tooltip="`prevent vertical movement [${k(KeyActions.OnlyAllowHorizontalMovement)}]`"
+        :active="tool.mouse.disallowOctaveChange" :onClick="toggleTimeConstrain">
         ↔
       </Button>
     </div>

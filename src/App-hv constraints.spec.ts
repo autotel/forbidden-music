@@ -22,18 +22,11 @@ describe('app horizontal and vertical constrained edits', async () => {
         app,
     } = testRuntime;
 
-        projectStore.notes.push(note({
-            time: 2,
-            timeEnd: 4,
-            octave: 4,
-            layer: 0
-        }));
-
     it('can constrain note dragging to be only horizontal', async () => {
         Object.values(snapStore.values).forEach(value => {
             value.active = false;
         });
-        toolStore.disallowOctaveChange = true;
+        toolStore.mouse.disallowOctaveChange = true;
 
         projectStore.clearScore();
 
@@ -46,8 +39,8 @@ describe('app horizontal and vertical constrained edits', async () => {
         projectStore.appendNote(note(noteToInsert));
         roboMouse.currentPosition = { x: 0, y: 0 };
 
-        
-        if(projectStore.notes.length < 1) {
+
+        if (projectStore.notes.length < 1) {
             throw new Error("This test needs a one note to exist");
         }
 
@@ -70,10 +63,10 @@ describe('app horizontal and vertical constrained edits', async () => {
         await wait(100);
         await roboMouse.moveTo(end, 100);
         await wait(100);
-        
+
         expect(selectStore.getNotes().length).toBeGreaterThan(0)
         selectStore.select();
-        if(selectStore.getNotes().length > 0) {
+        if (selectStore.getNotes().length > 0) {
             throw new Error("Failed to reset selection");
         }
 
@@ -87,7 +80,7 @@ describe('app horizontal and vertical constrained edits', async () => {
             value.active = false;
         });
         snapStore.values.equal1.active = true;
-        toolStore.disallowOctaveChange = true;
+        toolStore.mouse.disallowOctaveChange = true;
 
         projectStore.clearScore();
 
@@ -100,8 +93,8 @@ describe('app horizontal and vertical constrained edits', async () => {
         projectStore.appendNote(note(noteToInsert));
         roboMouse.currentPosition = { x: 0, y: 0 };
 
-        
-        if(projectStore.notes.length < 1) {
+
+        if (projectStore.notes.length < 1) {
             throw new Error("This test needs a one note to exist");
         }
 
@@ -118,17 +111,17 @@ describe('app horizontal and vertical constrained edits', async () => {
             y: viewStore.octaveToPxWithOffset(5.6),
         }
 
-        await roboMouse.moveTo(start, 2000);
+        await roboMouse.moveTo(start, 100);
         await wait(100);
         roboMouse.mousedown();
         await wait(100);
-        await roboMouse.moveTo(end, 2000);
+        await roboMouse.moveTo(end, 100);
         await wait(100);
         roboMouse.mouseup();
-        
+
         expect(selectStore.getNotes().length).toBeGreaterThan(0)
         selectStore.select();
-        if(selectStore.getNotes().length > 0) {
+        if (selectStore.getNotes().length > 0) {
             throw new Error("Failed to reset selection");
         }
 

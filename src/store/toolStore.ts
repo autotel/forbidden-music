@@ -1,6 +1,6 @@
 import { clamp, useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, defineCustomElement, reactive, ref, watch } from 'vue';
 import { AutomationLane } from '../dataTypes/AutomationLane';
 import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
@@ -43,6 +43,8 @@ interface ToolMouse {
         tracesWhenDragStarted: PolyfillTrace[],
         traceWhenDragStarted: PolyfillTrace | false,
     },
+    disallowOctaveChange: boolean,
+    disallowTimeChange: boolean,
     hovered?: {
         trace?: Trace,
         traceRightEdge?: Trace,
@@ -107,7 +109,7 @@ const mouseDuplicateTraces = ({
 }
 
 const mouseDragSelectedTraces = ({
-    drag
+    drag, disallowOctaveChange, disallowTimeChange
 }: ToolMouse, {
     view, snap, project
 }: Stores) => {
@@ -144,11 +146,14 @@ const mouseDragSelectedTraces = ({
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (!correlativeDragStartClone) throw new Error('no correlativeDragStartClone');
 
-        draggedTrace.time = timeDeltaAfterSnap + correlativeDragStartClone.time;
+        if(!disallowTimeChange) {
+            draggedTrace.time = timeDeltaAfterSnap + correlativeDragStartClone.time;
+        }
+
         if ('timeEnd' in draggedTrace) {
             draggedTrace.timeEnd = timeDeltaAfterSnap + correlativeDragStartClone.timeEnd;
         }
-        if ('octave' in draggedTrace) {
+        if ('octave' in draggedTrace && (!disallowOctaveChange)) {
             if (!('octave' in correlativeDragStartClone)) throw new Error('no octave in correlativeDragStartClone');
             draggedTrace.octave = octaveDeltaAfterSnap + correlativeDragStartClone.octave;
         }
@@ -288,8 +293,6 @@ export const useToolStore = defineStore("tool", () => {
     });
 
     const showReferenceKeyboard = ref(false)
-    const disallowOctaveChange = ref(false);
-    const disallowTimeChange = ref(false);
     const currentMouseStringHelper = ref("");
 
     let newLoopDragX = 0;
@@ -309,6 +312,8 @@ export const useToolStore = defineStore("tool", () => {
     let mouse: ToolMouse = reactive({
         tracesBeingCreated: [] as Trace[],
         currentAction: MouseDownActions.None,
+        disallowOctaveChange: false,
+        disallowTimeChange: false,
         pos: {
             x: 0,
             y: 0,
@@ -645,7 +650,7 @@ export const useToolStore = defineStore("tool", () => {
             sortedRange.velocity = velocitiesInOrder[0];
             sortedRange.velocityEnd = velocitiesInOrder[1];
         }
-        
+
         selection.selectRange(
             sortedRange,
             current.value === Tool.Edit || current.value === Tool.Modulation,
@@ -752,10 +757,10 @@ export const useToolStore = defineStore("tool", () => {
             refreshAndApplyRangeSelection(e);
         } else if (mouse.drag) {
             let localDelta = mouse.drag?.delta;
-            if (disallowOctaveChange.value && current.value !== Tool.Modulation) {
+            if (mouse.disallowOctaveChange && current.value !== Tool.Modulation) {
                 localDelta.y = 0;
             }
-            if (disallowTimeChange.value) {
+            if (mouse.disallowTimeChange) {
                 localDelta.x = 0;
             }
 
@@ -858,8 +863,6 @@ export const useToolStore = defineStore("tool", () => {
         current, currentLeftHand,
         simplify,
         copyOnDrag,
-        disallowOctaveChange,
-        disallowTimeChange,
         showReferenceKeyboard,
 
         selectRange,

@@ -36,7 +36,8 @@ const mouseLeave = (e: MouseEvent) => {
         @mouseleave="mouseLeave" 
         @click="onClick" 
         :class="{ active, danger, inline }"
-        :style="{ backgroundColor: active ? activeColor : '' }"    
+        :style="{ backgroundColor: active ? activeColor : '' }"
+        v-bind="$attrs"
     >
         <slot></slot>
     </button>

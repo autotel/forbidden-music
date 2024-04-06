@@ -155,11 +155,11 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             break;
         }
         case KeyActions.OnlyAllowHorizontalMovement: {
-            tool.disallowOctaveChange = !tool.disallowOctaveChange;
+            tool.mouse.disallowOctaveChange = !tool.mouse.disallowOctaveChange;
             break;
         }
         case KeyActions.OnlyAllowVerticalMovement: {
-            tool.disallowTimeChange = !tool.disallowTimeChange;
+            tool.mouse.disallowTimeChange = !tool.mouse.disallowTimeChange;
             break;
         }
         case KeyActions.Reboot: {
