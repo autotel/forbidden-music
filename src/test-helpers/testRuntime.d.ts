@@ -17,7 +17,7 @@ export interface TestRuntime {
     selectStore: ReturnType<typeof useSelectStore>;
     interactionTarget: HTMLElement;
     body: HTMLElement;
-    interactionProtectDiv: HTMLElement;
     app: App;
     pinia: Pinia;
+    didDisclaimerShow: boolean;
 }

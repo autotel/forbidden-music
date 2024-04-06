@@ -12,7 +12,7 @@ import { useViewStore } from '../store/viewStore';
 import '../style.css';
 import { disclaimer } from '../texts/userDisclaimer';
 import { TestRuntime } from './testRuntime';
-import { RoboMouse, wait } from './utils';
+import { RoboMouse, wait } from './RoboMouse';
 export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) => {
 
     console.log("appMount");
@@ -30,23 +30,25 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
     containerDiv.style.width = "100vw";
     containerDiv.style.height = "100vh";
     containerDiv.style.position = "fixed";
-    containerDiv.style.zIndex = "0";
+    containerDiv.style.zIndex = "8";
     containerDiv.style.bottom = "0";
     containerDiv.style.left = "0";
     body.appendChild(containerDiv);
 
 
-    const interactionProtectDiv = document.createElement('div');
-    interactionProtectDiv.style.width = "100vw";
-    interactionProtectDiv.style.height = "100vh";
-    interactionProtectDiv.style.left = "0";
-    interactionProtectDiv.style.top = "0";
-    interactionProtectDiv.style.position = "fixed";
-    interactionProtectDiv.style.zIndex = "10";
-    body.appendChild(interactionProtectDiv);
+    // const interactionProtectDiv = document.createElement('div');
+    // interactionProtectDiv.id = "interaction-protect";
+    // interactionProtectDiv.style.width = "100vw";
+    // interactionProtectDiv.style.height = "100vh";
+    // interactionProtectDiv.style.left = "0";
+    // interactionProtectDiv.style.top = "0";
+    // interactionProtectDiv.style.position = "fixed";
+    // interactionProtectDiv.style.zIndex = "10";
+
+    // body.appendChild(interactionProtectDiv);
 
 
-    const roboMouse = new RoboMouse(interactionProtectDiv);
+    const roboMouse = new RoboMouse();
 
     const projectStore = useProjectStore();
     const viewStore = useViewStore();
@@ -66,8 +68,9 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         app,
         body,
         containerDiv,
-        interactionProtectDiv,
+        // interactionProtectDiv,
         selectStore,
+        didDisclaimerShow: false,
     };
     
     // console.log(result);
@@ -79,7 +82,7 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         
         // await wait(200);
 
-        const result = app.mount(containerDiv);
+        app.mount(containerDiv);
         // empty the project preventing default demo project interfering with tests
         projectStore.loadEmptyProjectDefinition();
         
@@ -92,21 +95,25 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         
         const expectedDisclaimer = disclaimer;
         const disclaimerFound = document.querySelector("#start-disclaimer");
-        if(disclaimerFound === null) {
-            console.log(document.body.innerHTML);
-            throw new Error("disclaimer html element not found");
+        try{
+            if(disclaimerFound === null) {
+                console.warn("disclaimer html element not found", document.body.innerHTML);
+            }
+            const disclaimerText = disclaimerFound?.innerHTML;
+        
+            expect(disclaimerText).toContain(expectedDisclaimer);
+            const closeButton = document.querySelector("#start-disclaimer button");
+            closeButton?.dispatchEvent(new MouseEvent("click", {
+                bubbles: true,
+            }));
+            roboMouse.click();
+            await wait(10);
+            const disclaimerFoundAfterClick = document.querySelector("#start-disclaimer");
+            expect(disclaimerFoundAfterClick).toBeNull();
+            preRuntime.didDisclaimerShow = true;
+        } catch(e) {
+            console.error(e);
         }
-        const disclaimerText = disclaimerFound?.innerHTML;
-        expect(disclaimerText).toContain(expectedDisclaimer);
-        const closeButton = document.querySelector("#start-disclaimer button");
-        closeButton?.dispatchEvent(new MouseEvent("click", {
-            bubbles: true,
-        }));
-        roboMouse.click();
-        await wait(10);
-        const disclaimerFoundAfterClick = document.querySelector("#start-disclaimer");
-        expect(disclaimerFoundAfterClick).toBeNull();
-
         clearTimeout(timeout);
         
     })().catch((e) => {

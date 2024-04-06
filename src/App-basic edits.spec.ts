@@ -3,7 +3,7 @@ import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import './style.css';
 import { appMount } from './test-helpers/appSetup';
-import { wait } from './test-helpers/utils';
+import { wait } from './test-helpers/RoboMouse';
 import { appCleanup } from './test-helpers/appCleanup';
 let generalInterval = 500;
 
@@ -55,6 +55,31 @@ describe('app basic editing tools', async () => {
         await wait(generalInterval / timeDiv);
         expect(projectStore.notes.length).toBe(2);
     }, generalInterval);
+  
+    it('selects by hovering and clicking', async () => {
+        if(projectStore.notes.length < 1) {
+            throw new Error("This test needs a one note to exist");
+        }
+        const noteToDrag = projectStore.notes[0];
+        
+        const noteBox = viewStore.rectOfNote(noteToDrag);
+        const start = {
+            x: (noteBox.x + viewStore.timeToPx(noteBox.event.timeEnd)) / 2,
+            y: noteBox.y + noteBox.radius,
+        }
+
+        await roboMouse.moveTo(start, 700);
+        await wait(100);
+        roboMouse.mousedown();
+        await wait(100);
+        roboMouse.mouseup();
+        await roboMouse.moveTo({x:0,y:0}, 700);
+        expect(selectStore.getNotes().length).toBeGreaterThan(0)
+        selectStore.select();
+        if(selectStore.getNotes().length > 0) {
+            throw new Error("Failed to reset selection");
+        }
+    });
 
     it('selects area', async () => {
         if (!interactionTarget) throw new Error("interactionTarget is null");
@@ -83,6 +108,7 @@ describe('app basic editing tools', async () => {
         await wait(generalInterval / 3);
         expect(selectStore.getNotes().length).toBe(2);
     }, generalInterval);
+
     it('duplicates selected ', async () => {
         if (!interactionTarget) throw new Error("interactionTarget is null");
         const div = 4;

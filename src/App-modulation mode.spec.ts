@@ -3,7 +3,7 @@ import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import './style.css';
 import { appMount } from './test-helpers/appSetup';
-import { wait } from './test-helpers/utils';
+import { wait } from './test-helpers/RoboMouse';
 import { appCleanup } from './test-helpers/appCleanup';
 let generalInterval = 500;
 
