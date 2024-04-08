@@ -33,9 +33,9 @@ const update = (val:number, i: number) => {
 
 </script>
 <template>
-    <div class="vals-container">
+    <div class="row-container">
         {{ props.param.displayName }}
-        <div style="width:100%">
+        <div class="knobs-array-container">
             <NumberKnob
                 v-for="(val, i) in liveArray"
                 :key="i"
@@ -49,3 +49,17 @@ const update = (val:number, i: number) => {
         </div>
     </div>
 </template>
+<style scoped>
+.knobs-array-container{
+    display: flex;
+    flex-wrap: wrap;
+
+}
+.row-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+</style>

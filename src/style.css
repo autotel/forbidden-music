@@ -163,3 +163,9 @@ svg text{
 #viewport {
   user-select: none;
 }
+
+.prevent-select {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

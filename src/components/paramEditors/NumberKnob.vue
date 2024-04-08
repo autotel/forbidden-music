@@ -61,7 +61,6 @@ const mouseDown = (e: MouseEvent) => {
     modelValueOnDragStart = props.modelValue;
     e.stopPropagation();
     dragging.value = true;
-
     window.addEventListener('mouseup', mouseUp);
     window.addEventListener('mousemove', windowMouseMove);
 }
@@ -74,7 +73,7 @@ const mouseUp = (e: MouseEvent) => {
 }
 </script>
 <template>
-    <div class="number-knob-container" @mousedown="mouseDown" :class="{ active: dragging, vertical }">
+    <div class="number-knob-container prevent-select" @mousedown="mouseDown" :class="{ active: dragging, vertical }">
         <div>
             <template v-if="props.max !== undefined && props.min !== undefined">
                 <div class="prog-container">
@@ -104,7 +103,7 @@ const mouseUp = (e: MouseEvent) => {
         </div>
     </div>
 </template>
-<style>
+<style scoped>
 .knob {
     fill: currentcolor;
     transform-origin: center;
@@ -141,12 +140,18 @@ const mouseUp = (e: MouseEvent) => {
     font-family: monospace;
     width: 2em;
     height: 3em;
+    position: relative;
+    padding: 0;
+    display: inline-flex;
+    
+    align-items: center;
+    text-align: center;
+    justify-content: center;
 }
 .number-knob-container>* {
     display: inline-flex;
-    position: relative;
     align-items: center;
-    text-align: center;
+    position: absolute;
     justify-content: center;
 
 }

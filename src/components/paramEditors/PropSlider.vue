@@ -146,7 +146,7 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <div class="number-knob-container" ref="valueDraggable" :class="{
+    <div class="prop-slider-container" ref="valueDraggable" :class="{
         active: dragging,
         automated,
     }
@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
             </template>
-            <span style="position: absolute; z-index: 2;">
+            <span class="readout">
                 {{ props.param.displayName }} &nbsp; {{ displayValue.toFixed(3) }}
             </span>
         </Tooltip>
@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
         </Button>
     </div>
 </template>
-<style>
+<style scoped>
 .lane-options-container {
     display: flex;
     justify-content: right;
@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
     top: 0;
 }
 
-.number-knob-container {
+.prop-slider-container {
     width: 100%;
     user-select: none;
     display: inline-flex;
@@ -214,16 +214,25 @@ onBeforeUnmount(() => {
     text-align: center;
     justify-content: center;
     box-sizing: border-box;
+    position: relative;
 }
 
-.number-knob-container>span {
+.prop-slider-container>span {
     position: absolute;
     width: 100%;
     height: 100%;
     left: 0;
     top: 0;
+    line-height: 1.8;
 }
 
+.readout {
+    left:0; top:0;
+
+    width:100%;
+    position: absolute; 
+    z-index: 2;
+}
 
 .active {
     background-color: rgb(7, 77, 99);
