@@ -25,8 +25,8 @@ describe('app snapping', async () => {
 
     it('snaps the created note to octave, if octave snap active', async () => {
         const timeDiv = 4;
-        Object.keys(snapStore.values).forEach(key => {
-            snapStore.values[key].active = false;
+        Object.values(snapStore.values).forEach((value) => {
+            value.active = false;
         });
         // button with 1EDO text content
         const buttons = document.querySelectorAll("button")
@@ -66,8 +66,9 @@ describe('app snapping', async () => {
 
     it('creates a note without snapping if no snap is active', async () => {
         const timeDiv = 4;
-        Object.keys(snapStore.values).forEach(key => {
-            snapStore.values[key].active = false;
+
+        Object.values(snapStore.values).forEach((value) => {
+            value.active = false;
         });
         projectStore.notes.length = 0;
         const noteToInsert = {

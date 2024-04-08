@@ -51,8 +51,8 @@ export const useProjectStore = defineStore("current project", () => {
     const loops = ref<Loop[]>([]);
     const lanes = useAutomationLaneStore();
 
-    const getSnapsList = (): LibraryItem["snaps"] => Object.keys(snaps.values).map((key) => {
-        return [key, snaps.values[key].active];
+    const getSnapsList = (): LibraryItem["snaps"] => Object.entries(snaps.values).map(([key,value]) => {
+        return [key, value.active];
     });
 
     const sortLoops = () => {

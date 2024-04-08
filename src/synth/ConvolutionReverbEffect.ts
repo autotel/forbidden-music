@@ -1,4 +1,4 @@
-import { AudioModule, EffectInstance, NumberSynthParam, OptionSynthParam, ParamType, ProgressSynthParam, SynthInstance, SynthParam } from "./super/SynthInterface";
+import { EffectInstance, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "./super/SynthInterface";
 
 export interface ImpulseResponseSampleDefinition {
     name: string,

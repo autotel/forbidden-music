@@ -68,12 +68,14 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
         </ButtonSub>
       </template>
     </Button>
-    <Button :onClick="() => snap.onlyWithMutedNotes = !snap.onlyWithMutedNotes" :class="{ active: snap.onlyWithMutedNotes }"
+    <Button :onClick="() => snap.onlyWithMutedNotes = !snap.onlyWithMutedNotes"
+      :class="{ active: snap.onlyWithMutedNotes }"
       tooltip="Snap only in relation to muted notes. Use CTRL+M to mute a note">
       Muted
     </Button>
     <Button :onClick="() => snap.onlyWithSimultaneousNotes = !snap.onlyWithSimultaneousNotes"
-      :class="{ active: snap.onlyWithSimultaneousNotes }" tooltip="Snap only in relation to notes which overlap in time">
+      :class="{ active: snap.onlyWithSimultaneousNotes }"
+      tooltip="Snap only in relation to notes which overlap in time">
       Simultaneous
     </Button>
     <Button :onClick="() => snap.onlyWithNotesInView = !snap.onlyWithNotesInView"
@@ -141,18 +143,19 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
 }
 
 .toneRelationMulti {
-  background-color: rgb(233, 150, 125);
+  background-color: rgb(192, 158, 177);
 }
 
 .toneRelationMulti.active,
 .toneRelationMulti:hover,
 .toneRelationMulti.active:hover {
-  background-color: rgb(255, 119, 78);
+  background-color: rgb(255, 151, 208);
 }
 
 
 .button.highlight {
-  border-color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  border: solid 2px;
   position: relative;
   z-index: 2;
 }
@@ -165,5 +168,13 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
   .button:not(.active, :hover) {
     color: rgba(255, 255, 255, 0.747);
   }
+
+  .button.highlight {
+    color: rgb(255, 255, 255);
+    border: solid 2px;
+    position: relative;
+    z-index: 2;
+  }
+
 }
 </style>
