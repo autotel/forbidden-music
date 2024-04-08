@@ -25,8 +25,8 @@ describe('toolStore', () => {
         { time: 3, timeEnd: 7 },
     ].map(loop);
 
-    Object.keys(snap.values).forEach(key => {
-        snap.values[key].active = false;
+    Object.values(snap.values).forEach(val => {
+        val.active = false;
     });
 
     project.append(...testScore, ...testLoops);

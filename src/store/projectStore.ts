@@ -192,9 +192,12 @@ export const useProjectStore = defineStore("current project", () => {
         if (pDef.bpm) playback.bpm = pDef.bpm;
 
         pDef.snaps.forEach(([name, activeState]) => {
-            if (!snaps.values[name]) return;
+            if (!(name in snaps.values)) return;
+            // @ts-ignore
             snaps.values[name].active = activeState;
         });
+        
+
         layers.clear();
         pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
             const layer = layers.getOrMakeLayerWithIndex(index);
