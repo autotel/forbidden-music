@@ -46,13 +46,13 @@ const toggleSelectTool = () => {
     <Button :tooltip="`redo`" :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
       ↷
     </Button>
-
+<!-- 
     <Button :onClick="(e) => {
       tool.current = tool.current === Tool.Automation ? Tool.Edit : Tool.Automation;
     }" :active="tool.current == Tool.Automation"
       :tooltip="`Automation mode [${k(KeyActions.ActivateAutomationMode)}]`">
       Automation
-    </Button>
+    </Button> -->
     <Button :onClick="(e) => {
       tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
     }" :active="tool.current == Tool.Modulation"

@@ -129,6 +129,8 @@ onMounted(() => audioContextStore.audioContextPromise.then(() => {
 .controls-container {
     width: 100%;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .encircled {

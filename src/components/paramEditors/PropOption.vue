@@ -46,6 +46,7 @@ const applyValueDelta = (ud: UpOrDown) => {
 }
 
 const minusButtonClicked = (e: MouseEvent) => {
+    
     e.stopPropagation();
     e.preventDefault();
     e.stopImmediatePropagation();

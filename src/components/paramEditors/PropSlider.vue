@@ -2,9 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/super/SynthInterface';
 import { useToolStore } from '../../store/toolStore';
+import { Tool } from '../../dataTypes/Tool';
 import { useAutomationLaneStore } from '../../store/automationLanesStore';
 import Tooltip from '../Tooltip.vue';
-
+import Button from '../Button.vue';
 // TODO: this could use a refactor
 
 const props = defineProps<{
@@ -22,8 +23,9 @@ const displayValue = ref(props.param.value);
 const tool = useToolStore();
 const lanes = useAutomationLaneStore();
 const automated = computed(() => {
-    return tool.laneBeingEdited?.targetParameter === props.param
+    return tool.laneBeingEdited?.targetParameter === props.param && tool.current === Tool.Automation;
 });
+const canBeAutomated = lanes.canParameterBeAutomated(props.param);
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -73,7 +75,7 @@ const mouseDown = (e: MouseEvent) => {
         y: e.clientY,
     };
     preMapValueOnDragStart = preMapValue.value;
-    console.log(e.button)
+
     switch (e.button) {
         case 1: {
             if (props.param.default !== undefined) {
@@ -89,22 +91,28 @@ const mouseDown = (e: MouseEvent) => {
             taken = true;
         }
     }
-    if(taken) {
+    if (taken) {
         e.stopPropagation();
         e.preventDefault();
     }
 
 }
 const mouseUp = (e: MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    dragging.value = false;
+    if (dragging.value) {
+        e.stopPropagation();
+        e.preventDefault();
+        dragging.value = false;
+    }
 }
 const doubleClick = (e: MouseEvent) => {
     console.log("dblck")
     if (props.param.default !== undefined) {
         props.param.value = props.param.default
     }
+}
+const enterAutomation = () => {
+    tool.current = Tool.Automation;
+    tool.laneBeingEdited = lanes.getOrCreateAutomationLaneForParameter(props.param);
 }
 watch(props.param, (newParam) => {
     displayValue.value = newParam.value;
@@ -138,30 +146,42 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <Tooltip
-        :tooltip="props.param.default !== undefined ? `middle button or double click sets it to ${props.param.default}` : 'drag to set'">
-        <div class="number-knob-container" ref="valueDraggable" :class="{
-                active: dragging,
-                automated: automated,
-            }
-            " style="width:100%">
+    <div class="number-knob-container" ref="valueDraggable" :class="{
+        active: dragging,
+        automated,
+    }
+        ">
+        <Tooltip
+            :tooltip="props.param.default !== undefined ? `middle button or double click sets it to ${props.param.default}` : ''">
 
             <template v-if="props.param.max !== undefined && props.param.min !== undefined">
                 <div class="prog-container">
                     <div class="prog-bar" :class="{ negative: preMapValue < 0 }" :style="{
                             width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
                             left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
-                        }
-                        "></div>
+                        }"
+                    >
+                    </div>
                 </div>
             </template>
-            <span style="{position: absolute; z-index: 2;}">
+            <span style="position: absolute; z-index: 2;">
                 {{ props.param.displayName }} &nbsp; {{ displayValue.toFixed(3) }}
             </span>
-        </div>
-    </Tooltip>
+        </Tooltip>
+    </div>
+    <div v-if="canBeAutomated" class="lane-options-container">
+        <Button :onClick="enterAutomation" :tooltip="`Automate ${props.param.displayName}`" class="automate">
+            Automate
+        </Button>
+    </div>
 </template>
 <style>
+.lane-options-container {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+}
+
 .prog-bar {
     position: absolute;
     height: 100%;
@@ -181,6 +201,7 @@ onBeforeUnmount(() => {
 }
 
 .number-knob-container {
+    width: 100%;
     user-select: none;
     display: inline-flex;
     position: relative;
@@ -193,6 +214,14 @@ onBeforeUnmount(() => {
     text-align: center;
     justify-content: center;
     box-sizing: border-box;
+}
+
+.number-knob-container>span {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
 }
 
 

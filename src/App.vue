@@ -137,7 +137,6 @@ const mouseDownListener = (e: MouseEvent) => {
         viewDragStartY = e.clientY;
         viewDragStartOctave = view.octaveOffset;
     } else if (e.button === 2) {
-        console.log("right button");
     } else {
         // left button
         tool.mouseDown(e);
@@ -233,9 +232,11 @@ watch(paneWidth, () => {
     resize();
 })
 
+const allowContextMenu = true;
+
 </script>
 <template>
-    <div id="app-container" oncontextmenu="return false;">
+    <div id="app-container" oncontextmenu="return allowContextMenu">
         <div id="viewport" ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewportPixi v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"

@@ -60,7 +60,6 @@ const mouseDown = (e: MouseEvent) => {
     };
     modelValueOnDragStart = props.modelValue;
     e.stopPropagation();
-    e.preventDefault();
     dragging.value = true;
 
     window.addEventListener('mouseup', mouseUp);
@@ -68,7 +67,6 @@ const mouseDown = (e: MouseEvent) => {
 }
 const mouseUp = (e: MouseEvent) => {
     e.stopPropagation();
-    e.preventDefault();
     dragging.value = false;
 
     window.removeEventListener('mouseup', mouseUp);
