@@ -111,7 +111,7 @@ const mouseDuplicateTraces = ({
 const mouseDragSelectedTraces = ({
     drag, disallowOctaveChange, disallowTimeChange
 }: ToolMouse, {
-    view, snap, project
+    view, snap, project, lanes,
 }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
@@ -141,7 +141,6 @@ const mouseDragSelectedTraces = ({
     if ('octave' in snappedTrace) {
         octaveDeltaAfterSnap = snappedTrace.octave - octaveWhenDragStarted
     }
-
     drag.traces.map((draggedTrace, index) => {
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (!correlativeDragStartClone) throw new Error('no correlativeDragStartClone');
@@ -153,12 +152,13 @@ const mouseDragSelectedTraces = ({
         if ('timeEnd' in draggedTrace) {
             draggedTrace.timeEnd = timeDeltaAfterSnap + correlativeDragStartClone.timeEnd;
         }
+
         if ('octave' in draggedTrace && (!disallowOctaveChange)) {
             if (!('octave' in correlativeDragStartClone)) throw new Error('no octave in correlativeDragStartClone');
             draggedTrace.octave = octaveDeltaAfterSnap + correlativeDragStartClone.octave;
         }
+
     });
-    // refresh = true;
 }
 
 
@@ -187,13 +187,13 @@ const mouseDragModulationSelectedTraces = (
 const mouseDragAutomationSelectedTraces = (
     { drag }: ToolMouse,
     { view, snap, project, lanes }: Stores,
-    /** provide this reference in order to set de initial velocity for new traces */
-    lastVelocitySet: Reference<number> = { value: 0 }
 ) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) return;
+    
     const valueDelta = view.pxToValue(-drag.delta.y);
     const timeDelta = view.pxToTime(drag.delta.x);
+
     drag.traces.forEach((trace, index) => {
         if (trace.type !== TraceType.AutomationPoint) return;
         const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
@@ -202,6 +202,15 @@ const mouseDragAutomationSelectedTraces = (
         const valueWhenDragStarted = traceWhenDragStarted.value;
         trace.value = valueWhenDragStarted + valueDelta;
         trace.time = traceWhenDragStarted.time + timeDelta;
+
+        if(trace.prev?.time && trace.prev?.time > trace.time) {
+            trace.time = trace.prev.time;
+            // trace.prev.time = trace.time;
+        }
+        if(trace.next?.time && trace.next?.time < trace.time) {
+            trace.time = trace.next.time;
+            // trace.next.time = trace.time;
+        }
 
     });
 }
@@ -770,7 +779,7 @@ export const useToolStore = defineStore("tool", () => {
                 );
             } else if (current.value === Tool.Automation) {
                 mouseDragAutomationSelectedTraces(
-                    mouse, storesPill, lastVelocitySet
+                    mouse, storesPill
                 );
             } else if (
                 mouse.tracesBeingCreated.length === 1

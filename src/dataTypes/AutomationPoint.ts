@@ -16,6 +16,8 @@ export type AutomationPoint = TimePosition & Selectable & Draggable & ValuePosit
   type: TraceType.AutomationPoint;
   mute: boolean;
   layer: number;
+  next: AutomationPoint | null;
+  prev: AutomationPoint | null;
 }
 
 export const automationPoint = (
@@ -31,6 +33,8 @@ export const automationPoint = (
     value,
     layer,
     mute,
+    next: null, 
+    prev: null,
   };
 }
 

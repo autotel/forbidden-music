@@ -5,6 +5,8 @@ import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
 import { SynthParam } from "../synth/super/SynthInterface";
 import { useSynthStore } from "./synthStore";
 
+
+
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const lanes = ref<Map<string, AutomationLane>>(new Map());
     const synth = useSynthStore();
@@ -16,10 +18,20 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         return parameter.animate !== undefined
     }
     const sortPointsByTime = (lane: AutomationLane) => {
-        lane.content.sort((a, b) => a.time - b.time);
+        lane.content.sort((a, b) => {
+            return a.time - b.time
+        });
+        let prevPoint: AutomationPoint | null = null;
+        lane.content.forEach((point, i) => {
+            if (prevPoint) {
+                prevPoint.next = point;
+            }
+            point.prev = prevPoint;
+            prevPoint = point;
+        });
+
         lane.sizeWhenLastSorted = lane.content.length;
     }
-
     watchEffect(() => {
         lanes.value.forEach((lane) => {
             if (lane.content.length !== lane.sizeWhenLastSorted) {
@@ -118,6 +130,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     //     const defaultLane = addAutomationLane();
     //     defaultLane.displayName = "Default";
     // }
+
 
     return {
         lanes,
