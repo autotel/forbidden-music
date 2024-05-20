@@ -167,7 +167,7 @@ onBeforeUnmount(() => {
     }
         ">
         <span v-if="automated" class="readout">
-            &gt; automated &lt;
+            {{ props.param.displayName }}  (automated)
         </span>
         <Tooltip
         v-else 
