@@ -1,5 +1,5 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { AutomatableSynthParam } from "./interfaces/Automatable";
+import { AutomatableSynthParam, getTweenSlice } from "./interfaces/Automatable";
 import { ParamType, NumberSynthParam, SynthParam } from "./interfaces/SynthParam";
 import { EventParamsBase, Synth } from "./super/Synth";
 
@@ -86,7 +86,6 @@ const sineVoice = (audioContext: AudioContext) => {
             }
             noteVelocity = params.velocity;
             this.inUse = true;
-            console.log(params);
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
             const { relativeOctaves, relativeGains } = params;
             this.setValues(relativeOctaves, relativeGains);
@@ -151,25 +150,25 @@ const buildParams = (synth: ClusterSineSynth) => {
 
     const octavesIntervalParam: AutomatableSynthParam = {
         displayName: "octave interval",
+        _v: 0.2002,
         exportable: true,
         type: ParamType.number,
         set value(value: number) {
-            synth.octavesInterval = value;
+            this._v = value;
         },
         get value() {
-            return synth.octavesInterval;
+            return this._v;
         },
         min: 0,
         max: 3,
-        animate (startTime:number, destTime: number, destValue: number) {
-            synth.animateOctavesInterval(destTime, destValue);
-            this.currentTween = {
-                time: startTime,
-                timeEnd: destTime,
-                value: synth.octavesInterval,
-                valueEnd: destValue,
-            }
+        updateValue(time: number) {
+            const tweenSlice = getTweenSlice(this, time);
+            this._v = tweenSlice.value;
         },
+        animate(startTime: number, destTime: number, destValue: number) {
+        },
+        stopAnimations() {
+        }
     }
 
     synth.params.push(octavesIntervalParam);
@@ -201,6 +200,9 @@ const buildParams = (synth: ClusterSineSynth) => {
         min: 0,
         max: 1,
     });
+    return {
+        octavesIntervalParam
+    }
 }
 type ClusterSineVoice = ReturnType<typeof sineVoice>;
 
@@ -208,10 +210,10 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
     voices: ClusterSineVoice[] = [];
     credits = "Simple sine synth by Autotel";
 
-    octavesInterval: number = 0.2002;
     volumeRolloff: number = 0.75;
     oscillatorsCount: number = 3;
     imprecision: number = 0;
+    octavesInterval: AutomatableSynthParam;
 
     panCorrParam = {
         displayName: "octave - pan correlation",
@@ -240,9 +242,11 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
         return pan;
     }
 
-    getCluster = () => {
+    getCluster = (atTime: number) => {
+        this.octavesInterval.updateValue(atTime);
+        const octavesInterval = this.octavesInterval.value;
         if (
-            this.memoizedCluster.octavesInterval === this.octavesInterval &&
+            this.memoizedCluster.octavesInterval === octavesInterval &&
             this.memoizedCluster.volumeRolloff === this.volumeRolloff &&
             this.memoizedCluster.oscillatorsCount === this.oscillatorsCount
         ) return this.memoizedCluster;
@@ -251,7 +255,6 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
         if (this.oscillatorsCount < 1) throw new Error("oscillatorsCount must be at least 1");
         const oscillatorsCount = this.oscillatorsCount;
         const volumeRolloff = this.volumeRolloff;
-        const octavesInterval = this.octavesInterval;
         // 1 -> 1; 2 -> 1.5; 3->2
         const virtualCenter = (oscillatorsCount - 1) / 2;
         for (let i = 0; i < oscillatorsCount; i++) {
@@ -262,10 +265,9 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
             this.memoizedCluster.relativeOctaves[i] = relativeOctave;
             this.memoizedCluster.gains[i] = relativeGain;
         }
-        this.memoizedCluster.octavesInterval = this.octavesInterval;
+        this.memoizedCluster.octavesInterval = octavesInterval;
         this.memoizedCluster.volumeRolloff = this.volumeRolloff;
         this.memoizedCluster.oscillatorsCount = this.oscillatorsCount;
-        // console.log(`relativeOctaves: ${this.memoizedCluster.relativeOctaves.join(',')}; gains: ${this.memoizedCluster.gains.join(',')}`)
         return this.memoizedCluster;
     }
 
@@ -277,7 +279,7 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
         this.output.gain.value = 0.1;
         let maximizer: AudioNode | undefined;
         this.transformTriggerParams = (params: EventParamsBase) => {
-            const { relativeOctaves, gains } = this.getCluster();
+            const { relativeOctaves, gains } = this.getCluster(audioContext.currentTime);
             params.relativeOctaves = relativeOctaves;
             params.relativeGains = gains;
             return {
@@ -302,15 +304,14 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
             }
             this.isReady = false;
         }
-        buildParams(this);
+
+        const {
+            octavesIntervalParam
+        } = buildParams(this);
+        this.octavesInterval = octavesIntervalParam;
         this.params.push(this.panCorrParam);
     }
 
-    animateOctavesInterval = (destTime: number, destValue: number) => {
-        this.voices.forEach((voice) => {
-            voice.animateOctavesInterval(destTime, destValue);
-        });
-    }
     releaseAll = () => {
         this.voices.forEach((voice) => {
             voice.stop();

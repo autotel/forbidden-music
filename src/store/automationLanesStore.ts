@@ -60,7 +60,22 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         const paramName = synth.synthParamToAccessorString(targetParameter) || 'undefined'
         let lane = lanes.value.get(paramName)
         if (!lane) {
-            lane = addAutomationLane(targetParameter);
+            lane = addAutomationLane(
+                targetParameter
+            );
+        }
+        if (lane.content.length === 0) {
+            // ugly patch for playback only taking into account from the second point on.
+            const range = targetParameter.max - targetParameter.min;
+            const firstPointValue = (targetParameter.value - targetParameter.min) / range;
+            const at = automationPoint({
+                time: 0,
+                value: firstPointValue,
+                layer: 0,
+            })
+            lane.content.push(
+                at, at
+            )
         }
         return lane;
     }
@@ -80,12 +95,12 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     }
     const applyAutomationLaneDef = (automationLaneDef: AutomationLaneDef) => {
         let targetParameter = castToSynthParam(automationLaneDef.targetParameter);
-        if(!targetParameter) {
+        if (!targetParameter) {
             console.warn('could not apply automation lane def as target parameter is', targetParameter, automationLaneDef)
             return
         }
         let automatable = isAutomatable(targetParameter);
-        if(!automatable){
+        if (!automatable) {
             console.warn('could not apply automation lane def as target parameter is not automatable', targetParameter)
             return
         }

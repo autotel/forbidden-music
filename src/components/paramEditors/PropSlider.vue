@@ -28,7 +28,7 @@ const automated = computed(() => {
     return lanes.isParameterAutomated(props.param);
 });
 const automationIsOpened = computed(() => {
-    return tool.laneBeingEdited && (tool.laneBeingEdited.targetParameter === props.param);
+    return tool.laneBeingEdited && (tool.laneBeingEdited.targetParameter === props.param) && tool.current === Tool.Automation;
 });
 const canBeAutomated = isAutomatable(props.param);
 const mouseDrag = (e: MouseEvent) => {
@@ -125,7 +125,7 @@ const enterAutomation = () => {
     tool.laneBeingEdited = lanes.getOrCreateAutomationLaneForParameter(automatable);
 }
 const exitAutomation = () => {
-    tool.current = Tool.Select;
+    tool.current = Tool.Edit;
     tool.laneBeingEdited = undefined;
 }
 watch(props.param, (newParam) => {
@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
         </Tooltip>
     </div>
     <div v-if="canBeAutomated" class="lane-options-container">
-        <Button v-if="automationIsOpened"  :onClick="()=>exitAutomation()" :tooltip="`Exit automation editing of ${props.param.displayName}`" class="automate">
+        <Button v-if="automationIsOpened"  :onClick="()=>exitAutomation()" :tooltip="`[esc] Exit automation editing of ${props.param.displayName}`" class="automate">
             Exit
         </Button>
         <Button v-else :onClick="()=>enterAutomation()" :tooltip="`Automate ${props.param.displayName}`" class="automate">

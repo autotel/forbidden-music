@@ -9,6 +9,7 @@ export type CurrentTweenDef = {
 }
 
 export type NotAnimatedValue = {
+    /** value at the time */
     value: number;
 }
 
@@ -32,11 +33,11 @@ export interface AutomatableSynthParam extends NumberSynthParam {
  * @param destValue value to animate to
  */
 export function addAutomationDestinationPoint(param: AutomatableSynthParam, timeDest: number, destValue: number) {
-    const lastTween = param.currentTween;
-    const animationStarted = lastTween?.timeEnd || timeDest;
-    const valueStarted = lastTween?.valueEnd || param.value;
+    const currentTween = param.currentTween;
+    const animationStarted = currentTween?.timeEnd || timeDest;
+    const valueStarted = currentTween?.valueEnd || param.value;
     param.animate(animationStarted, timeDest, destValue);
-    param.lastTween = {
+    param.currentTween = {
         time: animationStarted,
         timeEnd: timeDest,
         value: valueStarted,
@@ -46,7 +47,7 @@ export function addAutomationDestinationPoint(param: AutomatableSynthParam, time
 
 export function stopAndResetAnimations(param: AutomatableSynthParam) {
     param.stopAnimations();
-    delete param.lastTween;
+    delete param.currentTween;
 }
 /**
  * a tween cutter

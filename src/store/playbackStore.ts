@@ -351,15 +351,9 @@ export const usePlaybackStore = defineStore("playback", () => {
                     min: param.min, max: param.max
                 })
                 let animationEndAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
-                let animationStartedAbsolute = param.currentTween?.time || 0;
-                if (animationEndAbsolute < 0) {
-                    // TODO: could lerp for more precision
-                    animationEndAbsolute = 0;
-                }
-                try {
+                // only if my new point happens later than the last scheduled
+                if ((param.currentTween?.timeEnd || 0) < animationEndAbsolute) {
                     addAutomationDestinationPoint(param, animationEndAbsolute, mappedValue);
-                } catch (e) {
-                    console.error("could not schedule event", point, e);
                 }
             });
 
@@ -375,7 +369,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     let isPaused = false;
 
     const play = async () => {
-        if(!isPaused) resetLoopRepetitions();
+        if (!isPaused) resetLoopRepetitions();
         const audioContext = audioContextStore.audioContext;
         if (audioContext.state !== 'running') await audioContext.resume();
         playing.value = true;
