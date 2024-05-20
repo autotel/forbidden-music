@@ -64,6 +64,14 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         }
         return lane;
     }
+    const isParameterAutomated = (targetParameter: SynthParam) => {
+        if (!isAutomatable(targetParameter)) {
+            return false;
+        }
+        const paramName = synth.synthParamToAccessorString(targetParameter) || 'undefined'
+        let lane = lanes.value.get(paramName)
+        return lane !== undefined && lane.content.length > 0;
+    }
     const castToSynthParam = (targetParameter: string | SynthParam | undefined): SynthParam | undefined => {
         if (typeof targetParameter === 'string') {
             return synth.accessorStringToSynthParam(targetParameter);
@@ -150,6 +158,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         getAutomationLaneDefs,
         applyAutomationLaneDefs,
         getOrCreateAutomationLaneForParameter,
+        isParameterAutomated,
         forEachAutomationPoint,
         deleteAutomationPoint,
         clear,

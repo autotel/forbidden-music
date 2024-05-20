@@ -19,7 +19,7 @@ getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
             eventStartAbsolute = 0;
         }
         try {
-            param.animate?.(mappedValue, eventStartAbsolute);
+            param.animate?.(startTime, eventStartAbsolute, mappedValue);
         } catch (e) {
             console.error("could not schedule event", point, e);
         }

@@ -17,6 +17,7 @@ import { useAutomationLaneStore } from './automationLanesStore';
 import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
 import { filterMap } from '../functions/filterMap';
 import { SynthParam } from '../synth/interfaces/SynthParam';
+import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/interfaces/Automatable';
 
 
 interface MidiInputInterface {
@@ -237,7 +238,7 @@ export const usePlaybackStore = defineStore("playback", () => {
                      in this moment, return nothing (unless catch-up)
         */
         const returnValue: {
-            param: SynthParam,
+            param: AutomatableSynthParam,
             point: AutomationPoint,
         }[] = [];
 
@@ -349,13 +350,14 @@ export const usePlaybackStore = defineStore("playback", () => {
                 const mappedValue = automationRangeToParamRange(point.value, {
                     min: param.min, max: param.max
                 })
-                let eventStartAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
-                if (eventStartAbsolute < 0) {
+                let animationEndAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
+                let animationStartedAbsolute = param.currentTween?.time || 0;
+                if (animationEndAbsolute < 0) {
                     // TODO: could lerp for more precision
-                    eventStartAbsolute = 0;
+                    animationEndAbsolute = 0;
                 }
                 try {
-                    param.animate?.(mappedValue, eventStartAbsolute);
+                    addAutomationDestinationPoint(param, animationEndAbsolute, mappedValue);
                 } catch (e) {
                     console.error("could not schedule event", point, e);
                 }
@@ -392,6 +394,11 @@ export const usePlaybackStore = defineStore("playback", () => {
         previousClockTime = 0;
         synth.releaseAll();
         resetLoopRepetitions();
+        automation.lanes.forEach((lane) => {
+            const automatable = lane.targetParameter && isAutomatable(lane.targetParameter);
+            if (!automatable) return;
+            stopAndResetAnimations(automatable);
+        });
         isPaused = false;
     }
 

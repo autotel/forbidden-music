@@ -55,11 +55,11 @@ interface KarplusParamsChangeMessage {
     extype?: KarplusExciterType
 }
 
-const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth):SynthVoice => {
+const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth): SynthVoice => {
     let myVoiceIndex = synth.instances.length;
     return {
         inUse: false,
-        scheduleStart (
+        scheduleStart(
             frequency: number,
             absoluteStartTime: number,
             { velocity }: { velocity: number }
@@ -133,10 +133,16 @@ export class KarplusSynth extends Synth {
             get value() {
                 return this._v;
             },
-            animate: (v: number, t: number) => {
+            animate(startTime: number, destTime: number, destValue: number) {
                 enginePromise.then((engine) => {
                     // @ts-ignore
-                    engine.parameters.get("filterK").linearRampToValueAtTime(v, t);
+                    engine.parameters.get("filterK").linearRampToValueAtTime(destValue, destTime);
+                })
+            },
+            stopAnimations() {
+                enginePromise.then((engine) => {
+                    // @ts-ignore
+                    engine.parameters.get("filterK").cancelScheduledValues(0);
                 })
             },
             displayName: "boxcar K",
@@ -183,11 +189,17 @@ export class KarplusSynth extends Synth {
             get value() {
                 return this._v;
             },
-            animate: (v: number, t: number) => {
+            animate(startTime: number, destTime: number, destValue: number) {
                 enginePromise.then((engine) => {
                     // console.log("animating", v, t, t - audioContext.currentTime );
                     // @ts-ignore
-                    engine.parameters.get("delayFeedback").linearRampToValueAtTime(v, t);
+                    engine.parameters.get("delayFeedback").linearRampToValueAtTime(destValue, destTime);
+                })
+            },
+            stopAnimations() {
+                enginePromise.then((engine) => {
+                    // @ts-ignore
+                    engine.parameters.get("delayFeedback").cancelScheduledValues(0);
                 })
             },
             displayName: "feedback",

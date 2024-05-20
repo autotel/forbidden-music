@@ -1,3 +1,4 @@
+import { AutomatableSynthParam } from "../synth/interfaces/Automatable"
 import { SynthParam } from "../synth/interfaces/SynthParam"
 import { AutomationPoint, AutomationPointDef, automationPoint, automationPointDef } from "./AutomationPoint"
 /** exportable/ importable definition of a automationLane */
@@ -17,7 +18,7 @@ interface AutomationLaneDefB {
 /** 'alive' automationLane format */
 export interface AutomationLane {
     displayName: string
-    targetParameter?: SynthParam
+    targetParameter?: AutomatableSynthParam
     content: AutomationPoint[]
     sizeWhenLastSorted?: number
 }

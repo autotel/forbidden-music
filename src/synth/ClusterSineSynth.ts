@@ -1,4 +1,5 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
+import { AutomatableSynthParam } from "./interfaces/Automatable";
 import { ParamType, NumberSynthParam, SynthParam } from "./interfaces/SynthParam";
 import { EventParamsBase, Synth } from "./super/Synth";
 
@@ -147,7 +148,8 @@ const buildParams = (synth: ClusterSineSynth) => {
         min: 1,
         max: 7,
     });
-    synth.params.push({
+
+    const octavesIntervalParam: AutomatableSynthParam = {
         displayName: "octave interval",
         exportable: true,
         type: ParamType.number,
@@ -159,7 +161,19 @@ const buildParams = (synth: ClusterSineSynth) => {
         },
         min: 0,
         max: 3,
-    });
+        animate (startTime:number, destTime: number, destValue: number) {
+            synth.animateOctavesInterval(destTime, destValue);
+            this.currentTween = {
+                time: startTime,
+                timeEnd: destTime,
+                value: synth.octavesInterval,
+                valueEnd: destValue,
+            }
+        },
+    }
+
+    synth.params.push(octavesIntervalParam);
+
     synth.params.push({
         displayName: "volume rolloff",
         exportable: true,
@@ -173,6 +187,7 @@ const buildParams = (synth: ClusterSineSynth) => {
         min: 0,
         max: 1,
     });
+
     synth.params.push({
         displayName: "imprecision",
         exportable: true,
@@ -289,6 +304,12 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
         }
         buildParams(this);
         this.params.push(this.panCorrParam);
+    }
+
+    animateOctavesInterval = (destTime: number, destValue: number) => {
+        this.voices.forEach((voice) => {
+            voice.animateOctavesInterval(destTime, destValue);
+        });
     }
     releaseAll = () => {
         this.voices.forEach((voice) => {

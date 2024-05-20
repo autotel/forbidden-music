@@ -34,8 +34,6 @@ export interface NumberSynthParam extends SynthParamMinimum<number> {
     min: number,
     max: number,
     default?: number,
-    schedule?: (destTime: number, destValue: number) => void,
-    animate?: (destTime: number, destValue: number) => void,
     curve?: 'linear' | 'log',
 }
 

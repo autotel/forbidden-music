@@ -7,6 +7,7 @@ import { isAutomatable } from '../../synth/interfaces/Automatable';
 import { NumberSynthParam } from '../../synth/interfaces/SynthParam';
 import Button from '../Button.vue';
 import Tooltip from '../Tooltip.vue';
+import { exit } from 'process';
 // TODO: this could use a refactor
 
 const props = defineProps<{
@@ -24,7 +25,10 @@ const displayValue = ref(props.param.value);
 const tool = useToolStore();
 const lanes = useAutomationLaneStore();
 const automated = computed(() => {
-    return tool.laneBeingEdited?.targetParameter === props.param && tool.current === Tool.Automation;
+    return lanes.isParameterAutomated(props.param);
+});
+const automationIsOpened = computed(() => {
+    return tool.laneBeingEdited && (tool.laneBeingEdited.targetParameter === props.param);
 });
 const canBeAutomated = isAutomatable(props.param);
 const mouseDrag = (e: MouseEvent) => {
@@ -87,10 +91,11 @@ const mouseDown = (e: MouseEvent) => {
         }
         case 0: {
             dragging.value = true;
-            const automatable = isAutomatable(props.param);
-            if (!automatable) throw new Error("param is not automatable");
-            const nl = lanes.getOrCreateAutomationLaneForParameter(automatable);
-            if (nl) tool.laneBeingEdited = nl;
+            if (lanes.isParameterAutomated(props.param)) {
+                taken = true;
+                enterAutomation();
+                break;
+            }
             taken = true;
         }
     }
@@ -118,6 +123,10 @@ const enterAutomation = () => {
     if (!automatable) throw new Error("param is not automatable");
     tool.current = Tool.Automation;
     tool.laneBeingEdited = lanes.getOrCreateAutomationLaneForParameter(automatable);
+}
+const exitAutomation = () => {
+    tool.current = Tool.Select;
+    tool.laneBeingEdited = undefined;
 }
 watch(props.param, (newParam) => {
     displayValue.value = newParam.value;
@@ -153,10 +162,15 @@ onBeforeUnmount(() => {
 <template>
     <div class="prop-slider-container" ref="valueDraggable" :class="{
         active: dragging,
+        automationIsOpened,
         automated,
     }
         ">
+        <span v-if="automated" class="readout">
+            &gt; automated &lt;
+        </span>
         <Tooltip
+        v-else 
             :tooltip="props.param.default !== undefined ? `middle button or double click sets it to ${props.param.default}` : ''">
 
             <template v-if="props.param.max !== undefined && props.param.min !== undefined">
@@ -174,9 +188,13 @@ onBeforeUnmount(() => {
         </Tooltip>
     </div>
     <div v-if="canBeAutomated" class="lane-options-container">
-        <Button :onClick="enterAutomation" :tooltip="`Automate ${props.param.displayName}`" class="automate">
+        <Button v-if="automationIsOpened"  :onClick="()=>exitAutomation()" :tooltip="`Exit automation editing of ${props.param.displayName}`" class="automate">
+            Exit
+        </Button>
+        <Button v-else :onClick="()=>enterAutomation()" :tooltip="`Automate ${props.param.displayName}`" class="automate">
             Automate
         </Button>
+        
     </div>
 </template>
 <style scoped>
@@ -243,9 +261,12 @@ onBeforeUnmount(() => {
     background-color: rgb(7, 77, 99);
 }
 
-.automated {
+.automationIsOpened {
     border: solid 1px rgb(253, 152, 0);
     box-shadow: 0 0 10px rgb(253, 152, 0);
     z-index: 1;
+}
+.automated {
+    border: solid 1px rgb(253, 152, 0.6);
 }
 </style>
