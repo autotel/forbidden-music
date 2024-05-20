@@ -1,4 +1,4 @@
-import { SynthParamStored } from "../synth/super/SynthInterface";
+import { SynthParamStored } from "../synth/interfaces/SynthParam";
 import { AutomationLane } from "./AutomationLane";
 import { AutomationPointDef } from "./AutomationPoint";
 import { LoopDef } from "./Loop";

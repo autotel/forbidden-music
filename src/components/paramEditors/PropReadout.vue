@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { ReadoutSynthParam } from '../../synth/super/SynthInterface';
-import { useToolStore } from '../../store/toolStore';
-import { useAutomationLaneStore } from '../../store/automationLanesStore';
-import Tooltip from '../Tooltip.vue';
+import { ReadoutSynthParam } from '../../synth/interfaces/SynthParam';
 
 const props = defineProps<{
     param: ReadoutSynthParam,

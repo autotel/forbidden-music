@@ -1,22 +1,5 @@
-import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, SynthParam, SynthVoice } from "./super/SynthInterface";
-import { Synth } from "./super/Synth";
-
-class PerformanceChronometer {
-    private startTime: number;
-    constructor() {
-        this.startTime = performance.now();
-    }
-    getElapsedTime = () => {
-        return performance.now() - this.startTime;
-    }
-    reset = () => {
-        this.startTime = performance.now();
-    }
-    logElapsedTime = (text: string) => {
-        console.log(text, this.getElapsedTime().toFixed(2), "ms");
-        this.reset();
-    }
-}
+import { ParamType, SynthParam, ProgressSynthParam, NumberSynthParam } from "./interfaces/SynthParam";
+import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
 
 interface SampleFileDefinition {
     name: string;

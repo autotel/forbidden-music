@@ -14,12 +14,12 @@ import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
 import { OneShotSampler } from '../synth/OneShotSampler';
 import { SineSynth } from '../synth/SineSynth';
-import { SynthInterface } from '../synth/super/Synth';
-import { OptionSynthParam, ParamType, SynthParam } from "../synth/super/SynthInterface";
 import { useAudioContextStore } from "./audioContextStore";
 import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
+import { SynthParam, OptionSynthParam, ParamType } from '../synth/interfaces/SynthParam';
+import { SynthInterface } from '../synth/super/Synth';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -60,7 +60,7 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
         ) {
             if (sampleDefinition.exclusive && includeExclusives) {
                 samplers.push(newInstance);
-            }else if (sampleDefinition.onlyLocal && isDev()) {
+            } else if (sampleDefinition.onlyLocal && isDev()) {
                 samplers.push(newInstance);
             }
         } else {
@@ -77,13 +77,13 @@ const createSynths = (audioContext: AudioContext, includeExclusives: boolean) =>
 
     returnArray.unshift(new KickSynth(audioContext));
     returnArray.push(new KarplusSynth(audioContext));
+    returnArray.unshift(new ClusterSineSynth(audioContext));
 
     if (isDev()) {
         // bc. unfinished
         returnArray.push(new FmSynth(audioContext));
         returnArray.unshift(new FourierSynth(audioContext));
         // notes sometimes stop before time, suspected poor use of timeouts
-        returnArray.unshift(new ClusterSineSynth(audioContext));
     }
     console.log("available channels", returnArray.map(s => s.name));
     return returnArray;
@@ -261,7 +261,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return `${synthName}.${paramName}`;
     }
 
-    const accessorStringToSynthParam = (accessorString?: string) => {
+    const accessorStringToSynthParam = (accessorString?: string): SynthParam | undefined => {
         console.log("accessor string to synth param", accessorString);
         if (!accessorString) return undefined;
         const [synthName, paramName] = accessorString.split(".");

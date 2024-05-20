@@ -12,10 +12,10 @@ import { SynthChannel, useSynthStore } from "../../store/synthStore";
 import { useToolStore } from "../../store/toolStore";
 import { layerNoteColorStrings } from "../../store/viewStore";
 import { SynthInterface } from "../../synth/super/Synth";
-import { EffectInstance } from "../../synth/super/SynthInterface";
 import SynthSelector from "./SynthSelector.vue";
 import Collapsible from "../Collapsible.vue";
 import ParamsSliderList from "./ParamsSliderList.vue";
+import { EffectInstance } from "../../synth/interfaces/AudioModule";
 
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();

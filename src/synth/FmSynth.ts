@@ -1,7 +1,6 @@
 import { createFmWorklet } from '../functions/fmWorkletFactory';
-import { baseFrequency, frequencyToMidiNote, frequencyToNote12, frequencyToOctave } from '../functions/toneConverters';
-import { Synth } from './super/Synth';
-import { EventParamsBase, SynthParam, SynthVoice } from "./super/SynthInterface";
+import { frequencyToNote12 } from '../functions/toneConverters';
+import { EventParamsBase, Synth } from './super/Synth';
 
 
 interface FmStopVoiceMessage {

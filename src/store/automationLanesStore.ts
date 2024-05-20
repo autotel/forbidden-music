@@ -2,8 +2,9 @@ import { defineStore } from "pinia";
 import { ref, watchEffect } from "vue";
 import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
 import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
-import { SynthParam } from "../synth/super/SynthInterface";
 import { useSynthStore } from "./synthStore";
+import { SynthParam } from "../synth/interfaces/SynthParam";
+import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automatable";
 
 
 
@@ -14,9 +15,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     /** which parameter is currenly being shown on screen for automation */
     const parameterBeingAutomated = ref<SynthParam | false>(false);
 
-    const canParameterBeAutomated = (parameter: SynthParam) => {
-        return parameter.animate !== undefined
-    }
     const sortPointsByTime = (lane: AutomationLane) => {
         lane.content.sort((a, b) => {
             return a.time - b.time
@@ -40,7 +38,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
     })
 
-    const addAutomationLane = (targetParameter?: SynthParam, automationPoints: AutomationPoint[] = []) => {
+    const addAutomationLane = (targetParameter?: AutomatableSynthParam, automationPoints: AutomationPoint[] = []) => {
         const newLane = automationLane({
             displayName: "New Automation Lane",
             content: [],
@@ -55,8 +53,8 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         newLane.content = automationPoints;
         return newLane;
     }
-    const getOrCreateAutomationLaneForParameter = (targetParameter: SynthParam) => {
-        if (!canParameterBeAutomated(targetParameter)) {
+    const getOrCreateAutomationLaneForParameter = (targetParameter: AutomatableSynthParam) => {
+        if (!isAutomatable(targetParameter)) {
             return undefined;
         }
         const paramName = synth.synthParamToAccessorString(targetParameter) || 'undefined'
@@ -66,13 +64,25 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         }
         return lane;
     }
-    const applyAutomationLaneDef = (automationLaneDef: AutomationLaneDef) => {
-        let targetParameter = automationLaneDef.targetParameter;
+    const castToSynthParam = (targetParameter: string | SynthParam | undefined): SynthParam | undefined => {
         if (typeof targetParameter === 'string') {
-            targetParameter = synth.accessorStringToSynthParam(targetParameter);
+            return synth.accessorStringToSynthParam(targetParameter);
+        }
+        return targetParameter;
+    }
+    const applyAutomationLaneDef = (automationLaneDef: AutomationLaneDef) => {
+        let targetParameter = castToSynthParam(automationLaneDef.targetParameter);
+        if(!targetParameter) {
+            console.warn('could not apply automation lane def as target parameter is', targetParameter, automationLaneDef)
+            return
+        }
+        let automatable = isAutomatable(targetParameter);
+        if(!automatable){
+            console.warn('could not apply automation lane def as target parameter is not automatable', targetParameter)
+            return
         }
         const automationPoints = automationLaneDef.content.map(automationPoint)
-        addAutomationLane(targetParameter, automationPoints);
+        addAutomationLane(automatable, automationPoints);
     }
     const getAutomationLaneDef = (automationLane: AutomationLane): AutomationLaneDef => {
         const parameterAccessorString = synth.synthParamToAccessorString(
@@ -138,7 +148,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         applyAutomationLaneDef,
         getAutomationLaneDef,
         getAutomationLaneDefs,
-        canParameterBeAutomated,
         applyAutomationLaneDefs,
         getOrCreateAutomationLaneForParameter,
         forEachAutomationPoint,

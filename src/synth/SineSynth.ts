@@ -1,6 +1,7 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { EventParamsBase, SynthParam, SynthVoice } from "./super/SynthInterface";
-import { Synth } from "./super/Synth";
+import { SynthParam } from "./interfaces/SynthParam";
+import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
+
 
 type SineNoteParams = EventParamsBase & {
     perc: boolean,
@@ -86,20 +87,6 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
                 maximizer.disconnect();
             }
             this.isReady = false;
-        }
-
-        this.schedulePerc = (
-            frequency,
-            absoluteStartTime,
-            noteParameters
-        ) => {
-            const voice = this.scheduleStart(
-                frequency,
-                absoluteStartTime,
-                { perc: true, ...noteParameters }
-            )
-            voice.scheduleEnd(absoluteStartTime + noteParameters.velocity);
-            return voice;
         }
     }
     releaseAll = () => {

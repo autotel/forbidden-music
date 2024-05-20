@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import Tooltip from '../Tooltip.vue';
+import Button from '../Button.vue';
 import { OptionSynthParam } from '../../synth/interfaces/SynthParam';
 
 const triangleLeft = '◀';
 const triangleRight = '▶';
+const triangleDown = '▼';
+
+const showOptions = ref(false);
 
 const props = defineProps({
     param: {
@@ -60,6 +63,11 @@ const plusButtonClicked = (e: MouseEvent) => {
     applyValueDelta(UpOrDown.Up);
 }
 
+const optionClicked = (optionIndex: number) => {
+    props.param.value = optionIndex;
+    currentValueName.value = props.param.options[optionIndex].displayName;
+}
+
 onMounted(() => {
     const selectedOption = props.param.value;
     currentValueName.value = props.param.options[selectedOption]?.displayName;
@@ -73,26 +81,40 @@ watch(() => props.param.value, (newValue) => {
 </script>
 <template>
     <div class="option-container" ref="valueDraggable" :class="{ active: dragging }">
-        <div class="sw-button" ref="minusButton" @click="minusButtonClicked">
+        <!-- <div class="rw-button" ref="minusButton" @click="minusButtonClicked">
             {{ triangleLeft }}
-        </div>
+        </div> -->
         <span>
             {{ readout }}
         </span>
-        <div class="sw-button" ref="plusButton" @click="plusButtonClicked">
+        <!-- <div class="rw-button" ref="plusButton" @click="plusButtonClicked">
             {{ triangleRight }}
+        </div> -->
+        <div class="rw-button" :class="{expanded:showOptions}" @click="()=>showOptions=!showOptions">
+            {{ triangleDown }}
         </div>
     </div>
-
+    <div v-if="showOptions">
+        <Button 
+            v-for="(option, index) in props.param.options"
+            :onClick="(e) => optionClicked(index)"
+            :class="{ active: props.param.value === index }"
+        >{{option.displayName}}</Button>
+    </div>
 </template>
 <style>
 
-.sw-button {
+.rw-button {
     padding: 0 1em;
     cursor: pointer;
 }
 
-.sw-button:hover {
+.rw-button.expanded {
+    background-color: rgba(7, 77, 99,0.5);
+    transform: rotate(180deg);
+}
+
+.rw-button:hover {
     background-color: rgba(7, 77, 99,0.5);
 }
 
@@ -114,7 +136,7 @@ watch(() => props.param.value, (newValue) => {
     top: 0;
 }
 
-.active {
+Button.active {
     background-color: rgb(7, 77, 99);
 }
 

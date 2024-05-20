@@ -4,10 +4,10 @@ import { nextTick, ref, version, watch, watchEffect } from 'vue';
 import { LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0 } from '../dataTypes/LibraryItem';
 import { Note, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
-import { SynthParamStored } from '../synth/super/SynthInterface';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
+import { SynthParamStored } from '../synth/interfaces/SynthParam';
 
 
 const migrators = {

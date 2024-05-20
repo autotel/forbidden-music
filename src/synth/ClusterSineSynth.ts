@@ -1,6 +1,7 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { EventParamsBase, NumberSynthParam, ParamType, SynthParam, SynthVoice } from "./super/SynthInterface";
-import { Synth } from "./super/Synth";
+import { ParamType, NumberSynthParam, SynthParam } from "./interfaces/SynthParam";
+import { EventParamsBase, Synth } from "./super/Synth";
+
 
 type ClusterSineNoteParams = EventParamsBase & {
     relativeOctaves: number[],
@@ -84,6 +85,7 @@ const sineVoice = (audioContext: AudioContext) => {
             }
             noteVelocity = params.velocity;
             this.inUse = true;
+            console.log(params);
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
             const { relativeOctaves, relativeGains } = params;
             this.setValues(relativeOctaves, relativeGains);
@@ -267,7 +269,7 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
                 ...params,
                 relativeOctaves,
                 relativeGains: gains,
-                perc: false,
+                // perc: false,
             } as ClusterSineNoteParams;
         }
 

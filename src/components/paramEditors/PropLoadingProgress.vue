@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { ProgressSynthParam } from '../../synth/super/SynthInterface';
+import { ProgressSynthParam } from '../../synth/interfaces/SynthParam';
 
 const props = defineProps({
     param: {
@@ -31,7 +31,7 @@ setInterval(updateDisplayProgress, 1000);
                 }"></div>
             </div>
         </template>
-        <span style="{position: absolute; z-index: 2;}">
+        <span style="position: absolute; z-index: 2;">
             {{ displayProgress?.toFixed(1) }} / {{ props.param.max?.toFixed(1) }}
         </span>
     </div>

@@ -1,7 +1,7 @@
 import { createKarplusWorklet } from "../functions/karplusWorkletFactory";
-import { Synth, SynthInterface } from "./super/Synth";
-import { NumberSynthParam, OptionSynthParam, ParamType, SynthParam, SynthVoice } from "./super/SynthInterface";
-
+import { AutomatableSynthParam } from "./interfaces/Automatable";
+import { ParamType, NumberSynthParam, OptionSynthParam, SynthParam } from "./interfaces/SynthParam";
+import { SynthVoice, Synth } from "./super/Synth";
 // It's really difficult to measure the filter cutoff, though possible.
 // maybe we can use this approach to comb filter instead of the worklet
 // https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
@@ -143,7 +143,7 @@ export class KarplusSynth extends Synth {
             min: 0,
             max: 1,
             exportable: true,
-        } as NumberSynthParam;
+        } as AutomatableSynthParam;
         this.params.push(fffParam)
         fffParam.value = 0.128;
 
@@ -195,7 +195,7 @@ export class KarplusSynth extends Synth {
             max: 1.5,
             default: 0,
             exportable: true,
-        } as NumberSynthParam;
+        } as AutomatableSynthParam;
         this.params.push(ffParam)
         ffParam.value = -0.630;
 

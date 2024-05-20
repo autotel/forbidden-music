@@ -1,6 +1,7 @@
 import { findSampleSourceClosestToFrequency } from "./OneShotSampler";
-import { Synth } from "./super/Synth";
-import { EventParamsBase, NumberSynthParam, ParamType, ProgressSynthParam, ReadoutSynthParam, SynthParam, SynthVoice } from "./super/SynthInterface";
+import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam } from "./interfaces/SynthParam";
+import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
+
 interface SampleFileDefinition {
     name: string;
     frequency: number;

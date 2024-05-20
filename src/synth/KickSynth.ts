@@ -1,5 +1,5 @@
-import { Synth } from "./super/Synth";
-import { EventParamsBase, NumberSynthParam, ParamType, SynthParam, SynthVoice } from "./super/SynthInterface";
+import { NumberSynthParam, ParamType, SynthParam } from "./interfaces/SynthParam";
+import { SynthVoice, EventParamsBase, Synth } from "./super/Synth";
 
 interface KickSynthParams {
     startOctave: {value: number},

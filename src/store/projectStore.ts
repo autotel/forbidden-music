@@ -7,7 +7,6 @@ import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
 import { getNotesInRange } from '../functions/getEventsInRange';
 import { ifDev } from '../functions/isDev';
-import { SynthParam, SynthParamStored } from '../synth/super/SynthInterface';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
@@ -16,6 +15,7 @@ import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { SynthChannel, useSynthStore } from './synthStore';
 import demoProject from './project-default';
+import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 
 const emptyProjectDefinition: LibraryItem = {
     name: "unnamed (autosave)",

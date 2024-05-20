@@ -1,4 +1,33 @@
-import { EventParamsBase, SynthParam, SynthVoice, synthVoiceFactory } from "../super/SynthInterface";
+import { SynthParam } from "../interfaces/SynthParam";
+
+export interface EventParamsBase {
+    [key: string]: any,
+    velocity: number,
+}
+
+
+export interface SynthVoice<A = EventParamsBase> {
+    output?: AudioNode;
+    inUse: boolean;
+    scheduleStart: (
+        frequency: number,
+        absoluteStartTime: number,
+        /** parameters unique to this triggered event, such as velocity and whatnot */
+        noteParameters: any & A
+    ) => {};
+    scheduleEnd: (
+        absoluteStopTime: number,
+    ) => {}
+    stop: () => void,
+}
+export type synthVoiceFactory<
+    VoiceGen extends SynthVoice<A>,
+    A = any
+> = (
+    audioContext: AudioContext, 
+    synthParams: A
+) => VoiceGen;
+
 
 interface SynthBase {
     name: string;
@@ -26,7 +55,7 @@ export interface SynthInterface extends SynthBase {
     output: GainNode;
 }
 
-export interface ExternalSynthInterface extends SynthBase{
+export interface ExternalSynthInterface extends SynthBase {
 }
 
 export class Synth<
@@ -53,7 +82,7 @@ export class Synth<
                 audioContext,
                 this
             );
-            if(voice.output) voice.output.connect(this.output);
+            if (voice.output) voice.output.connect(this.output);
             return voice;
         }
         this.output = audioContext.createGain();
@@ -94,7 +123,10 @@ export class Synth<
         if (this.transformTriggerParams) {
             noteParameters = this.transformTriggerParams(noteParameters);
         }
-        const voice = this.scheduleStart(frequency, absoluteStartTime, noteParameters)
+        const voice = this.scheduleStart(frequency, absoluteStartTime, {
+            ...noteParameters,
+            perc: true,
+        })
         const { velocity } = noteParameters;
         voice.scheduleEnd(
             absoluteStartTime + velocity * 2.8

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { NumberSynthParam } from '../../synth/super/SynthInterface';
-import { useToolStore } from '../../store/toolStore';
 import { Tool } from '../../dataTypes/Tool';
 import { useAutomationLaneStore } from '../../store/automationLanesStore';
-import Tooltip from '../Tooltip.vue';
+import { useToolStore } from '../../store/toolStore';
+import { isAutomatable } from '../../synth/interfaces/Automatable';
+import { NumberSynthParam } from '../../synth/interfaces/SynthParam';
 import Button from '../Button.vue';
+import Tooltip from '../Tooltip.vue';
 // TODO: this could use a refactor
 
 const props = defineProps<{
@@ -25,7 +26,7 @@ const lanes = useAutomationLaneStore();
 const automated = computed(() => {
     return tool.laneBeingEdited?.targetParameter === props.param && tool.current === Tool.Automation;
 });
-const canBeAutomated = lanes.canParameterBeAutomated(props.param);
+const canBeAutomated = isAutomatable(props.param);
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -86,7 +87,9 @@ const mouseDown = (e: MouseEvent) => {
         }
         case 0: {
             dragging.value = true;
-            const nl = lanes.getOrCreateAutomationLaneForParameter(props.param);
+            const automatable = isAutomatable(props.param);
+            if (!automatable) throw new Error("param is not automatable");
+            const nl = lanes.getOrCreateAutomationLaneForParameter(automatable);
             if (nl) tool.laneBeingEdited = nl;
             taken = true;
         }
@@ -111,8 +114,10 @@ const doubleClick = (e: MouseEvent) => {
     }
 }
 const enterAutomation = () => {
+    const automatable = isAutomatable(props.param);
+    if (!automatable) throw new Error("param is not automatable");
     tool.current = Tool.Automation;
-    tool.laneBeingEdited = lanes.getOrCreateAutomationLaneForParameter(props.param);
+    tool.laneBeingEdited = lanes.getOrCreateAutomationLaneForParameter(automatable);
 }
 watch(props.param, (newParam) => {
     displayValue.value = newParam.value;
@@ -157,10 +162,9 @@ onBeforeUnmount(() => {
             <template v-if="props.param.max !== undefined && props.param.min !== undefined">
                 <div class="prog-container">
                     <div class="prog-bar" :class="{ negative: preMapValue < 0 }" :style="{
-                            width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
-                            left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
-                        }"
-                    >
+                        width: (preMapValue >= 0 ? (preMapValue) : (-preMapValue)) * 100 + '%',
+                        left: (preMapValue >= 0 ? 0 : (1 - preMapValue)) * 100 + '%',
+                    }">
                     </div>
                 </div>
             </template>
@@ -227,10 +231,11 @@ onBeforeUnmount(() => {
 }
 
 .readout {
-    left:0; top:0;
+    left: 0;
+    top: 0;
 
-    width:100%;
-    position: absolute; 
+    width: 100%;
+    position: absolute;
     z-index: 2;
 }
 

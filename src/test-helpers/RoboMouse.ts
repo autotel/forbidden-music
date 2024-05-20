@@ -1,4 +1,3 @@
-import * as puppeteer from "puppeteer";
 
 export const tweener = (
     start: number, end: number, duration: number, callback: (value: number) => void

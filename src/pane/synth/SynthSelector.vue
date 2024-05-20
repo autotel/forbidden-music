@@ -2,12 +2,11 @@
 import Button from "../../components/Button.vue";
 import { SynthChannel, useSynthStore } from "../../store/synthStore";
 import { SynthInterface } from "../../synth/super/Synth";
-import { EffectInstance } from "../../synth/super/SynthInterface";
 import ParamsSliderList from "./ParamsSliderList.vue";
-import PropOption from "../../components/paramEditors/PropOption.vue";
-import { computed, inject, ref, watch } from "vue";
-import Tooltip from "../../components/Tooltip.vue";
+import PropOptionButtons from "../../components/paramEditors/PropOptionButtons.vue";
+import { ref, watch } from "vue";
 import onePerRuntimeStore from "../../store/onePerRuntimeStore";
+import { EffectInstance } from "../../synth/interfaces/AudioModule";
 const props = defineProps<{
     activeLayerChan: SynthChannel | null,
     showCredits: (ofSynth: SynthInterface | EffectInstance) => void
@@ -47,7 +46,7 @@ const dots = ref('...');
 </script>
 <template>
     <template v-if="activeLayerChan">
-        <PropOption :param="synth.synthSelector(activeLayerChan)" />
+        <PropOptionButtons :param="synth.synthSelector(activeLayerChan)" />
         <template v-if="isSynthReady">
             <ParamsSliderList :synthParams="activeLayerChan.params" />
             <Button class="padded" v-if="'credits' in activeLayerChan.synth"

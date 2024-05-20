@@ -6,7 +6,7 @@ import PropLoadingProgress from "../../components/paramEditors/PropLoadingProgre
 import PropOption from "../../components/paramEditors/PropOption.vue";
 import PropSlider from '../../components/paramEditors/PropSlider.vue';
 import { useMonoModeInteraction } from "../../store/monoModeInteraction";
-import { ParamType, SynthParam } from "../../synth/super/SynthInterface";
+import { ParamType, SynthParam } from "../../synth/interfaces/SynthParam";
 import PropReadout from "../../components/paramEditors/PropReadout.vue";
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
