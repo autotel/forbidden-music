@@ -14,7 +14,7 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     // disable hot module reload
-    hmr: false,
+    hmr: true,
   },
   // to make use of `TAURI_DEBUG` and other env variables
   // https://tauri.studio/v1/api/config#buildconfig.beforedevcommand

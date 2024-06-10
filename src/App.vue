@@ -19,7 +19,7 @@ import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vu
 import Modal from './modals/Modal.vue';
 import UserDisclaimer from './modals/UserDisclaimer.vue';
 import Harp from './overlays/Harp.vue';
-import Pane from './pane/Pane.vue';
+import RightPane from './right-pane/RightPane.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useHistoryStore } from './store/historyStore';
 import { useLibraryStore } from './store/libraryStore';
@@ -31,6 +31,9 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
+import AnglesUp from './components/icons/AnglesUp.vue';
+import AnglesDown from './components/icons/AnglesDown.vue';
+import BottomPane from './bottom-pane/BottomPane.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -46,9 +49,11 @@ const clickOutsideCatcher = ref();
 const history = useHistoryStore();
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
-const paneWidth = ref(300);
+const sidePaneWidth = ref(300);
+const bottomPaneHeight = ref(300);
 const viewport = ref<HTMLElement>();
 const userSettings = useCustomSettingsStore();
+let transportHeight = 50;
 
 provide('modalText', modalText);
 
@@ -219,16 +224,17 @@ onBeforeUnmount(() => {
 });
 
 const resize = () => {
+    transportHeight = document.querySelector('.toolbars-container')?.clientHeight || 50;
     viewportSize.value = {
-        width: window.innerWidth - paneWidth.value,
-        height: window.innerHeight - 50,
+        width: window.innerWidth - sidePaneWidth.value,
+        height: window.innerHeight - transportHeight - bottomPaneHeight.value,
     };
     view.updateSize(viewportSize.value.width, viewportSize.value.height);
 };
 
 const viewportSize = ref({ width: 0, height: 0 });
 
-watch(paneWidth, () => {
+watch([sidePaneWidth, bottomPaneHeight], () => {
     resize();
 })
 
@@ -243,23 +249,38 @@ const allowContextMenu = true;
                 :height="viewportSize.height" />
             <ScoreViewportSvg v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
                 :height="viewportSize.height" />
+            <TimeScrollBar style="position:absolute; left:0; bottom:0;" />
         </div>
-        <TimeScrollBar />
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}
         </div>
         <div style="position:absolute; right:0px; top:30px">
-            <Pane :paneWidth="paneWidth" />
-            <Button :onClick="() => paneWidth = paneWidth ? 0 : 300" style="position:absolute"
-                :style="{ right: paneWidth + 'px' }">
+            <RightPane :paneWidth="sidePaneWidth" />
+            <Button :onClick="() => sidePaneWidth = sidePaneWidth ? 0 : 300" style="position:absolute"
+                :style="{ right: sidePaneWidth + 'px' }">
 
-                <AnglesRight v-if="paneWidth" />
+                <AnglesRight v-if="sidePaneWidth" />
                 <AnglesLeft v-else />
             </Button>
+        </div>
+        <div :style="{
+            position: 'absolute',
+            bottom: `${transportHeight}px`,
+            left: '0px',
+            height: `${bottomPaneHeight}px`
+        }">
+            <BottomPane :paneHeight="bottomPaneHeight" />
         </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <div class="toolbars-container">
             <Transport />
+            <div style="display:flex; align-items: center; height: 100%;">
+                <Button :onClick="() => bottomPaneHeight = bottomPaneHeight ? 0 : 300">
+                    <AnglesDown v-if="bottomPaneHeight" />
+                    <AnglesUp v-else />
+                    Synth
+                </Button>
+            </div>
             <!-- <Autotel /> -->
             <ToolSelector />
             <SkipBar />
@@ -299,8 +320,8 @@ const allowContextMenu = true;
                     9 / 10
                 ]">
                     {{ new Fraction(fr).toFraction() }} is rounded to {{
-                new Fraction(fr).simplify(snap.simplify).toFraction()
-            }}
+                        new Fraction(fr).simplify(snap.simplify).toFraction()
+                    }}
                 </li>
             </ul>
         </div>
@@ -308,7 +329,13 @@ const allowContextMenu = true;
     <UserDisclaimer />
     <TooltipDisplayer />
 </template>
-<style></style>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+</style>
 <style scoped>
 .unclickable {
     pointer-events: none;
