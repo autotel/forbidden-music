@@ -58,6 +58,7 @@ export interface SynthInterface extends SynthBase {
 export interface ExternalSynthInterface extends SynthBase {
 }
 
+
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
@@ -75,9 +76,10 @@ export class Synth<
     transformTriggerParams?: (p: EventParamsBase) => A;
     constructor(
         audioContext: AudioContext,
-        factory: synthVoiceFactory<V>,
+        factory?: synthVoiceFactory<V>,
     ) {
         this.createVoice = () => {
+            if(!factory) throw new Error("No factory provided to create voice");
             const voice = factory(
                 audioContext,
                 this
@@ -139,3 +141,4 @@ export class Synth<
         });
     }
 }
+

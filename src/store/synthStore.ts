@@ -20,6 +20,7 @@ import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { SynthParam, OptionSynthParam, ParamType } from '../synth/interfaces/SynthParam';
 import { SynthInterface } from '../synth/super/Synth';
+import { SynthPlaceholder } from '../synth/PlaceholderSynth';
 
 
 type AdmissibleSynthType = SynthInterface;
@@ -29,63 +30,84 @@ export interface SynthChannel {
     params: SynthParam[];
 }
 
-const createSynths = (audioContext: AudioContext, includeExclusives: boolean) => {
+type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => AdmissibleSynthType;
 
-    const samplers = [] as (OneShotSampler | GranularSampler)[];
-    let returnArray = [] as AdmissibleSynthType[];
+export class SynthConstructorWrapper {
+    constructor(
+        public audioContext: AudioContext,
+        public constructorFunction: SynthMinimalConstructor,
+        public extraParams: unknown[] = [],
+        public name: string
+    ) {
+    }
+    create = () => {
+        const instance = new this.constructorFunction(this.audioContext, ...this.extraParams);
+        instance.name = this.name;
+        return instance;
+    }
+}
+
+const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boolean): SynthConstructorWrapper[] => {
+
+    const samplers = [] as SynthConstructorWrapper[];
+    let returnArray = [] as SynthConstructorWrapper[];
+
+    // Sorry for the contortionist code.
+    // I need a constructor that can be instanced at runtime
+    // and know the name beforehand.
+    // Before making better code I would need to make the sampler's sample 
+    // chooseable after instantiation.
+
+    const addAvailableSynth = <T extends any[]>(
+        constr: SynthMinimalConstructor,
+        extraParams?: T,
+        name?: string,
+        isExclusive?: boolean,
+        isOnlyLocal?: boolean,
+    ) => {
+        const epp = (extraParams || []) as T;
+        if (isExclusive && !includeExclusives) return;
+        if (isOnlyLocal && !isDev()) return;
+        returnArray.push(
+            new SynthConstructorWrapper(audioContext, constr, epp, name || constr.name)
+        );
+    }
+
+    addAvailableSynth(SynthPlaceholder);
 
     sampleDefinitions.forEach((sampleDefinition) => {
-        const newInstance: OneShotSampler | GranularSampler = (() => {
-            if (sampleDefinition.type === 'one shot') {
-                return new OneShotSampler(
-                    audioContext,
-                    sampleDefinition.samples,
-                    sampleDefinition.name,
-                    sampleDefinition.readme
-                )
-            } else if (sampleDefinition.type === 'granular') {
-                return new GranularSampler(
-                    audioContext,
-                    sampleDefinition.samples,
-                    sampleDefinition.name,
-                    sampleDefinition.readme
-                )
-            } else {
-                throw new Error("type not supported " + sampleDefinition.type)
-            }
-        })();
+        const ps = [
+            sampleDefinition.samples,
+            sampleDefinition.name,
+            sampleDefinition.readme
+        ];
 
-        if (
-            sampleDefinition.exclusive || sampleDefinition.onlyLocal
-        ) {
-            if (sampleDefinition.exclusive && includeExclusives) {
-                samplers.push(newInstance);
-            } else if (sampleDefinition.onlyLocal && isDev()) {
-                samplers.push(newInstance);
-            }
+        if (sampleDefinition.type === 'one shot') {
+            addAvailableSynth(OneShotSampler, ps, sampleDefinition.name, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
+        } else if (sampleDefinition.type === 'granular') {
+            addAvailableSynth(GranularSampler, ps, sampleDefinition.name, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
         } else {
-            samplers.push(newInstance);
+            throw new Error("type not supported " + sampleDefinition.type)
         }
 
     });
 
-    returnArray = [
-        new SineSynth(audioContext),
-        // new ExternalMidiSynth(audioContext),
-        ...samplers
-    ];
 
-    returnArray.unshift(new KickSynth(audioContext));
-    returnArray.push(new KarplusSynth(audioContext));
-    returnArray.unshift(new ClusterSineSynth(audioContext));
+
+    addAvailableSynth(KickSynth);
+    addAvailableSynth(KarplusSynth);
+    addAvailableSynth(ClusterSineSynth);
+
 
     if (isDev()) {
         // bc. unfinished
-        returnArray.push(new FmSynth(audioContext));
-        returnArray.unshift(new FourierSynth(audioContext));
+        addAvailableSynth(FmSynth,[],'FmSynth',false,true);
+        addAvailableSynth(FourierSynth,[],'FourierSynth',false,true);
+        // addAvailableSynth(MIDIOutput);
         // notes sometimes stop before time, suspected poor use of timeouts
     }
     console.log("available channels", returnArray.map(s => s.name));
+
     return returnArray;
 }
 
@@ -95,17 +117,25 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const audioContextStore = useAudioContextStore();
     const effectsStore = useEffectsStore();
 
-    const availableSynths = ref(
-        createSynths(audioContextStore.audioContext, exclusives.enabled) as AdmissibleSynthType[]
-    );
+    const synthConstructorWrappers = ref<SynthConstructorWrapper[]>(getSynthConstructors(
+        audioContextStore.audioContext,
+        exclusives.enabled
+    ));
+
     const channels = ref<SynthChannel[]>([]);
+    const instancedSynths = ref<AdmissibleSynthType[]>([]);
 
     const addChannel = (index?: number) => {
+        const newSynth = synthConstructorWrappers.value[0].create();
+        instancedSynths.value.push(newSynth);
+        console.log("instanced synths:", instancedSynths.value.length);
+
         const newChannel = {
-            synth: availableSynths.value[0],
-            params: availableSynths.value[0].params,
-            layer: 0
+            synth: newSynth,
+            params: newSynth.params,
+            layer: instancedSynths.value.length,
         };
+
         if (index !== undefined) {
             channels.value[index] = newChannel;
             return newChannel;
@@ -206,55 +236,30 @@ export const useSynthStore = defineStore("synthesizers", () => {
         }
     }
 
-    const setSynthByName = (synthName: string, channel = 0) => new Promise<AdmissibleSynthType>((resolve, reject) => {
+    const setSynthByName = (
+        synthName: string, 
+        channel = 0
+    ) => new Promise<AdmissibleSynthType>((resolve, reject) => {
         console.log("set synth by name", synthName);
         audioContextStore.audioContextPromise.then(() => {
-            const foundSynth = availableSynths.value.find((s) => s.name === synthName);
+            const foundSynth = instancedSynths.value.find((s) => s.name === synthName);
             if (foundSynth) {
                 setSynth(foundSynth, channel);
                 resolve(foundSynth);
             } else {
                 console.error("synth not found", synthName);
-                console.log("available synths", availableSynths.value.map(s => s.name));
+                console.log("available synths", synthConstructorWrappers.value.map(s => s.name));
                 reject();
             }
         });
     })
 
 
-    const synthSelector = (synthChannel: SynthChannel): OptionSynthParam => ({
-        type: ParamType.option,
-        getValue(synthChannel: SynthChannel) {
-            const ret = synthChannel.synth ? availableSynths.value.indexOf(
-                synthChannel.synth
-            ) : 0;
-            if (ret === -1) {
-                console.error("synth not found");
-                return 0;
-            }
-            return ret;
-        },
-        setValue(synthChannel: SynthChannel, choiceNo: number) {
-            if (!availableSynths.value[choiceNo]) throw new Error(`no synth at index ${choiceNo}`);
-            setSynth(availableSynths.value[choiceNo], channels.value.indexOf(synthChannel));
-        },
-        get value() {
-            return this.getValue(synthChannel);
-        },
-        set value(choiceNo: number) {
-            this.setValue(synthChannel, choiceNo);
-        },
-        options: availableSynths.value.map((s, index) => ({
-            value: index,
-            displayName: s.name,
-        })),
-        exportable: true,
-    })
 
     const synthParamToAccessorString = (param?: SynthParam) => {
         if (!param) return undefined;
         if (typeof param === 'string') throw new Error("param is string");
-        const synthWithParam = availableSynths.value.find((synth) => synth.params.includes(param));
+        const synthWithParam = instancedSynths.value.find((synth) => synth.params.includes(param));
         if (!synthWithParam) throw new Error("synth with param not found");
         const synthName = synthWithParam.name;
         const paramName = param.displayName;
@@ -262,10 +267,10 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const accessorStringToSynthParam = (accessorString?: string): SynthParam | undefined => {
-        console.log("accessor string to synth param", accessorString);
+        console.warn("accessor string to synth param, needs updating to target channel, represent multi-instance synths", accessorString);
         if (!accessorString) return undefined;
         const [synthName, paramName] = accessorString.split(".");
-        const synth = availableSynths.value.find((s) => s.name === synthName);
+        const synth = instancedSynths.value.find((s) => s.name === synthName);
         if (!synth) {
             console.warn("synth not found", synthName);
             return undefined;
@@ -278,6 +283,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         console.log("found automated param ", param);
         return param;
     }
+
 
     /**
      * resolve assoc of
@@ -295,14 +301,14 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     return {
-        availableSynths,
+        synthConstructorWrappers,
+        instancedSynths,
         channels,
         scheduleNote,
         scheduleAutomation,
         releaseAll,
         setSynthByName,
         getOrCreateChannel,
-        synthSelector,
         getLayerSynth,
         removeChannel,
         addChannel,

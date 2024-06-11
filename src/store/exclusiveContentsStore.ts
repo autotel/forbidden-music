@@ -11,19 +11,22 @@ export const useExclusiveContentsStore = defineStore("exclusive contents store",
         enabled.value = true;
     });
 
-    // ifDev(() => {
-    //     console.log("dev - exclusives mode on");
-    //     enabled.value = true;
-    // });
+    ifDev(() => {
+        console.log("dev - exclusives mode on");
+        enabled.value = true;
+    });
+    const evaluateFromUrl = () => {
+        try {
+            if (window.location.hash == "#exclusive") {
+                enabled.value = true;
+                console.log("exclusives mode on");
+            }
+        } catch (e) { }
+    }
 
-    try {
-        if (window.location.hash == "#exclusive") {
-            enabled.value = true;
-            console.log("exclusives mode on");
-        }
-    } catch (e) { }
-
+    evaluateFromUrl();
     return {
-        enabled
+        enabled,
+        evaluateFromUrl
     }
 });

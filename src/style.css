@@ -5,7 +5,6 @@
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
 
-  color: #0f0f0f;
   background-color: #fcfafc;
 
   font-synthesis: none;
@@ -14,14 +13,10 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
-
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #fcfafc;
-    background-color: #0f0f0f;
-  }
+:root, .bg-colored {
+  color: #0f0f0f;
 }
+
 
 *{
   box-sizing: border-box;
@@ -104,33 +99,6 @@ svg {
 svg text{
   stroke: none;
 }
-@media (prefers-color-scheme: dark) {
-  svg {
-    fill: #bbbbbb22;
-    stroke: white;
-  }
-  svg text{
-    fill: currentColor;
-  }
-  :root {
-    color: #f6f6f6;
-    background-color: #18161b;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  .button {
-    color: #ffffff;
-    background-color: #ffffff38;
-  }
-
-  .button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
 
 .padded {
@@ -168,4 +136,37 @@ svg text{
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #fcfafc;
+  }
+
+
+  svg {
+    fill: #bbbbbb22;
+    stroke: white;
+  }
+  svg text{
+    fill: currentColor;
+  }
+  :root, .bg-colored {
+    color: #f6f6f6;
+    background-color: #18161b;
+  }
+
+  a:hover {
+    color: #24c8db;
+  }
+
+  input,
+  .button {
+    color: #ffffff;
+    background-color: #ffffff38;
+  }
+
+  .button:active {
+    background-color: #0f0f0f69;
+  }
 }

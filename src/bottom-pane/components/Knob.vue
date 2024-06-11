@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { NumberSynthParam } from '../../synth/interfaces/SynthParam';
 import AnglesLeft from '../../components/icons/AnglesLeft.vue';
+import { abbreviate } from '../../functions/abbreviate';
+import Tooltip from '../../components/Tooltip.vue';
 const props = defineProps<{
     param: NumberSynthParam
 }>();
 let mouseDownPos = {
     x: 0, y: 0,
 };
+const knobAngle = (angle: number) => {
+    angle *= 270;
+    angle -= 45;
+    return `transform:rotate(${angle}deg)`;
+}
+const abbreviatedName = computed(() => {
+    if (!props.param.displayName) return '';
+    // return props.param.displayName;
+    return abbreviate(props.param.displayName, 10);
+});
 const paramValueToLocalValue = () => {
     localValue.value = (props.param.value - props.param.min) / (props.param.max - props.param.min);
 }
@@ -110,33 +122,38 @@ const addWheelListeners = () => {
 const removeWheelListeners = () => {
     window.removeEventListener('wheel', mouseWheeled);
 }
+const tooltip = computed(() => {
+    if(props.param.tooltip) return props.param.tooltip;
+    return props.param.displayName;
+});
 </script>
 <template>
-    <div class="prevent-select knob-layout" @mousedown="mouseDown" @mouseenter="addWheelListeners"
-        @mouseleave="removeWheelListeners">
-        
-        <div class="knob">
-            <div :style="`transform:rotate(${localValue * 360}deg)`">
-                <span style="font-size:2em">-</span>
-                <canvas ref="canvas" width="0" height="0"></canvas>
-            </div>
-        </div>
-        <small>{{ props.param.displayName }}</small>
-        <small>{{ props.param.value.toFixed(2) }}</small>
+    <Tooltip :tooltip="tooltip" :force-hide="dragging">
+        <div class="prevent-select knob-layout" @mousedown="mouseDown" @mouseenter="addWheelListeners"
+            @mouseleave="removeWheelListeners">
 
-    </div>
+            <div class="knob">
+                <div :style="knobAngle(localValue)">
+                    <span style="font-size:2em">-</span>
+                    <canvas ref="canvas" width="0" height="0"></canvas>
+                </div>
+            </div>
+            <small>{{ abbreviatedName }}</small>
+            <small>{{ props.param.value.toFixed(2) }}</small>
+
+        </div>
+    </Tooltip>
 </template>
 <style scoped>
-
 .knob-layout {
-    width:4em;
-    height:fit-content;
+    width: 4em;
+    height: fit-content;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     text-align: center;
-    gap: 0.3em;
+    gap: 0.2em;
+    overflow: hidden;
 }
 
 .knob {
@@ -146,7 +163,7 @@ const removeWheelListeners = () => {
     width: 1.9em;
     height: 1.9em;
     fill: currentcolor;
-    cursor:grab;
+    cursor: grab;
 }
 
 .knob>* {
@@ -157,8 +174,13 @@ const removeWheelListeners = () => {
     width: 100%;
     height: 100%;
 }
+
 .knob:hover {
     box-shadow: 0.3em 0.3em 0.6em rgba(0, 0, 0, 0.356);
+}
+
+small {
+    white-space: nowrap;
 }
 
 canvas {

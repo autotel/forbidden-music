@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useSlots } from 'vue';
+import { useSlots, watch } from 'vue';
 import { useToolStore } from '../store/toolStore';
 const slots = useSlots()
 const tool = useToolStore();
 
 const props = defineProps<{
-    tooltip?: string
+    tooltip?: string,
+    forceHide?: boolean,
 }>()
 
 
@@ -21,6 +22,12 @@ const mouseLeave = (e: MouseEvent) => {
     tool.tooltipOwner = null;
 }
 
+watch(() => props.forceHide, (newVal) => {
+    if (newVal) {
+        tool.tooltip = '';
+        tool.tooltipOwner = null;
+    }
+})
 
 </script>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Fraction from 'fraction.js';
-import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { onBeforeMount, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
 import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
@@ -34,6 +34,7 @@ import { useViewStore } from './store/viewStore';
 import AnglesUp from './components/icons/AnglesUp.vue';
 import AnglesDown from './components/icons/AnglesDown.vue';
 import BottomPane from './bottom-pane/BottomPane.vue';
+import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -53,6 +54,7 @@ const sidePaneWidth = ref(300);
 const bottomPaneHeight = ref(300);
 const viewport = ref<HTMLElement>();
 const userSettings = useCustomSettingsStore();
+const exclusiveContentsStore = useExclusiveContentsStore();
 let transportHeight = 50;
 
 provide('modalText', modalText);
@@ -182,6 +184,7 @@ const tryLoadStart = async () => {
 }
 
 onMounted(() => {
+    exclusiveContentsStore.evaluateFromUrl();
     if (clickOutsideCatcher.value) {
         window.addEventListener('wheel', (e) => {
             if (e.target === clickOutsideCatcher.value) {
@@ -272,7 +275,7 @@ const allowContextMenu = true;
             <BottomPane :paneHeight="bottomPaneHeight" />
         </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
-        <div class="toolbars-container">
+        <div class="toolbars-container bg-colored">
             <Transport />
             <div style="display:flex; align-items: center; height: 100%;">
                 <Button :onClick="() => bottomPaneHeight = bottomPaneHeight ? 0 : 300">
