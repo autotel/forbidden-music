@@ -1,4 +1,4 @@
-import { EffectInstance } from "./interfaces/AudioModule";
+import { AudioEffect } from "./interfaces/AudioModule";
 import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam } from "./interfaces/SynthParam";
 
 export interface ImpulseResponseSampleDefinition {
@@ -10,7 +10,7 @@ export interface ImpulseResponseSampleDefinition {
 const createConvolutionReverb = async (
     impulseResponseUrl: string, audioContext: AudioContext
 ): Promise<{
-    inputNode: AudioNode, output: AudioNode
+    input: AudioNode, output: AudioNode
 }> => {
     const output = audioContext.createGain();
     const convolver = audioContext.createConvolver();
@@ -19,32 +19,32 @@ const createConvolutionReverb = async (
     const buffer = await response.arrayBuffer();
     const decodedBuffer = await audioContext.decodeAudioData(buffer);
     convolver.buffer = decodedBuffer;
-    return { inputNode: convolver, output };
+    return { input: convolver, output };
 }
 
-export class ConvolutionReverbEffect implements EffectInstance {
+export class ConvolutionReverbEffect implements AudioEffect {
     private audioContext: AudioContext;
     private loadingProgress = 0;
-    inputNode: AudioNode;
+    input: AudioNode;
     output: AudioNode;
     params: SynthParam[] = [];
     name: string = "Convolution Reverb";
     enable: () => void;
     disable: () => void;
     credits: string = "";
-    alreadyBuiltReverbs: { [key: string]: { inputNode: AudioNode, output: AudioNode } } = {};
+    alreadyBuiltReverbs: { [key: string]: { input: AudioNode, output: AudioNode } } = {};
     constructor(
         audioContext: AudioContext,
         sampleDefinitions: ImpulseResponseSampleDefinition[],
     ) {
         this.audioContext = audioContext;
         this.output = this.audioContext.createGain();
-        this.inputNode = this.audioContext.createGain();
+        this.input = this.audioContext.createGain();
         const dry = this.audioContext.createGain();
         const wet = this.audioContext.createGain();
-        this.inputNode.connect(dry);
+        this.input.connect(dry);
         dry.connect(this.output);
-        this.inputNode.connect(wet);
+        this.input.connect(wet);
         wet.gain.value = 0;
         dry.gain.value = 1;
 
@@ -54,7 +54,7 @@ export class ConvolutionReverbEffect implements EffectInstance {
             }
             wet.disconnect();
             const alreadyBuilt = this.alreadyBuiltReverbs[path];
-            wet.connect(alreadyBuilt.inputNode);
+            wet.connect(alreadyBuilt.input);
             alreadyBuilt.output.connect(this.output);
         }
         const changeImpulseResponse = async (sampleDefinition:ImpulseResponseSampleDefinition) => {

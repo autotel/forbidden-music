@@ -96,4 +96,31 @@ export interface LibraryItem_0_4_0 {
     lanes: AutomationLane[];
 }
 
-export type LibraryItem = LibraryItem_0_4_0;
+export interface LibraryItem_0_5_0 {
+
+    version: string;
+    name: string;
+    created: Number;
+    edited: Number;
+    snaps: Array<[string, boolean]>;
+    bpm?: number;
+    layers: {
+        channelSlot: number;
+        visible: boolean;
+        locked: boolean;
+    }[];
+    channels: {
+        chain: {
+            type: string;
+            params: Array<SynthParamStored>;
+        }[]
+    }[];
+    customOctavesTable?: number[];
+    snap_simplify?: number;
+
+    notes: NoteDef[];
+    loops: LoopDef[];
+    lanes: AutomationLane[];
+}
+
+export type LibraryItem = LibraryItem_0_5_0;

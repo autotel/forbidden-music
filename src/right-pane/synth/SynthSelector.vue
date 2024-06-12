@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import Button from "../../components/Button.vue";
 import { SynthChannel, useSynthStore } from "../../store/synthStore";
-import { SynthInterface } from "../../synth/super/Synth";
+import { SynthBase } from "../../synth/super/Synth";
 import ParamsSliderList from "./ParamsSliderList.vue";
 import PropOptionButtons from "../../components/paramEditors/PropOptionButtons.vue";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import onePerRuntimeStore from "../../store/onePerRuntimeStore";
-import { EffectInstance } from "../../synth/interfaces/AudioModule";
+import { AudioEffect } from "../../synth/interfaces/AudioModule";
 const props = defineProps<{
     activeLayerChan: SynthChannel | null,
-    showCredits: (ofSynth: SynthInterface | EffectInstance) => void
+    showCredits: (ofSynth: SynthBase | AudioEffect) => void
 }>()
 
 const synth = useSynthStore();

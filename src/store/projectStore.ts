@@ -1,4 +1,4 @@
-import {compress,decompress} from 'lzutf8';
+import { compress, decompress } from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
@@ -28,11 +28,13 @@ const emptyProjectDefinition: LibraryItem = {
     bpm: 120,
     layers: [],
     channels: [{
-        type: "(CPX)test-tone",
-        params: [{
-            displayName: "volume",
-            value: 0.8,
-        }],
+        chain: [{
+            type: "",
+            params: [{
+                displayName: "volume",
+                value: 0.8,
+            }],
+        }]
     }],
     version: LIBRARY_VERSION,
 };
@@ -51,7 +53,7 @@ export const useProjectStore = defineStore("current project", () => {
     const loops = ref<Loop[]>([]);
     const lanes = useAutomationLaneStore();
 
-    const getSnapsList = (): LibraryItem["snaps"] => Object.entries(snaps.values).map(([key,value]) => {
+    const getSnapsList = (): LibraryItem["snaps"] => Object.entries(snaps.values).map(([key, value]) => {
         return [key, value.active];
     });
 
@@ -159,18 +161,20 @@ export const useProjectStore = defineStore("current project", () => {
         } as LibraryItem;
         if (synth.channels.length) {
             ret.channels = synth.channels.map((channel: SynthChannel) => ({
-                type: channel.synth.name,
-                params: channel.params.filter((param: SynthParam) => {
-                    return param.exportable;
-                }).map((param: SynthParam) => {
-                    const ret = {
-                        value: param.value,
-                    } as SynthParamStored
-                    if(param.displayName){
-                        ret.displayName = param.displayName;
-                    }
-                    return ret;
-                })
+                chain: channel.chain.map((audioModule) => ({
+                    type: audioModule.name,
+                    params: audioModule.params.filter((param: SynthParam) => {
+                        return param.exportable;
+                    }).map((param: SynthParam) => {
+                        const ret = {
+                            value: param.value,
+                        } as SynthParamStored
+                        if (param.displayName) {
+                            ret.displayName = param.displayName;
+                        }
+                        return ret;
+                    })
+                }))
             }));
         }
         return ret;
@@ -188,7 +192,7 @@ export const useProjectStore = defineStore("current project", () => {
 
         const nLoops: Loop[] = pDef.loops.map(loop);
         loops.value = nLoops;
-        
+
         if (pDef.bpm) playback.bpm = pDef.bpm;
 
         pDef.snaps.forEach(([name, activeState]) => {
@@ -196,7 +200,7 @@ export const useProjectStore = defineStore("current project", () => {
             // @ts-ignore
             snaps.values[name].active = activeState;
         });
-        
+
 
         layers.clear();
         pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
@@ -213,7 +217,7 @@ export const useProjectStore = defineStore("current project", () => {
 
         (async () => {
             await audioContextStore.audioContextPromise;
-            pDef.channels.forEach(({ type, params }, index) => {
+            pDef.channels.forEach(({ chain }) => chain.forEach(({ type, params }, index) => {
                 synth.setSynthByName(type, index).then((synth) => {
                     params.forEach((param) => {
                         try {
@@ -231,7 +235,7 @@ export const useProjectStore = defineStore("current project", () => {
                         }
                     });
                 })
-            });
+            }))
 
         })();
 

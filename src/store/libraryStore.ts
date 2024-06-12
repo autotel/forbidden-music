@@ -1,7 +1,7 @@
-import {compress, decompress} from 'lzutf8';
+import { compress, decompress } from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, version, watch, watchEffect } from 'vue';
-import { LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0 } from '../dataTypes/LibraryItem';
+import { LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0, LibraryItem_0_5_0 } from '../dataTypes/LibraryItem';
 import { Note, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
@@ -38,7 +38,7 @@ const migrators = {
         }
         return newObj;
     },
-    "0.2.0": (obj: LibraryItem_0_1_0): LibraryItem_0_3_0 => {
+    "0.2.0": (obj: LibraryItem_0_2_0): LibraryItem_0_3_0 => {
         const newObj = Object.assign({
             loops: [],
         }, obj) as unknown as LibraryItem_0_3_0 & {
@@ -47,7 +47,7 @@ const migrators = {
         newObj.version = "0.3.0";
         return newObj;
     },
-    "0.3.0": (obj: LibraryItem_0_1_0): LibraryItem_0_4_0 => {
+    "0.3.0": (obj: LibraryItem_0_3_0): LibraryItem_0_4_0 => {
         const newObj = Object.assign({
             lanes: [],
         }, obj) as unknown as LibraryItem_0_4_0 & {
@@ -56,9 +56,18 @@ const migrators = {
         newObj.version = "0.4.0";
         return newObj;
     },
+    "0.4.0": (obj: LibraryItem_0_4_0): LibraryItem_0_5_0 => {
+        const newChans = obj.channels.map(({ type, params }) => ({
+            chain: [{ type, params }]
+        }));
+        const newObj = {
+            ...obj,
+            channels: newChans,
+        } as LibraryItem_0_5_0;
+        newObj.version = "0.5.0";
+        return newObj;
+    }
 }
-
-
 
 type PossibleImportObjects = LibraryItem | Array<Note>
 

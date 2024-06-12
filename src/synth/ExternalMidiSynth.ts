@@ -1,6 +1,6 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
 import { ParamType, SynthParam } from './interfaces/SynthParam';
-import { EventParamsBase, ExternalSynthInterface, SynthVoice } from './super/Synth';
+import { EventParamsBase, ExternalSynthBase, SynthVoice } from './super/Synth';
 
 
 //@ts-ignore
@@ -70,7 +70,7 @@ const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
 }
 
 
-export class ExternalMidiSynth implements ExternalSynthInterface {
+export class ExternalMidiSynth implements ExternalSynthBase {
     constructor(audioContext: AudioContext) {
         this.updateParams();
 

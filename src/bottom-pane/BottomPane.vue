@@ -11,14 +11,14 @@ import KickSynthEdit from './editModules/KickSynthEdit.vue';
 import ChannelSelector from './ChannelSelector.vue';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import OtherSynths from './editModules/OtherSynths.vue';
-import { useEffectsStore } from '../store/effectsStore';
+import { useMasterEffectsStore } from '../store/masterEffectsStore';
 defineProps<{
     paneHeight: number
 }>();
 
 
 const synth = useSynthStore();
-const effects = useEffectsStore();
+const effects = useMasterEffectsStore();
 const exclusivesStore = useExclusiveContentsStore();
 const synthChain = computed(() => [
     currentSynth.value,

@@ -13,21 +13,21 @@ import { GranularSampler } from '../synth/GranularSampler';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
 import { OneShotSampler } from '../synth/OneShotSampler';
-import { SineSynth } from '../synth/SineSynth';
+import { SynthPlaceholder } from '../synth/PlaceholderSynth';
+import { AudioEffect } from '../synth/interfaces/AudioModule';
+import { SynthParam } from '../synth/interfaces/SynthParam';
+import { Synth } from '../synth/super/Synth';
 import { useAudioContextStore } from "./audioContextStore";
-import { useEffectsStore } from "./effectsStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
-import { SynthParam, OptionSynthParam, ParamType } from '../synth/interfaces/SynthParam';
-import { SynthInterface } from '../synth/super/Synth';
-import { SynthPlaceholder } from '../synth/PlaceholderSynth';
+import { useMasterEffectsStore } from "./masterEffectsStore";
 
 
-type AdmissibleSynthType = SynthInterface;
+type AdmissibleSynthType = AudioEffect | Synth;
 
 export interface SynthChannel {
-    synth: AdmissibleSynthType;
-    params: SynthParam[];
+    chain: AdmissibleSynthType[];
+    receivesNotes: Synth[]
 }
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => AdmissibleSynthType;
@@ -101,8 +101,8 @@ const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boo
 
     if (isDev()) {
         // bc. unfinished
-        addAvailableSynth(FmSynth,[],'FmSynth',false,true);
-        addAvailableSynth(FourierSynth,[],'FourierSynth',false,true);
+        addAvailableSynth(FmSynth, [], 'FmSynth', false, true);
+        addAvailableSynth(FourierSynth, [], 'FourierSynth', false, true);
         // addAvailableSynth(MIDIOutput);
         // notes sometimes stop before time, suspected poor use of timeouts
     }
@@ -115,7 +115,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const layerStore = useLayerStore();
     const exclusives = useExclusiveContentsStore();
     const audioContextStore = useAudioContextStore();
-    const effectsStore = useEffectsStore();
+    const masterEffectsStore = useMasterEffectsStore();
 
     const synthConstructorWrappers = ref<SynthConstructorWrapper[]>(getSynthConstructors(
         audioContextStore.audioContext,
@@ -125,23 +125,12 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const channels = ref<SynthChannel[]>([]);
     const instancedSynths = ref<AdmissibleSynthType[]>([]);
 
-    const addChannel = (index?: number) => {
-        const newSynth = synthConstructorWrappers.value[0].create();
-        instancedSynths.value.push(newSynth);
-        console.log("instanced synths:", instancedSynths.value.length);
-
+    const addChannel = () => {
         const newChannel = {
-            synth: newSynth,
-            params: newSynth.params,
-            layer: instancedSynths.value.length,
+            chain: [],
+            receivesNotes: [],
         };
-
-        if (index !== undefined) {
-            channels.value[index] = newChannel;
-            return newChannel;
-        } else {
-            channels.value.push(newChannel);
-        }
+        channels.value.push(newChannel);
         return newChannel;
     }
 
@@ -150,37 +139,32 @@ export const useSynthStore = defineStore("synthesizers", () => {
         channels.value.splice(index, 1);
     }
 
-    const getOrCreateChannel = (index: number) => {
-        if (!channels.value[index]) {
-            addChannel(index);
-        }
-        return channels.value[index];
-    }
-
-    getOrCreateChannel(0);
+    addChannel();
 
     const scheduleNote = (
         event: Note,
         eventStartAbsolute: number,
         eventDuration?: number,
     ) => {
-        const synth = getLayerSynth(event.layer);
-        if (!synth) return;
+        const synths = getLayerSynths(event.layer);
+        if (!synths.length) return;
         const frequency = getFrequency(event);
-        if (eventDuration) {
-            synth.scheduleStart(
-                frequency,
-                eventStartAbsolute,
-                event
-            ).scheduleEnd(eventStartAbsolute + eventDuration);
-        } else {
-            synth.schedulePerc(
-                frequency,
-                eventStartAbsolute,
-                event
-            );
+        synths.forEach(synth => {
+            if (eventDuration) {
+                synth.scheduleStart(
+                    frequency,
+                    eventStartAbsolute,
+                    event
+                ).scheduleEnd(eventStartAbsolute + eventDuration);
+            } else {
+                synth.schedulePerc(
+                    frequency,
+                    eventStartAbsolute,
+                    event
+                );
 
-        }
+            }
+        })
     }
     const scheduleAutomation = (
         event: AutomationPoint,
@@ -190,68 +174,49 @@ export const useSynthStore = defineStore("synthesizers", () => {
         if (!destinationParameter.animate) throw new Error("destination parameter is not animatable");
         destinationParameter.animate(event.value, detinationTime);
     }
-    const releaseAll = () => channels.value.forEach(({ synth }) => synth.stop());
+    const releaseAll = () => channels.value.forEach(({ chain }) => chain.forEach(audioModule => {
+        if ('stop' in audioModule) {
+            audioModule.stop()
+        }
+    }));
+
     /**
      * enables, connects and in other ways notify
      * the change into a new synth
      */
-    const setSynth = (synth: AdmissibleSynthType, channel = 0) => {
-        const targetChannel = getOrCreateChannel(channel);
-
-        const oldSynth = targetChannel.synth;
-        console.log("channel", channel, "disabling old synth", oldSynth.name, "enabling", synth.name);
-        if ('output' in oldSynth) {
-            // TODO: doing this can cause a synth that is needed to get disconnected
-            // in a multi timbral situation
-            // oldSynth.output.disconnect();
-            console.log("disconnecting ", oldSynth.name, "from effects store input");
-        }
-        oldSynth.disable();
-
-        targetChannel.synth = synth;
-        targetChannel.params = synth.params;
-
-        Object.assign(targetChannel, {
-            synth: synth,
-            params: synth.params,
-        })
-
+    const addModule = (audioModule: AdmissibleSynthType, targetChannel: SynthChannel) => {
+        const lastModuleInChannel = targetChannel.chain[targetChannel.chain.length - 1];
         // to reduce traffic
-        if (synth.needsFetching) {
-            console.log("synth needs fetching");
+        if (audioModule.needsFetching) {
+            console.log("audioModule needs fetching");
             if (exclusives.enabled) {
-                synth.enable();
+                audioModule.enable();
             } else {
                 setTimeout(() => {
-                    synth.enable();
+                    audioModule.enable();
                 }, 5000);
             }
         } else {
-            synth.enable();
+            audioModule.enable();
         }
 
-        if ('output' in synth) {
-            synth.output.connect(effectsStore.myInput);
-            console.log("connecting ", synth.name, "to effects store input");
+        if ('isSynth' in audioModule) {
+            targetChannel.receivesNotes.push(audioModule);
+        }
+        if (audioModule.output) {
+            audioModule.output.connect(masterEffectsStore.myInput);
+            console.log("connecting ", audioModule.name, "to effects store input");
+        }
+        if (lastModuleInChannel && lastModuleInChannel.output && 'input' in audioModule) {
+            lastModuleInChannel.output.connect(audioModule.input);
         }
     }
 
     const setSynthByName = (
-        synthName: string, 
+        synthName: string,
         channel = 0
     ) => new Promise<AdmissibleSynthType>((resolve, reject) => {
-        console.log("set synth by name", synthName);
-        audioContextStore.audioContextPromise.then(() => {
-            const foundSynth = instancedSynths.value.find((s) => s.name === synthName);
-            if (foundSynth) {
-                setSynth(foundSynth, channel);
-                resolve(foundSynth);
-            } else {
-                console.error("synth not found", synthName);
-                console.log("available synths", synthConstructorWrappers.value.map(s => s.name));
-                reject();
-            }
-        });
+        throw new Error("not implemented");
     })
 
 
@@ -267,7 +232,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const accessorStringToSynthParam = (accessorString?: string): SynthParam | undefined => {
-        console.warn("accessor string to synth param, needs updating to target channel, represent multi-instance synths", accessorString);
+        console.warn("accessor string to synth param, needs updating to target channel, represent multi-instance receivesNotes", accessorString);
         if (!accessorString) return undefined;
         const [synthName, paramName] = accessorString.split(".");
         const synth = instancedSynths.value.find((s) => s.name === synthName);
@@ -291,13 +256,13 @@ export const useSynthStore = defineStore("synthesizers", () => {
      * falls back to default channel synth 0
      */
 
-    const getLayerSynth = (layerNo: number): AdmissibleSynthType | undefined => {
+    const getLayerSynths = (layerNo: number): Synth[] => {
         const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
         const channelIfExists = channels.value[channelNo || 0] as SynthChannel | undefined;
         if (!channelIfExists) {
-            return channels.value[0].synth;
+            return channels.value[0].receivesNotes;
         }
-        return channelIfExists.synth;
+        return channelIfExists.receivesNotes;
     }
 
     return {
@@ -308,8 +273,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         scheduleAutomation,
         releaseAll,
         setSynthByName,
-        getOrCreateChannel,
-        getLayerSynth,
+        getLayerSynths,
         removeChannel,
         addChannel,
         synthParamToAccessorString,

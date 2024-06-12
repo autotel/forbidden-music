@@ -60,7 +60,7 @@ paramRangeToAutomationRange(value: number, paramRange: MinMax): number
 automationRangeToParamRange(value: number, paramRange: MinMax): number
 ```
 
-Note that some SynthParams are compatible replacement of MinMax interface. From `SynthInterface.ts`:
+Note that some SynthParams are compatible replacement of MinMax interface. From `SynthBase.ts`:
 
 ``` typescript
 interface NumberSynthParam extends SynthParamMinimum<number> {

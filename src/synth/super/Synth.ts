@@ -1,3 +1,4 @@
+import { AudioModule } from "../interfaces/AudioModule";
 import { SynthParam } from "../interfaces/SynthParam";
 
 export interface EventParamsBase {
@@ -29,12 +30,13 @@ export type synthVoiceFactory<
 ) => VoiceGen;
 
 
-interface SynthBase {
+interface SynthBase extends AudioModule {
     name: string;
     enable: () => void;
     disable: () => void;
     params: SynthParam[];
     isReady: boolean;
+    isSynth: true;
     /** indicates whether this synth needs to fetch something from server, thus incurring in costs */
     needsFetching?: boolean;
     transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
@@ -49,21 +51,20 @@ interface SynthBase {
         noteParameters: EventParamsBase
     ) => SynthVoice;
     stop: () => void;
-}
-
-export interface SynthInterface extends SynthBase {
+    
     output: GainNode;
 }
 
-export interface ExternalSynthInterface extends SynthBase {
+export interface ExternalSynthBase extends SynthBase {
 }
 
 
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
-> implements SynthInterface {
+> implements SynthBase {
     name: string = "Synth";
+    readonly isSynth = true;
     isReady = false;
     /** voice instances */
     instances: V[] = [];
@@ -73,6 +74,7 @@ export class Synth<
     output: GainNode;
     audioContext: AudioContext;
     params: SynthParam[] = [];
+    needsFetching = false;
     transformTriggerParams?: (p: EventParamsBase) => A;
     constructor(
         audioContext: AudioContext,

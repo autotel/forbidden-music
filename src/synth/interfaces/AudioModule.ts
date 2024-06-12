@@ -13,10 +13,13 @@ export interface AudioModule {
      */
     disable: () => void,
     credits?: string,
+    needsFetching?: boolean,
+    output?: AudioNode,
+    input?: AudioNode,
 }
 
 
-export interface EffectInstance extends AudioModule {
+export interface AudioEffect extends AudioModule {
     output: AudioNode,
-    inputNode: AudioNode,
+    input: AudioNode,
 }
