@@ -3,7 +3,7 @@ import { AutomationLane } from "./AutomationLane";
 import { AutomationPointDef } from "./AutomationPoint";
 import { LoopDef } from "./Loop";
 import { NoteDef } from "./Note";
-
+import { SynthChannelsDefinition } from "../store/synthStore";
 const version = "0.4.0";
 export const LIBRARY_VERSION = version;
 
@@ -109,12 +109,7 @@ export interface LibraryItem_0_5_0 {
         visible: boolean;
         locked: boolean;
     }[];
-    channels: {
-        chain: {
-            type: string;
-            params: Array<SynthParamStored>;
-        }[]
-    }[];
+    channels: SynthChannelsDefinition;
     customOctavesTable?: number[];
     snap_simplify?: number;
 

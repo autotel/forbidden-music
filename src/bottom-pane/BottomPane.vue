@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import ModuleContainer from './components/ModuleContainer.vue';
-import Knob from './components/Knob.vue';
-import { usePlaybackStore } from '../store/playbackStore';
-import { SynthChannel, useSynthStore } from '../store/synthStore';
-import { KickSynth } from '../synth/KickSynth';
-import SynthEditSelector from './SynthEditSelector.vue';
-import { computed, onBeforeMount, ref } from 'vue';
-import { ParamType } from '../synth/interfaces/SynthParam';
-import KickSynthEdit from './editModules/KickSynthEdit.vue';
-import ChannelSelector from './ChannelSelector.vue';
+import { computed, ref } from 'vue';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
-import OtherSynths from './editModules/OtherSynths.vue';
 import { useMasterEffectsStore } from '../store/masterEffectsStore';
+import { SynthChannel, useSynthStore } from '../store/synthStore';
+import ChannelSelector from './ChannelSelector.vue';
+import SynthEditSelector from './SynthEditSelector.vue';
+import ModuleContainer from './components/ModuleContainer.vue';
+
 defineProps<{
     paneHeight: number
 }>();
@@ -21,13 +16,11 @@ const synth = useSynthStore();
 const effects = useMasterEffectsStore();
 const exclusivesStore = useExclusiveContentsStore();
 const synthChain = computed(() => [
-    currentSynth.value,
+    ...activeLayerChan.value.chain,
     ...effects.effectsChain,
-
 ]);
 
-const activeLayerChan = ref<SynthChannel>(synth.getOrCreateChannel(0));
-const currentSynth = computed(() => activeLayerChan.value.synth);
+const activeLayerChan = ref<SynthChannel>(synth.channels[0]);
 
 </script>
 <template>

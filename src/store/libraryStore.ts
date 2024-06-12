@@ -77,7 +77,7 @@ const reservedEntryNames = [
     userCustomPerformanceSettingsKey,
 ];
 
-const normalizeLibraryItem = (obj: any): LibraryItem => {
+export const normalizeLibraryItem = (obj: any): LibraryItem => {
     if (!obj.version) obj.version = "0.0.0";
     while (obj.version in migrators) {
         // @ts-ignore

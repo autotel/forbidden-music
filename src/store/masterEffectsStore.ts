@@ -26,7 +26,7 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
         let lastNode: AudioNode = myInput;
         for (let effect of effectsChain) {
             lastNode.disconnect();
-            lastNode.connect(effect.inputNode);
+            lastNode.connect(effect.input);
             lastNode = effect.output;
         }
         lastNode.connect(output);

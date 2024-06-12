@@ -13,6 +13,7 @@ import { useLayerStore } from './layerStore';
 import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
 import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
+import { normalizeLibraryItem } from './libraryStore';
 import { SynthChannel, useSynthStore } from './synthStore';
 import demoProject from './project-default';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
@@ -29,7 +30,7 @@ const emptyProjectDefinition: LibraryItem = {
     layers: [],
     channels: [{
         chain: [{
-            type: "",
+            type: "sine",
             params: [{
                 displayName: "volume",
                 value: 0.8,
@@ -217,24 +218,9 @@ export const useProjectStore = defineStore("current project", () => {
 
         (async () => {
             await audioContextStore.audioContextPromise;
+            synth.applyChannelsDefinition(pDef.channels);
             pDef.channels.forEach(({ chain }) => chain.forEach(({ type, params }, index) => {
-                synth.setSynthByName(type, index).then((synth) => {
-                    params.forEach((param) => {
-                        try {
-                            const foundNamedParam = synth.params.find(({ displayName }) => {
-                                return displayName === param.displayName;
-                            })
-                            if (foundNamedParam) {
-                                foundNamedParam.value = param.value;
-                                console.log("import param", param.displayName, param.value);
-                            } else {
-                                console.warn(`ignoring imported param ${param.displayName} in synth ${synth.name}`);
-                            }
-                        } catch (e) {
-                            console.warn(`error importing param "${param.displayName}" in synth "${synth.name}"`, e);
-                        }
-                    });
-                })
+                console.warn("not loading parameters yet!!");
             }))
 
         })();
@@ -324,7 +310,7 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const loadDemoProjectDefinition = () => {
-        setFromProjectDefinition(demoProject);
+        setFromProjectDefinition(normalizeLibraryItem(demoProject));
     }
 
     return {
