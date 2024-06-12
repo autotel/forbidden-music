@@ -22,12 +22,12 @@ const exclusivesStore = useExclusiveContentsStore();
 const bottomPaneState = useBottomPaneStateStore();
 const synthChain = computed(() => [
     ...bottomPaneState.activeLayerChannel.chain,
-    ...effects.effectsChain,
+    // ...effects.effectsChain,
 ]);
 
 </script>
 <template>
-    <div id="wrapper" v-if="paneHeight">
+    <div id="wrapper" v-if="paneHeight" class="bg-colored">
         <div id="hrow-items">
             <TransparentContainer>
                 <ChannelSelector v-if="exclusivesStore.enabled" />
@@ -39,6 +39,11 @@ const synthChain = computed(() => [
                 <AudioModuleContainer :audioModule="synth" />
             </template>
             <AddSynth />
+            <ModuleContainer title="Master" :rows="0">
+                <template v-for="fx in effects.effectsChain">
+                    <AudioModuleContainer :audioModule="fx" style="margin:-5px" undeletable/>
+                </template>
+            </ModuleContainer>
         </div>
     </div>
 

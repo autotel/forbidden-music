@@ -12,7 +12,8 @@ import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
 import { useSynthStore } from '../store/synthStore';
 
 const props = defineProps<{
-    audioModule: AudioModule
+    audioModule: AudioModule,
+    undeletable?: boolean
 }>();
 const bottomPaneState = useBottomPaneStateStore();
 const synth = useSynthStore();
@@ -36,7 +37,7 @@ const remove = () => {
 <template>
     <ModuleContainer v-if="audioModule" :title="audioModule.name">
         <template #icons>
-            <Button danger :onClick="remove" tooltip="delete" style="background-color:transparent">×</Button>
+            <Button v-if="!undeletable" danger :onClick="remove" tooltip="delete" style="background-color:transparent">×</Button>
         </template>
         <template #default>
         <component :is="getComponentFor(audioModule)" :audioModule="audioModule" />
