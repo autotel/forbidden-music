@@ -4,7 +4,7 @@ import { AutomationPointDef } from "./AutomationPoint";
 import { LoopDef } from "./Loop";
 import { NoteDef } from "./Note";
 import { SynthChannelsDefinition } from "../store/synthStore";
-const version = "0.4.0";
+const version = "0.5.0";
 export const LIBRARY_VERSION = version;
 
 export interface LibraryItem_0_1_0 {
@@ -117,5 +117,9 @@ export interface LibraryItem_0_5_0 {
     loops: LoopDef[];
     lanes: AutomationLane[];
 }
-
+export type OldFormatLibraryItem = 
+    LibraryItem_0_1_0 | 
+    LibraryItem_0_2_0 | 
+    LibraryItem_0_3_0 | 
+    LibraryItem_0_4_0;
 export type LibraryItem = LibraryItem_0_5_0;

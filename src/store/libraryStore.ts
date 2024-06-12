@@ -1,13 +1,15 @@
 import { compress, decompress } from 'lzutf8';
 import { defineStore } from 'pinia';
-import { nextTick, ref, version, watch, watchEffect } from 'vue';
-import { LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0, LibraryItem_0_5_0 } from '../dataTypes/LibraryItem';
+import { nextTick, ref, watch, watchEffect } from 'vue';
+import { LIBRARY_VERSION, LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0, LibraryItem_0_5_0, OldFormatLibraryItem } from '../dataTypes/LibraryItem';
 import { Note, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 import { SynthParamStored } from '../synth/interfaces/SynthParam';
+import { SynthChannelsDefinition } from './synthStore';
+import { L } from '@tauri-apps/api/event-41a9edf5';
 
 
 const migrators = {
@@ -57,19 +59,20 @@ const migrators = {
         return newObj;
     },
     "0.4.0": (obj: LibraryItem_0_4_0): LibraryItem_0_5_0 => {
-        const newChans = obj.channels.map(({ type, params }) => ({
+        const newChans:SynthChannelsDefinition = obj.channels.map(({ type, params }) => ({
             chain: [{ type, params }]
         }));
         const newObj = {
             ...obj,
             channels: newChans,
         } as LibraryItem_0_5_0;
-        newObj.version = "0.5.0";
+        console.log(obj.channels, newChans);
+        newObj.version = LIBRARY_VERSION;
         return newObj;
     }
 }
 
-type PossibleImportObjects = LibraryItem | Array<Note>
+type PossibleImportObjects = OldFormatLibraryItem | LibraryItem | Array<Note>
 
 const reservedEntryNames = [
     "forbidden-music",
@@ -79,6 +82,7 @@ const reservedEntryNames = [
 
 export const normalizeLibraryItem = (obj: any): LibraryItem => {
     if (!obj.version) obj.version = "0.0.0";
+    console.log("normalizing", obj.version);
     while (obj.version in migrators) {
         // @ts-ignore
         const migrator = migrators[obj.version];
@@ -89,7 +93,7 @@ export const normalizeLibraryItem = (obj: any): LibraryItem => {
 }
 
 const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
-    inValue.version = version;
+    inValue.version = LIBRARY_VERSION;
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
     nsLocalStorage.setItem(filename, compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
@@ -213,6 +217,7 @@ export const useLibraryStore = defineStore("library store", () => {
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
+            console.log({iobj});
             project.setFromProjectDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             // assuming iobj is an array of notes
@@ -239,7 +244,6 @@ export const useLibraryStore = defineStore("library store", () => {
         exportMIDIPitchBend,
         importObject,
 
-        version,
         filenamesList,
         errorMessage,
         inSyncWithStorage,

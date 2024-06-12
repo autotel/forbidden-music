@@ -143,6 +143,10 @@ export const useProjectStore = defineStore("current project", () => {
         sanitizeTimeRanges(...loops);
         return loops;
     }
+    const probe = (...params: any[]) => {
+        console.log(...params);
+        return params[0];
+    }
 
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
@@ -160,6 +164,7 @@ export const useProjectStore = defineStore("current project", () => {
             channels: [],
             version: LIBRARY_VERSION,
         } as LibraryItem;
+        ret.version = LIBRARY_VERSION;
         if (synth.channels.length) {
             ret.channels = synth.channels.map((channel: SynthChannel) => ({
                 chain: channel.chain.map((audioModule) => ({

@@ -157,6 +157,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         if (!synths.length) return;
         const frequency = getFrequency(event);
         synths.forEach(synth => {
+            if (synth instanceof SynthPlaceholder) return;
             if (eventDuration) {
                 synth.scheduleStart(
                     frequency,
@@ -209,11 +210,11 @@ export const useSynthStore = defineStore("synthesizers", () => {
         channel.receivesNotes = [];
         let prevModule: AdmissibleSynthType | undefined;
 
-        for(let audioModule of channel.chain) {
+        for (let audioModule of channel.chain) {
             if ('isSynth' in audioModule) {
                 channel.receivesNotes.push(audioModule);
             }
-            if(prevModule && prevModule.output && audioModule.input) {
+            if (prevModule && prevModule.output && audioModule.input) {
                 prevModule.output.connect(audioModule.input);
                 console.log("connecting ", prevModule.name, "to", audioModule.name);
             }
@@ -263,8 +264,12 @@ export const useSynthStore = defineStore("synthesizers", () => {
         rewireChain(targetChannel);
     }
 
-    const applyChannelsDefinition = (definition: SynthChannelsDefinition) => {
-        definition.forEach(({ chain }) => {
+    const applyChannelsDefinition = (inChannels: SynthChannelsDefinition, addToCurrent = false) => {
+        if (!addToCurrent) {
+            channels.value = [];
+        }
+        inChannels.forEach(({ chain }) => {
+            console.log("loading channel", chain);
             const newChannel = addChannel();
             chain.forEach((audioModule) => {
                 let synth = synthConstructorWrappers.value.find((s) => s.name === audioModule.type);

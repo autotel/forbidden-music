@@ -123,7 +123,6 @@ const showJSONSaveDialog = () => {
             const fileNameWithExtension = firstSelected.endsWith(".json") ? firstSelected : firstSelected + ".json";
             try {
                 const libraryItem = project.getProjectDefintion();
-                libraryItem.version = libraryStore.version;
                 const json = JSON.stringify(libraryItem);
                 await fs.writeFile({ path: fileNameWithExtension, contents: json });
                 console.log("save JSON", fileNameWithExtension, json);
@@ -143,7 +142,6 @@ const showJSONSaveDialog = () => {
 
 const download = () => {
     const libraryItem = project.getProjectDefintion();
-    libraryItem.version = libraryStore.version;
     const json = JSON.stringify(libraryItem);
     downloadString(json, "application/json", project.name + ".json");
 }

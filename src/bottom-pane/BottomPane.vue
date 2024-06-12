@@ -24,7 +24,6 @@ const synthChain = computed(() => [
     ...bottomPaneState.activeLayerChannel.chain,
     // ...effects.effectsChain,
 ]);
-
 </script>
 <template>
     <div id="wrapper" v-if="paneHeight" class="bg-colored">

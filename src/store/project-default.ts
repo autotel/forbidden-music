@@ -1,4 +1,4 @@
-import { LibraryItem } from "../dataTypes/LibraryItem";
+import { LIBRARY_VERSION, LibraryItem } from "../dataTypes/LibraryItem";
 
 
 export default {
@@ -679,8 +679,8 @@ export default {
             "channelSlot": 0
         }
     ],
-    "channels": [
-        {
+    "channels": [{
+        chain: [{
             "type": "KickSynth",
             "params": [
                 {
@@ -692,7 +692,7 @@ export default {
                     "value": 0.03333333333333334
                 }
             ]
-        }
-    ],
-    "version": "0.4.0"
+        }]
+    }],
+    "version": LIBRARY_VERSION
 } as LibraryItem;
