@@ -72,6 +72,7 @@ export class Synth<
     enable = () => { this.isReady = true; }
     disable = () => { this.isReady = false; }
     output: GainNode;
+    input?: AudioNode;
     audioContext: AudioContext;
     params: SynthParam[] = [];
     needsFetching = false;

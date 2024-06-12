@@ -4,8 +4,12 @@ import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { useMasterEffectsStore } from '../store/masterEffectsStore';
 import { SynthChannel, useSynthStore } from '../store/synthStore';
 import ChannelSelector from './ChannelSelector.vue';
-import SynthEditSelector from './SynthEditSelector.vue';
+import AudioModuleContainer from './AudioModuleContainer.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
+import AddSynth from './components/AddSynth.vue';
+import TransparentContainer from './components/TransparentContainer.vue';
+import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
+import { SynthPlaceholder } from '../synth/PlaceholderSynth';
 
 defineProps<{
     paneHeight: number
@@ -15,22 +19,26 @@ defineProps<{
 const synth = useSynthStore();
 const effects = useMasterEffectsStore();
 const exclusivesStore = useExclusiveContentsStore();
+const bottomPaneState = useBottomPaneStateStore();
 const synthChain = computed(() => [
-    ...activeLayerChan.value.chain,
+    ...bottomPaneState.activeLayerChannel.chain,
     ...effects.effectsChain,
 ]);
-
-const activeLayerChan = ref<SynthChannel>(synth.channels[0]);
 
 </script>
 <template>
     <div id="wrapper" v-if="paneHeight">
         <div id="hrow-items">
-            <ChannelSelector v-if="exclusivesStore.enabled" :active-layer-chan="activeLayerChan"
-                @change:activeLayerChan="activeLayerChan = $event" />
+            <TransparentContainer>
+                <ChannelSelector v-if="exclusivesStore.enabled" />
+            </TransparentContainer>
             <ModuleContainer title="Notes" :rows="0">
             </ModuleContainer>
-            <SynthEditSelector v-for="synth in synthChain" :audioModule="synth" />
+            <template v-for="synth in synthChain">
+                <AddSynth v-if="!(synth instanceof SynthPlaceholder)"/>
+                <AudioModuleContainer :audioModule="synth" />
+            </template>
+            <AddSynth />
         </div>
     </div>
 

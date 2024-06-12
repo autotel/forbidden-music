@@ -3,20 +3,23 @@ import { computed } from 'vue';
 
 const props = defineProps<{
     title: string,
-    rows?: number
 }>();
-const width = computed(() => {
-    return ((props.rows===undefined?1:props.rows) * 4 + 1.6) + 'em';
-});
 </script>
 
 <template>
     <div class="module-container">
-        <div id="title-rotator">
-            <div id="title">{{ title }}</div>
+        <div id="title-rotator" :class="{ sideline: true }">
+            <div id="title">
+                <span>
+                    {{ title }}
+                </span>
+                <div id="icons-slot-container">
+                    <slot name="icons"></slot>
+                </div>
+            </div>
         </div>
 
-        <div id="slot-container" :style="{ width }">
+        <div id="slot-container">
             <slot></slot>
         </div>
     </div>
@@ -28,14 +31,14 @@ const width = computed(() => {
     flex-wrap: wrap;
     align-items: flex-start;
     justify-content: center;
-    height: fit-content;
+    height: 100%;
 }
 
 .module-container {
     display: flex;
     flex-direction: row;
     height: 18em;
-    padding: 0.3em;
+    padding: 0.2em;
     margin: 0.3em;
     padding-left: 2em;
     background-color: #5a595e;
@@ -51,19 +54,33 @@ const width = computed(() => {
     bottom: 0.8em;
     transform-origin: left top;
     transform: translate(0, 100%) rotate(-90deg);
-    text-align: center;
     /* nowrap */
     white-space: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 16.5em;
+    height: 1em;
+}
+
+#icons-slot-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+}
+
+.sideline {
+    border-right: solid 1px #aaac;
 }
 
 #title-rotator {
     position: absolute;
     top: -1.2em;
-    left: 0;
+    left: 0.05em;
     width: 1.6em;
     height: calc(100% + 0.6em);
     margin: 0.6em;
-    border-right: solid 1px #aaac;
     box-sizing: border-box;
 }
 

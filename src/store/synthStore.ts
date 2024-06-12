@@ -14,7 +14,7 @@ import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
 import { OneShotSampler } from '../synth/OneShotSampler';
 import { SynthPlaceholder } from '../synth/PlaceholderSynth';
-import { AudioEffect } from '../synth/interfaces/AudioModule';
+import { AudioEffect, AudioModule } from '../synth/interfaces/AudioModule';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 import { Synth } from '../synth/super/Synth';
 import { useAudioContextStore } from "./audioContextStore";
@@ -23,7 +23,7 @@ import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 
 
-type AdmissibleSynthType = AudioEffect | Synth;
+type AdmissibleSynthType = AudioEffect | Synth | AudioModule;
 
 export interface SynthChannel {
     chain: AdmissibleSynthType[];
@@ -186,16 +186,8 @@ export const useSynthStore = defineStore("synthesizers", () => {
             audioModule.stop()
         }
     }));
-
-    /**
-     * enables, connects and in other ways notify
-     * the change into a new synth
-     */
-    const addAudioModule = (audioModule: SynthConstructorWrapper, targetChannel: SynthChannel) => {
-        const lastModuleInChannel = targetChannel.chain[targetChannel.chain.length - 1];
+    const instanceAudioModule = (audioModule: SynthConstructorWrapper) => {
         const newModule = audioModule.create();
-        targetChannel.chain.push(newModule);
-        instancedSynths.value.push(newModule);
         console.log("adding audio module", newModule.name, "count", instancedSynths.value.length);
         // to reduce traffic
         if (newModule.needsFetching) {
@@ -211,31 +203,65 @@ export const useSynthStore = defineStore("synthesizers", () => {
             newModule.enable();
         }
 
-        if ('isSynth' in newModule) {
-            targetChannel.receivesNotes.push(newModule);
+        return newModule;
+    }
+    const rewireChain = (channel: SynthChannel) => {
+        channel.receivesNotes = [];
+        let prevModule: AdmissibleSynthType | undefined;
+
+        for(let audioModule of channel.chain) {
+            if ('isSynth' in audioModule) {
+                channel.receivesNotes.push(audioModule);
+            }
+            if(prevModule && prevModule.output && audioModule.input) {
+                prevModule.output.connect(audioModule.input);
+                console.log("connecting ", prevModule.name, "to", audioModule.name);
+            }
+            prevModule = audioModule;
         }
-        if (newModule.output) {
-            newModule.output.connect(masterEffectsStore.myInput);
-            console.log("connecting ", newModule.name, "to effects store input");
-        }
-        if (lastModuleInChannel && lastModuleInChannel.output && 'input' in newModule) {
-            lastModuleInChannel.output.connect(newModule.input);
+
+        if (prevModule && prevModule.output) {
+            prevModule.output.connect(masterEffectsStore.myInput);
+            console.log("connecting ", prevModule.name, "to effects store input");
         }
     }
+    /**
+     * enables, connects and in other ways notify
+     * the change into a new synth
+     */
+    const addAudioModule = (targetChannel: SynthChannel, audioModule: SynthConstructorWrapper) => {
+        const newModule = instanceAudioModule(audioModule);
+        targetChannel.chain.push(newModule);
+        rewireChain(targetChannel);
+    }
 
-    const setSynthByName = (
-        synthName: string,
-        channel = 0
-    ) => new Promise<AdmissibleSynthType>((resolve, reject) => {
-        const targetChannel = channels.value[channel];
-        const synth = synthConstructorWrappers.value.find((s) => s.name === synthName);
-        if (!synth) {
-            reject("synth not found");
+    const replaceAudioModule = (
+        targetChannel: SynthChannel,
+        removedModule: AdmissibleSynthType,
+        newModule: SynthConstructorWrapper
+    ) => {
+        const index = targetChannel.chain.indexOf(removedModule);
+        if (index === -1) {
+            console.warn("module not found in chain");
             return;
         }
-        addAudioModule(synth, targetChannel);
-        resolve(synth.create());
-    })
+        removedModule.disable();
+        targetChannel.chain.splice(index, 1);
+        const instancedModule = instanceAudioModule(newModule);
+        targetChannel.chain.splice(index, 0, instancedModule);
+        rewireChain(targetChannel);
+    }
+
+    const removeAudioModule = (targetChannel: SynthChannel, audioModule: AdmissibleSynthType) => {
+        const index = targetChannel.chain.indexOf(audioModule);
+        if (index === -1) {
+            console.warn("module not found in chain");
+            return;
+        }
+        audioModule.disable();
+        targetChannel.chain.splice(index, 1);
+        rewireChain(targetChannel);
+    }
 
     const applyChannelsDefinition = (definition: SynthChannelsDefinition) => {
         definition.forEach(({ chain }) => {
@@ -246,7 +272,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
                     const regex = new RegExp(audioModule.type.slice(0, 3));
                     const loosely = synthConstructorWrappers.value.find((s) => s.name.match(regex));
                     if (loosely) {
-                        console.warn("synth named",audioModule.type,"not found, looking for similarly named: ", loosely?.name);
+                        console.warn("synth named", audioModule.type, "not found, looking for similarly named: ", loosely?.name);
                         synth = loosely;
                     }
                 }
@@ -254,12 +280,10 @@ export const useSynthStore = defineStore("synthesizers", () => {
                     console.warn("synth not found", audioModule.type);
                     synth = synthConstructorWrappers.value[0];
                 }
-                addAudioModule(synth, newChannel);
+                addAudioModule(newChannel, synth);
             });
         });
     }
-
-
 
     const synthParamToAccessorString = (param?: SynthParam) => {
         if (!param) return undefined;
@@ -317,6 +341,8 @@ export const useSynthStore = defineStore("synthesizers", () => {
         removeChannel,
         addChannel,
         addAudioModule,
+        removeAudioModule,
+        replaceAudioModule,
         synthParamToAccessorString,
         accessorStringToSynthParam,
         testBeep: async () => {

@@ -9,13 +9,29 @@ import ModuleContainer from '../components/ModuleContainer.vue';
 const props = defineProps<{
     audioModule: AudioModule
 }>();
-const maxKnobsPerCol = 4;
-const rows = computed(() => Math.ceil(props.audioModule.params.length / maxKnobsPerCol));
+
+const rows = () => {
+    return Math.ceil(props.audioModule.params.length / 4);
+}
+const width = computed(() => {
+    return (rows() * 4) + 'em';
+});
+
 </script>
 <template>
-    <ModuleContainer v-if="audioModule" :title="audioModule.name" :rows="rows">
+    <div :style="{width}" class="knob-layout">
         <template v-for="param in audioModule.params">
             <Knob v-if="param.type === ParamType.number" :param="param" />
         </template>
-    </ModuleContainer>
+    </div>
 </template>
+<style scoped>
+.knob-layout {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    height: 100%;
+}
+</style>

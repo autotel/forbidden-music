@@ -13,11 +13,9 @@ defineProps<{
 }>();
 </script>
 <template>
-    <ModuleContainer v-if="audioModule" :title="audioModule.name">
-        <div style="display: flex;flex-direction: column; align-items: center;">
-            <template v-for="param in audioModule.params">
-                <Knob v-if="param.type === ParamType.number" :param="param" />
-            </template>
-        </div>
-    </ModuleContainer>
+    <div style="display: flex;flex-direction: column; align-items: center;">
+        <template v-for="param in audioModule.params">
+            <Knob v-if="param.type === ParamType.number" :param="param" />
+        </template>
+    </div>
 </template>
