@@ -69,6 +69,7 @@ let viewDragStartOctave = 0;
 
 
 const mouseWheelListener = (e: WheelEvent) => {
+    e.preventDefault();
     const viewMousePositionBefore = {
         time: view.pxToTimeWithOffset(e.clientX),
         octave: -view.pxToOctaveWithOffset(e.clientY),
@@ -138,6 +139,7 @@ const mouseDownListener = (e: MouseEvent) => {
     // middle wheel
     if (e.button === 1) {
         e.stopPropagation();
+        e.preventDefault();
         draggingView = true;
         viewDragStartX = e.clientX;
         viewDragStartTime = view.timeOffset;

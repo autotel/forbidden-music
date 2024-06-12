@@ -39,8 +39,8 @@ watch(() => props.param.value, () => {
 
 });
 const mouseWheeled = (e: WheelEvent) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
     mouseDragDelta({ x: e.deltaX / 5, y: e.deltaY / 5 });
 }
 const mouseDrag = (e: MouseEvent) => {
@@ -80,6 +80,7 @@ const windowMouseMove = (e: MouseEvent) => {
 }
 const mouseDown = async (e: MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     try {
         await canvas.value?.requestPointerLock();
         // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);

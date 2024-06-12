@@ -35,6 +35,8 @@ const currentSynth = computed(() => activeLayerChan.value.synth);
         <div id="hrow-items">
             <ChannelSelector v-if="exclusivesStore.enabled" :active-layer-chan="activeLayerChan"
                 @change:activeLayerChan="activeLayerChan = $event" />
+            <ModuleContainer title="Notes" :rows="0">
+            </ModuleContainer>
             <SynthEditSelector v-for="synth in synthChain" :audioModule="synth" />
         </div>
     </div>

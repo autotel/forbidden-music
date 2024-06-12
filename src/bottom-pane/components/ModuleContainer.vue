@@ -6,8 +6,7 @@ const props = defineProps<{
     rows?: number
 }>();
 const width = computed(() => {
-    console.log(props.rows);
-    return ((props.rows || 1) * 4 + 1.6) + 'em';
+    return ((props.rows===undefined?1:props.rows) * 4 + 1.6) + 'em';
 });
 </script>
 
