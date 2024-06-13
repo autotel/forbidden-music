@@ -140,7 +140,7 @@ const tooltip = computed(() => {
                 </div>
             </div>
             <small>{{ abbreviatedName }}</small>
-            <small>{{ props.param.value.toFixed(2) }}</small>
+            <small>{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
 
         </div>
     </Tooltip>

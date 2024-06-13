@@ -31,6 +31,7 @@ export interface NumberSynthParam extends SynthParamMinimum<number> {
     type: ParamType.number,
     value: number,
     displayName: string,
+    displayValue?: string,
     min: number,
     max: number,
     default?: number,

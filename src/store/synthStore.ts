@@ -22,6 +22,7 @@ import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 import { SineSynth } from '../synth/SineSynth';
+import { RingModEffect } from '../synth/RingModEffect';
 
 
 type AdmissibleSynthType = AudioEffect | Synth | AudioModule;
@@ -120,13 +121,11 @@ const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boo
 
     });
 
-
-
     addAvailableSynth(KickSynth);
     addAvailableSynth(KarplusSynth);
     addAvailableSynth(SineCluster);
     addAvailableSynth(SineSynth);
-
+    addAvailableSynth(RingModEffect);
 
     if (isDev()) {
         // bc. unfinished
@@ -235,6 +234,9 @@ export const useSynthStore = defineStore("synthesizers", () => {
         for (let audioModule of channel.chain) {
             if ('receivesNotes' in audioModule) {
                 channel.receivesNotes.push(audioModule);
+            }
+            if (audioModule.output) {
+                audioModule.output.disconnect();
             }
             if (prevModule && prevModule.output && audioModule.input) {
                 prevModule.output.connect(audioModule.input);
