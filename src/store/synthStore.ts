@@ -6,14 +6,14 @@ import { AutomationPoint } from '../dataTypes/AutomationPoint';
 import { Note, getFrequency } from "../dataTypes/Note";
 import isDev from '../functions/isDev';
 import isTauri, { tauriObject } from '../functions/isTauri';
-import { ClusterSineSynth } from '../synth/ClusterSineSynth';
+import { SineCluster } from '../synth/SineCluster';
 import { FmSynth } from '../synth/FmSynth';
 import { FourierSynth } from '../synth/FourierSynth';
 import { GranularSampler } from '../synth/GranularSampler';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
-import { OneShotSampler } from '../synth/OneShotSampler';
-import { SynthPlaceholder } from '../synth/PlaceholderSynth';
+import { Sampler } from '../synth/Sampler';
+import { PlaceholderSynth } from '../synth/PlaceholderSynth';
 import { AudioEffect, AudioModule } from '../synth/interfaces/AudioModule';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 import { Synth } from '../synth/super/Synth';
@@ -21,6 +21,7 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
+import { SineSynth } from '../synth/SineSynth';
 
 
 type AdmissibleSynthType = AudioEffect | Synth | AudioModule;
@@ -54,9 +55,27 @@ export class SynthConstructorWrapper {
     }
 }
 
-const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boolean): SynthConstructorWrapper[] => {
+const titleCase = <T extends (string | undefined)>(str: T) => {
+    if (!str) return str;
+    return str.replace(
+        /\w\S*/g,
+        function (txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        }
+    );
+}
 
-    const samplers = [] as SynthConstructorWrapper[];
+const sampleNameToUName = <T extends (string | undefined)>(name?: T) => {
+    if (!name) return name;
+    return titleCase(name.replace(/[^a-zA-Z0-9]/g, " "));
+}
+
+const camelCaseToUName = <T extends (string | undefined)>(name: T) => {
+    if (!name) return name;
+    return titleCase(name.replace(/([A-Z])/g, " $1"));
+}
+
+const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boolean): SynthConstructorWrapper[] => {
     let returnArray = [] as SynthConstructorWrapper[];
 
     // Sorry for the contortionist code.
@@ -76,11 +95,13 @@ const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boo
         if (isExclusive && !includeExclusives) return;
         if (isOnlyLocal && !isDev()) return;
         returnArray.push(
-            new SynthConstructorWrapper(audioContext, constr, epp, name || constr.name)
+            new SynthConstructorWrapper(
+                audioContext, constr, epp, name || camelCaseToUName(constr.name)
+            )
         );
     }
 
-    addAvailableSynth(SynthPlaceholder);
+    addAvailableSynth(PlaceholderSynth);
 
     sampleDefinitions.forEach((sampleDefinition) => {
         const ps = [
@@ -88,11 +109,11 @@ const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boo
             sampleDefinition.name,
             sampleDefinition.readme
         ];
-
+        const sampleUname = sampleNameToUName(sampleDefinition.name);
         if (sampleDefinition.type === 'one shot') {
-            addAvailableSynth(OneShotSampler, ps, sampleDefinition.name, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
+            addAvailableSynth(Sampler, ps, sampleUname + " Sampler", sampleDefinition.exclusive, sampleDefinition.onlyLocal);
         } else if (sampleDefinition.type === 'granular') {
-            addAvailableSynth(GranularSampler, ps, sampleDefinition.name, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
+            addAvailableSynth(GranularSampler, ps, "Granular " + sampleUname, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
         } else {
             throw new Error("type not supported " + sampleDefinition.type)
         }
@@ -103,13 +124,14 @@ const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boo
 
     addAvailableSynth(KickSynth);
     addAvailableSynth(KarplusSynth);
-    addAvailableSynth(ClusterSineSynth);
+    addAvailableSynth(SineCluster);
+    addAvailableSynth(SineSynth);
 
 
     if (isDev()) {
         // bc. unfinished
-        addAvailableSynth(FmSynth, [], 'FmSynth', false, true);
-        addAvailableSynth(FourierSynth, [], 'FourierSynth', false, true);
+        addAvailableSynth(FmSynth, [], undefined, false, true);
+        addAvailableSynth(FourierSynth, [], undefined, false, true);
         // addAvailableSynth(MIDIOutput);
         // notes sometimes stop before time, suspected poor use of timeouts
     }
@@ -157,7 +179,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         if (!synths.length) return;
         const frequency = getFrequency(event);
         synths.forEach(synth => {
-            if (synth instanceof SynthPlaceholder) return;
+            if (synth instanceof PlaceholderSynth) return;
             if (eventDuration) {
                 synth.scheduleStart(
                     frequency,
@@ -211,7 +233,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         let prevModule: AdmissibleSynthType | undefined;
 
         for (let audioModule of channel.chain) {
-            if ('isSynth' in audioModule) {
+            if ('receivesNotes' in audioModule) {
                 channel.receivesNotes.push(audioModule);
             }
             if (prevModule && prevModule.output && audioModule.input) {

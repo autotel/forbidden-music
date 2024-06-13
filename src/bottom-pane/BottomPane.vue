@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, watch } from 'vue';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { useMasterEffectsStore } from '../store/masterEffectsStore';
 import { SynthChannel, useSynthStore } from '../store/synthStore';
@@ -9,12 +9,11 @@ import ModuleContainer from './components/ModuleContainer.vue';
 import AddSynth from './components/AddSynth.vue';
 import TransparentContainer from './components/TransparentContainer.vue';
 import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
-import { SynthPlaceholder } from '../synth/PlaceholderSynth';
+import { PlaceholderSynth } from '../synth/PlaceholderSynth';
 
 defineProps<{
     paneHeight: number
 }>();
-
 
 const synth = useSynthStore();
 const effects = useMasterEffectsStore();
@@ -24,6 +23,10 @@ const synthChain = computed(() => [
     ...bottomPaneState.activeLayerChannel.chain,
     // ...effects.effectsChain,
 ]);
+watch(()=>synth.channels, (newVal, oldVal) => {
+    console.log('synth.channels changed', newVal, oldVal);
+    bottomPaneState.activeLayerChannel = synth.channels[0];
+});
 </script>
 <template>
     <div id="wrapper" v-if="paneHeight" class="bg-colored">
@@ -34,7 +37,7 @@ const synthChain = computed(() => [
             <ModuleContainer title="Notes" :rows="0">
             </ModuleContainer>
             <template v-for="synth in synthChain">
-                <AddSynth v-if="!(synth instanceof SynthPlaceholder)"/>
+                <AddSynth v-if="!(synth instanceof PlaceholderSynth)"/>
                 <AudioModuleContainer :audioModule="synth" />
             </template>
             <AddSynth />

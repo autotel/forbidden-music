@@ -1,8 +1,8 @@
 import { SynthParam } from "./SynthParam";
 
 export interface AudioModule {
-    name: string,
     params: SynthParam[],
+    name?: string,
     /**
      * in case a synth needs to do operations before first note is played
      * such as loading samples, calculating something, etc.

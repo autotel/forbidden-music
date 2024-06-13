@@ -28,7 +28,6 @@ export class ConvolutionReverbEffect implements AudioEffect {
     input: AudioNode;
     output: AudioNode;
     params: SynthParam[] = [];
-    name: string = "Convolution Reverb";
     enable: () => void;
     disable: () => void;
     credits: string = "";

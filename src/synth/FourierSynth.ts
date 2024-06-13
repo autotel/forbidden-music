@@ -130,7 +130,6 @@ export class FourierSynth extends Synth {
         value: null
     }
     periodicWaveContents = defaultPericWaveContents();
-    name =  "Fourier Synth";
     enable = () => {
         this.updatePeriodicWave();
         this.isReady = true;

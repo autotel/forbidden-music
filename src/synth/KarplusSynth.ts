@@ -107,7 +107,6 @@ export class KarplusSynth extends Synth {
     constructor(audioContext: AudioContext) {
         super(audioContext, karplusVoice);
         this.output.gain.value = 0.5;
-        this.name = "Karplus";
         const enginePromise = createKarplusWorklet(audioContext)
 
         enginePromise.then((engine) => {

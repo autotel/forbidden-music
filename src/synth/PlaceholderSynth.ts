@@ -1,7 +1,6 @@
 import { EventParamsBase, Synth } from "./super/Synth";
 
-export class SynthPlaceholder extends Synth<EventParamsBase> {
-    name: string = "None";
+export class PlaceholderSynth extends Synth<EventParamsBase> {
     constructor(audioContext: AudioContext) {
         super(audioContext);
     }

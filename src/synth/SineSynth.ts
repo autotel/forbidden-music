@@ -70,7 +70,6 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
         audioContext: AudioContext,
     ) {
         super(audioContext, sineVoice);
-        this.name = "Sine Synth";
         this.output.gain.value = 0.1;
         let maximizer: AudioNode | undefined;
 

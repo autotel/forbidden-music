@@ -1,4 +1,5 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
+import { AudioModule } from './interfaces/AudioModule';
 import { ParamType, SynthParam } from './interfaces/SynthParam';
 import { EventParamsBase, ExternalSynthBase, SynthVoice } from './super/Synth';
 
@@ -70,12 +71,12 @@ const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
 }
 
 
-export class ExternalMidiSynth implements ExternalSynthBase {
+export class ExternalMidiSynth implements AudioModule {
+    receivesNotes: true = true;
     constructor(audioContext: AudioContext) {
         this.updateParams();
 
     }
-    name = "External midi Synth";
     isReady = false;
     //@ts-ignore
     midiOutputs: MIDIOutput[] = [];

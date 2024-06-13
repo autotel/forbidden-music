@@ -233,7 +233,7 @@ class SampleSource {
 
 type SamplerVoice = ReturnType<typeof samplerVoice>;
 
-export class OneShotSampler extends Synth<EventParamsBase, SamplerVoice> {
+export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
     private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];

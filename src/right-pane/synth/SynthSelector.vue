@@ -13,17 +13,17 @@ const props = defineProps<{
 }>()
 
 const synth = useSynthStore();
-const isSynthReady = ref(false);
+const receivesNotesReady = ref(false);
 const isSupposedlyLoading = ref(false);
 
 let myInterval: number | NodeJS.Timer | false = false;
 const checkFn = () => {
-    isSynthReady.value = false;
+    receivesNotesReady.value = false;
     if (
         props.activeLayerChan &&
         props.activeLayerChan.synth.isReady
     ) {
-        isSynthReady.value = true;
+        receivesNotesReady.value = true;
         return true;
     }
     if (isSupposedlyLoading.value) {
@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
 });
 
 watch(() => props.activeLayerChan?.synth, () => {
-    isSynthReady.value = false;
+    receivesNotesReady.value = false;
     isSupposedlyLoading.value = false;
     dots.value = "...";
 })
@@ -61,13 +61,13 @@ const dots = ref('...');
     <template v-if="activeLayerChan">
         <PropOptionButtons :param="synth.synthSelector(activeLayerChan)" />
 
-        <template v-if="isSupposedlyLoading && !isSynthReady">
+        <template v-if="isSupposedlyLoading && !receivesNotesReady">
             <Button :on-click="() => { isSupposedlyLoading = false; }">
                 Loading {{ dots }}
             </Button>
         </template>
 
-        <template v-if="isSupposedlyLoading || isSynthReady">
+        <template v-if="isSupposedlyLoading || receivesNotesReady">
             <ParamsSliderList :synthParams="activeLayerChan.params" />
             <Button class="padded" v-if="'credits' in activeLayerChan.synth"
                 :on-click="() => activeLayerChan ? showCredits(activeLayerChan.synth) : null">

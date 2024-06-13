@@ -31,12 +31,11 @@ export type synthVoiceFactory<
 
 
 interface SynthBase extends AudioModule {
-    name: string;
     enable: () => void;
     disable: () => void;
     params: SynthParam[];
     isReady: boolean;
-    isSynth: true;
+    receivesNotes: true;
     /** indicates whether this synth needs to fetch something from server, thus incurring in costs */
     needsFetching?: boolean;
     transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
@@ -51,7 +50,6 @@ interface SynthBase extends AudioModule {
         noteParameters: EventParamsBase
     ) => SynthVoice;
     stop: () => void;
-    
     output: GainNode;
 }
 
@@ -63,9 +61,9 @@ export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
 > implements SynthBase {
-    name: string = "Synth";
-    readonly isSynth = true;
+    readonly receivesNotes = true;
     isReady = false;
+    name= "Synth";
     /** voice instances */
     instances: V[] = [];
     createVoice: () => V;

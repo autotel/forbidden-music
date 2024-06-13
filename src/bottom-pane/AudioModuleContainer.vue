@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { KickSynth } from '../synth/KickSynth';
-import { SynthPlaceholder } from '../synth/PlaceholderSynth';
+import { PlaceholderSynth } from '../synth/PlaceholderSynth';
 import { AudioModule } from '../synth/interfaces/AudioModule';
 import SynthReplace from './editModules/SynthReplace.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
@@ -18,7 +18,7 @@ const props = defineProps<{
 const bottomPaneState = useBottomPaneStateStore();
 const synth = useSynthStore();
 const getComponentFor = (audioModule: AudioModule) => {
-    if (audioModule instanceof SynthPlaceholder) {
+    if (audioModule instanceof PlaceholderSynth) {
         return SynthReplace;
     } else if (audioModule instanceof KickSynth) {
         return KickSynthEdit;

@@ -90,7 +90,6 @@ export class KickSynth extends Synth<EventParamsBase, KickVoice>{
         exportable: true,
     }
     params: SynthParam[];
-    name: string = "KickSynth";
     constructor(
         audioContext: AudioContext
     ) {

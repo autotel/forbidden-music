@@ -132,7 +132,7 @@ const sineVoice = (audioContext: AudioContext) => {
 };
 
 
-const buildParams = (synth: ClusterSineSynth) => {
+const buildParams = (synth: SineCluster) => {
 
     synth.params.push({
         displayName: "oscillators count",
@@ -206,7 +206,7 @@ const buildParams = (synth: ClusterSineSynth) => {
 }
 type ClusterSineVoice = ReturnType<typeof sineVoice>;
 
-export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
+export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
     voices: ClusterSineVoice[] = [];
     credits = "Simple sine synth by Autotel";
 
@@ -275,7 +275,6 @@ export class ClusterSineSynth extends Synth<EventParamsBase, ClusterSineVoice> {
         audioContext: AudioContext,
     ) {
         super(audioContext, sineVoice);
-        this.name = "Sine Cluster";
         this.output.gain.value = 0.1;
         let maximizer: AudioNode | undefined;
         this.transformTriggerParams = (params: EventParamsBase) => {

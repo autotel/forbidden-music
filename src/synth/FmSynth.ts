@@ -95,7 +95,6 @@ export class FmSynth extends Synth {
         if (this.engine) this.engine.port.postMessage({ stopall: true } as FmStopAllMessage);
     };
 
-    name = "Fm";
     credits = `
     Worklet from https://github.com/kazssym/web-fm-sound
 

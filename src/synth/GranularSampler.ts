@@ -1,4 +1,4 @@
-import { findSampleSourceClosestToFrequency } from "./OneShotSampler";
+import { findSampleSourceClosestToFrequency } from "./Sampler";
 import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam } from "./interfaces/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
 
@@ -405,7 +405,6 @@ export class GranularSampler extends Synth {
     loadingProgress = 0;
     credits: string = "";
     needsFetching=true;
-    name: string = "Granular Sampler";
     enable: () => void;
     disable: () => void;
     constructor(
@@ -427,7 +426,6 @@ export class GranularSampler extends Synth {
         this.output.gain.value = 0.3;
 
         if (credits) this.credits = credits;
-        if (name) this.name = "Granular "+ name;
 
         const {
             relativeSampleStartTime,
