@@ -133,6 +133,8 @@ const getSynthConstructors = (audioContext: AudioContext, includeExclusives: boo
         collection,
         readme,
     } ) => {
+        // When I create a sampler selector for bottom panel, I can pass the whole array so that 
+        // the sample is chosen as param. Then I don't need to iterate over sampledefinitions
         const ps = [[
             { name, path, collection, readme }
         ]];
