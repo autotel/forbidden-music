@@ -17,9 +17,3 @@ export interface AudioModule {
     output?: AudioNode,
     input?: AudioNode,
 }
-
-
-export interface AudioEffect extends AudioModule {
-    output: AudioNode,
-    input: AudioNode,
-}

@@ -168,7 +168,7 @@ export const useProjectStore = defineStore("current project", () => {
         if (synth.channels.length) {
             ret.channels = synth.channels.map((channel: SynthChannel) => ({
                 chain: channel.chain.map((audioModule) => ({
-                    type: audioModule.name,
+                    type: audioModule.name || "unknown",
                     params: audioModule.params.filter((param: SynthParam) => {
                         return param.exportable;
                     }).map((param: SynthParam) => {
@@ -179,7 +179,7 @@ export const useProjectStore = defineStore("current project", () => {
                             ret.displayName = param.displayName;
                         }
                         return ret;
-                    })
+                    }) as SynthParamStored[]
                 }))
             }));
         }

@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import Button from "../../components/Button.vue";
 import { SynthChannel, useSynthStore } from "../../store/synthStore";
-import { SynthBase } from "../../synth/super/Synth";
 import ParamsSliderList from "./ParamsSliderList.vue";
 import PropOptionButtons from "../../components/paramEditors/PropOptionButtons.vue";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import onePerRuntimeStore from "../../store/onePerRuntimeStore";
-import { AudioEffect } from "../../synth/interfaces/AudioModule";
+import { AudioModule } from "../../synth/interfaces/AudioModule";
 const props = defineProps<{
     activeLayerChan: SynthChannel | null,
-    showCredits: (ofSynth: SynthBase | AudioEffect) => void
+    showCredits: (ofSynth: AudioModule) => void
 }>()
 
 const synth = useSynthStore();
@@ -21,7 +20,8 @@ const checkFn = () => {
     receivesNotesReady.value = false;
     if (
         props.activeLayerChan &&
-        props.activeLayerChan.synth.isReady
+        'isReady' in props.activeLayerChan.chain[0] &&
+        props.activeLayerChan.chain[0].isReady
     ) {
         receivesNotesReady.value = true;
         return true;
@@ -49,7 +49,7 @@ onBeforeUnmount(() => {
     }
 });
 
-watch(() => props.activeLayerChan?.synth, () => {
+watch(() => props.activeLayerChan?.chain[0], () => {
     receivesNotesReady.value = false;
     isSupposedlyLoading.value = false;
     dots.value = "...";

@@ -5,17 +5,16 @@ import ButtonSub from "../../components/ButtonSub.vue";
 import HeartPulse from "../../components/icons/HeartPulse.vue";
 import { useAudioContextStore } from "../../store/audioContextStore";
 import { useCustomSettingsStore } from "../../store/customSettingsStore";
-import { useMasterEffectsStore } from "../../store/masterEffectsStore";
 import { useLayerStore } from "../../store/layerStore";
+import { useMasterEffectsStore } from "../../store/masterEffectsStore";
 import { useMonoModeInteraction } from "../../store/monoModeInteraction";
 import { SynthChannel, useSynthStore } from "../../store/synthStore";
 import { useToolStore } from "../../store/toolStore";
 import { layerNoteColorStrings } from "../../store/viewStore";
-import { SynthBase } from "../../synth/super/Synth";
-import SynthSelector from "./SynthSelector.vue";
+import { AudioModule } from "../../synth/interfaces/AudioModule";
 import Collapsible from "../Collapsible.vue";
 import ParamsSliderList from "./ParamsSliderList.vue";
-import { AudioEffect } from "../../synth/interfaces/AudioModule";
+import SynthSelector from "./SynthSelector.vue";
 
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
@@ -27,7 +26,7 @@ const tool = useToolStore();
 const layers = useLayerStore();
 const audioContextStore = useAudioContextStore();
 
-const showCredits = (ofSynth: SynthBase | AudioEffect) => {
+const showCredits = (ofSynth: AudioModule) => {
     if (!infoTextModal) throw new Error('infoTextModal not injected');
     if (!('credits' in ofSynth)) return;
     const credits = ofSynth.credits as string;

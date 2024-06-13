@@ -1,7 +1,7 @@
-import { AudioEffect } from "./interfaces/AudioModule";
+import { AudioModule } from "./interfaces/AudioModule";
 import { ParamType, SynthParam } from "./interfaces/SynthParam";
 
-export class RingModEffect implements AudioEffect {
+export class RingModEffect implements AudioModule {
     output: GainNode;
     input: GainNode;
     enable: () => void;

@@ -1,4 +1,4 @@
-import { AudioEffect } from "./interfaces/AudioModule";
+import { AudioModule } from "./interfaces/AudioModule";
 import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam } from "./interfaces/SynthParam";
 
 export interface ImpulseResponseSampleDefinition {
@@ -22,7 +22,7 @@ const createConvolutionReverb = async (
     return { input: convolver, output };
 }
 
-export class ConvolutionReverbEffect implements AudioEffect {
+export class ConvolutionReverbEffect implements AudioModule {
     private audioContext: AudioContext;
     private loadingProgress = 0;
     input: AudioNode;

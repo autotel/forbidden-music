@@ -16,17 +16,16 @@ export const abbreviate2 = (str: string, maxLength: number): string => {
     }
 
     const vowels = ['a', 'e', 'i', 'o', 'u'];
-    let count = 0;
-    let result = '';
-    const endAt = maxLength - 1;
-    for (let i = 0; i < str.length; i++) {
+    let count = 0;   
+    
+    let result = str[0];
+    
+    for (let i = 1; i < str.length; i++) {
         if (vowels.includes(str[i])) {
             continue;
         }
-
         result += str[i];
         count++;
-
         if (count >= maxLength) {
             break;
         }

@@ -1,8 +1,8 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { AudioEffect } from "./interfaces/AudioModule";
+import { AudioModule } from "./interfaces/AudioModule";
 import { SynthParam } from "./interfaces/SynthParam";
 
-export class AutoMaximizerEffect implements AudioEffect {
+export class AutoMaximizerEffect implements AudioModule {
     output: GainNode;
     input: GainNode;
     enable: () => void;
