@@ -57,6 +57,7 @@ export class RingModEffect implements AudioEffect {
         this.enable = async () => {
             this.input.connect(this.output);
             oscillator.connect(this.input.gain);
+            this.input.connect(dry);
             dry.connect(this.output);
             oscillator.start();
         }
@@ -64,6 +65,7 @@ export class RingModEffect implements AudioEffect {
         this.disable = () => {
             oscillator.stop();
             oscillator.disconnect();
+            dry.disconnect();
             this.input.disconnect();
         }
 

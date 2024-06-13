@@ -36,11 +36,11 @@ watch(()=>synth.channels, (newVal, oldVal) => {
             </TransparentContainer>
             <ModuleContainer title="Notes" :rows="0">
             </ModuleContainer>
-            <template v-for="synth in synthChain">
-                <AddSynth v-if="!(synth instanceof PlaceholderSynth)"/>
+            <template v-for="(synth, i) in synthChain">
+                <AddSynth v-if="!(synth instanceof PlaceholderSynth)" :position="i"/>
                 <AudioModuleContainer :audioModule="synth" />
             </template>
-            <AddSynth />
+            <AddSynth :position="synthChain.length"/>
             <ModuleContainer title="Master" :rows="0">
                 <template v-for="fx in effects.effectsChain">
                     <AudioModuleContainer :audioModule="fx" style="margin:-5px" undeletable/>

@@ -6,14 +6,16 @@ import { AutomationPoint } from '../dataTypes/AutomationPoint';
 import { Note, getFrequency } from "../dataTypes/Note";
 import isDev from '../functions/isDev';
 import isTauri, { tauriObject } from '../functions/isTauri';
-import { SineCluster } from '../synth/SineCluster';
 import { FmSynth } from '../synth/FmSynth';
 import { FourierSynth } from '../synth/FourierSynth';
 import { GranularSampler } from '../synth/GranularSampler';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
-import { Sampler } from '../synth/Sampler';
 import { PlaceholderSynth } from '../synth/PlaceholderSynth';
+import { RingModEffect } from '../synth/RingModEffect';
+import { Sampler } from '../synth/Sampler';
+import { SineCluster } from '../synth/SineCluster';
+import { SineSynth } from '../synth/SineSynth';
 import { AudioEffect, AudioModule } from '../synth/interfaces/AudioModule';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 import { Synth } from '../synth/super/Synth';
@@ -21,8 +23,6 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
-import { SineSynth } from '../synth/SineSynth';
-import { RingModEffect } from '../synth/RingModEffect';
 
 
 type AdmissibleSynthType = AudioEffect | Synth | AudioModule;
@@ -254,9 +254,9 @@ export const useSynthStore = defineStore("synthesizers", () => {
      * enables, connects and in other ways notify
      * the change into a new synth
      */
-    const addAudioModule = (targetChannel: SynthChannel, audioModule: SynthConstructorWrapper) => {
+    const addAudioModule = (targetChannel: SynthChannel, position: number, audioModule: SynthConstructorWrapper) => {
         const newModule = instanceAudioModule(audioModule);
-        targetChannel.chain.push(newModule);
+        targetChannel.chain.splice(position, 0, newModule);
         rewireChain(targetChannel);
     }
 
