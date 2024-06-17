@@ -14,7 +14,7 @@ import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
 import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
 import { normalizeLibraryItem } from './libraryStore';
-import { SynthChannel, useSynthStore } from './synthStore';
+import { useSynthStore } from './synthStore';
 import demoProject from './project-default';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 
@@ -143,10 +143,6 @@ export const useProjectStore = defineStore("current project", () => {
         sanitizeTimeRanges(...loops);
         return loops;
     }
-    const probe = (...params: any[]) => {
-        console.log(...params);
-        return params[0];
-    }
 
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
@@ -166,22 +162,7 @@ export const useProjectStore = defineStore("current project", () => {
         } as LibraryItem;
         ret.version = LIBRARY_VERSION;
         if (synth.channels.length) {
-            ret.channels = synth.channels.map((channel: SynthChannel) => ({
-                chain: channel.chain.map((audioModule) => ({
-                    type: audioModule.name || "unknown",
-                    params: audioModule.params.filter((param: SynthParam) => {
-                        return param.exportable;
-                    }).map((param: SynthParam) => {
-                        const ret = {
-                            value: param.value,
-                        } as SynthParamStored
-                        if (param.displayName) {
-                            ret.displayName = param.displayName;
-                        }
-                        return ret;
-                    }) as SynthParamStored[]
-                }))
-            }));
+            ret.channels = synth.getCurrentChannelsDefinition();
         }
         return ret;
     }
@@ -224,7 +205,7 @@ export const useProjectStore = defineStore("current project", () => {
         (async () => {
             await audioContextStore.audioContextPromise;
             synth.applyChannelsDefinition(pDef.channels);
-            pDef.channels.forEach(({ chain }) => chain.forEach(({ type, params }, index) => {
+            pDef.channels.forEach(({ chain }) => chain.forEach((step, index) => {
                 console.warn("not loading parameters yet!!");
             }))
 

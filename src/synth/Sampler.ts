@@ -107,7 +107,7 @@ const samplerVoice = (
         if (!sampleSource.sampleBuffer) throw new Error("sample buffer not loaded");
 
         cancelScheduledValues();
-
+        
         bufferSource = audioContext.createBufferSource();
         bufferSource.buffer = sampleSource.sampleBuffer;
         bufferSource.connect(output);

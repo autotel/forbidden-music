@@ -5,17 +5,19 @@ import Button from '../../components/Button.vue';
 import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
 import { SynthConstructorWrapper, useSynthStore } from '../../store/synthStore';
 import SynthSelector from '../SynthSelector.vue';
+import { SynthChain } from '../../dataStructures/SynthChain';
 const props = defineProps<{
     position: number
+    targetChain: SynthChain
 }>();
-const synthStore = useSynthStore();
+const synth = useSynthStore();
 const expanded = ref(false);
 const bottomPaneState = useBottomPaneStateStore();
-const addSynth = (synth: SynthConstructorWrapper) => {
-    synthStore.addAudioModule(
-        bottomPaneState.activeLayerChannel,
+const addSynth = (synthCon: SynthConstructorWrapper) => {
+    const newSynth = synth.instanceAudioModule(synthCon);
+    props.targetChain.addAudioModule(
         props.position,
-        synth
+        newSynth
     );
     expanded.value = false;
 }

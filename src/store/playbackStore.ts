@@ -371,7 +371,9 @@ export const usePlaybackStore = defineStore("playback", () => {
     const play = async () => {
         if (!isPaused) resetLoopRepetitions();
         const audioContext = audioContextStore.audioContext;
+        console.log("w audio context state");
         if (audioContext.state !== 'running') await audioContext.resume();
+        console.log("play");
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
         previousClockTime = audioContext.currentTime;

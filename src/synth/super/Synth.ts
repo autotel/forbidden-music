@@ -30,14 +30,12 @@ export type synthVoiceFactory<
 ) => VoiceGen;
 
 
-interface SynthBase extends AudioModule {
-    enable: () => void;
-    disable: () => void;
-    params: SynthParam[];
-    isReady: boolean;
+export interface ReceivesNotes extends AudioModule {
+    // enable: () => void;
+    // disable: () => void;
+    // params: SynthParam[];
+    // isReady: boolean;
     receivesNotes: true;
-    /** indicates whether this synth needs to fetch something from server, thus incurring in costs */
-    needsFetching?: boolean;
     transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
     scheduleStart: (
         frequency: number,
@@ -53,14 +51,11 @@ interface SynthBase extends AudioModule {
     output: GainNode;
 }
 
-export interface ExternalSynthBase extends SynthBase {
-}
-
 
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
-> implements SynthBase {
+> implements ReceivesNotes {
     readonly receivesNotes = true;
     isReady = false;
     name= "Synth";

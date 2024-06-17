@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import Button from '../components/Button.vue';
 import ButtonSub from '../components/ButtonSub.vue';
+import { SynthChain } from '../dataStructures/SynthChain';
 import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
 import { useCustomSettingsStore } from '../store/customSettingsStore';
-import { SynthChannel, useSynthStore } from '../store/synthStore';
+import { useSynthStore } from '../store/synthStore';
 import { layerNoteColorStrings } from '../store/viewStore';
 
 const bottomPaneStore = useBottomPaneStateStore();
 const synth = useSynthStore();
 const userSettings = useCustomSettingsStore();
-const changeSynthChan = (chan: SynthChannel) => {
+const changeSynthChan = (chan: SynthChain) => {
     bottomPaneStore.activeLayerChannel = chan;
 }
 </script>
@@ -26,7 +27,7 @@ const changeSynthChan = (chan: SynthChannel) => {
                 <template v-else>
                     <span class="encircled">{{ chanNo }}</span>
                 </template>
-                {{ synthChan.chain[0]?.name }}
+                {{ synthChan.name }}
 
                 <ButtonSub class="sub-button" :onClick="() => { synth.channels.splice(chanNo, 1) }">
                     ×
