@@ -49,4 +49,16 @@ circle.selected {
     stroke: #f889;
     stroke-width: 3px;
 }
+
+/** dark mode */
+@media screen and (prefers-color-scheme: dark) {
+
+    line,
+    circle {
+        stroke: rgba(255, 255, 255, 0.404);
+        fill: #ffffff00;
+    }
+
+
+}
 </style>
