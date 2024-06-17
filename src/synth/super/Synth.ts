@@ -1,4 +1,5 @@
 import { AudioModule } from "../interfaces/AudioModule";
+import { SynthChainStepType } from "../interfaces/SynthChainStep";
 import { SynthParam } from "../interfaces/SynthParam";
 
 export interface EventParamsBase {
@@ -58,6 +59,7 @@ export class Synth<
 > implements ReceivesNotes {
     readonly receivesNotes = true;
     isReady = false;
+    readonly type = SynthChainStepType.AudioModule;
     name= "Synth";
     /** voice instances */
     instances: V[] = [];

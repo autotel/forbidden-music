@@ -1,10 +1,12 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
 import { AudioModule } from "./interfaces/AudioModule";
+import { SynthChainStepType } from "./interfaces/SynthChainStep";
 import { SynthParam } from "./interfaces/SynthParam";
 
 export class AutoMaximizerEffect implements AudioModule {
     output: GainNode;
     input: GainNode;
+    readonly type = SynthChainStepType.AudioModule;
     enable: () => void;
     disable: () => void;
     constructor(

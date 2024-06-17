@@ -6,6 +6,7 @@ import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
 import { SynthConstructorWrapper, useSynthStore } from '../../store/synthStore';
 import SynthSelector from '../SynthSelector.vue';
 import { SynthChain } from '../../dataStructures/SynthChain';
+import { SynthStack } from '../../dataStructures/SynthStack';
 const props = defineProps<{
     position: number
     targetChain: SynthChain
@@ -21,44 +22,60 @@ const addSynth = (synthCon: SynthConstructorWrapper) => {
     );
     expanded.value = false;
 }
+const addRack = () => {
+    props.targetChain.addAudioModule(
+        props.position,
+        new SynthStack(props.targetChain.destination),
+    );
+    expanded.value = false;
+}
 </script>
 <template>
-    <div :style="{
-        width:expanded?'auto':'0.1em',
-        backgroundColor: 'transparent',
-        position:'relative',
-        display:'flex',
-        flexDirection:'row',
-        height:'18em'
-    }">
-        <div id="icons">
+    <div class="main-container">
+        <div class="icons-container">
             <Button 
                 style="background-color: transparent;"    
                 @click="expanded=!expanded"
             >{{expanded?'×':'+'}}
             </Button>
         </div>
-        <div id="selector" v-if="expanded">
-            <div style="height:100%; overflow-y: auto;">
-                <SynthSelector @select="addSynth" />
-            </div>
+        <div class="selector-container" v-if="expanded">
+            <SynthSelector @select="addSynth" />
+
+            <Button :onClick="addRack"
+                style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
+                Parallel rack
+            </Button>
         </div>
     </div>
 </template>
 <style scoped>
-#icons {
+.main-container {
+    width:auto;
+    background-color: transparent;
+    position:relative;
+    height:18em;
     display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+}
+.icons-container {
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    width: 0.05em;
+    height:18em;
+    justify-content: center;
+    width: 1em;
     flex-grow: 0;
     flex-shrink:0;
 }
-#selector {
+.selector-container{
+    display: inline-block;
     overflow-y: auto;
-    height: 100%;
     flex-grow: 0;
     flex-shrink:0;
+    height:18em;
 }
 </style>

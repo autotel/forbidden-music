@@ -38,8 +38,8 @@ const props = defineProps<{
     display: flex;
     flex-direction: row;
     height: 18em;
-    padding: 0.2em;
-    margin: 0.3em;
+    /* padding: 0.2em;
+    margin: 0.3em; */
     padding-left: 2em;
     background-color: #5a595e;
     border: 1px solid #aaac;

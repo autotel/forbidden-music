@@ -1,9 +1,11 @@
 import { AudioModule } from "./interfaces/AudioModule";
+import { SynthChainStepType } from "./interfaces/SynthChainStep";
 import { ParamType, SynthParam } from "./interfaces/SynthParam";
 
 export class RingModEffect implements AudioModule {
     output: GainNode;
     input: GainNode;
+    readonly type = SynthChainStepType.AudioModule;
     enable: () => void;
     disable: () => void;
     params: SynthParam[];

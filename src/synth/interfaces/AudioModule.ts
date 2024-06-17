@@ -1,6 +1,8 @@
 import { SynthParam } from "./SynthParam";
+import { SynthChainStep, SynthChainStepType } from "./SynthChainStep";
 
-export interface AudioModule {
+export interface AudioModule extends SynthChainStep {
+    type: SynthChainStepType.AudioModule;
     params: SynthParam[],
     name?: string,
     /**

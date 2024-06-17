@@ -1,6 +1,7 @@
 import { AudioModule } from "../synth/interfaces/AudioModule";
+import { SynthChainStep, SynthChainStepType } from "../synth/interfaces/SynthChainStep";
 import { ReceivesNotes } from "../synth/super/Synth";
-import { SynthStack } from "./SynthStack";
+import { SynthStack, isStack } from "./SynthStack";
 const MAX_RECURSION = 10;
 export type ChainStep = AudioModule | SynthStack;
 const getNoteReceivers = (
@@ -15,26 +16,29 @@ const getNoteReceivers = (
             // It's an ordinary audio module
             const receivesNotes = chainItem as ReceivesNotes;
             acc.push(receivesNotes);
-        } else if (Array.isArray(chainItem)) {
-            // It's a parallel stack of audio modules, recurse
-            const subReceivers = getNoteReceivers(chainItem, recursionDepth + 1);
-            acc.push(...subReceivers);
         } else if (chainItem instanceof SynthChain) {
             // it's a synth chain 
             acc.push(...chainItem.noteReceivers);
-        }
+        } else if (isStack(chainItem)) {
+            // It's a parallel stack of audio modules, recurse
+            const subReceivers = getNoteReceivers(chainItem, recursionDepth + 1);
+            acc.push(...subReceivers);
+        } 
         return acc;
     }, [] as ReceivesNotes[]);
 }
 
-export class SynthChain {
-    constructor() {
-    }
+export class SynthChain implements SynthChainStep {
     name = "SynthChain";
-    destination?: AudioNode;
+    type = SynthChainStepType.SynthChain;
+    destination: AudioNode;
     chain: ChainStep[] = [];
     noteReceivers: ReceivesNotes[] = [];
     chainChangedEventListeners = new Set<() => void>();
+
+    constructor(destination: AudioNode) {
+        this.destination = destination;
+    }
     handleChanged = () => {
         console.log("chain changed");
         this.rewire();
@@ -54,7 +58,7 @@ export class SynthChain {
         let prevModule: AudioModule | undefined;
         console.log("receive notes", this.noteReceivers.map(r => r.name));
         for (let item of this.chain) {
-            if (Array.isArray(item)) {
+            if (isStack(item)) {
                 for(let chain of item){
                     chain.rewire(recursion + 1);
                 }
@@ -76,21 +80,21 @@ export class SynthChain {
         }
         this.noteReceivers = getNoteReceivers(this.chain);
     }
-    addAudioModule = (position: number, newModule: AudioModule) => {
+    addAudioModule = (position: number, newModule: ChainStep) => {
         this.chain.splice(position, 0, newModule);
         this.rewire();
         this.handleChanged();
     }
     replaceAudioModule = (
-        removedModule: AudioModule,
-        newModule: AudioModule,
+        removedModule: ChainStep,
+        newModule: ChainStep,
     ) => {
         const index = this.chain.indexOf(removedModule);
         if (index === -1) {
             console.warn("module not found in chain");
             return;
         }
-        removedModule.disable();
+        if(! isStack(removedModule)) removedModule.disable();
         this.chain.splice(index, 1);
         this.chain.splice(index, 0, newModule);
         this.rewire();

@@ -4,16 +4,17 @@ import { SynthChain } from '../dataStructures/SynthChain';
 import { PlaceholderSynth } from '../synth/PlaceholderSynth';
 import AudioModuleContainer from './AudioModuleContainer.vue';
 import AddSynth from './components/AddSynth.vue';
-import ParallelChainEdit from './editModules/ParallelChainEdit.vue';
+import StackContainer from './editModules/StackContainer.vue';
 
 const props = defineProps<{
     synthChain: SynthChain
 }>();
 
-const chain = ref(props.synthChain.chain);
+const stepsArray = ref(props.synthChain.chain);
 
 const chainChangedHandler = () => {
-    chain.value = [...props.synthChain.chain];
+    stepsArray.value = [...props.synthChain.chain];
+    props.synthChain.rewire();
 }
 
 watch(() => props.synthChain, (newVal, oldVal) => {
@@ -31,14 +32,14 @@ onMounted(() => {
 </script>
 
 <template>
-    <template v-for="(step, i) in chain">
+    <template v-for="(step, i) in stepsArray">
         <template v-if="!(step instanceof PlaceholderSynth)">
             <AddSynth :position="i" :targetChain="synthChain" />
-            <ParallelChainEdit v-if="Array.isArray(step)" :stack="step" />
+            <StackContainer v-if="Array.isArray(step)" :stack="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
             <AudioModuleContainer v-else :audioModule="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
         </template>
     </template>
-    <AddSynth :position="chain.length" :targetChain="synthChain" />
+    <AddSynth :position="stepsArray.length" :targetChain="synthChain" />
 
 </template>
 <style scoped>

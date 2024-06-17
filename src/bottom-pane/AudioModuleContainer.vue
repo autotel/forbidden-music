@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import Button from '../components/Button.vue';
 import { ChainStep, SynthChain } from '../dataStructures/SynthChain';
-import { SynthStack } from '../dataStructures/SynthStack';
+import { SynthStack, isStack } from '../dataStructures/SynthStack';
 import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
 import { useSynthStore } from '../store/synthStore';
 import { KickSynth } from '../synth/KickSynth';
@@ -11,18 +11,18 @@ import { AudioModule } from '../synth/interfaces/AudioModule';
 import ModuleContainer from './components/ModuleContainer.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
-import ParallelChainEdit from './editModules/ParallelChainEdit.vue';
+import StackContainer from './editModules/StackContainer.vue';
 import SynthReplace from './editModules/SynthReplace.vue';
 
 const props = defineProps<{
-    audioModule: ChainStep,
-    remove?: () => void
+    audioModule: AudioModule,
+    remove?: () => void,
 }>();
 
 const title = computed<string>(()=>{
     if ('name' in props.audioModule) {
         return props.audioModule.name + '';
-    } else if (Array.isArray(props.audioModule)) {
+    } else if (isStack(props.audioModule)) {
         return 'Parallel Chain';
     } else {
         return '???';
@@ -32,8 +32,6 @@ const title = computed<string>(()=>{
 const getComponentFor = (audioModule: AudioModule) => {
     if (audioModule instanceof PlaceholderSynth) {
         return SynthReplace;
-    } else if (Array.isArray(audioModule)) {
-        return ParallelChainEdit;
     } else if (audioModule instanceof KickSynth) {
         return KickSynthEdit;
     } else {
@@ -54,8 +52,7 @@ const handleRemoveClick = () => {
                 style="background-color:transparent">×</Button>
         </template>
         <template #default>
-            <ParallelChainEdit v-if="Array.isArray(audioModule)" :stack="audioModule" />
-            <component v-else :is="getComponentFor(audioModule)" :audioModule="audioModule" />
+            <component :is="getComponentFor(audioModule)" :audioModule="audioModule" />
         </template>
     </ModuleContainer>
 </template>
