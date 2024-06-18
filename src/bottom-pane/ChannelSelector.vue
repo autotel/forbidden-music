@@ -32,7 +32,7 @@ const addChannel = () => {
                 </template>
                 {{ synthChan.name }}
 
-                <ButtonSub class="sub-button" :onClick="() => { synth.channels.chains.splice(chanNo, 1) }">
+                <ButtonSub class="sub-button" danger :onClick="() => { synth.channels.chains.splice(chanNo, 1) }">
                     ×
                 </ButtonSub>
             </Button>

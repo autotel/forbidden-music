@@ -1,12 +1,8 @@
 <script setup lang="ts">
 
-import ModuleContainer from '../components/ModuleContainer.vue';
-import Knob from '../components/Knob.vue';
-import { usePlaybackStore } from '../../store/playbackStore';
-import { useSynthStore } from '../../store/synthStore';
-import { onBeforeMount, ref } from 'vue';
-import { ParamType } from '../../synth/interfaces/SynthParam';
 import { KickSynth } from '../../synth/KickSynth';
+import { ParamType } from '../../synth/interfaces/SynthParam';
+import Knob from '../components/Knob.vue';
 
 defineProps<{
     audioModule: KickSynth

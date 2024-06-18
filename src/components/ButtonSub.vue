@@ -18,7 +18,7 @@ const mouseEnter = (e: MouseEvent) => {
     if (!tooltip) return;
     tool.tooltip = tooltip;
     tool.tooltipOwner = e.target as HTMLElement;
-} 
+}
 
 const mouseLeave = (e: MouseEvent) => {
     tool.tooltip = '';
@@ -38,15 +38,15 @@ const mouseLeave = (e: MouseEvent) => {
 <style scoped>
 button {
     border-radius: 50%;
-    height: 1.5rem;
-    width: 1.5rem;
+    height: 1.4em;
+    width: 1.4em;
     background-color: rgb(212, 212, 212);
     padding: 0;
     border: solid 1px;
     cursor: pointer;
-    display:inline;
-    margin-top: -0.5em;
-    margin-bottom: -0.5em;
+    display: inline-block;
+    margin-top: -0.1em;
+    margin-bottom: -0.1em;
 }
 
 button:hover {
@@ -66,4 +66,7 @@ button.danger:hover {
     background-color: rgb(255, 90, 49);
 }
 
+@media (prefers-color-scheme:dark) {
+    
+}
 </style>

@@ -24,6 +24,7 @@ const sineVoice = (audioContext: AudioContext): SynthVoice => {
             absoluteStartTime: number,
             params: SineNoteParams
         ) {
+            console.log("sine synth start");
             noteVelocity = params.velocity;
             this.inUse = true;
             gainNode.gain.cancelScheduledValues(absoluteStartTime);

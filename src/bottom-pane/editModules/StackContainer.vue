@@ -5,6 +5,7 @@ import { SynthChain } from '../../dataStructures/SynthChain';
 import { SynthStack } from '../../dataStructures/SynthStack';
 import ChainContainer from '../ChainContainer.vue';
 import ModuleContainer from '../components/ModuleContainer.vue';
+import ButtonSub from '../../components/ButtonSub.vue';
 const props = defineProps<{
     stack: SynthStack,
     root?: boolean,
@@ -15,9 +16,17 @@ const emits = defineEmits<{
 }>();
 
 const visibleChain = ref<SynthChain | null>(null);
+const layersArray = ref([...props.stack.chains]);
 
 const addLayer = () => {
     props.stack.addChain();
+    layersArray.value = [...props.stack.chains];
+    emits('change', props.stack);
+}
+
+const removeLayer = (index: number) => {
+    props.stack.removeChain(index);
+    layersArray.value = [...props.stack.chains];
     emits('change', props.stack);
 }
 
@@ -36,18 +45,20 @@ const handleRemoveClick = () => {
         </template>
         <template #default>
             <div style="" class="col">
-                <template v-for="(am, no) in stack.chains">
+                <template v-for="(am, no) in layersArray">
                     <Button :onClick="() => visibleChain = am" :class="{ active: visibleChain === am }"
                         style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
                         chain {{ no }}
+                        <ButtonSub danger :onClick="() => removeLayer(no)" tooltip="delete">×</ButtonSub>
                     </Button>
+
                 </template>
                 <Button :onClick="addLayer"
                     style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
                     +
                 </Button>
             </div>
-                <ChainContainer v-if="visibleChain" :synthChain="visibleChain" />
+            <ChainContainer v-if="visibleChain" :synthChain="visibleChain" />
         </template>
     </ModuleContainer>
 </template>
@@ -63,5 +74,4 @@ const handleRemoveClick = () => {
 }
 
 .active {}
-
 </style>

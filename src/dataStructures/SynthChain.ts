@@ -2,11 +2,11 @@ import { it } from "node:test";
 import { AudioModule } from "../synth/interfaces/AudioModule";
 import { SynthChainStep, SynthChainStepType } from "../synth/interfaces/SynthChainStep";
 import { ReceivesNotes } from "../synth/super/Synth";
-import { SynthStack, isStack } from "./SynthStack";
-const MAX_RECURSION = 10;
+import { MAX_RECURSION, SynthStack, isStack } from "./SynthStack";
+import { Patcheable } from "../dataTypes/Patcheable";
 export type ChainStep = AudioModule | SynthStack;
 const getNoteReceivers = (
-    modules: (ChainStep | SynthChain)[],
+    modules: (ChainStep | SynthChain | SynthStack)[],
     recursionDepth = 0,
 ): ReceivesNotes[] => {
     if (recursionDepth > MAX_RECURSION) {
@@ -19,12 +19,17 @@ const getNoteReceivers = (
             acc.push(receivesNotes);
         } else if (chainItem instanceof SynthChain) {
             // it's a synth chain 
-            acc.push(...chainItem.noteReceivers);
-        } else if (isStack(chainItem)) {
+            acc.push(...getNoteReceivers(chainItem.chain, recursionDepth + 1));
+        } else if (chainItem instanceof SynthStack) {
             // It's a parallel stack of audio modules, recurse
-            const subReceivers = getNoteReceivers(chainItem.chains, recursionDepth + 1);
+            const subReceivers: ReceivesNotes[] = [];
+            chainItem.chains.forEach(chain => subReceivers.push(
+                ...getNoteReceivers(chain.chain, recursionDepth + 1))
+            );
             acc.push(...subReceivers);
-        } 
+        } else {
+            // console.error("unexpected chain item", chainItem);
+        }
         return acc;
     }, [] as ReceivesNotes[]);
 }
@@ -32,13 +37,14 @@ const getNoteReceivers = (
 export class SynthChain implements SynthChainStep {
     name = "SynthChain";
     type = SynthChainStepType.SynthChain;
-    destination: AudioNode;
+    output: GainNode;
+    input: GainNode;
     chain: ChainStep[] = [];
-    noteReceivers: ReceivesNotes[] = [];
     chainChangedEventListeners = new Set<() => void>();
 
-    constructor(destination: AudioNode) {
-        this.destination = destination;
+    constructor(audioContext: AudioContext) {
+        this.output = audioContext.createGain();
+        this.input = audioContext.createGain();
     }
     handleChanged = () => {
         console.log("chain changed");
@@ -51,34 +57,40 @@ export class SynthChain implements SynthChainStep {
     removeChangeListener = (listener: () => void) => {
         this.chainChangedEventListeners.delete(listener);
     }
+    removeChangeListeners = () => {
+        this.chainChangedEventListeners.clear();
+    }
     rewire = (recursion = 0) => {
-        if(!this.destination) throw new Error("destination not set");
         if (recursion > MAX_RECURSION) {
             throw new Error("chain recursion depth exceeded");
         }
-        let prevModule: AudioModule | undefined;
-        console.log("receive notes", this.noteReceivers.map(r => r.name));
+        let prevModule: Patcheable | undefined;
         for (let item of this.chain) {
             if (isStack(item)) {
                 item.rewire(recursion + 1);
-                item.output.connect(this.destination);
-            } else {
-                const audioModule = item;
-                if (audioModule.output) {
-                    audioModule.output.disconnect();
-                }
-                if (prevModule && prevModule.output && audioModule.input) {
-                    prevModule.output.connect(audioModule.input);
-                    console.log("connecting ", prevModule.name, "to", audioModule.name);
-                }
-                prevModule = audioModule;
             }
+            if (item instanceof SynthChain) {
+                item.rewire(recursion + 1);
+            }
+            const step = item;
+            if (step.output) {
+                step.output.disconnect();
+            }
+            if (step.input) {
+                if (!prevModule) {
+                    step.input.connect(this.input);
+                } else if (prevModule.output) {
+                    prevModule.output.connect(step.input);
+                }
+            }
+            prevModule = step;
         }
         if (prevModule && prevModule.output) {
-            prevModule.output.connect(this.destination);
-            console.log("connecting ", prevModule.name, "to chain destination");
+            prevModule.output.connect(this.output);
         }
-        this.noteReceivers = getNoteReceivers(this.chain);
+    }
+    getNoteReceivers = () => {
+        return getNoteReceivers(this.chain);
     }
     addAudioModule = (position: number, newModule: ChainStep) => {
         this.chain.splice(position, 0, newModule);
@@ -94,7 +106,7 @@ export class SynthChain implements SynthChainStep {
             console.warn("module not found in chain");
             return;
         }
-        if(! isStack(removedModule)) removedModule.disable();
+        if (!isStack(removedModule)) removedModule.disable();
         this.chain.splice(index, 1);
         this.chain.splice(index, 0, newModule);
         this.rewire();
@@ -116,7 +128,7 @@ export class SynthChain implements SynthChainStep {
         this.handleChanged();
     }
     releaseAll = () => {
-        this.noteReceivers.forEach(receiver => receiver.stop());
+        this.getNoteReceivers().forEach(receiver => receiver.stop());
     }
 
 }

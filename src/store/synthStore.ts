@@ -241,8 +241,9 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const applyChainDefinition = (chain: SynthChain, definition: SynthChainDefinition) => {
         definition.forEach((chainStep, i) => {
             if (Array.isArray(chainStep)) {
+                // TODO: this looks weird after refactors
                 const stack: SynthChainStepDefinition[] = chainStep;
-                const newChain = new SynthChain(masterEffectsStore.myInput);
+                const newChain = new SynthChain(audioContextStore.audioContext);
                 applyChainDefinition(newChain, stack);
             } else {
                 let synthConstructor = synthConstructorWrappers.value.find((s) => s.name === chainStep.type);
@@ -351,12 +352,14 @@ export const useSynthStore = defineStore("synthesizers", () => {
      * could be memoized (it's called on every single trigger evt)
      */
     const getLayerSynths = (layerNo: number): ReceivesNotes[] => {
+        console.log("getting layer synths", layerNo);
         const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
         const channelIfExists = channels.value.chains[channelNo || 0] as SynthChain | undefined;
         if (!channelIfExists) {
-            return channels.value.chains[0]?.noteReceivers || [];
+            return channels.value.chains[0]?.getNoteReceivers() || [];
         }
-        return channelIfExists.noteReceivers;
+        console.log("found channel", channelIfExists);
+        return channelIfExists.getNoteReceivers();
     }
 
     channels.value.addChain().name="Default Channel";

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 
 const props = defineProps<{
     title: string,
+    padding?: boolean
 }>();
 </script>
 
@@ -19,7 +20,7 @@ const props = defineProps<{
             </div>
         </div>
 
-        <div id="slot-container">
+        <div id="slot-container" :class="{ padding }">
             <slot></slot>
         </div>
     </div>
@@ -34,12 +35,15 @@ const props = defineProps<{
     height: 100%;
 }
 
+.padding {
+    padding: 0.2em;
+    margin: 0.3em;
+}
+
 .module-container {
     display: flex;
     flex-direction: row;
     height: 18em;
-    /* padding: 0.2em;
-    margin: 0.3em; */
     padding-left: 2em;
     background-color: #5a595e;
     border: 1px solid #aaac;

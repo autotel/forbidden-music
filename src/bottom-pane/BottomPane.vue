@@ -6,7 +6,7 @@ import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { useMasterEffectsStore } from '../store/masterEffectsStore';
 import { useSynthStore } from '../store/synthStore';
-import AudioModuleContainer from './AudioModuleContainer.vue';
+import AudioModuleContainer from './editModules/AudioModuleContainer.vue';
 import ChainContainer from './ChainContainer.vue';
 import ChannelSelector from './ChannelSelector.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
