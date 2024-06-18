@@ -7,11 +7,13 @@ import { SynthConstructorWrapper, useSynthStore } from '../../store/synthStore';
 import SynthSelector from '../SynthSelector.vue';
 import { SynthChain } from '../../dataStructures/SynthChain';
 import { SynthStack } from '../../dataStructures/SynthStack';
+import { useAudioContextStore } from '../../store/audioContextStore';
 const props = defineProps<{
     position: number
     targetChain: SynthChain
 }>();
 const synth = useSynthStore();
+const audioContextStore = useAudioContextStore();
 const expanded = ref(false);
 const bottomPaneState = useBottomPaneStateStore();
 const addSynth = (synthCon: SynthConstructorWrapper) => {
@@ -25,7 +27,7 @@ const addSynth = (synthCon: SynthConstructorWrapper) => {
 const addRack = () => {
     props.targetChain.addAudioModule(
         props.position,
-        new SynthStack(props.targetChain.destination),
+        new SynthStack(audioContextStore.audioContext),
     );
     expanded.value = false;
 }
@@ -56,7 +58,6 @@ const addRack = () => {
     position:relative;
     height:18em;
     display: flex;
-    flex-direction: column;
     flex-wrap: nowrap;
     justify-content: flex-start;
     align-content: flex-start;

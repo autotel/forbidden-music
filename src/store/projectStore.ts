@@ -161,7 +161,7 @@ export const useProjectStore = defineStore("current project", () => {
             version: LIBRARY_VERSION,
         } as LibraryItem;
         ret.version = LIBRARY_VERSION;
-        if (synth.channels.length) {
+        if (synth.channels.chains.length) {
             ret.channels = synth.getCurrentChannelsDefinition();
         }
         return ret;

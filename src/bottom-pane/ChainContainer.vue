@@ -5,6 +5,7 @@ import { PlaceholderSynth } from '../synth/PlaceholderSynth';
 import AudioModuleContainer from './AudioModuleContainer.vue';
 import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
+import { isStack } from '../dataStructures/SynthStack';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -35,7 +36,7 @@ onMounted(() => {
     <template v-for="(step, i) in stepsArray">
         <template v-if="!(step instanceof PlaceholderSynth)">
             <AddSynth :position="i" :targetChain="synthChain" />
-            <StackContainer v-if="Array.isArray(step)" :stack="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
+            <StackContainer v-if="isStack(step)" :stack="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
             <AudioModuleContainer v-else :audioModule="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
         </template>
     </template>

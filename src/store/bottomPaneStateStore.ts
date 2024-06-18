@@ -1,12 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { ifDev } from "../functions/isDev";
-import { ifTauri } from "../functions/isTauri";
-import { SynthChannel, useSynthStore } from "./synthStore";
+import { useSynthStore } from "./synthStore";
 
 export const useBottomPaneStateStore = defineStore("bottom pane state store", () => {
     const synthStore = useSynthStore();
-    const activeLayerChannel = ref(synthStore.channels[0]);
+    const activeLayerChannel = ref(synthStore.channels.chains[0] ?? null);
     return {
         activeLayerChannel,
     }

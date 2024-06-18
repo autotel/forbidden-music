@@ -7,7 +7,7 @@ import ChainContainer from '../ChainContainer.vue';
 import ModuleContainer from '../components/ModuleContainer.vue';
 const props = defineProps<{
     stack: SynthStack,
-    targetChain: SynthChain,
+    root?: boolean,
     remove?: () => void,
 }>();
 const emits = defineEmits<{
@@ -17,9 +17,7 @@ const emits = defineEmits<{
 const visibleChain = ref<SynthChain | null>(null);
 
 const addLayer = () => {
-    const newChain = new SynthChain(props.stack.destination);
-    props.stack.push(newChain);
-    props.targetChain.rewire();
+    props.stack.addChain();
     emits('change', props.stack);
 }
 
@@ -38,7 +36,7 @@ const handleRemoveClick = () => {
         </template>
         <template #default>
             <div style="" class="col">
-                <template v-for="(am, no) in stack">
+                <template v-for="(am, no) in stack.chains">
                     <Button :onClick="() => visibleChain = am" :class="{ active: visibleChain === am }"
                         style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
                         chain {{ no }}

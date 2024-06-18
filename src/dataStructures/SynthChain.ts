@@ -1,3 +1,4 @@
+import { it } from "node:test";
 import { AudioModule } from "../synth/interfaces/AudioModule";
 import { SynthChainStep, SynthChainStepType } from "../synth/interfaces/SynthChainStep";
 import { ReceivesNotes } from "../synth/super/Synth";
@@ -21,7 +22,7 @@ const getNoteReceivers = (
             acc.push(...chainItem.noteReceivers);
         } else if (isStack(chainItem)) {
             // It's a parallel stack of audio modules, recurse
-            const subReceivers = getNoteReceivers(chainItem, recursionDepth + 1);
+            const subReceivers = getNoteReceivers(chainItem.chains, recursionDepth + 1);
             acc.push(...subReceivers);
         } 
         return acc;
@@ -59,9 +60,8 @@ export class SynthChain implements SynthChainStep {
         console.log("receive notes", this.noteReceivers.map(r => r.name));
         for (let item of this.chain) {
             if (isStack(item)) {
-                for(let chain of item){
-                    chain.rewire(recursion + 1);
-                }
+                item.rewire(recursion + 1);
+                item.output.connect(this.destination);
             } else {
                 const audioModule = item;
                 if (audioModule.output) {
@@ -76,7 +76,7 @@ export class SynthChain implements SynthChainStep {
         }
         if (prevModule && prevModule.output) {
             prevModule.output.connect(this.destination);
-            console.log("connecting ", prevModule.name, "to effects store input");
+            console.log("connecting ", prevModule.name, "to chain destination");
         }
         this.noteReceivers = getNoteReceivers(this.chain);
     }
@@ -110,7 +110,7 @@ export class SynthChain implements SynthChainStep {
     }
     removeAudioModuleAt = (index: number) => {
         const step = this.chain[index];
-        if(! Array.isArray(step)) step.disable();
+        step.disable();
         this.chain.splice(index, 1);
         this.rewire();
         this.handleChanged();

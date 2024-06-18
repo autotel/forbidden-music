@@ -28,6 +28,7 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
+import { probe } from '../functions/probe';
 
 type AdmissibleSynthType = AudioModule | Synth;
 
@@ -180,21 +181,9 @@ export const useSynthStore = defineStore("synthesizers", () => {
         exclusives.enabled
     ));
 
-    const channels = ref<SynthStack>(new SynthStack(masterEffectsStore.myInput));
+    const channels = ref<SynthStack>(new SynthStack(audioContextStore.audioContext));
     const instancedSynths = ref<AdmissibleSynthType[]>([]);
-
-    const addChannel = () => {
-        const newChannel = new SynthChain(masterEffectsStore.myInput);
-        channels.value.push(newChannel);
-        return newChannel;
-    }
-
-
-    const removeChannel = (index: number) => {
-        channels.value.splice(index, 1);
-    }
-
-    addChannel();
+    channels.value.output.connect(masterEffectsStore.myInput);
 
     const scheduleNote = (
         event: Note,
@@ -230,7 +219,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         if (!destinationParameter.animate) throw new Error("destination parameter is not animatable");
         destinationParameter.animate(event.value, detinationTime);
     }
-    const releaseAll = () => channels.value.forEach((chain) => chain.releaseAll());
+    const releaseAll = () => channels.value.chains.forEach((chain) => chain.releaseAll());
     const instanceAudioModule = (audioModule: SynthConstructorWrapper) => {
         const newModule = audioModule.create();
         console.log("adding audio module", newModule.name, "count", instancedSynths.value.length);
@@ -275,13 +264,14 @@ export const useSynthStore = defineStore("synthesizers", () => {
         });
     }
     const applyChannelsDefinition = (inChannels: SynthChannelsDefinition, addToCurrent = false) => {
+        console.log("applying channels definition", inChannels);
         if (!addToCurrent) {
-            channels.value.length = 0;
+            channels.value.empty();
         }
-        inChannels.forEach(({ chain }) => {
-            console.log("loading channel", chain);
-            const newChain = addChannel();
-            applyChainDefinition(newChain, chain);
+        inChannels.forEach(( channel ) => {
+            console.log("loading channel", channel);
+            const newChain = channels.value.addChain();
+            applyChainDefinition(newChain, channel.chain);
         });
     }
 
@@ -289,7 +279,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const getDefinitionForChain = (fromChain: SynthChain): SynthChainDefinition => {
         return fromChain.chain.map((step) => {
             if (isStack(step)) {
-                return step.map((subChain) => {
+                return step.chains.map((subChain) => {
                     return getDefinitionForChain(subChain);
                 });
             }
@@ -318,10 +308,10 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const getCurrentChannelsDefinition = (): SynthChannelsDefinition => {
-        return channels.value.map((channel) => {
+        return  channels.value.chains.map((channel) => {
             if (!channel) throw new Error("channel is undefined");
             return getChannelDefinition(channel);
-        })
+        });
     }
 
     const synthParamToAccessorString = (param?: SynthParam) => {
@@ -362,12 +352,14 @@ export const useSynthStore = defineStore("synthesizers", () => {
      */
     const getLayerSynths = (layerNo: number): ReceivesNotes[] => {
         const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
-        const channelIfExists = channels.value[channelNo || 0] as SynthChain | undefined;
+        const channelIfExists = channels.value.chains[channelNo || 0] as SynthChain | undefined;
         if (!channelIfExists) {
-            return channels.value[0].noteReceivers;
+            return channels.value.chains[0]?.noteReceivers || [];
         }
         return channelIfExists.noteReceivers;
     }
+
+    channels.value.addChain().name="Default Channel";
 
     return {
         synthConstructorWrappers,
@@ -379,8 +371,6 @@ export const useSynthStore = defineStore("synthesizers", () => {
         releaseAll,
         getLayerSynths,
         applyChannelsDefinition,
-        removeChannel,
-        addChannel,
         instanceAudioModule,
         synthParamToAccessorString,
         accessorStringToSynthParam,
