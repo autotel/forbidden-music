@@ -45,7 +45,7 @@ const props = defineProps<{
     flex-direction: row;
     height: 18em;
     padding-left: 2em;
-    background-color: #5a595e;
+    background-color: #92909b80;
     border: 1px solid #aaac;
     border-radius: 1em;
     box-sizing: border-box;

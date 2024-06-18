@@ -29,21 +29,20 @@ import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 import { probe } from '../functions/probe';
+import { get } from 'node:http';
 
 type AdmissibleSynthType = AudioModule | Synth;
 
-export type SynthChainStepDefinition = {
+/** storage for export/save, etc definitions */
+type AudioModuleDefinition = {
     type: string;
     params: Array<SynthParamStored>;
-} | SynthChainStepDefinition[];
-
-export type SynthChainDefinition = SynthChainStepDefinition[];
-
-export type SynthChannelDefinition = {
-    chain: SynthChainDefinition
 }
+type SynthChainDefinition = SynthChainStepDefinition[];
+type SynthStackDefinition = SynthChainDefinition[];
+export type SynthChainStepDefinition = AudioModuleDefinition | SynthStackDefinition;
 
-export type SynthChannelsDefinition = SynthChannelDefinition[]
+export type SynthChannelsDefinition = SynthStackDefinition;
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => AdmissibleSynthType;
 
@@ -238,14 +237,18 @@ export const useSynthStore = defineStore("synthesizers", () => {
         }
         return newModule;
     }
+
     const applyChainDefinition = (chain: SynthChain, definition: SynthChainDefinition) => {
-        definition.forEach((chainStep, i) => {
+        console.log("applying chain definition", definition);
+        definition.forEach((chainStep: SynthChainStepDefinition, i) => {
             if (Array.isArray(chainStep)) {
-                // TODO: this looks weird after refactors
-                const stack: SynthChainStepDefinition[] = chainStep;
-                const newChain = new SynthChain(audioContextStore.audioContext);
-                applyChainDefinition(newChain, stack);
+                // it's a stack
+                const stackDef: SynthStackDefinition = chainStep;
+                const newStack = new SynthStack(audioContextStore.audioContext);
+                applyStackDefinition(newStack, stackDef);
+                chain.addAudioModule(i, newStack);
             } else {
+                // It's an audio module
                 let synthConstructor = synthConstructorWrappers.value.find((s) => s.name === chainStep.type);
                 if (!synthConstructor) {
                     const regex = new RegExp(chainStep.type.slice(0, 3));
@@ -264,55 +267,60 @@ export const useSynthStore = defineStore("synthesizers", () => {
             }
         });
     }
+
+    const applyStackDefinition = (stack: SynthStack, definition: SynthStackDefinition) => {
+        definition.forEach((chainDef: SynthChainDefinition) => {
+            const newChain = stack.addChain();
+            applyChainDefinition(newChain, chainDef);
+        });
+    }
+
     const applyChannelsDefinition = (inChannels: SynthChannelsDefinition, addToCurrent = false) => {
         console.log("applying channels definition", inChannels);
         if (!addToCurrent) {
             channels.value.empty();
         }
-        inChannels.forEach(( channel ) => {
-            console.log("loading channel", channel);
+        inChannels.forEach((chainDef) => {
+            console.log("loading channel chain", chainDef);
             const newChain = channels.value.addChain();
-            applyChainDefinition(newChain, channel.chain);
+            applyChainDefinition(newChain, chainDef);
         });
     }
 
-
-    const getDefinitionForChain = (fromChain: SynthChain): SynthChainDefinition => {
-        return fromChain.chain.map((step) => {
-            if (isStack(step)) {
-                return step.chains.map((subChain) => {
-                    return getDefinitionForChain(subChain);
-                });
-            }
-
-            return {
-                type: step.name || "unknown",
-                params: step.params.filter((param: SynthParam) => {
-                    return param.exportable;
-                }).map((param: SynthParam) => {
-                    const ret = {
-                        value: param.value,
-                    } as SynthParamStored
-                    if (param.displayName) {
-                        ret.displayName = param.displayName;
-                    }
-                    return ret;
-                }) as SynthParamStored[]
-            } as SynthChainStepDefinition;
-        })
-    }
-
-    const getChannelDefinition = (channel: SynthChain): SynthChannelDefinition => {
+    const getDefinitionForAudioModule = (synth: AudioModule): AudioModuleDefinition => {
         return {
-            chain: getDefinitionForChain(channel)
+            type: synth.name || "unknown",
+            params: synth.params.filter((param: SynthParam) => {
+                return param.exportable;
+            }).map((param: SynthParam) => {
+                const ret = {
+                    value: param.value,
+                } as SynthParamStored
+                if (param.displayName) {
+                    ret.displayName = param.displayName;
+                }
+                return ret;
+            }) as SynthParamStored[]
         }
     }
 
-    const getCurrentChannelsDefinition = (): SynthChannelsDefinition => {
-        return  channels.value.chains.map((channel) => {
-            if (!channel) throw new Error("channel is undefined");
-            return getChannelDefinition(channel);
+    const getDefinitionForChain = (fromChain: SynthChain): SynthChainDefinition => {
+        return fromChain.chain.map((step) => {
+            if (step instanceof SynthStack) {
+                return getDefinitionForStack(step);
+            }
+            return getDefinitionForAudioModule(step);
+        })
+    }
+
+    const getDefinitionForStack = (stack: SynthStack): SynthStackDefinition => {
+        return stack.chains.map((chain) => {
+            return getDefinitionForChain(chain);
         });
+    }
+
+    const getCurrentChannelsDefinition = (): SynthChannelsDefinition => {
+        return getDefinitionForStack(channels.value);
     }
 
     const synthParamToAccessorString = (param?: SynthParam) => {
@@ -342,7 +350,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         console.log("found automated param ", param);
         return param;
     }
-    
+
 
     /**
      * resolve assoc of
@@ -362,7 +370,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return channelIfExists.getNoteReceivers();
     }
 
-    channels.value.addChain().name="Default Channel";
+    channels.value.addChain().name = "Default Channel";
 
     return {
         synthConstructorWrappers,

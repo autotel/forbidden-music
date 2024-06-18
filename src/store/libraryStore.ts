@@ -59,9 +59,9 @@ const migrators = {
         return newObj;
     },
     "0.4.0": (obj: LibraryItem_0_4_0): LibraryItem_0_5_0 => {
-        const newChans:SynthChannelsDefinition = obj.channels.map(({ type, params }) => ({
-            chain: [{ type, params }]
-        }));
+        const newChans:SynthChannelsDefinition = obj.channels.map(({ type, params }) => (
+            [{ type, params }]
+        ));
         const newObj = {
             ...obj,
             channels: newChans,

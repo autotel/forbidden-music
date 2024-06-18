@@ -28,15 +28,7 @@ const emptyProjectDefinition: LibraryItem = {
     snaps: [],
     bpm: 120,
     layers: [],
-    channels: [{
-        chain: [{
-            type: "sine",
-            params: [{
-                displayName: "volume",
-                value: 0.8,
-            }],
-        }]
-    }],
+    channels: [],
     version: LIBRARY_VERSION,
 };
 
@@ -205,10 +197,6 @@ export const useProjectStore = defineStore("current project", () => {
         (async () => {
             await audioContextStore.audioContextPromise;
             synth.applyChannelsDefinition(pDef.channels);
-            pDef.channels.forEach(({ chain }) => chain.forEach((step, index) => {
-                console.warn("not loading parameters yet!!");
-            }))
-
         })();
 
     }

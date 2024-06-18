@@ -65,20 +65,19 @@ export class SynthChain implements SynthChainStep {
             throw new Error("chain recursion depth exceeded");
         }
         let prevModule: Patcheable | undefined;
-        for (let item of this.chain) {
-            if (isStack(item)) {
-                item.rewire(recursion + 1);
+        for (let step of this.chain) {
+            if (step instanceof SynthStack) {
+                step.rewire(recursion + 1);
             }
-            if (item instanceof SynthChain) {
-                item.rewire(recursion + 1);
+            if (step instanceof SynthChain) {
+                step.rewire(recursion + 1);
             }
-            const step = item;
             if (step.output) {
                 step.output.disconnect();
             }
             if (step.input) {
                 if (!prevModule) {
-                    step.input.connect(this.input);
+                    this.input.connect(step.input);
                 } else if (prevModule.output) {
                     prevModule.output.connect(step.input);
                 }

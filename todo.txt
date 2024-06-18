@@ -1,26 +1,20 @@
 # Piano roll to-do
-	create test to assert that v-constraints do not cause v modifications on notes when v movement is constrained off
-	layers are not getting deleted
+	adding and deleting a chain in a stack of effects cuts the line
+
     granular: velocity to sample start
 	granular: automate some params (rel. sample start)
 
 	make it possible to set the base frequency upon which octaves are calculated
-	on tauri, typographies mustn't be fetched from google
+	dont fetch typographies from google
 	auto compile, maybe https://github.com/tauri-apps/tauri-action
-	Base Frequency selection
 	patreon login? 
 	Midi MPE connectivity 
-	group editing: finish or delete
-		dragging a note grouped in another than active group, drags the whole group 
-		copying a note grouped in another than active group, copies the whole group to new group 
+	
 	Physical model sounds 
 	Record and add percussive sounds
 	Step sequencer for rhythms?
 	Time or time*octave markers 
 	"simultaneous" modifier status does not get saved
-	mouse helper icon should represent what the mouse is doing, if tool is engaged in a drag, instead of showing what would do on click
-
-# Ideas
 
 	switch between log and linear hz layouts for didactic purposes.
-	integrate tuning explorer into this as a way to construct scales
+	integrate tuning explorer into this as a way to create scales

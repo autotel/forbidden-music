@@ -679,20 +679,18 @@ export default {
             "channelSlot": 0
         }
     ],
-    "channels": [{
-        chain: [{
-            "type": "KickSynth",
-            "params": [
-                {
-                    "displayName": "start octave",
-                    "value": 1.1863333333333332
-                },
-                {
-                    "displayName": "decay time",
-                    "value": 0.03333333333333334
-                }
-            ]
-        }]
-    }],
+    "channels": [[{
+        "type": "KickSynth",
+        "params": [
+            {
+                "displayName": "start octave",
+                "value": 1.1863333333333332
+            },
+            {
+                "displayName": "decay time",
+                "value": 0.03333333333333334
+            }
+        ]
+    }]],
     "version": LIBRARY_VERSION
 } as LibraryItem;
