@@ -36,13 +36,14 @@ export class SynthStack implements SynthChainStep {
         } else {
             this.input.disconnect();
         }
-    
         this.chains.forEach((synthChain, index) => {
             synthChain.rewire(recursion + 1);
+            this.input.connect(synthChain.input);
+            synthChain.output.connect(this.output);
         });
     }
     removeChain(index: number) {
-        // this.chains[index].removeChangeListeners();
+        this.chains[index].output.disconnect(this.output);
         this.chains.splice(index, 1);
         this.rewire();
     }

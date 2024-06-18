@@ -27,6 +27,7 @@ const addLayer = () => {
 const removeLayer = (index: number) => {
     props.stack.removeChain(index);
     layersArray.value = [...props.stack.chains];
+    visibleChain.value = null;
     emits('change', props.stack);
 }
 
@@ -73,5 +74,7 @@ const handleRemoveClick = () => {
     flex-shrink: 0;
 }
 
-.active {}
+.active {
+    background-color: rgba(238, 130, 238, 0.425);
+}
 </style>

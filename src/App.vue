@@ -260,7 +260,7 @@ const allowContextMenu = true;
             {{ tool.currentMouseStringHelper }}
         </div>
         <div style="position:absolute; right:0px; top:30px">
-            <RightPane :paneWidth="sidePaneWidth" />
+            <RightPane :paneWidth="sidePaneWidth" :paneHeight="viewportSize.height"/>
             <Button :onClick="() => sidePaneWidth = sidePaneWidth ? 0 : 300" style="position:absolute"
                 :style="{ right: sidePaneWidth + 'px' }">
 

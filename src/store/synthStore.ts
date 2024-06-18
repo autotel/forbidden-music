@@ -360,13 +360,11 @@ export const useSynthStore = defineStore("synthesizers", () => {
      * could be memoized (it's called on every single trigger evt)
      */
     const getLayerSynths = (layerNo: number): ReceivesNotes[] => {
-        console.log("getting layer synths", layerNo);
         const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
         const channelIfExists = channels.value.chains[channelNo || 0] as SynthChain | undefined;
         if (!channelIfExists) {
             return channels.value.chains[0]?.getNoteReceivers() || [];
         }
-        console.log("found channel", channelIfExists);
         return channelIfExists.getNoteReceivers();
     }
 

@@ -19,7 +19,6 @@ const chainChangedHandler = () => {
 }
 
 watch(() => props.synthChain, (newVal, oldVal) => {
-    console.log('props.synthChain.chain changed', newVal, oldVal);
     oldVal.removeChangeListener(chainChangedHandler);
     newVal.addChangeListener(chainChangedHandler);
     chainChangedHandler();
@@ -40,7 +39,7 @@ onMounted(() => {
             <AudioModuleContainer v-else :audioModule="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
         </template>
     </template>
-    <AddSynth :position="stepsArray.length" :targetChain="synthChain" />
+    <AddSynth :position="stepsArray.length" :targetChain="synthChain" :force-expanded="stepsArray.length === 0" />
 
 </template>
 <style scoped>

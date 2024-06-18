@@ -13,11 +13,12 @@ import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 const playback = usePlaybackStore();
 defineProps<{
     paneWidth: number
+    paneHeight: number
 }>()
 const exclusives = useExclusiveContentsStore();
 </script>
 <template>
-    <div class="right-pane" :style="{ width: paneWidth + 'px' }">
+    <div class="right-pane" :style="{ width: paneWidth + 'px', height: paneHeight + 'px' }">
         <WorkingMemory startExpanded />
         <FileManager />
         <LayersManager v-if="exclusives.enabled" />

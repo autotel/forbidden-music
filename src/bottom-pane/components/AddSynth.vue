@@ -11,6 +11,7 @@ import { useAudioContextStore } from '../../store/audioContextStore';
 const props = defineProps<{
     position: number
     targetChain: SynthChain
+    forceExpanded?: boolean
 }>();
 const synth = useSynthStore();
 const audioContextStore = useAudioContextStore();
@@ -34,14 +35,14 @@ const addRack = () => {
 </script>
 <template>
     <div class="main-container">
-        <div class="icons-container">
+        <div class="icons-container" v-if="!forceExpanded">
             <Button 
                 style="background-color: transparent;"    
                 @click="expanded=!expanded"
             >{{expanded?'×':'+'}}
             </Button>
         </div>
-        <div class="selector-container" v-if="expanded">
+        <div class="selector-container" v-if="expanded || forceExpanded">
             <SynthSelector @select="addSynth" />
 
             <Button :onClick="addRack"
