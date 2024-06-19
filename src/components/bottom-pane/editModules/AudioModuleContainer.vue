@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Button from '../../../components/Button.vue';
-import { isStack } from '../../../dataStructures/SynthStack';
 import { KickSynth } from '../../../synth/KickSynth';
 import { PlaceholderSynth } from '../../../synth/PlaceholderSynth';
 import { AudioModule } from '../../../synth/interfaces/AudioModule';
@@ -15,16 +14,6 @@ const props = defineProps<{
     audioModule: AudioModule,
     remove?: () => void,
 }>();
-
-const title = computed<string>(() => {
-    if ('name' in props.audioModule) {
-        return props.audioModule.name + '';
-    } else if (isStack(props.audioModule)) {
-        return 'Parallel Chain';
-    } else {
-        return '???';
-    }
-});
 
 const getComponentFor = (audioModule: AudioModule) => {
     if (audioModule instanceof KickSynth) {
@@ -44,7 +33,7 @@ const handleRemoveClick = () => {
 
 </script>
 <template>
-    <ModuleContainer v-if="audioModule" :title="title" padding>
+    <ModuleContainer v-if="audioModule" :title="props.audioModule.name" padding>
         <template #icons>
             <Button v-if="props.remove" danger :onClick="handleRemoveClick" tooltip="delete"
                 style="background-color:transparent">×</Button>

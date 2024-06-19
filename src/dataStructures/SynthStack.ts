@@ -1,19 +1,16 @@
-import { SynthChainStep, SynthChainStepType } from "../synth/interfaces/SynthChainStep";
-import { ReceivesNotes, Synth } from "../synth/super/Synth";
-import { ChainStep, SynthChain } from "./SynthChain";
+import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
+import { SynthChain } from "./SynthChain";
 export const MAX_RECURSION = 10;
-export const isStack = (step: ChainStep): step is SynthStack => {
-    return step.type === SynthChainStepType.SynthStack;
-}
 
-export class SynthStack implements SynthChainStep {
+export class SynthStack implements PatcheableTrait {
     name = "SynthStack";
-    type = SynthChainStepType.SynthStack;
+    readonly patcheableType = PatcheableType.SynthChain;
     output: AudioNode;
     input: AudioNode;
     chains: SynthChain[] = [];
     isSynthStack = true;
     addChain: () => SynthChain;
+    enable: false | (() => void) = false;
     constructor(audioContext: AudioContext) {
         this.output = audioContext.createGain();
         this.input = audioContext.createGain();
@@ -28,10 +25,10 @@ export class SynthStack implements SynthChainStep {
         }
     }
     rewire(recursion = 0) {
-        if(recursion > MAX_RECURSION) {
+        if (recursion > MAX_RECURSION) {
             throw new Error("recursion depth exceeded");
         }
-        if(this.chains.length === 0) {
+        if (this.chains.length === 0) {
             this.input.connect(this.output);
         } else {
             this.input.disconnect();
@@ -53,6 +50,6 @@ export class SynthStack implements SynthChainStep {
         this.rewire();
     }
     disable() {
-        this.chains.forEach(synthChain => synthChain.chain.map(module => module.disable()));
+        this.chains.forEach(synthChain => synthChain.chain.map(({ disable }) => disable ? disable() : false));
     }
 }

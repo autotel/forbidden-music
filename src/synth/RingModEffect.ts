@@ -1,11 +1,9 @@
 import { AudioModule } from "./interfaces/AudioModule";
-import { SynthChainStepType } from "./interfaces/SynthChainStep";
 import { ParamType, SynthParam } from "./interfaces/SynthParam";
 
-export class RingModEffect implements AudioModule {
+export class RingModEffect extends AudioModule {
     output: GainNode;
     input: GainNode;
-    readonly type = SynthChainStepType.AudioModule;
     enable: () => void;
     disable: () => void;
     params: SynthParam[];
@@ -13,8 +11,7 @@ export class RingModEffect implements AudioModule {
     constructor(
         audioContext: AudioContext,
     ) {
-        audioContext;
-
+        super();
         this.output = audioContext.createGain();
         this.input = audioContext.createGain();
 

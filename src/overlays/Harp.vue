@@ -12,6 +12,8 @@ import { getFrequency, note } from '../dataTypes/Note';
 import { octaveToFrequency } from '../functions/toneConverters';
 import { useProjectStore } from '../store/projectStore';
 import { usePlaybackStore } from '../store/playbackStore';
+import { useLayerStore } from '../store/layerStore';
+import { useToolStore } from '../store/toolStore';
 const snap = useSnapStore();
 const view = useViewStore();
 const synth = useSynthStore();
@@ -43,9 +45,9 @@ const importFreqs = () => {
 
 const line = ref({ x1: 0, y1: 0, x2: 0, y2: 0 });
 let lastTime = 0;
-
 const project = useProjectStore();
 const playback = usePlaybackStore();
+const tool = useToolStore();
 const mouseEntered = (e: MouseEvent) => {
     mouseMoved(e);
     prevMouse = { ...mouse };
@@ -93,11 +95,14 @@ const frameFn = (time: number) => {
                 const velocity = movementXPX / 70;
 
                 if (isNaN(extra)) return;
-                synth.channels[0].synth.schedulePerc(
-                    octaveToFrequency(octave),
-                    timeNow + extra,
-                    { velocity }
-                )
+                const noteReceivers = synth.getLayerSynths(tool.currentLayerNumber)
+                noteReceivers.forEach(noteReceiver => {
+                    noteReceiver.schedulePerc(
+                        octaveToFrequency(octave),
+                        timeNow + extra,
+                        { velocity }
+                    );
+                });
                 if (recording.value) {
                     addEvent(octave);
                 }
@@ -126,7 +131,8 @@ onMounted(() => {
 
 </script>
 <template>
-    <Floaty :x="0" :y="0" :width="500" :height="90" :title="'Harp'" :onmouseenter="mouseEntered" :onmouseleave="mouseLeft">
+    <Floaty :x="0" :y="0" :width="500" :height="90" :title="'Harp'" :onmouseenter="mouseEntered"
+        :onmouseleave="mouseLeft">
         <svg v-on:mousemove="mouseMoved" style="width:100%; height:100%; border:solid 1px"
             xmlns="http://www.w3.org/2000/svg">
             <line v-for="octave in octaves" :x1="octave.pos" :y1="0" :x2="octave.pos" :y2="height" stroke="currentColor"

@@ -22,17 +22,18 @@ import { RingModEffect } from '../synth/RingModEffect';
 import { Sampler } from '../synth/Sampler';
 import { SineCluster } from '../synth/SineCluster';
 import { SineSynth } from '../synth/SineSynth';
-import { AudioModule } from '../synth/interfaces/AudioModule';
+import { AudioModule, ReceivesNotes } from '../synth/interfaces/AudioModule';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 import { ThingyScoreFx } from '../synth/scoreEffects/Thingy';
-import { ReceivesNotes, Synth } from '../synth/super/Synth';
+import { PatcheableSynthVoice, Synth } from '../synth/super/Synth';
 import { useAudioContextStore } from "./audioContextStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 import { abbreviate } from '../functions/abbreviate';
+import { PatcheableTrait, PatcheableType } from '../dataTypes/PatcheableTrait';
 
-type AdmissibleSynthType = AudioModule | Synth;
+type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
 /** storage for export/save, etc definitions */
 type AudioModuleDefinition = {
@@ -45,7 +46,7 @@ export type SynthChainStepDefinition = AudioModuleDefinition | SynthStackDefinit
 
 export type SynthChannelsDefinition = SynthStackDefinition;
 
-type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => AdmissibleSynthType;
+type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
 export class SynthConstructorWrapper {
     constructor(
@@ -225,28 +226,31 @@ export const useSynthStore = defineStore("synthesizers", () => {
         const newModule = audioModule.create();
         console.log("adding audio module", newModule.name, "count", instancedSynths.value.length);
         // to reduce traffic
-        if (newModule.needsFetching) {
-            console.log("newModule needs fetching");
-            if (exclusives.enabled) {
-                newModule.enable();
+        const enable = newModule.enable;
+        if (enable) {
+            if ('needsFetching' in newModule) {
+                console.log("newModule needs fetching");
+                if (exclusives.enabled) {
+                    enable();
+                } else {
+                    setTimeout(() => {
+                        enable();
+                    }, 5000);
+                }
             } else {
-                setTimeout(() => {
-                    newModule.enable();
-                }, 5000);
+                enable();
             }
-        } else {
-            newModule.enable();
         }
         return newModule;
     }
-    const findAudioModuleParamByName = (synth: AudioModule, name: string):SynthParam | undefined => {
+    const findAudioModuleParamByName = (synth: AudioModule, name: string): SynthParam | undefined => {
         const exact = synth.params.find((param) => param.displayName === name);
         if (exact) return exact;
         const similar = synth.params.find((param) => param.displayName?.includes(name));
-        if(similar) return similar;
+        if (similar) return similar;
         const abbrevName = abbreviate(name, 5);
         const abbreviated = synth.params.find((param) => {
-            if(!param.displayName) return false;
+            if (!param.displayName) return false;
             return abbreviate(param.displayName, 5).includes(abbrevName)
         });
         return abbreviated;
@@ -278,15 +282,16 @@ export const useSynthStore = defineStore("synthesizers", () => {
                 const synth = instanceAudioModule(synthConstructor);
                 chain.addAudioModule(i, synth);
                 const paramsDef = chainStep.params;
-                for(let paramDef of paramsDef) {
-                    const synthParam = findAudioModuleParamByName(synth, paramDef.displayName || "");
-                    if(!synthParam) {
-                        console.warn("param not found", paramDef.displayName);
-                        continue;
+                if ('params' in synth) {
+                    for (let paramDef of paramsDef) {
+                        const synthParam = findAudioModuleParamByName(synth, paramDef.displayName || "");
+                        if (!synthParam) {
+                            console.warn("param not found", paramDef.displayName);
+                            continue;
+                        }
+                        synthParam.value = paramDef.value;
                     }
-                    synthParam.value = paramDef.value;
                 }
-                
             }
         });
     }
@@ -311,19 +316,20 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const getDefinitionForAudioModule = (synth: AudioModule): AudioModuleDefinition => {
+        let params = synth.params.filter((param: SynthParam) => {
+            return param.exportable;
+        }).map((param: SynthParam) => {
+            const ret = {
+                value: param.value,
+            } as SynthParamStored
+            if (param.displayName) {
+                ret.displayName = param.displayName;
+            }
+            return ret;
+        }) as SynthParamStored[]
         return {
             type: synth.name || "unknown",
-            params: synth.params.filter((param: SynthParam) => {
-                return param.exportable;
-            }).map((param: SynthParam) => {
-                const ret = {
-                    value: param.value,
-                } as SynthParamStored
-                if (param.displayName) {
-                    ret.displayName = param.displayName;
-                }
-                return ret;
-            }) as SynthParamStored[]
+            params
         }
     }
 
@@ -332,7 +338,12 @@ export const useSynthStore = defineStore("synthesizers", () => {
             if (step instanceof SynthStack) {
                 return getDefinitionForStack(step);
             }
-            return getDefinitionForAudioModule(step);
+            if (step.patcheableType === PatcheableType.AudioModule) {
+                const audioModule = step as AudioModule;
+                return getDefinitionForAudioModule(audioModule);
+            }
+            console.error("no method to get definition for ", step);
+            return [];
         })
     }
 

@@ -5,7 +5,8 @@ import { PlaceholderSynth } from '../../synth/PlaceholderSynth';
 import AudioModuleContainer from './editModules/AudioModuleContainer.vue';
 import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
-import { isStack } from '../../dataStructures/SynthStack';
+import { SynthStack } from '../../dataStructures/SynthStack';
+import { AudioModule } from '../../synth/interfaces/AudioModule';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -35,8 +36,11 @@ onMounted(() => {
     <template v-for="(step, i) in stepsArray">
         <template v-if="!(step instanceof PlaceholderSynth)">
             <AddSynth :position="i" :targetChain="synthChain" />
-            <StackContainer v-if="isStack(step)" :stack="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
-            <AudioModuleContainer v-else :audioModule="step" :remove="() => synthChain.removeAudioModuleAt(i)" />
+            <StackContainer v-if="step instanceof SynthStack" :stack="step"
+                :remove="() => synthChain.removeAudioModuleAt(i)" />
+            <AudioModuleContainer v-else-if="step instanceof AudioModule" :audioModule="step"
+                :remove="() => synthChain.removeAudioModuleAt(i)" />
+            <p v-else style="color: red;">Unknown module type</p>
         </template>
     </template>
     <AddSynth :position="stepsArray.length" :targetChain="synthChain" :force-expanded="stepsArray.length === 0" />

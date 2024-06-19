@@ -1,6 +1,6 @@
+import { PatcheableType } from '../dataTypes/PatcheableTrait';
 import { frequencyToMidiNote } from '../functions/toneConverters';
 import { AudioModule } from './interfaces/AudioModule';
-import { SynthChainStepType } from './interfaces/SynthChainStep';
 import { ParamType, SynthParam } from './interfaces/SynthParam';
 import { EventParamsBase, SynthVoice } from './super/Synth';
 
@@ -72,12 +72,12 @@ const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
 }
 
 
-export class ExternalMidiSynth implements AudioModule {
+export class ExternalMidiSynth extends AudioModule {
     receivesNotes: true = true;
-    readonly type = SynthChainStepType.AudioModule;
+    readonly chainStepType = PatcheableType.AudioModule;
     constructor(audioContext: AudioContext) {
+        super();
         this.updateParams();
-
     }
     isReady = false;
     //@ts-ignore

@@ -23,28 +23,31 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
 
     const reconnectChain = () => {
         myInput.disconnect();
-        let lastNode: AudioNode = myInput;
+        let lastNode: AudioNode | undefined = myInput;
         for (let effect of effectsChain) {
-            lastNode.disconnect();
-            lastNode.connect(effect.input);
+            if (lastNode) {
+                lastNode.disconnect();
+                if(effect.input) lastNode.connect(effect.input);
+            }
             lastNode = effect.output;
         }
-        lastNode.connect(output);
+        if(lastNode) lastNode.connect(output);
     }
 
     const addEffect = (effect: admissibleEffectTypes) => {
         effectsChain.push(effect);
-        effect.enable();
+        effect.enable ? effect.enable() : undefined;
         reconnectChain();
     }
 
     const removeEffect = (effect: admissibleEffectTypes) => {
         const indexOfEffect = effectsChain.indexOf(effect);
-        if(indexOfEffect === -1) {
+        if (indexOfEffect === -1) {
             throw new Error("Effect not found in chain");
         }
         effectsChain.splice(indexOfEffect, 1);
-        effect.disable();
+
+        effect.disable ? effect.disable() : undefined;
         reconnectChain();
     }
 
@@ -85,9 +88,9 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
     // at time of evaluation. might aswell used a timeout
     // best would be to have an settings-loaded promise
     audioContextStore.audioContextPromise.then(() => {
-        if(userSettingsStore.effectsEnabled) {
+        if (userSettingsStore.effectsEnabled) {
             activateEffects();
-        }else{
+        } else {
             deactivateEffects();
         }
     });

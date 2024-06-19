@@ -1,5 +1,6 @@
-import { SynthChainStepType } from "../interfaces/SynthChainStep";
-import { ReceivesNotes, SynthVoice } from "../super/Synth";
+import { PatcheableType } from "../../dataTypes/PatcheableTrait";
+import { Synth, SynthVoice } from "../super/Synth";
+
 
 
 class ThingyVoice implements SynthVoice {
@@ -10,22 +11,23 @@ class ThingyVoice implements SynthVoice {
         absoluteStartTime: number,
         /** parameters unique to this triggered event, such as velocity and whatnot */
         noteParameters: any
-    ) => { };
+    ) => { return this };
     scheduleEnd = (
         absoluteStopTime: number,
-    ) => { }
-    stop = () => {}
+    ) => { return this }
+    stop = () => { }
 }
 
 
-export class ThingyScoreFx implements ReceivesNotes {
+export class ThingyScoreFx extends Synth {
     readonly receivesNotes = true;
-    readonly type = SynthChainStepType.AudioModule;
+    readonly chainStepType = PatcheableType.AudioModule;
     output: GainNode;
     params = [];
     source?: AudioBufferSourceNode;
     inherentFrequency = Infinity;
     constructor(audioContext: AudioContext) {
+        super(audioContext);
         this.output = audioContext.createGain();
         this.setWave = (wave: number[]) => {
             if (this.source) {
@@ -46,25 +48,5 @@ export class ThingyScoreFx implements ReceivesNotes {
             source.start();
         };
     }
-    scheduleStart = (
-        frequency: number,
-        absoluteStartTime: number,
-        noteParameters: any
-    ) => {
-        return new ThingyVoice();
-
-    };
-    schedulePerc = (
-        frequency: number,
-        absoluteStartTime: number,
-        noteParameters: any
-    ) => {
-        const v = this.scheduleStart(frequency, absoluteStartTime, noteParameters);
-        v.scheduleEnd(absoluteStartTime + 0.1);
-        return v;
-    };
-    stop = () => { };
-    enable = () => { };
-    disable = () => { };
-    setWave:(wave: number[]) => void
+    setWave: (wave: number[]) => void
 }

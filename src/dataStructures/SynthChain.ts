@@ -1,10 +1,7 @@
-import { it } from "node:test";
-import { AudioModule } from "../synth/interfaces/AudioModule";
-import { SynthChainStep, SynthChainStepType } from "../synth/interfaces/SynthChainStep";
-import { ReceivesNotes } from "../synth/super/Synth";
-import { MAX_RECURSION, SynthStack, isStack } from "./SynthStack";
-import { Patcheable } from "../dataTypes/Patcheable";
-export type ChainStep = AudioModule | SynthStack;
+import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
+import { ReceivesNotes } from "../synth/interfaces/AudioModule";
+import { MAX_RECURSION, SynthStack } from "./SynthStack";
+export type ChainStep = PatcheableTrait;
 const getNoteReceivers = (
     modules: (ChainStep | SynthChain | SynthStack)[],
     recursionDepth = 0,
@@ -34,13 +31,16 @@ const getNoteReceivers = (
     }, [] as ReceivesNotes[]);
 }
 
-export class SynthChain implements SynthChainStep {
+export class SynthChain implements PatcheableTrait {
     name = "SynthChain";
-    type = SynthChainStepType.SynthChain;
+    readonly chainStepType = PatcheableType.SynthChain;
     output: GainNode;
     input: GainNode;
     chain: ChainStep[] = [];
     chainChangedEventListeners = new Set<() => void>();
+    readonly patcheableType = PatcheableType.SynthChain;
+    readonly enable = false;
+    readonly disable = false;
 
     constructor(audioContext: AudioContext) {
         this.output = audioContext.createGain();
@@ -64,7 +64,7 @@ export class SynthChain implements SynthChainStep {
         if (recursion > MAX_RECURSION) {
             throw new Error("chain recursion depth exceeded");
         }
-        let prevModule: Patcheable | undefined;
+        let prevModule: PatcheableTrait | undefined;
         for (let step of this.chain) {
             if (step instanceof SynthStack) {
                 step.rewire(recursion + 1);
@@ -91,7 +91,7 @@ export class SynthChain implements SynthChainStep {
     getNoteReceivers = () => {
         return getNoteReceivers(this.chain);
     }
-    addAudioModule = (position: number, newModule: ChainStep) => {
+    addAudioModule = (position: number, newModule: PatcheableTrait) => {
         this.chain.splice(position, 0, newModule);
         this.rewire();
         this.handleChanged();
@@ -105,7 +105,7 @@ export class SynthChain implements SynthChainStep {
             console.warn("module not found in chain");
             return;
         }
-        if (!isStack(removedModule)) removedModule.disable();
+        removedModule.disable?removedModule.disable():undefined;
         this.chain.splice(index, 1);
         this.chain.splice(index, 0, newModule);
         this.rewire();
@@ -121,7 +121,7 @@ export class SynthChain implements SynthChainStep {
     }
     removeAudioModuleAt = (index: number) => {
         const step = this.chain[index];
-        step.disable();
+        step.disable?step.disable():undefined;
         this.chain.splice(index, 1);
         this.rewire();
         this.handleChanged();

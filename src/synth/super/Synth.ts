@@ -1,5 +1,5 @@
-import { AudioModule } from "../interfaces/AudioModule";
-import { SynthChainStepType } from "../interfaces/SynthChainStep";
+import { PatcheableTrait, PatcheableType } from "../../dataTypes/PatcheableTrait";
+import { ReceivesNotes } from "../interfaces/AudioModule";
 import { SynthParam } from "../interfaces/SynthParam";
 
 export interface EventParamsBase {
@@ -22,35 +22,24 @@ export interface SynthVoice<A = EventParamsBase> {
     ) => {}
     stop: () => void,
 }
+
+export interface PatcheableSynthVoice<A = EventParamsBase> extends SynthVoice<A>, PatcheableTrait {
+    name: string,
+    output: AudioNode,
+    needsFetching?: boolean,
+    params: SynthParam[];
+}
+
+
 export type synthVoiceFactory<
     VoiceGen extends SynthVoice<A>,
     A = any
 > = (
-    audioContext: AudioContext, 
+    audioContext: AudioContext,
     synthParams: A
 ) => VoiceGen;
 
 
-export interface ReceivesNotes extends AudioModule {
-    // enable: () => void;
-    // disable: () => void;
-    // params: SynthParam[];
-    // isReady: boolean;
-    receivesNotes: true;
-    transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
-    scheduleStart: (
-        frequency: number,
-        absoluteStartTime: number,
-        noteParameters: EventParamsBase
-    ) => SynthVoice;
-    schedulePerc: (
-        frequency: number,
-        absoluteStartTime: number,
-        noteParameters: EventParamsBase
-    ) => SynthVoice;
-    stop: () => void;
-    output: GainNode;
-}
 
 
 export class Synth<
@@ -59,8 +48,8 @@ export class Synth<
 > implements ReceivesNotes {
     readonly receivesNotes = true;
     isReady = false;
-    readonly type = SynthChainStepType.AudioModule;
-    name= "Synth";
+    readonly patcheableType = PatcheableType.AudioModule;
+    name = "Synth";
     /** voice instances */
     instances: V[] = [];
     createVoice: () => V;
@@ -77,7 +66,7 @@ export class Synth<
         factory?: synthVoiceFactory<V>,
     ) {
         this.createVoice = () => {
-            if(!factory) throw new Error("No factory provided to create voice");
+            if (!factory) throw new Error("No factory provided to create voice");
             const voice = factory(
                 audioContext,
                 this

@@ -14,7 +14,7 @@ describe('Library store', () => {
         const projectStore = useProjectStore();
         const libraryStore = useLibraryStore();
         projectStore.loadDemoProjectDefinition();
-        console.log(libraryStore.version);
+        console.log(libraryStore.filenamesList);
     });
     it('can save a project', () => {
         const projectStore = useProjectStore();
