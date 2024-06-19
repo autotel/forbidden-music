@@ -17,7 +17,7 @@ defineProps<{
 const exclusives = useExclusiveContentsStore();
 </script>
 <template>
-    <div class="right-pane" :style="{ width: paneWidth + 'px', height: paneHeight + 'px' }">
+    <div class="right-pane" :style="{ width: paneWidth + 'px', height: paneHeight + 'px', display: paneWidth?'unset':'none' }">
         <WorkingMemory startExpanded />
         <FileManager />
         <LayersManager v-if="exclusives.enabled" />
