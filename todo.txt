@@ -1,5 +1,6 @@
 # Piano roll to-do
-	adding and deleting a chain in a stack of effects cuts the line
+
+	patching: add a synth chain that works 'per voice' - this way, some effects can respond to notes poliphonically, new synths can be created
 
     granular: velocity to sample start
 	granular: automate some params (rel. sample start)

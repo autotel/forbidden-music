@@ -22,7 +22,6 @@ export class AutoMaximizerEffect implements AudioModule {
 
         this.enable = async () => {
             if(!maximizer) {
-                // TODO: move maximizer to an fx, and remove it from here
                 maximizer = await createMaximizerWorklet(audioContext);
             }
             this.input.disconnect();

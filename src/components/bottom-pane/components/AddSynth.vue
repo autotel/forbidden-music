@@ -46,7 +46,7 @@ const addRack = () => {
         </div>
         <div class="selector-container" v-if="expanded || forceExpanded">
             <SynthSelector @select="addSynth" />
-
+            <h3 class="padded">Patch</h3>
             <Button :onClick="addRack"
                 style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
                 Parallel rack
