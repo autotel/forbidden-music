@@ -7,7 +7,7 @@ import { SynthStack } from '../../../dataStructures/SynthStack';
 import ChainContainer from '../ChainContainer.vue';
 import ModuleContainer from '../components/ModuleContainer.vue';
 const props = defineProps<{
-    stack: SynthStack,
+    audioModule: SynthStack,
     root?: boolean,
     remove?: () => void,
 }>();
@@ -15,23 +15,23 @@ const emits = defineEmits<{
     (e: 'change', newValue: SynthStack): void
 }>();
 
-const visibleChain = ref<SynthChain | null>(props.stack.chains[0] ?? null);
-const layersArray = ref([...props.stack.chains]);
+const visibleChain = ref<SynthChain | null>(props.audioModule.chains[0] ?? null);
+const layersArray = ref([...props.audioModule.chains]);
 
 const addLayer = () => {
-    const newChain = props.stack.addChain();
-    layersArray.value = [...props.stack.chains];
-    emits('change', props.stack);
+    const newChain = props.audioModule.addChain();
+    layersArray.value = [...props.audioModule.chains];
+    emits('change', props.audioModule);
     setTimeout(() => {
         visibleChain.value = newChain;
     }, 0);
 }
 
 const removeLayer = (index: number) => {
-    props.stack.removeChain(index);
-    layersArray.value = [...props.stack.chains];
+    props.audioModule.removeChain(index);
+    layersArray.value = [...props.audioModule.chains];
     visibleChain.value = null;
-    emits('change', props.stack);
+    emits('change', props.audioModule);
 }
 
 const handleRemoveClick = () => {
@@ -42,39 +42,39 @@ const handleRemoveClick = () => {
 </script>
 
 <template>
-    <ModuleContainer title="rack">
-        <template #icons>
-            <Button v-if="props.remove" danger :onClick="handleRemoveClick" tooltip="delete"
-                style="background-color:transparent">×</Button>
-        </template>
-        <template #default>
-            <div style="" class="col">
-                <template v-for="(am, no) in layersArray">
-                    <Button :onClick="() => visibleChain = am" :class="{ active: visibleChain === am }"
-                        style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
-                        chain {{ no }}
-                        <ButtonSub danger :onClick="() => removeLayer(no)" tooltip="delete">×</ButtonSub>
-                    </Button>
+    <div class="col">
+        <template v-for="(am, no) in layersArray">
+            <Button :onClick="() => visibleChain = am" :class="{ active: visibleChain === am }"
+                style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
+                chain {{ no }}
+                <ButtonSub danger :onClick="() => removeLayer(no)" tooltip="delete">×</ButtonSub>
+            </Button>
 
-                </template>
-                <Button :onClick="addLayer"
-                    style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
-                    +
-                </Button>
-            </div>
-            <ChainContainer v-if="visibleChain" :synthChain="visibleChain" />
         </template>
-    </ModuleContainer>
+        <Button :onClick="addLayer" style="width:calc(100% - 2em); display:flex; justify-content: space-between;"
+            class="padded">
+            +
+        </Button>
+    </div>
+    <div class="chain-container">
+        <ChainContainer v-if="visibleChain" :synthChain="visibleChain" />
+    </div>
 </template>
 <style scoped>
 .col {
-    padding-top: 0.6em;
     height: 18em;
     width: 12em;
     overflow: auto;
     position: relative;
     flex-grow: 0;
     flex-shrink: 0;
+}
+
+.chain-container {
+    position: relative;
+    display: flex;
+    top: -0.6em;
+    gap: 0.4em;
 }
 
 .active {

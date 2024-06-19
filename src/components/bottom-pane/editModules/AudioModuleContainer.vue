@@ -15,31 +15,6 @@ const props = defineProps<{
     remove?: () => void,
 }>();
 
-const getComponentFor = (audioModule: AudioModule) => {
-    if (audioModule instanceof KickSynth) {
-        return KickSynthEdit;
-    } else if (audioModule instanceof ThingyScoreFx) {
-        return ThingyEdit;
-    } else {
-        return OtherAudioModules;
-    }
-}
-
-const handleRemoveClick = () => {
-    if (props.remove) return props.remove();
-    throw new Error('no remove handler');
-}
-
-
 </script>
 <template>
-    <ModuleContainer v-if="audioModule" :title="props.audioModule.name" padding>
-        <template #icons>
-            <Button v-if="props.remove" danger :onClick="handleRemoveClick" tooltip="delete"
-                style="background-color:transparent">×</Button>
-        </template>
-        <template #default>
-            <component :is="getComponentFor(audioModule)" :audioModule="audioModule" />
-        </template>
-    </ModuleContainer>
 </template>

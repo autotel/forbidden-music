@@ -77,7 +77,7 @@ const sampleNameToUName = <T extends (string | undefined)>(name?: T) => {
     if (!name) return name;
     return titleCase(
         camelCaseToUName(name)
-            .replace(/[^a-zA-Z0-9]/g, " ")
+            .replace(/[^a-zA-Z0-9]/g, " ").replace(/ +/g, " ")
     ).trim();
 }
 

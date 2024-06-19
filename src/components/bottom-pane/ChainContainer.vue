@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
+import Button from '../../components/Button.vue';
 import { SynthChain } from '../../dataStructures/SynthChain';
-import { PlaceholderSynth } from '../../synth/PlaceholderSynth';
-import AudioModuleContainer from './editModules/AudioModuleContainer.vue';
+import { SynthStack } from '../../dataStructures/SynthStack';
+import { PatcheableTrait, PatcheableType } from '../../dataTypes/PatcheableTrait';
+import { KickSynth } from '../../synth/KickSynth';
+import { ThingyScoreFx } from '../../synth/scoreEffects/Thingy';
+import ModuleContainer from './components/ModuleContainer.vue';
+import KickSynthEdit from './editModules/KickSynthEdit.vue';
+import OtherAudioModules from './editModules/OtherAudioModules.vue';
+import ThingyEdit from './editModules/ThingyEdit.vue';
 import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
-import { SynthStack } from '../../dataStructures/SynthStack';
 import { AudioModule } from '../../synth/interfaces/AudioModule';
+import { Synth } from '../../synth/super/Synth';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -25,23 +32,45 @@ watch(() => props.synthChain, (newVal, oldVal) => {
     chainChangedHandler();
 });
 
+const confirm = (message: string) => {
+    return window.confirm(message);
+}
+
 onMounted(() => {
     props.synthChain.addChangeListener(chainChangedHandler);
     chainChangedHandler();
 });
 
+const xClickHandler = (synthChain: SynthChain, index: number) => {
+    if (!confirm(`Are you sure you want to delete this ${synthChain.chain[index].name} module?`)) {
+        return;
+    }
+    synthChain.removeAudioModuleAt(index);
+}
+const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
+    return audioModule.patcheableType === PatcheableType.AudioModule
+}
 </script>
 
 <template>
-    <template v-for="(step, i) in stepsArray">
-        <template v-if="!(step instanceof PlaceholderSynth)">
-            <AddSynth :position="i" :targetChain="synthChain" />
-            <StackContainer v-if="step instanceof SynthStack" :stack="step"
-                :remove="() => synthChain.removeAudioModuleAt(i)" />
-            <AudioModuleContainer v-else-if="step instanceof AudioModule" :audioModule="step"
-                :remove="() => synthChain.removeAudioModuleAt(i)" />
-            <p v-else style="color: red;">Unknown module type</p>
-        </template>
+    <template v-for="(audioModule, i) in stepsArray">
+        <AddSynth :position="i" :targetChain="synthChain" />
+        <ModuleContainer v-if="audioModule" :title="audioModule.name + ''" padding>
+            <template #icons>
+                <Button danger :onClick="() => xClickHandler(synthChain, i)" tooltip="delete"
+                    style="background-color:transparent">×</Button>
+            </template>
+            <template #default>
+                <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
+                <KickSynth v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
+                <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
+                <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
+                <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->
+                <p v-else style="color: red;">Unknown module type</p>
+            </template>
+        </ModuleContainer>
+
+        <p v-else style="color: red;">Unknown module type</p>
     </template>
     <AddSynth :position="stepsArray.length" :targetChain="synthChain" :force-expanded="stepsArray.length === 0" />
 
