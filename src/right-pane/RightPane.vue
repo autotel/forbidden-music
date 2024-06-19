@@ -9,7 +9,6 @@ import { usePlaybackStore } from '../store/playbackStore';
 import LayersManager from './LayersManager.vue';
 import Physical from './Physical.vue';
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
-const playback = usePlaybackStore();
 defineProps<{
     paneWidth: number
     paneHeight: number
@@ -17,7 +16,8 @@ defineProps<{
 const exclusives = useExclusiveContentsStore();
 </script>
 <template>
-    <div class="right-pane" :style="{ width: paneWidth + 'px', height: paneHeight + 'px', display: paneWidth?'unset':'none' }">
+    <div class="right-pane"
+        :style="{ width: paneWidth + 'px', height: paneHeight + 'px', display: paneWidth ? 'unset' : 'none' }">
         <WorkingMemory startExpanded />
         <FileManager />
         <LayersManager v-if="exclusives.enabled" />
@@ -55,5 +55,4 @@ const exclusives = useExclusiveContentsStore();
 .icon {
     font-size: 20px;
 }
-
 </style>

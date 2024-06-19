@@ -1,6 +1,13 @@
 # Piano roll to-do
+	automation activation on bottompane
+	controllers for the other type of parameters (option, array)
 
 	patching: add a synth chain that works 'per voice' - this way, some effects can respond to notes poliphonically, new synths can be created
+	patching: channel splitter; input is gain node with one channel, output is a gain node with two channels (or the same but in stereo) . 
+		Also channel joiner
+		allows creation of side-chain effects like gate, compressor-
+	patching: teleport, pair of modules that llow sending audio to arbitrary places. Might need delay for fedback loops
+		audio sent to teleport could be used for modulation of some parameters
 
     granular: velocity to sample start
 	granular: automate some params (rel. sample start)
