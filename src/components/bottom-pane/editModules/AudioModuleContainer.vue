@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { isStack } from '../../dataStructures/SynthStack';
-import { KickSynth } from '../../synth/KickSynth';
-import { PlaceholderSynth } from '../../synth/PlaceholderSynth';
-import { AudioModule } from '../../synth/interfaces/AudioModule';
-import Button from '../../components/Button.vue';
-import KickSynthEdit from './KickSynthEdit.vue';
+import Button from '../../../components/Button.vue';
+import { isStack } from '../../../dataStructures/SynthStack';
+import { KickSynth } from '../../../synth/KickSynth';
+import { PlaceholderSynth } from '../../../synth/PlaceholderSynth';
+import { AudioModule } from '../../../synth/interfaces/AudioModule';
 import ModuleContainer from '../components/ModuleContainer.vue';
+import KickSynthEdit from './KickSynthEdit.vue';
+import ThingyEdit from './ThingyEdit.vue';
 import OtherAudioModules from './OtherAudioModules.vue';
-import SynthReplace from './SynthReplace.vue';
+import { ThingyScoreFx } from '../../../synth/scoreEffects/Thingy';
 
 const props = defineProps<{
     audioModule: AudioModule,
@@ -26,10 +27,10 @@ const title = computed<string>(() => {
 });
 
 const getComponentFor = (audioModule: AudioModule) => {
-    if (audioModule instanceof PlaceholderSynth) {
-        return SynthReplace;
-    } else if (audioModule instanceof KickSynth) {
+    if (audioModule instanceof KickSynth) {
         return KickSynthEdit;
+    } else if (audioModule instanceof ThingyScoreFx) {
+        return ThingyEdit;
     } else {
         return OtherAudioModules;
     }

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
-import { SynthChain } from '../dataStructures/SynthChain';
-import { PlaceholderSynth } from '../synth/PlaceholderSynth';
+import { SynthChain } from '../../dataStructures/SynthChain';
+import { PlaceholderSynth } from '../../synth/PlaceholderSynth';
 import AudioModuleContainer from './editModules/AudioModuleContainer.vue';
 import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
-import { isStack } from '../dataStructures/SynthStack';
+import { isStack } from '../../dataStructures/SynthStack';
 
 const props = defineProps<{
     synthChain: SynthChain

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import Button from '../components/Button.vue';
-import ButtonSub from '../components/ButtonSub.vue';
-import { SynthChain } from '../dataStructures/SynthChain';
-import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
-import { useCustomSettingsStore } from '../store/customSettingsStore';
-import { useSynthStore } from '../store/synthStore';
-import { layerNoteColorStrings } from '../store/viewStore';
+import Button from '../../components/Button.vue';
+import ButtonSub from '../../components/ButtonSub.vue';
+import { SynthChain } from '../../dataStructures/SynthChain';
+import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
+import { useCustomSettingsStore } from '../../store/customSettingsStore';
+import { useSynthStore } from '../../store/synthStore';
+import { layerNoteColorStrings } from '../../store/viewStore';
 
 const bottomPaneStore = useBottomPaneStateStore();
 const synth = useSynthStore();

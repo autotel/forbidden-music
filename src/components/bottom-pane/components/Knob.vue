@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { NumberSynthParam } from '../../synth/interfaces/SynthParam';
-import AnglesLeft from '../../components/icons/AnglesLeft.vue';
-import { abbreviate } from '../../functions/abbreviate';
-import Tooltip from '../../components/Tooltip.vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import Tooltip from '../../../components/Tooltip.vue';
+import { abbreviate } from '../../../functions/abbreviate';
+import { NumberSynthParam } from '../../../synth/interfaces/SynthParam';
 const props = defineProps<{
     param: NumberSynthParam
 }>();

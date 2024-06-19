@@ -1,13 +1,13 @@
 <script setup lang="ts">
 
 import { ref } from 'vue';
-import Button from '../../components/Button.vue';
-import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
-import { SynthConstructorWrapper, useSynthStore } from '../../store/synthStore';
+import Button from '../../../components/Button.vue';
+import { useBottomPaneStateStore } from '../../../store/bottomPaneStateStore';
+import { SynthConstructorWrapper, useSynthStore } from '../../../store/synthStore';
 import SynthSelector from '../SynthSelector.vue';
-import { SynthChain } from '../../dataStructures/SynthChain';
-import { SynthStack } from '../../dataStructures/SynthStack';
-import { useAudioContextStore } from '../../store/audioContextStore';
+import { SynthChain } from '../../../dataStructures/SynthChain';
+import { SynthStack } from '../../../dataStructures/SynthStack';
+import { useAudioContextStore } from '../../../store/audioContextStore';
 const props = defineProps<{
     position: number
     targetChain: SynthChain
@@ -26,10 +26,12 @@ const addSynth = (synthCon: SynthConstructorWrapper) => {
     expanded.value = false;
 }
 const addRack = () => {
+    const newStack = new SynthStack(audioContextStore.audioContext);
     props.targetChain.addAudioModule(
         props.position,
-        new SynthStack(audioContextStore.audioContext),
+        newStack,
     );
+    newStack.addChain();
     expanded.value = false;
 }
 </script>

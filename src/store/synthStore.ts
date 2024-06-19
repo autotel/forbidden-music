@@ -30,6 +30,8 @@ import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 import { probe } from '../functions/probe';
 import { get } from 'node:http';
+import { ThingyScoreFx } from '../synth/scoreEffects/Thingy';
+import { ExternalMidiSynth } from '../synth/ExternalMidiSynth';
 
 type AdmissibleSynthType = AudioModule | Synth;
 
@@ -159,9 +161,10 @@ const getSynthConstructors = (
 
     if (isDev()) {
         // bc. unfinished
-        addAvailableSynth(FmSynth, [], undefined, false, true);
-        addAvailableSynth(FourierSynth, [], undefined, false, true);
-        // addAvailableSynth(MIDIOutput);
+        addAvailableSynth(FmSynth, [], "(xp) Fm Synth", false, true);
+        addAvailableSynth(FourierSynth, [], "(xp) Fourier Synth", false, true);
+        addAvailableSynth(ThingyScoreFx, [], "(xp) Thingy Score Effect");
+        addAvailableSynth(ExternalMidiSynth, [], "(xp) External Midi Synth");
         // notes sometimes stop before time, suspected poor use of timeouts
     }
     console.log("available channels", returnArray.map(s => s.name));

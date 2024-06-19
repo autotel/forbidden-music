@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
 import { computed } from 'vue';
-import { AudioModule } from '../../synth/interfaces/AudioModule';
-import { ParamType } from '../../synth/interfaces/SynthParam';
+import { AudioModule } from '../../../synth/interfaces/AudioModule';
+import { ParamType } from '../../../synth/interfaces/SynthParam';
 import Knob from '../components/Knob.vue';
 import ModuleContainer from '../components/ModuleContainer.vue';
 

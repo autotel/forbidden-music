@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Fraction from 'fraction.js';
-import { onBeforeMount, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import BottomPane from './components/bottom-pane/BottomPane.vue';
 import Button from './components/Button.vue';
 import Pianito from './components/Pianito.vue';
 import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
@@ -10,8 +11,10 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
+import AnglesDown from './components/icons/AnglesDown.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
+import AnglesUp from './components/icons/AnglesUp.vue';
 import { Tool } from './dataTypes/Tool';
 import { keyBindingsListener } from './functions/keyBindingsListener';
 import { KeyActions, getActionForKeys } from './keyBindings';
@@ -21,20 +24,16 @@ import UserDisclaimer from './modals/UserDisclaimer.vue';
 import Harp from './overlays/Harp.vue';
 import RightPane from './right-pane/RightPane.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
+import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 import { useHistoryStore } from './store/historyStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
-import onePerRuntimeStore from './store/onePerRuntimeStore';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-import AnglesUp from './components/icons/AnglesUp.vue';
-import AnglesDown from './components/icons/AnglesDown.vue';
-import BottomPane from './bottom-pane/BottomPane.vue';
-import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -260,7 +259,7 @@ const allowContextMenu = true;
             {{ tool.currentMouseStringHelper }}
         </div>
         <div style="position:absolute; right:0px; top:30px">
-            <RightPane :paneWidth="sidePaneWidth" :paneHeight="viewportSize.height"/>
+            <RightPane :paneWidth="sidePaneWidth" :paneHeight="viewportSize.height" />
             <Button :onClick="() => sidePaneWidth = sidePaneWidth ? 0 : 300" style="position:absolute"
                 :style="{ right: sidePaneWidth + 'px' }">
 

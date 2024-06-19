@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { SynthChain } from '../dataStructures/SynthChain';
-import { useAudioContextStore } from '../store/audioContextStore';
-import { useBottomPaneStateStore } from '../store/bottomPaneStateStore';
-import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
-import { useMasterEffectsStore } from '../store/masterEffectsStore';
-import { useSynthStore } from '../store/synthStore';
+import { SynthChain } from '../../dataStructures/SynthChain';
+import { useAudioContextStore } from '../../store/audioContextStore';
+import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
+import { useExclusiveContentsStore } from '../../store/exclusiveContentsStore';
+import { useMasterEffectsStore } from '../../store/masterEffectsStore';
+import { useSynthStore } from '../../store/synthStore';
 import AudioModuleContainer from './editModules/AudioModuleContainer.vue';
 import ChainContainer from './ChainContainer.vue';
 import ChannelSelector from './ChannelSelector.vue';

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import Button from '../../components/Button.vue';
-import { SynthChain } from '../../dataStructures/SynthChain';
-import { SynthStack } from '../../dataStructures/SynthStack';
+import Button from '../../../components/Button.vue';
+import ButtonSub from '../../../components/ButtonSub.vue';
+import { SynthChain } from '../../../dataStructures/SynthChain';
+import { SynthStack } from '../../../dataStructures/SynthStack';
 import ChainContainer from '../ChainContainer.vue';
 import ModuleContainer from '../components/ModuleContainer.vue';
-import ButtonSub from '../../components/ButtonSub.vue';
 const props = defineProps<{
     stack: SynthStack,
     root?: boolean,
@@ -15,13 +15,16 @@ const emits = defineEmits<{
     (e: 'change', newValue: SynthStack): void
 }>();
 
-const visibleChain = ref<SynthChain | null>(null);
+const visibleChain = ref<SynthChain | null>(props.stack.chains[0] ?? null);
 const layersArray = ref([...props.stack.chains]);
 
 const addLayer = () => {
-    props.stack.addChain();
+    const newChain = props.stack.addChain();
     layersArray.value = [...props.stack.chains];
     emits('change', props.stack);
+    setTimeout(() => {
+        visibleChain.value = newChain;
+    }, 0);
 }
 
 const removeLayer = (index: number) => {

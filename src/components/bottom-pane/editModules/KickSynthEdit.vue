@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import { KickSynth } from '../../synth/KickSynth';
-import { ParamType } from '../../synth/interfaces/SynthParam';
+import { KickSynth } from '../../../synth/KickSynth';
+import { ParamType } from '../../../synth/interfaces/SynthParam';
 import Knob from '../components/Knob.vue';
 
 defineProps<{

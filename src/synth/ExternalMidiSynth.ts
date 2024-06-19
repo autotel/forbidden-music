@@ -1,7 +1,8 @@
 import { frequencyToMidiNote } from '../functions/toneConverters';
 import { AudioModule } from './interfaces/AudioModule';
+import { SynthChainStepType } from './interfaces/SynthChainStep';
 import { ParamType, SynthParam } from './interfaces/SynthParam';
-import { EventParamsBase, ExternalSynthBase, SynthVoice } from './super/Synth';
+import { EventParamsBase, SynthVoice } from './super/Synth';
 
 
 //@ts-ignore
@@ -73,6 +74,7 @@ const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
 
 export class ExternalMidiSynth implements AudioModule {
     receivesNotes: true = true;
+    readonly type = SynthChainStepType.AudioModule;
     constructor(audioContext: AudioContext) {
         this.updateParams();
 
