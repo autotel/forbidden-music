@@ -10,12 +10,14 @@ import { ThingyScoreFx } from '../../synth/scoreEffects/Thingy';
 import ModuleContainer from './components/ModuleContainer.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
+import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
 import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import { AudioModule } from '../../synth/interfaces/AudioModule';
 import { PatcheableSynthVoice, Synth } from '../../synth/super/Synth';
+import { FourierSynth } from '../../synth/FourierSynth';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -35,7 +37,7 @@ watch(() => props.synthChain, (newVal, oldVal) => {
 });
 
 const confirm = (message: string) => {
-    return window.confirm(message);
+    return true
 }
 
 onMounted(() => {
@@ -69,6 +71,7 @@ const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is Patche
                 <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
                 <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
                 <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
+                <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
                 <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
                 <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->

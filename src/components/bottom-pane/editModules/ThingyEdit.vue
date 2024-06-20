@@ -1,10 +1,7 @@
 <script setup lang="ts">
 
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { ParamType } from '../../../synth/interfaces/SynthParam';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ThingyScoreFx } from '../../../synth/scoreEffects/Thingy';
-import Knob from '../components/Knob.vue';
-import { on } from 'events';
 
 const props = defineProps<{
     audioModule: ThingyScoreFx

@@ -135,22 +135,27 @@ const getSynthConstructors = (
 
     });
 
-    impulseResponseSampleDefinitions.forEach(({
-        name,
-        path,
-        collection,
-        readme,
-    }) => {
-        // When I create a sampler selector for bottom panel, I can pass the whole array so that 
-        // the sample is chosen as param. Then I don't need to iterate over sampledefinitions
-        const ps = [[
-            { name, path, collection, readme }
-        ]];
-        addAvailableSynth(
-            ConvolutionReverbEffect,
-            ps, sampleNameToUName(name) + " Convolver", true, false
-        );
-    });
+    // impulseResponseSampleDefinitions.forEach(({
+    //     name,
+    //     path,
+    //     collection,
+    //     readme,
+    // }) => {
+    //     // When I create a sampler selector for bottom panel, I can pass the whole array so that 
+    //     // the sample is chosen as param. Then I don't need to iterate over sampledefinitions
+    //     const ps = [[
+    //         { name, path, collection, readme }
+    //     ]];
+    //     addAvailableSynth(
+    //         ConvolutionReverbEffect,
+    //         ps, sampleNameToUName(name) + " Convolver", true, false
+    //     );
+    // });
+    console.log("impulseResponseSampleDefinitions", impulseResponseSampleDefinitions);
+    addAvailableSynth(
+        ConvolutionReverbEffect,
+        [impulseResponseSampleDefinitions], "Convolver", true, false
+    );
 
     addAvailableSynth(KickSynth);
     addAvailableSynth(KarplusSynth);
@@ -166,7 +171,7 @@ const getSynthConstructors = (
         addAvailableSynth(FourierSynth, [], "(xp) Fourier Synth", false, true);
         addAvailableSynth(ThingyScoreFx, [], "(xp) Thingy Score Effect");
         addAvailableSynth(ExternalMidiSynth, [], "(xp) External Midi Synth");
-        
+
         addAvailableSynth(PatcheableSynth, [], "(xp) Dyna synth", false, true);
     }
     console.log("available channels", returnArray.map(s => s.name));

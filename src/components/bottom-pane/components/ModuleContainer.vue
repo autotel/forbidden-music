@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps<{
     title: string,
     padding?: boolean
 }>();
+const sideline = ref(false);
+const mainContainer = ref<HTMLDivElement | null>(null);
+onMounted(() => {
+    if(!mainContainer.value) return;
+    sideline.value = mainContainer.value.clientWidth > 40;
+});
 </script>
 
 <template>
-    <div class="module-container">
-        <div id="title-rotator" :class="{ sideline: true }">
+    <div class="module-container" ref="mainContainer">
+        <div id="title-rotator" :class="{ sideline }">
             <div id="title">
                 <span>
                     {{ title }}
@@ -49,8 +55,9 @@ const props = defineProps<{
     border: 1px solid #aaac;
     border-radius: 1em;
     box-sizing: border-box;
-    overflow: hidden;
+    /* overflow: hidden; */
     position: relative;
+
 }
 
 #title {
@@ -80,12 +87,13 @@ const props = defineProps<{
 
 #title-rotator {
     position: absolute;
-    top: -1.2em;
+    top: -0.6em;
     left: 0.05em;
     width: 1.6em;
-    height: calc(100% + 0.6em);
+    height: 100%;
     margin: 0.6em;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 @media (prefers-color-scheme: light) {

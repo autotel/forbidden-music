@@ -1,14 +1,12 @@
 <script setup lang="ts">
 
 import { computed } from 'vue';
-import { AudioModule } from '../../../synth/interfaces/AudioModule';
+import { PatcheableSynth } from '../../../synth/PatcheableSynth';
 import { ParamType } from '../../../synth/interfaces/SynthParam';
-import Knob from '../components/Knob.vue';
-import ModuleContainer from '../components/ModuleContainer.vue';
-import { PatcheableSynthVoice } from '../../../synth/super/Synth';
+import NumberSynthParam from '../components/NumberSynthParam.vue';
 
 const props = defineProps<{
-    audioModule: PatcheableSynthVoice
+    audioModule: PatcheableSynth
 }>();
 
 const rows = () => {
@@ -23,7 +21,7 @@ const width = computed(() => {
     <div :style="{width}" class="knob-layout">
         ptjer
         <template v-for="param in audioModule.params">
-            <Knob v-if="param.type === ParamType.number" :param="param" />
+            <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
             <p v-if="param.type === ParamType.voicePatch" :param="param" >
                 <template v-for="voice in param.value">
                     <p>{{ voice.type }}</p>

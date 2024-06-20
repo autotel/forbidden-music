@@ -3,7 +3,8 @@
 import { computed, onMounted, ref } from 'vue';
 import { KickSynth } from '../../../synth/KickSynth';
 import { ParamType } from '../../../synth/interfaces/SynthParam';
-import Knob from '../components/Knob.vue';
+import NumberSynthParam from '../components/NumberSynthParam.vue';
+import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import { useThrottleFn } from '@vueuse/core';
 
 const props = defineProps<{
@@ -98,7 +99,8 @@ onMounted(() => {
         <canvas ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]" style="flex-grow: 0; flex-shrink: 0;"></canvas>
         <div style="display: flex; flex-direction: row; margin-top:1em; flex-wrap: wrap; width: 20em; align-items: center;">
             <template v-for="param in audioModule.params">
-                <Knob v-if="param.type === ParamType.number" :param="param" @update="paramChangedListener" />
+                <NumberSynthParam v-if="param.type === ParamType.number" :param="param" @update="paramChangedListener" />
+                <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" @update="paramChangedListener" />
             </template>
         </div>
     </div>
