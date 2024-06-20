@@ -6,7 +6,7 @@ import { PatcheableType } from "../dataTypes/PatcheableTrait";
 // IDEA: could be stereo
 const subharmonics = 4;
 const frequencyMultiplier = 1
-const defaultPericWaveContents = (): [number[], number[]] => {
+export const defaultPericWaveContents = (): [number[], number[]] => {
     // const { real, imag } = ftTemplates[0];
     // real.forEach((value, index) => {
     //     if (real[index] === null) real[index] = 0;
@@ -61,21 +61,22 @@ type NullableRef<T> = {
     value: T | null;
 }
 
-class FourierVoice implements PatcheableSynthVoice {
+export class FourierVoice implements PatcheableSynthVoice {
     inUse: boolean = false;
     readonly patcheableType = PatcheableType.AudioVoiceModule;
     name = "Fourier Voice";
     output: any;
     periodicWaveRef: SimpleRef<PeriodicWave>;
-    params:SynthParam[] = [];
+    paramsRef = {value: []};
+    receivesNotes = true;
     scheduleStart: (frequency: number, absoluteStartTime: number, eventParams: EventParamsBase) => FourierVoice;
-    scheduleEnd: (absoluteStopTime: number) => FourierVoice;
-    stop: () => void;
+    scheduleEnd: (absoluteStopTime?: number) => FourierVoice;
     enable = () => { }
     disable = () => { }
     constructor(audioContext: AudioContext, periodicWaveRef: SimpleRef<PeriodicWave>) {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0;
         this.output = gainNode;
         oscillator.connect(gainNode);
         oscillator.start();
@@ -95,6 +96,9 @@ class FourierVoice implements PatcheableSynthVoice {
             absoluteStartTime: number,
             { velocity }: EventParamsBase
         ) => {
+
+            console.log('scheduling f voice', frequency, velocity);
+
             this.inUse = true;
             noteStartedTime = absoluteStartTime;
             gainNode.gain.cancelScheduledValues(absoluteStartTime);
@@ -107,25 +111,21 @@ class FourierVoice implements PatcheableSynthVoice {
         };
 
         this.scheduleEnd = (
-            absoluteStopTime: number
+            absoluteStopTime?: number
         ) => {
-            const duration = absoluteStopTime - noteStartedTime;
-            gainNode.gain.linearRampToValueAtTime(0, absoluteStopTime);
-            currentReleaseTimeout = setTimeout(() => {
+            console.log('scheduling end voice');
+            if(absoluteStopTime){
+                const duration = absoluteStopTime - noteStartedTime;
+                gainNode.gain.linearRampToValueAtTime(0, absoluteStopTime);
+                currentReleaseTimeout = setTimeout(() => {
+                    releaseVoice();
+                    currentReleaseTimeout = null;
+                }, duration * 1000);
+            }else{
                 releaseVoice();
-                currentReleaseTimeout = null;
-            }, duration * 1000);
+            }
             return this;
         }
-
-        this.stop = () => {
-            if (currentReleaseTimeout !== null) {
-                clearTimeout(currentReleaseTimeout);
-                currentReleaseTimeout = null;
-            }
-            releaseVoice();
-        }
-
     }
 }
 

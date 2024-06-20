@@ -149,6 +149,11 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             break;
         }
         case KeyActions.Exit: {
+            const currentFocus = document.activeElement as HTMLElement;
+            if (currentFocus) {
+                currentFocus.blur();
+            }
+            document.body.focus();
             selection.clear();
             tool.resetState();
             tool.current = Tool.Edit;

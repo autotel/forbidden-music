@@ -1,6 +1,6 @@
 import { createFmWorklet } from '../functions/fmWorkletFactory';
 import { frequencyToNote12 } from '../functions/toneConverters';
-import { EventParamsBase, Synth } from './super/Synth';
+import { EventParamsBase, Synth, SynthVoice } from './super/Synth';
 
 
 interface FmStopVoiceMessage {
@@ -26,12 +26,13 @@ interface FmParamsChangeMessage {
     delaysDetune?: number;
 }
 
-const voiceFactory = ({ engine }: { engine: AudioWorkletNode }) => ({
+const voiceFactory = ({ engine }: { engine: AudioWorkletNode }): SynthVoice & { [key: string]: any } => ({
     inUse: false,
     triggerStarted: 0,
     triggeredVelocity: 0,
     triggeredNote: 0,
     currentReleaseTimeout: null as null | ReturnType<typeof setTimeout>,
+
     scheduleStart(
         frequency: number,
         absoluteStartTime: number,
@@ -56,20 +57,23 @@ const voiceFactory = ({ engine }: { engine: AudioWorkletNode }) => ({
         });
         return this;
     },
-    scheduleEnd(absoluteStopTime: number) {
-        const duration = absoluteStopTime - this.triggerStarted;
-        this.currentReleaseTimeout = setTimeout(() => {
-            engine.port.postMessage({
-                noteOff: {
-                    key: frequencyToNote12(this.triggeredNote)
-                }
-            });
-            this.inUse = false;
-        }, duration * 1000);
-
+    scheduleEnd(absoluteStopTime?: number) {
+        if (absoluteStopTime) {
+            const duration = absoluteStopTime - this.triggerStarted;
+            this.currentReleaseTimeout = setTimeout(() => {
+                this.stop();
+            }, duration * 1000);
+        } else {
+            this.stop();
+        }
         return this;
     },
     stop() {
+        engine.port.postMessage({
+            noteOff: {
+                key: frequencyToNote12(this.triggeredNote)
+            }
+        });
         this.inUse = false;
         return this;
     }

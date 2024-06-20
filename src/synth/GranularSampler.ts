@@ -113,11 +113,10 @@ const granularSamplerVoice = (
             }
             return this;
         },
-        scheduleEnd(absoluteStopTime: number) {
+        scheduleEnd(absoluteStopTime?: number) {
             myScheduler.scheduleStop(absoluteStopTime);
             return this;
         },
-        stop,
     }
 }
 
@@ -180,7 +179,7 @@ class Scheduler {
     /** in seconds */
     frameLength: number = 0.1;
     scheduleStart: (absoluteStartTime: number) => void;
-    scheduleStop: (absoluteStopTime: number) => void;
+    scheduleStop: (absoluteStopTime?: number) => void;
     stop: () => void;
     onStopCallback = () => { };
     constructor(
@@ -199,8 +198,8 @@ class Scheduler {
             frameFunction();
         }
 
-        this.scheduleStop = (absoluteStopTime: number) => {
-            endsAt = absoluteStopTime;
+        this.scheduleStop = (absoluteStopTime?: number) => {
+            endsAt = absoluteStopTime || 0
         }
 
         this.stop = () => {

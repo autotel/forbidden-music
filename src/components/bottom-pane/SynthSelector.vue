@@ -14,6 +14,7 @@ const searchResults = computed<SynthConstructorWrapper[]>(()=>{
 });
 onMounted(()=>{
     filterinput.value?.focus();
+    console.log("refocus");
 });
 const showTabHint = computed(()=>searchString.value.length && filterinput.value === document.activeElement);
 

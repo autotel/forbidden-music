@@ -57,6 +57,14 @@ interface KarplusParamsChangeMessage {
 
 const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth): SynthVoice => {
     let myVoiceIndex = synth.instances.length;
+    const stop = (instance: SynthVoice) => {
+        if (!synth.engine) throw new Error("engine not created");
+        synth.engine.port.postMessage({
+            stop: true,
+            i: myVoiceIndex,
+        } as KarplusStopVoiceMessage);
+        instance.inUse = false;
+    }
     return {
         inUse: false,
         scheduleStart(
@@ -76,26 +84,15 @@ const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth): SynthVoi
             }, (absoluteStartTime - synth.audioContext.currentTime) * 1000);
             return this;
         },
-        scheduleEnd(absoluteStopTime: number) {
-            // TODO: somehow make the start time precise
-            setTimeout(() => {
-                if (!synth.engine) throw new Error("engine not created");
-                synth.engine.port.postMessage({
-                    stop: true,
-                    i: myVoiceIndex,
-                } as KarplusStopVoiceMessage);
-                this.inUse = false;
-            }, (absoluteStopTime - synth.audioContext.currentTime) * 1000);
+        scheduleEnd(absoluteStopTime?: number) {
+            if (absoluteStopTime) {
+                setTimeout(() => stop(this), (absoluteStopTime - synth.audioContext.currentTime) * 1000);
+            } else {
+                stop(this);
+            }
             return this;
         },
-        stop() {
-            if (!synth.engine) throw new Error("engine not created");
-            synth.engine.port.postMessage({
-                stop: true,
-                i: myVoiceIndex,
-            } as KarplusStopVoiceMessage);
-            this.inUse = false;
-        }
+
 
     }
 }

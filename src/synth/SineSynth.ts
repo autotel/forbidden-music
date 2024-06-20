@@ -41,22 +41,24 @@ const sineVoice = (audioContext: AudioContext): SynthVoice => {
             }
             return this;
         },
-        scheduleEnd(absoluteEndTime: number) {
-            const noteDuration = absoluteEndTime - noteStarted;
-            gainNode.gain.cancelScheduledValues(absoluteEndTime);
-            gainNode.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
-            // firefox has a bit of a hard time with this stuff
-            gainNode.gain.linearRampToValueAtTime(0, absoluteEndTime);
-            setTimeout(() => {
+        scheduleEnd(absoluteEndTime?: number) {
+            if (absoluteEndTime) {
+                const noteDuration = absoluteEndTime - noteStarted;
+                gainNode.gain.cancelScheduledValues(absoluteEndTime);
+                gainNode.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
+                // firefox has a bit of a hard time with this stuff
+                gainNode.gain.linearRampToValueAtTime(0, absoluteEndTime);
+                setTimeout(() => {
+                    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    this.inUse = false;
+                }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
+            } else {
                 gainNode.gain.cancelScheduledValues(audioContext.currentTime);
                 gainNode.gain.setValueAtTime(0, audioContext.currentTime);
                 this.inUse = false;
-            }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
+            }
             return this;
-        },
-        stop() {
-            const now = audioContext.currentTime;
-            this.scheduleEnd(now);
         }
     };
 
@@ -73,11 +75,6 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
         super(audioContext, sineVoice);
         this.output.gain.value = 0.1;
         this.voices = Array.from({ length: 4 }, () => sineVoice(audioContext));
-    }
-    releaseAll = () => {
-        this.voices.forEach((voice) => {
-            voice.stop();
-        });
     }
     params = [] as SynthParam[];
 }

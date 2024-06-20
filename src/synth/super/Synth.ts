@@ -16,18 +16,19 @@ export interface SynthVoice<A = EventParamsBase> {
         absoluteStartTime: number,
         /** parameters unique to this triggered event, such as velocity and whatnot */
         noteParameters: any & A
-    ) => {};
+    ) => void;
     scheduleEnd: (
-        absoluteStopTime: number,
-    ) => {}
-    stop: () => void,
+        absoluteStopTime?: number,
+    ) => void
 }
 
 export interface PatcheableSynthVoice<A = EventParamsBase> extends SynthVoice<A>, PatcheableTrait {
+    patcheableType: PatcheableType.AudioVoiceModule;
     name: string,
     output: AudioNode,
     needsFetching?: boolean,
-    params: SynthParam[];
+    paramsRef: {value: SynthParam[]};
+    receivesNotes?: boolean;
 }
 
 
@@ -122,9 +123,9 @@ export class Synth<
         );
         return voice;
     }
-    stop = () => {
+    scheduleEnd = (when?: number | undefined) => {
         this.instances.forEach((voice) => {
-            voice.stop();
+            voice.scheduleEnd(when);
         });
     }
 }

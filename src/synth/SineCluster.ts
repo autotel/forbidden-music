@@ -104,15 +104,19 @@ const sineVoice = (audioContext: AudioContext) => {
             }
             return this;
         },
-        scheduleEnd(absoluteEndTime: number) {
-            const noteDuration = absoluteEndTime - noteStarted;
-            gainNode.gain.cancelScheduledValues(absoluteEndTime);
-            gainNode.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
-            // firefox has a bit of a hard time with this stuff
-            gainNode.gain.linearRampToValueAtTime(0, absoluteEndTime);
-            currentStopTimeout = setTimeout(() => {
+        scheduleEnd(absoluteEndTime?: number) {
+            if(absoluteEndTime) {
+                const noteDuration = absoluteEndTime - noteStarted;
+                gainNode.gain.cancelScheduledValues(absoluteEndTime);
+                gainNode.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
+                // firefox has a bit of a hard time with this stuff
+                gainNode.gain.linearRampToValueAtTime(0, absoluteEndTime);
+                currentStopTimeout = setTimeout(() => {
+                    this.releaseVoice();
+                }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
+            }else{
                 this.releaseVoice();
-            }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
+            }
             return this;
         },
         stop() {
@@ -309,12 +313,6 @@ export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
         } = buildParams(this);
         this.octavesInterval = octavesIntervalParam;
         this.params.push(this.panCorrParam);
-    }
-
-    releaseAll = () => {
-        this.voices.forEach((voice) => {
-            voice.stop();
-        });
     }
     params = [] as SynthParam[];
 }

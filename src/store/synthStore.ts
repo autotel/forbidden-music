@@ -13,7 +13,7 @@ import { AutoMaximizerEffect } from '../synth/AutoMaximizerEffect';
 import { ConvolutionReverbEffect } from '../synth/ConvolutionReverbEffect';
 import { ExternalMidiSynth } from '../synth/ExternalMidiSynth';
 import { FmSynth } from '../synth/FmSynth';
-import { FourierSynth } from '../synth/FourierSynth';
+import { FourierSynth, FourierVoice } from '../synth/FourierSynth';
 import { GranularSampler } from '../synth/GranularSampler';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
@@ -32,6 +32,7 @@ import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 import { abbreviate } from '../functions/abbreviate';
 import { PatcheableTrait, PatcheableType } from '../dataTypes/PatcheableTrait';
+import { PatcheableSynth } from '../synth/PatcheableSynth';
 
 type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
@@ -46,7 +47,7 @@ export type SynthChainStepDefinition = AudioModuleDefinition | SynthStackDefinit
 
 export type SynthChannelsDefinition = SynthStackDefinition;
 
-type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
+type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AdmissibleSynthType);
 
 export class SynthConstructorWrapper {
     constructor(
@@ -165,7 +166,8 @@ const getSynthConstructors = (
         addAvailableSynth(FourierSynth, [], "(xp) Fourier Synth", false, true);
         addAvailableSynth(ThingyScoreFx, [], "(xp) Thingy Score Effect");
         addAvailableSynth(ExternalMidiSynth, [], "(xp) External Midi Synth");
-        // notes sometimes stop before time, suspected poor use of timeouts
+        
+        addAvailableSynth(PatcheableSynth, [], "(xp) Dyna synth", false, true);
     }
     console.log("available channels", returnArray.map(s => s.name));
 
@@ -282,7 +284,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
                 const synth = instanceAudioModule(synthConstructor);
                 chain.addAudioModule(i, synth);
                 const paramsDef = chainStep.params;
-                if ('params' in synth) {
+                if (synth instanceof AudioModule && paramsDef) {
                     for (let paramDef of paramsDef) {
                         const synthParam = findAudioModuleParamByName(synth, paramDef.displayName || "");
                         if (!synthParam) {

@@ -30,7 +30,11 @@ const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
     let noteOffMessage: number[] = [];
     const midiOutput = synth.midiOutputs[synth.selectedMidiOutputIndex];
     if (!midiOutput) throw new Error("no midi output");
-    
+    const stop = (instance: SynthVoice) => {
+        midiOutput.send(noteOffMessage);
+        synth.usedChannels[triggerChannel] = false;
+        return instance;
+    }
     const ret = {
         inUse: false,
         scheduleStart(frequency: number, absoluteStartTime: number, noteParameters: EventParamsBase) {
@@ -55,19 +59,13 @@ const createVoice = (synth: ExternalMidiSynth): SynthVoice => {
             return this;
         },
         scheduleEnd(absoluteStopTime: number) {
-            // potential problem: note off migth get sent even if stopped all happened just before. 
-            midiOutput.send(noteOffMessage, absoluteStopTime);
+            const timeRelativeToNow = absoluteStopTime - window.performance.now();
             setTimeout(() => {
-                synth.usedChannels[triggerChannel] = false;
-            }, absoluteStopTime * 1000);
-            return this;
-        },
-        stop() {
-            midiOutput.send(noteOffMessage);
-            synth.usedChannels[triggerChannel] = false;
+                stop(this);
+            }, timeRelativeToNow * 1000);
             return this;
         }
-    }
+    } as SynthVoice;
     return ret;
 }
 

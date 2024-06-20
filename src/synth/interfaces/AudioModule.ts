@@ -32,7 +32,7 @@ export interface ReceivesNotes extends AudioModule {
         absoluteStartTime: number,
         noteParameters: EventParamsBase
     ) => SynthVoice;
-    stop: () => void;
+    scheduleEnd: (when?:number) => void;
     output: GainNode;
 }
 

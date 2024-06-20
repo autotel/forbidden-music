@@ -89,10 +89,16 @@ export class SynthChain implements PatcheableTrait {
         }
     }
     getNoteReceivers = () => {
+        console.log("getting note receivers", this.chain);
         return getNoteReceivers(this.chain);
     }
     addAudioModule = (position: number, newModule: PatcheableTrait) => {
         this.chain.splice(position, 0, newModule);
+        this.rewire();
+        this.handleChanged();
+    }
+    setAudioModules = (modules: PatcheableTrait[]) => {
+        this.chain = modules;
         this.rewire();
         this.handleChanged();
     }
@@ -127,7 +133,7 @@ export class SynthChain implements PatcheableTrait {
         this.handleChanged();
     }
     releaseAll = () => {
-        this.getNoteReceivers().forEach(receiver => receiver.stop());
+        this.getNoteReceivers().forEach(receiver => receiver.scheduleEnd());
     }
 
 }

@@ -1,3 +1,5 @@
+import { PatcheableSynthVoice } from "../super/Synth"
+import { AudioModule } from "./AudioModule"
 
 export enum ParamType {
     number = "number",
@@ -7,6 +9,7 @@ export enum ParamType {
     infoText = "info text",
     nArray = "nArray",
     readout = "readout",
+    voicePatch = "voicePatch",
 }
 
 export type SynthParamStored = {
@@ -82,7 +85,18 @@ export interface ArraySynthParam extends SynthParamMinimum<number[]> {
     default?: number[],
 }
 
+type PatchedVoiceDef = {
+    type: string,
+    factory: () => PatcheableSynthVoice | AudioModule,
+    params: SynthParam[]
+}
 
+type VoicePatch = PatchedVoiceDef[]  
+
+export interface VoicePatchSynthParam extends SynthParamMinimum<VoicePatch> {
+    type: ParamType.voicePatch,
+    value: VoicePatch,
+}
 
 export type SynthParam =
     NumberSynthParam |
@@ -91,5 +105,6 @@ export type SynthParam =
     InfoTextSynthParam |
     ProgressSynthParam |
     ReadoutSynthParam |
-    ArraySynthParam
+    ArraySynthParam |
+    VoicePatchSynthParam
 

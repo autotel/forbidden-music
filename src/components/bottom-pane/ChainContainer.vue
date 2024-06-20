@@ -5,15 +5,17 @@ import { SynthChain } from '../../dataStructures/SynthChain';
 import { SynthStack } from '../../dataStructures/SynthStack';
 import { PatcheableTrait, PatcheableType } from '../../dataTypes/PatcheableTrait';
 import { KickSynth } from '../../synth/KickSynth';
+import { PatcheableSynth } from '../../synth/PatcheableSynth';
 import { ThingyScoreFx } from '../../synth/scoreEffects/Thingy';
 import ModuleContainer from './components/ModuleContainer.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
+import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
 import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import { AudioModule } from '../../synth/interfaces/AudioModule';
-import { Synth } from '../../synth/super/Synth';
+import { PatcheableSynthVoice, Synth } from '../../synth/super/Synth';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -50,6 +52,9 @@ const xClickHandler = (synthChain: SynthChain, index: number) => {
 const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
     return audioModule.patcheableType === PatcheableType.AudioModule
 }
+const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is PatcheableSynthVoice => {
+    return audioModule.patcheableType === PatcheableType.AudioVoiceModule
+}
 </script>
 
 <template>
@@ -62,9 +67,11 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
             </template>
             <template #default>
                 <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
-                <KickSynth v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
+                <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
                 <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
+                <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
                 <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
+                <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
                 <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->
                 <p v-else style="color: red;">Unknown module type</p>
             </template>

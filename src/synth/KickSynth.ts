@@ -2,11 +2,11 @@ import { NumberSynthParam, ParamType, SynthParam } from "./interfaces/SynthParam
 import { SynthVoice, EventParamsBase, Synth } from "./super/Synth";
 
 interface KickSynthParams {
-    startOctave: {value: number},
-    decayTime: {value: number},
+    startOctave: { value: number },
+    decayTime: { value: number },
 }
 
-const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): SynthVoice<EventParamsBase>  => {
+const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): SynthVoice<EventParamsBase> => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     const distortion = audioContext.createWaveShaper();
@@ -23,8 +23,6 @@ const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): Sy
         gainNode.gain.value = 0;
         v.inUse = false;
     }
-
-
 
     return {
         inUse: false,
@@ -56,25 +54,25 @@ const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): Sy
 
             return this;
         },
-        scheduleEnd(absoluteStopTime: number) {
-            const duration = absoluteStopTime - eventStartedTime;
-            gainNode.gain.linearRampToValueAtTime(0, eventStartedTime + duration);
-            setTimeout(() => {
+        scheduleEnd(absoluteStopTime?: number) {
+            if (!absoluteStopTime) {
                 releaseVoice(this);
-            }, duration * 1000);
-            return this;
+            } else {
+                const duration = absoluteStopTime - eventStartedTime;
+                gainNode.gain.linearRampToValueAtTime(0, eventStartedTime + duration);
+                setTimeout(() => {
+                    releaseVoice(this);
+                }, duration * 1000);
+                return this;
+            }
         },
 
-        stop() {
-            releaseVoice(this);
-            return this;
-        }
     }
 }
 
 type KickVoice = ReturnType<typeof kickVoice>;
 
-export class KickSynth extends Synth<EventParamsBase, KickVoice>{
+export class KickSynth extends Synth<EventParamsBase, KickVoice> {
     startOctave: NumberSynthParam = {
         displayName: "start octave",
         type: ParamType.number,

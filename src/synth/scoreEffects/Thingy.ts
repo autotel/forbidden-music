@@ -11,10 +11,10 @@ class ThingyVoice implements SynthVoice {
         absoluteStartTime: number,
         /** parameters unique to this triggered event, such as velocity and whatnot */
         noteParameters: any
-    ) => { return this };
+    ) => { };
     scheduleEnd = (
-        absoluteStopTime: number,
-    ) => { return this }
+        absoluteStopTime?: number,
+    ) => { }
     stop = () => { }
 }
 
