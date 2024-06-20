@@ -6,6 +6,10 @@ import { NumberSynthParam } from '../../../synth/interfaces/SynthParam';
 const props = defineProps<{
     param: NumberSynthParam
 }>();
+
+
+const emit = defineEmits(['update']);
+
 let mouseDownPos = {
     x: 0, y: 0,
 };
@@ -30,29 +34,22 @@ const localValue = ref(0);
 
 let valueOnDragStart = 0;
 const dragging = ref(false);
-const emit = defineEmits(['update:props.param.value']);
 const ww = 600;
 
 watch(() => props.param.value, () => {
     paramValueToLocalValue();
-
+    emit('update');
 });
+
 const mouseWheeled = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
     mouseDragDelta({ x: e.deltaX / 5, y: e.deltaY / 5 });
 }
+
 const mouseDrag = (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    // let mouseMovePos = {
-    //     x: e.clientX,
-    //     y: e.clientY,
-    // };
-    // let delta = {
-    //     x: mouseMovePos.x - mouseDownPos.x,
-    //     y: mouseMovePos.y - mouseDownPos.y,
-    // };
     const delta = {
         x: e.movementX,
         y: e.movementY,
@@ -110,7 +107,6 @@ const mouseUp = (e: MouseEvent) => {
 }
 onMounted(() => {
     paramValueToLocalValue();
-
 });
 onUnmounted(() => {
     window.removeEventListener('mouseup', mouseUp);

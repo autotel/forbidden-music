@@ -1,28 +1,26 @@
+import { buffer } from "stream/consumers";
 import { NumberSynthParam, ParamType, SynthParam } from "./interfaces/SynthParam";
 import { SynthVoice, EventParamsBase, Synth } from "./super/Synth";
+import { useThrottleFn } from "@vueuse/core";
 
-interface KickSynthParams {
-    startOctave: { value: number },
-    decayTime: { value: number },
-}
+const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<EventParamsBase> => {
 
-const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): SynthVoice<EventParamsBase> => {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    const distortion = audioContext.createWaveShaper();
-    const output = gainNode;
-    let eventStartedTime: number;
-    let currentTargetFrequency: number;
-    oscillator.connect(gainNode);
-    oscillator.start();
+    let source: AudioBufferSourceNode | undefined;
+    let output = audioContext.createGain();
+    let eventStartedTime = 0;
 
     const releaseVoice = (v: { inUse: boolean }) => {
-        gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-        // firefox has a bit of a hard time with this stuff
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.value = 0;
         v.inUse = false;
+        if (!source) return;
+        source.disconnect();
+        source.stop();
     }
+
+    const setBuffer = (buffer: AudioBuffer) => {
+        source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.loop = false;
+    };
 
     return {
         inUse: false,
@@ -33,25 +31,12 @@ const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): Sy
             evtParams: EventParamsBase
         ) {
             this.inUse = true;
+            setBuffer(synth.currentBuffer);
             eventStartedTime = absoluteStartTime;
-            currentTargetFrequency = frequency;
-            gainNode.gain.cancelScheduledValues(eventStartedTime);
-            gainNode.gain.setValueAtTime(0, eventStartedTime);
-            gainNode.gain.linearRampToValueAtTime(
-                evtParams.velocity,
-                eventStartedTime + 0.01
-            );
-
-
-            const ot = 2 ** (synthParams.startOctave.value - 1);
-            oscillator.frequency.cancelScheduledValues(eventStartedTime);
-            oscillator.frequency.setValueAtTime(
-                frequency * ot, eventStartedTime
-            );
-            oscillator.frequency.linearRampToValueAtTime(
-                frequency, eventStartedTime + synthParams.decayTime.value
-            );
-
+            if (!source) throw new Error("failed to create source");
+            source.connect(output);
+            source.playbackRate.value = frequency / synth.inherentSampleFrequency;
+            source.start(absoluteStartTime);
             return this;
         },
         scheduleEnd(absoluteStopTime?: number) {
@@ -59,7 +44,6 @@ const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): Sy
                 releaseVoice(this);
             } else {
                 const duration = absoluteStopTime - eventStartedTime;
-                gainNode.gain.linearRampToValueAtTime(0, eventStartedTime + duration);
                 setTimeout(() => {
                     releaseVoice(this);
                 }, duration * 1000);
@@ -69,35 +53,110 @@ const kickVoice = (audioContext: AudioContext, synthParams: KickSynthParams): Sy
 
     }
 }
-
-type KickVoice = ReturnType<typeof kickVoice>;
-
-export class KickSynth extends Synth<EventParamsBase, KickVoice> {
-    startOctave: NumberSynthParam = {
-        displayName: "start octave",
+interface CTPP {
+    displayName: string,
+    min: number,
+    max: number,
+    value: number,
+}
+const chageTrigNumParam = ({
+    displayName, min, max, value
+}: CTPP, listener: () => void) => {
+    return {
+        _v: value,
+        displayName,
         type: ParamType.number,
+        min,
+        max,
+        set value(v: number) {
+            this._v = v;
+            listener();
+        },
+        get value() {
+            return this._v;
+        },
+        exportable: true,
+    } as NumberSynthParam
+}
+const curveFunction = (t: number, curve: number) => {
+    // crossfades between exp and linear
+    // result is value between 0 and 1 as function of t (seconds) 
+    return Math.max(0, 1 - Math.pow(t, curve));
+}
+export class KickSynth extends Synth {
+    paramChanged = () => { };
+    startOctave = chageTrigNumParam({
+        displayName: "start octave",
         min: 0, max: 4,
         value: 2.273,
-        exportable: true,
-    }
-    decayTime: NumberSynthParam = {
-        displayName: "decay time",
-        type: ParamType.number,
+    }, ()=>this.paramChanged())
+    vDecayTime = chageTrigNumParam({
+        displayName: "amplitude decay time",
+        min: 0, max: 2,
+        value: 0.5,
+    }, ()=>this.paramChanged())
+    fDecayTime = chageTrigNumParam({
+        displayName: "frequency decay time",
         min: 0, max: 2,
         value: 0.04,
-        exportable: true,
-    }
+    }, ()=>this.paramChanged())
+    vcurve = chageTrigNumParam({
+        displayName: "amplitude curve",
+        min: 0, max: 1,
+        value: 0.5,
+    }, ()=>this.paramChanged())
+    fcurve = chageTrigNumParam({
+        displayName: "frequency curve",
+        min: 0, max: 1,
+        value: 0.5,
+    }, ()=>this.paramChanged())
+    currentWave: number[] = [];
+    currentBuffer: AudioBuffer;
     params: SynthParam[];
+    inherentSampleFrequency = 80;
+    updateBuffer = (): AudioBuffer => {
+        this.currentWave = [];
+        const sampleRate = this.audioContext.sampleRate;
+        const decaySamples = (this.vDecayTime.value * sampleRate) || 1;
+        const newBuffer = this.audioContext.createBuffer(1, decaySamples, sampleRate);
+        const data = newBuffer.getChannelData(0);
+        let phase = 0;
+        for (let i = 0; i < decaySamples; i++) {
+            const t = i / decaySamples;
+            const secs = i / sampleRate;
+            const octaveAdd = (
+                this.startOctave.value * curveFunction(secs / this.fDecayTime.value, this.fcurve.value)
+            );
+            const oct = 1 + octaveAdd;
+            const frequency = this.inherentSampleFrequency * Math.pow(2, oct);
+            phase += frequency / sampleRate;
+            this.currentWave[i] = Math.sin(Math.PI * 2 * phase) * curveFunction(t, this.vcurve.value);
+            data[i] = this.currentWave[i];
+        }
+        this.currentBuffer = newBuffer;
+        // just so that I can definitely define buffer @ contstructor
+        return newBuffer;
+    }
     constructor(
         audioContext: AudioContext
     ) {
         super(audioContext, kickVoice);
-
+        this.currentBuffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
         this.output.gain.value = 0.1;
+
+        this.enable = () => {
+            this.paramChanged = useThrottleFn(() => {
+                this.updateBuffer();
+            }, 10)
+            this.paramChanged();
+        }
 
         this.params = [
             this.startOctave,
-            this.decayTime,
+            this.vDecayTime,
+            this.vcurve,
+            this.fDecayTime,
+            this.fcurve,
         ];
 
 

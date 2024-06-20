@@ -89,7 +89,6 @@ export class SynthChain implements PatcheableTrait {
         }
     }
     getNoteReceivers = () => {
-        console.log("getting note receivers", this.chain);
         return getNoteReceivers(this.chain);
     }
     addAudioModule = (position: number, newModule: PatcheableTrait) => {
