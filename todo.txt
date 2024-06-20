@@ -1,28 +1,41 @@
 # Piano roll to-do
+
+## Basics & architecture
+	tool to make sure sounds are on tune
+	make it possible to set the base frequency upon which octaves are calculated
+	dont fetch typographies from google
+## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)
 
-	patching: add a synth chain that works 'per voice' - this way, some effects can respond to notes poliphonically, new synths can be created
-	patching: channel splitter; input is gain node with one channel, output is a gain node with two channels (or the same but in stereo) . 
+	add a synth chain that works 'per voice' - this way, some effects can respond to notes poliphonically, new synths can be created
+	channel splitter; input is gain node with one channel, output is a gain node with two channels (or the same but in stereo) . 
 		Also channel joiner
 		allows creation of side-chain effects like gate, compressor-
-	patching: teleport, pair of modules that llow sending audio to arbitrary places. Might need delay for fedback loops
+	teleport, pair of modules that llow sending audio to arbitrary places. Might need delay for fedback loops
 		audio sent to teleport could be used for modulation of some parameters
+## Custom samplers	
+	[tauri] load samples from a folder so that user can create their own samplers
 
-    granular: velocity to sample start
-	granular: automate some params (rel. sample start)
+## Granular sampler
+    velocity to sample start
+	automate some params (rel. sample start)
 
-	make it possible to set the base frequency upon which octaves are calculated
-	dont fetch typographies from google
+## Dev line
 	auto compile, maybe https://github.com/tauri-apps/tauri-action
+
+## Distribution & traffic care
 	patreon login? 
+
+## Whole new features
 	Midi MPE connectivity 
-	
 	Physical model sounds 
 	Record and add percussive sounds
 	Step sequencer for rhythms?
-	Time or time*octave markers 
-	"simultaneous" modifier status does not get saved
-
+	Time or [time, octave] markers 
 	switch between log and linear hz layouts for didactic purposes.
 	integrate tuning explorer into this as a way to create scales
+
+## bugs
+	"simultaneous" modifier status seems not to get saved
+
