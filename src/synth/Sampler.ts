@@ -107,7 +107,7 @@ const samplerVoice = (
         if (!sampleSource.sampleBuffer) throw new Error("sample buffer not loaded");
 
         cancelScheduledValues();
-        
+
         bufferSource = audioContext.createBufferSource();
         bufferSource.buffer = sampleSource.sampleBuffer;
         bufferSource.connect(output);
@@ -172,9 +172,10 @@ const samplerVoice = (
             return this;
         },
         scheduleEnd(
-            absoluteEndTime: number,
+            absoluteEndTime?: number,
         ) {
-            output.gain.linearRampToValueAtTime(0, absoluteEndTime + currentAdsr[3]);
+            const end = absoluteEndTime?(absoluteEndTime + currentAdsr[3]):0;
+            output.gain.linearRampToValueAtTime(0, end);
             return this;
         },
         stop,
@@ -349,7 +350,7 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
     ): SynthVoice<EventParamsBase> {
         const tweakedAdsr = [...this.adsr];
         tweakedAdsr[3] *= 4 * noteParameters.velocity;
-        
+
         const tweakedParam = {
             ...noteParameters,
             adsr: tweakedAdsr,
