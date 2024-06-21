@@ -28,6 +28,7 @@
 	patreon login? 
 
 ## Whole new features
+	drop sample in and use as sampler
 	Midi MPE connectivity 
 	Physical model sounds 
 	Record and add percussive sounds
