@@ -364,10 +364,15 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return getDefinitionForStack(channels.value);
     }
 
+    const synthHasParams = (synth: PatcheableTrait): synth is AudioModule => {
+        return synth.patcheableType === PatcheableType.AudioModule
+    }
     const synthParamToAccessorString = (param?: SynthParam) => {
         if (!param) return undefined;
         if (typeof param === 'string') throw new Error("param is string");
-        const synthWithParam = instancedSynths.value.find((synth) => synth.params.includes(param));
+        const synthWithParam = instancedSynths.value.find(
+            (synth) => synthHasParams(synth) && synth.params.includes(param)
+        );
         if (!synthWithParam) throw new Error("synth with param not found");
         const synthName = synthWithParam.name;
         const paramName = param.displayName;
@@ -377,17 +382,24 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const accessorStringToSynthParam = (accessorString?: string): SynthParam | undefined => {
         console.warn("accessor string to synth param, needs updating to target channel, represent multi-instance receivesNotes", accessorString);
         if (!accessorString) return undefined;
+        
         const [synthName, paramName] = accessorString.split(".");
-        const synth = instancedSynths.value.find((s) => s.name === synthName);
+        const synth = instancedSynths.value.find(
+            (s) => 'params' in s && s.name === synthName
+        ) as PatcheableTrait & { params: SynthParam[] }
+
         if (!synth) {
             console.warn("synth named ", synthName, "not found", synthName);
             return undefined;
         }
+        
         const param = synth.params.find((p) => p.displayName === paramName);
+
         if (!param) {
             console.warn("param not found", paramName);
             return undefined;
         }
+
         console.log("found automated param ", param);
         return param;
     }
