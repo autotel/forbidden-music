@@ -12,7 +12,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const lanes = ref<Map<SynthParam, AutomationLane>>(new Map());
     const synth = useSynthStore();
 
-
     const sortPointsByTime = (lane: AutomationLane) => {
         lane.content.sort((a, b) => {
             return a.time - b.time
@@ -28,6 +27,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
 
         lane.sizeWhenLastSorted = lane.content.length;
     }
+
     watchEffect(() => {
         lanes.value.forEach((lane) => {
             if (lane.content.length !== lane.sizeWhenLastSorted) {
@@ -145,7 +145,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         if (atIndex === -1) throw new Error('could not delete point as it was not found on lane\'s content')
         containerLane.content.splice(atIndex, 1);
     }
-
     const forEachAutomationPoint = (callback: (ap: AutomationPoint) => void) => {
         lanes.value.forEach((lane) => {
             lane.content.forEach(callback);
