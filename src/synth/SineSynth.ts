@@ -1,5 +1,5 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { SynthParam } from "./interfaces/SynthParam";
+import { ParamType, SynthParam } from "./interfaces/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
 
 
@@ -73,8 +73,22 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
         audioContext: AudioContext,
     ) {
         super(audioContext, sineVoice);
+        const outputGain = this.output;
         this.output.gain.value = 0.1;
         this.voices = Array.from({ length: 4 }, () => sineVoice(audioContext));
+        this.params.push({
+            displayName: 'Gain',
+            type: ParamType.number,
+            exportable: true,
+            min: 0,
+            max: 1,
+            get value() {
+                return outputGain.gain.value;
+            },
+            set value(v) {
+                outputGain.gain.value = v;
+            }
+        });
     }
     params = [] as SynthParam[];
 }
