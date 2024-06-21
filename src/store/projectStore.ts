@@ -28,7 +28,7 @@ const emptyProjectDefinition: LibraryItem = {
     snaps: [],
     bpm: 120,
     layers: [],
-    channels: [],
+    channels: [[]],
     version: LIBRARY_VERSION,
 };
 
@@ -199,6 +199,7 @@ export const useProjectStore = defineStore("current project", () => {
             synth.applyChannelsDefinition(pDef.channels);
         })();
 
+        
     }
 
     const clearScore = () => {

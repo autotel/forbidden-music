@@ -22,22 +22,21 @@ const audioContext = useAudioContextStore();
 const running = ref(false);
 const mouse = { x: 0, y: 0 };
 let prevMouse = { ...mouse };
-interface String {
+interface HarpString {
     pos: number;
     octave: number;
 }
 const recording = ref(false);
 const height = ref(view.viewHeightPx);
-const octaves = ref<String[]>([]);
+const octaves = ref<HarpString[]>([]);
 const mouseMoved = (e: MouseEvent) => {
     mouse.x = e.offsetX;
     mouse.y = e.offsetY;
 }
 const importFreqs = () => {
-    const step = view.viewWidthPx / 40;
     const imported = snap.customOctavesTable.sort();
     octaves.value = imported.map((octave, i) => {
-        const pos = (i + 0.5) * step
+        const pos = (i + 0.5) / imported.length * floatyPos.width;
         return { pos, octave };
     });
 
@@ -127,11 +126,17 @@ onMounted(() => {
     importFreqs();
 })
 
-
+const floatyPos = {
+    x: 0,
+    y: 0,
+    width: 500,
+    height: 90
+}
 
 </script>
 <template>
-    <Floaty :x="0" :y="0" :width="500" :height="90" :title="'Harp'" :onmouseenter="mouseEntered"
+    <Floaty v-bind="floatyPos" :title="'Harp'" :onmouseenter="mouseEntered"
+        @resize="(size)=>({...floatyPos, ...size})" @move="(pos)=>({...floatyPos, ...pos})" 
         :onmouseleave="mouseLeft">
         <svg v-on:mousemove="mouseMoved" style="width:100%; height:100%; border:solid 1px"
             xmlns="http://www.w3.org/2000/svg">

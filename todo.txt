@@ -4,6 +4,7 @@
 	tool to make sure sounds are on tune
 	make it possible to set the base frequency upon which octaves are calculated
 	dont fetch typographies from google
+	mute layers
 ## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)

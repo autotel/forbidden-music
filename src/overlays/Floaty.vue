@@ -8,7 +8,10 @@ const props = defineProps<{
     width?: number,
     height?: number
 }>()
-
+const emits = defineEmits<{
+    (e: 'resize', size: { width: number, height: number }): void
+    (e: 'move', pos: { x: number, y: number }): void
+}>()
 const dragHandle = ref<HTMLElement | null>(null);
 
 const box = ref({
@@ -48,10 +51,12 @@ const drag = (e: MouseEvent) => {
     if (mouse.value.moving) {
         box.value.x = mouse.value.positionWhenDragStarted.x + delta.x;
         box.value.y = mouse.value.positionWhenDragStarted.y + delta.y;
+        emits('move', { x: box.value.x, y: box.value.y });
     }
     if (mouse.value.resizing) {
         box.value.width = mouse.value.sizeWhenDragStarted.width + delta.x;
         box.value.height = mouse.value.sizeWhenDragStarted.height + delta.y;
+        emits('resize', { width: box.value.width, height: box.value.height });
     }
 }
 
@@ -80,8 +85,8 @@ const toPx = (box: { x: number, y: number, width: number, height: number }) => {
 <template>
     <div style="backdrop-filter: blur(5px); position:absolute" :style="toPx(box)">
         <div ref="dragHandle" @mousedown="startDrag" class="dragHandle" :class="{
-        dragging: mouse.moving,
-    }">
+            dragging: mouse.moving,
+        }">
         </div>
         <slot></slot>
         <div class="wh-drag" @mousedown="startResize"></div>

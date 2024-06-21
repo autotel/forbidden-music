@@ -22,6 +22,7 @@ const bottomPaneState = useBottomPaneStateStore();
 const audioContextStore = useAudioContextStore();
 const synthChain = computed<SynthChain | null>(() => bottomPaneState.activeLayerChannel);
 const thereIsAudio = ref(false);
+
 watch(()=>synth.channels, (newVal, oldVal) => {
     console.log('synth.channels changed', newVal, oldVal);
     bottomPaneState.activeLayerChannel = synth.channels.chains[0] ?? null;
