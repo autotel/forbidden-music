@@ -8,6 +8,8 @@
 	make it possible to set the base frequency upon which octaves are calculated
 	dont fetch typographies from google
 	mute layers
+	better mechanisms to catch up if playback started mid note/automation 
+		and if note begins before & ends after loop, to keep it playing as if it were midi
 ## Need refactor
 	'credits' modal & 'monomode interaction' 
 	automation
