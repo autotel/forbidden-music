@@ -29,7 +29,7 @@ const paramValueToLocalValue = () => {
 const localValueToParamValue = () => {
     props.param.value = (localValue.value * (props.param.max - props.param.min) + props.param.min);
 }
-const canvas = ref<HTMLCanvasElement | null>(null);
+const mouseCaptureCanvas = ref<HTMLCanvasElement | null>(null);
 const localValue = ref(0);
 
 let valueOnDragStart = 0;
@@ -78,9 +78,9 @@ const mouseDown = async (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     try {
-        await canvas.value?.requestPointerLock();
+        await mouseCaptureCanvas.value?.requestPointerLock();
         // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
-        if (document.pointerLockElement === canvas.value) {
+        if (document.pointerLockElement === mouseCaptureCanvas.value) {
             console.log("The pointer lock status is now locked");
             // window.addEventListener("mousemove", lockedPointerMoved, false);
         }
@@ -130,8 +130,7 @@ const tooltip = computed(() => {
 
             <div class="knob">
                 <div :style="knobAngle(localValue)">
-                    <span style="font-size:2em">-</span>
-                    <canvas ref="canvas" width="0" height="0"></canvas>
+                    <canvas ref="mouseCaptureCanvas" width="8" height="2.5"></canvas>
                 </div>
             </div>
             <small>{{ abbreviatedName }}</small>
@@ -156,19 +155,25 @@ const tooltip = computed(() => {
     display: inline-block;
     border: solid 1px;
     border-radius: 50%;
-    width: 1.9em;
-    height: 1.9em;
+    width: 30px;
+    height: 30px;
     fill: currentcolor;
     cursor: grab;
 }
 
 .knob>* {
     transform-origin: center;
-    opacity: 0.5;
+    opacity: 0.7;
     display: flex;
     align-items: center;
     width: 100%;
     height: 100%;
+}
+.knob canvas {
+    background-color: currentcolor;
+    /* position: absolute; */
+    position:relative;
+    top: -0.5px
 }
 
 .knob:hover {
@@ -179,7 +184,4 @@ small {
     white-space: nowrap;
 }
 
-canvas {
-    position: absolute;
-}
 </style>
