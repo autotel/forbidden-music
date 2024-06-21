@@ -29,10 +29,11 @@ export class RingModEffect extends AudioModule {
         this.params = [{
             type: ParamType.number,
             displayName: "Frequency",
+            _mapFn: (v: number) => Math.pow(2, v) / 10,
             _v: Math.log2(oscillator.frequency.value * 10),
             set value(v: number) {
                 this._v = v;
-                oscillator.frequency.value = Math.pow(2, v) / 10;
+                oscillator.frequency.value = this._mapFn(v);
             },
             get value() {
                 return this._v;
@@ -40,32 +41,52 @@ export class RingModEffect extends AudioModule {
             get displayValue() {
                 return `${oscillator.frequency.value.toFixed(3)}`;
             },
+            animate (startTime: number, destTime: number, destValue: number) {
+                // oscillator.frequency.cancelScheduledValues(startTime);
+                // oscillator.frequency.setValueAtTime(oscillator.frequency.value, startTime);
+                oscillator.frequency.linearRampToValueAtTime(this._mapFn(destValue), destTime);
+            },
+            stopAnimations (startTime: number = 0) {
+                oscillator.frequency.cancelScheduledValues(startTime);
+            },
             min: 0,
             max: 15,
             exportable: true,
-        },{
+        }, {
             type: ParamType.number,
             displayName: "wet",
             set value(v: number) {
-                dry.gain.value = 1-v;
+                dry.gain.value = 1 - v;
                 wet.gain.value = v;
             },
             get value() {
                 return wet.gain.value;
             },
+            animate: (startTime: number, destTime: number, destValue: number) => {
+                // dry.gain.cancelScheduledValues(startTime);
+                // wet.gain.cancelScheduledValues(startTime);
+                // dry.gain.setValueAtTime(dry.gain.value, startTime);
+                // wet.gain.setValueAtTime(wet.gain.value, startTime);
+                dry.gain.linearRampToValueAtTime(1 - destValue, destTime);
+                wet.gain.linearRampToValueAtTime(destValue, destTime);
+            },
+            stopAnimations: (startTime: number = 0) => {
+                dry.gain.cancelScheduledValues(startTime);
+                wet.gain.cancelScheduledValues(startTime);
+            },
             min: 0,
             max: 1,
             exportable: true,
-        
-        },{
+
+        }, {
             type: ParamType.option,
             displayName: "Waveform",
             _v: 0,
             options: [
-                {value: "sine", displayName: "Sine"},
-                {value: "square", displayName: "Square"},
-                {value: "sawtooth", displayName: "Sawtooth"},
-                {value: "triangle", displayName: "Triangle"},
+                { value: "sine", displayName: "Sine" },
+                { value: "square", displayName: "Square" },
+                { value: "sawtooth", displayName: "Sawtooth" },
+                { value: "triangle", displayName: "Triangle" },
             ] as OscillatorOption[],
             set value(v: number) {
                 this._v = v;
@@ -83,7 +104,7 @@ export class RingModEffect extends AudioModule {
 
             oscillator.connect(ringer.gain);
             ringer.connect(wet)
-            
+
             dry.connect(this.output);
             wet.connect(this.output);
 

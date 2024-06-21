@@ -232,6 +232,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const instanceAudioModule = (audioModule: SynthConstructorWrapper) => {
         const newModule = audioModule.create();
         console.log("adding audio module", newModule.name, "count", instancedSynths.value.length);
+        instancedSynths.value.push(newModule);
         // to reduce traffic
         const enable = newModule.enable;
         if (enable) {

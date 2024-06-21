@@ -1,10 +1,16 @@
 # Piano roll to-do
 
+## bugs
+	when clearing project or changing project, bottom pane focuses on no-longer existing synth chain
+	Automations are not loaded 
 ## Basics & architecture
 	tool to make sure sounds are on tune
 	make it possible to set the base frequency upon which octaves are calculated
 	dont fetch typographies from google
 	mute layers
+## Need refactor
+	'credits' modal & 'monomode interaction' 
+	automation
 ## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)
@@ -38,6 +44,4 @@
 	switch between log and linear hz layouts for didactic purposes.
 	integrate tuning explorer into this as a way to create scales
 
-## bugs
-	"simultaneous" modifier status seems not to get saved
 

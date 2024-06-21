@@ -1,4 +1,5 @@
 import { AudioModule } from "./interfaces/AudioModule";
+import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
 import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam } from "./interfaces/SynthParam";
 
 export interface ImpulseResponseSampleDefinition {
@@ -83,32 +84,12 @@ export class ConvolutionReverbEffect extends AudioModule {
             },
             exportable: true,
         }
-        const wetParam: NumberSynthParam = {
-            type: ParamType.number,
-            displayName: 'Wet level',
-            set value(value: number) {
-                wet.gain.value = value;
-            },
-            get value() {
-                return wet.gain.value;
-            },
-            min: 0,
-            max: 1,
-            exportable: true,
-        }
-        const dryParam: NumberSynthParam = {
-            type: ParamType.number,
-            displayName: 'Dry level',
-            set value(value: number) {
-                dry.gain.value = value;
-            },
-            get value() {
-                return dry.gain.value;
-            },
-            min: 0,
-            max: 1,
-            exportable: true,
-        }
+        const wetParam =  createAutomatableAudioNodeParam(
+            wet.gain, 'Wet level', 0, 1
+        );
+        const dryParam: NumberSynthParam = createAutomatableAudioNodeParam(
+            dry.gain, 'Dry level', 0, 1
+        );
 
         this.params = [
             sampleChoiceDefinition,

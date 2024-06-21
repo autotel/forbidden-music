@@ -39,6 +39,7 @@ export interface NumberSynthParam extends SynthParamMinimum<number> {
     max: number,
     default?: number,
     curve?: 'linear' | 'log',
+    schedule?: (destTime: number, destValue: number) => void,
 }
 
 export interface ProgressSynthParam extends SynthParamMinimum<number> {
@@ -53,7 +54,6 @@ export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
     type: ParamType.boolean,
     value: boolean,
     displayName: string,
-    schedule?: (destTime: number, destValue: number) => void,
     default?: boolean,
 }
 

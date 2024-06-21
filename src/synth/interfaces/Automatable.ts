@@ -1,5 +1,5 @@
 import { TimeRange, ValuePosition } from "../../dataTypes/TimelineItem";
-import { NumberSynthParam, SynthParam } from "./SynthParam";
+import { NumberSynthParam, ParamType, SynthParam } from "./SynthParam";
 
 export type CurrentTweenDef = {
     time: number | false;
@@ -22,7 +22,7 @@ export interface AutomatableSynthParam extends NumberSynthParam {
      * @param destValue value to animate to
      */
     animate: (startTime: number, destTime: number, destValue: number) => void;
-    stopAnimations: () => void;
+    stopAnimations: (startTime?: number) => void;
 }
 
 /**
@@ -95,4 +95,44 @@ const _isAutomatable = (param: SynthParam): param is AutomatableSynthParam => {
 
 export function isAutomatable(param: SynthParam): AutomatableSynthParam | false {
     return _isAutomatable(param) ? param : false;
+}
+const accessProp = <T, K extends keyof T>(obj: T, key: K) => obj[key];
+const isValidAudioParam = (param: unknown): param is AudioParam => {
+    return param instanceof AudioParam;
+}
+export function createAutomatableAudioNodeParam(
+    targetParam: AudioParam,
+    displayName?: string,
+    min?: number,
+    max?: number,
+    exportable = true,
+): AutomatableSynthParam & NumberSynthParam {
+    displayName = displayName || Object.prototype.toString.call(targetParam);
+
+    min = (undefined === min) ? targetParam.minValue : min;
+    max = (undefined === max) ? targetParam.maxValue : max;
+
+    const automatableParam = {
+        type: ParamType.number,
+        _v: targetParam.value,
+        get value() {
+            return targetParam.value;
+        },
+        set value(v: number) {
+            targetParam.value = v;
+        },
+        min,
+        max,
+        displayName,
+        animate(startTime: number, destTime: number, destValue: number) {
+            targetParam.linearRampToValueAtTime(destValue, destTime);
+        },
+        stopAnimations(startTime: number = 0) {
+            targetParam.cancelScheduledValues(startTime || 0);
+        },
+        exportable,
+    } as NumberSynthParam & AutomatableSynthParam;
+
+    console.log("created automatable param", automatableParam);
+    return automatableParam;
 }

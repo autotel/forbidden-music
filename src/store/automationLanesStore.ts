@@ -9,11 +9,9 @@ import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automa
 
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
-    const lanes = ref<Map<string, AutomationLane>>(new Map());
+    const lanes = ref<Map<SynthParam, AutomationLane>>(new Map());
     const synth = useSynthStore();
 
-    /** which parameter is currenly being shown on screen for automation */
-    const parameterBeingAutomated = ref<SynthParam | false>(false);
 
     const sortPointsByTime = (lane: AutomationLane) => {
         lane.content.sort((a, b) => {
@@ -38,18 +36,18 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
     })
 
-    const addAutomationLane = (targetParameter?: AutomatableSynthParam, automationPoints: AutomationPoint[] = []) => {
+    const addAutomationLane = (targetParameter: AutomatableSynthParam, automationPoints: AutomationPoint[] = []) => {
+        const exists = lanes.value.get(targetParameter);
+        if(exists) {
+            throw new Error('automation lane already exists for this parameter. Use getOrCreate instead')
+        }
         const newLane = automationLane({
             displayName: "New Automation Lane",
             content: [],
             targetParameter,
         });
         if (targetParameter) newLane.targetParameter = targetParameter;
-        // if(typeof synth.synthParamToAccessorString !== 'function') {
-        //     throw new Error('synth.synthParamToAccessorString is ' + typeof synth.synthParamToAccessorString + ' instead of function')
-        // }
-        const key = synth.synthParamToAccessorString(targetParameter) || 'undefined'
-        lanes.value.set(key, newLane);
+        lanes.value.set(targetParameter, newLane);
         newLane.content = automationPoints;
         return newLane;
     }
@@ -57,8 +55,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         if (!isAutomatable(targetParameter)) {
             return undefined;
         }
-        const paramName = synth.synthParamToAccessorString(targetParameter) || 'undefined'
-        let lane = lanes.value.get(paramName)
+        let lane = lanes.value.get(targetParameter)
         if (!lane) {
             lane = addAutomationLane(
                 targetParameter
@@ -80,11 +77,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         return lane;
     }
     const isParameterAutomated = (targetParameter: SynthParam) => {
-        if (!isAutomatable(targetParameter)) {
-            return false;
-        }
-        const paramName = synth.synthParamToAccessorString(targetParameter) || 'undefined'
-        let lane = lanes.value.get(paramName)
+        let lane = lanes.value.get(targetParameter)
         return lane !== undefined && lane.content.length > 0;
     }
     const castToSynthParam = (targetParameter: string | SynthParam | undefined): SynthParam | undefined => {
@@ -158,11 +151,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             lane.content.forEach(callback);
         });
     }
-
-    // if (!lanes.value.size) {
-    //     const defaultLane = addAutomationLane();
-    //     defaultLane.displayName = "Default";
-    // }
 
 
     return {

@@ -1,4 +1,5 @@
 import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
+import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
 import { ParamType, SynthParam } from "./interfaces/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
 
@@ -68,7 +69,7 @@ type SineVoice = ReturnType<typeof sineVoice>;
 
 export class SineSynth extends Synth<EventParamsBase, SineVoice> {
     voices: SineVoice[] = [];
-    credits = "Simple sine synth by Autotel";
+    credits = "Minimal sine synth, Autotel";
     constructor(
         audioContext: AudioContext,
     ) {
@@ -76,19 +77,10 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
         const outputGain = this.output;
         this.output.gain.value = 0.1;
         this.voices = Array.from({ length: 4 }, () => sineVoice(audioContext));
-        this.params.push({
-            displayName: 'Gain',
-            type: ParamType.number,
-            exportable: true,
-            min: 0,
-            max: 1,
-            get value() {
-                return outputGain.gain.value;
-            },
-            set value(v) {
-                outputGain.gain.value = v;
-            }
-        });
+        const gain = createAutomatableAudioNodeParam(
+            outputGain.gain, 'gian', 0, 1
+        );
+        this.params.push(gain);
     }
     params = [] as SynthParam[];
 }
