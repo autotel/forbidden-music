@@ -72,12 +72,14 @@ onMounted(async() => {
     flex-direction: row;
     flex-wrap: nowrap;
     align-content: flex-start;
-
+    overflow: hidden;
+    overflow-x: auto;
 }
 
 #hrow-items>* {
     display: inline-block;
     margin: 0.5em;
+    margin-bottom: 0;
     vertical-align: top;
     flex-shrink: 0;
     flex-grow: 0;
