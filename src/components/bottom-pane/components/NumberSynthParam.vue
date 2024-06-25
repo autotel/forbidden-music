@@ -74,9 +74,18 @@ const abbreviatedName = computed(() => {
 const paramValueToLocalValue = () => {
     if (automated.value) {
         const automationPointsAround = getAutomationPointsAroundCurrentTime();
-        const eitherPoint = automationPointsAround.find(({ point }) => point);
-        if (!eitherPoint) return;
-        localValue.value = eitherPoint.point.value;
+        if (automationPointsAround.length > 1) {
+            const interpValue = automation.getValueBetweenTwoPoints(
+                automationPointsAround[0].point,
+                automationPointsAround[1].point,
+                playback.currentScoreTime
+            );
+            localValue.value = interpValue;
+        } else {
+            const eitherPoint = automationPointsAround.find(({ point }) => point);
+            if (!eitherPoint) return;
+            localValue.value = eitherPoint.point.value;
+        }
     } else {
         localValue.value = (props.param.value - props.param.min) / (props.param.max - props.param.min);
     }
@@ -96,12 +105,12 @@ watch(() => props.param.value, () => {
     paramValueToLocalValue();
     emit('update');
 });
-setInterval(() => {
+// setInterval(() => {
+//     console.log("start interval", props.param.displayName);
+//     paramValueToLocalValue();
+//     emit('update');
 
-    paramValueToLocalValue();
-    emit('update');
-
-}, 200)
+// }, 200)
 const mouseWheeled = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -155,6 +164,7 @@ const mouseDragDelta = ({ x, y }: { x: number, y: number }) => {
         automationPointsAround.forEach(({ point }) => {
             point.value = clamp01(point.value + valDelta);
         });
+        paramValueToLocalValue();
     } else {
         localValue.value = val;
     }
@@ -236,6 +246,10 @@ const tooltip = computed(() => {
     </Tooltip>
 </template>
 <style scoped>
+/* .automated .knob div {
+    visibility: hidden;
+} */
+
 .knob-layout {
     width: 4em;
     height: fit-content;

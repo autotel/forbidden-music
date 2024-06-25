@@ -215,8 +215,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const catchUpAutomations = (scoreTime: number) => {
         const catchUpAutomations = new Map<AutomatableSynthParam, AutomationPoint>();
-        probe(automation.getAutomationPointsAroundTime(scoreTime)
-            , "ap's").forEach((automationItem) => {
+        automation.getAutomationPointsAroundTime(scoreTime).forEach((automationItem) => {
                 const { param, point } = automationItem;
                 const prevAutomation = catchUpAutomations.get(param);
                 if (prevAutomation) {
