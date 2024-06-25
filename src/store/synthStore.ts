@@ -23,7 +23,7 @@ import { Sampler } from '../synth/Sampler';
 import { SineCluster } from '../synth/SineCluster';
 import { SineSynth } from '../synth/SineSynth';
 import { AudioModule, ReceivesNotes } from '../synth/interfaces/AudioModule';
-import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
+import { SynthParam, SynthParamStored, isValidParam } from '../synth/interfaces/SynthParam';
 import { ThingyScoreFx } from '../synth/scoreEffects/Thingy';
 import { PatcheableSynthVoice, Synth } from '../synth/super/Synth';
 import { useAudioContextStore } from "./audioContextStore";
@@ -33,6 +33,7 @@ import { useMasterEffectsStore } from "./masterEffectsStore";
 import { abbreviate } from '../functions/abbreviate';
 import { PatcheableTrait, PatcheableType } from '../dataTypes/PatcheableTrait';
 import { PatcheableSynth } from '../synth/PatcheableSynth';
+import { access } from 'fs';
 
 type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
@@ -228,7 +229,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         if (!destinationParameter.animate) throw new Error("destination parameter is not animatable");
         destinationParameter.animate(event.value, detinationTime);
     }
-    const releaseAll = () => channels.value.chains.forEach((chain) => chain.releaseAll());
+    const releaseAll = () => channels.value.children.forEach((chain) => chain.releaseAll());
     const instanceAudioModule = (audioModule: SynthConstructorWrapper) => {
         const newModule = audioModule.create();
         console.log("adding audio module", newModule.name, "count", instancedSynths.value.length);
@@ -252,7 +253,11 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return newModule;
     }
     const findAudioModuleParamByName = (synth: AudioModule, name: string): SynthParam | undefined => {
-        const exact = synth.params.find((param) => param.displayName === name);
+        console.log("           finding param", name, "in", synth);
+        const exact = synth.params.find((param) => {
+            console.log("               param", param.displayName, param.displayName === name ? "==" : "!=", name);
+            return param.displayName === name
+        });
         if (exact) return exact;
         const similar = synth.params.find((param) => param.displayName?.includes(name));
         if (similar) return similar;
@@ -342,7 +347,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const getDefinitionForChain = (fromChain: SynthChain): SynthChainDefinition => {
-        return fromChain.chain.map((step) => {
+        return fromChain.children.map((step) => {
             if (step instanceof SynthStack) {
                 return getDefinitionForStack(step);
             }
@@ -356,7 +361,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const getDefinitionForStack = (stack: SynthStack): SynthStackDefinition => {
-        return stack.chains.map((chain) => {
+        return stack.children.map((chain) => {
             return getDefinitionForChain(chain);
         });
     }
@@ -365,44 +370,54 @@ export const useSynthStore = defineStore("synthesizers", () => {
         return getDefinitionForStack(channels.value);
     }
 
-    const synthHasParams = (synth: PatcheableTrait): synth is AudioModule => {
-        return synth.patcheableType === PatcheableType.AudioModule
-    }
-    const synthParamToAccessorString = (param?: SynthParam) => {
-        if (!param) return undefined;
-        if (typeof param === 'string') throw new Error("param is string");
-        const synthWithParam = instancedSynths.value.find(
-            (synth) => synthHasParams(synth) && synth.params.includes(param)
-        );
-        if (!synthWithParam) throw new Error("synth with param not found");
-        const synthName = synthWithParam.name;
-        const paramName = param.displayName;
-        return `${synthName}.${paramName}`;
-    }
-
     const accessorStringToSynthParam = (accessorString?: string): SynthParam | undefined => {
-        console.warn("accessor string to synth param, needs updating to target channel, represent multi-instance receivesNotes", accessorString);
         if (!accessorString) return undefined;
-        
-        const [synthName, paramName] = accessorString.split(".");
-        const synth = instancedSynths.value.find(
-            (s) => 'params' in s && s.name === synthName
-        ) as PatcheableTrait & { params: SynthParam[] }
-
-        if (!synth) {
-            console.warn("synth named ", synthName, "not found", synthName);
-            return undefined;
+        console.log("accessorStringToSynthParam", accessorString);
+        const accessorParts = accessorString.split(".");
+        type EitherAccessible = AudioModule | SynthChain | SynthStack | SynthParam | undefined;
+        let recAccumulator = channels.value as EitherAccessible
+        recursionLoop: for (let i = 0; i < accessorParts.length; i++) {
+            console.log("getting in", accessorParts[i], "from", recAccumulator);
+            const part = accessorParts[i];
+            const partAsNumber = parseInt(part);
+            console.log("   part", part);
+            switch (true) {
+                case recAccumulator instanceof SynthChain: {
+                    console.log("   looking for " + part + " is SynthChain " + recAccumulator.name);
+                    recAccumulator = recAccumulator.children[partAsNumber] as SynthChain;
+                    break;
+                }
+                case recAccumulator instanceof SynthStack: {
+                    console.log("   looking for " + part + " is SynthStack " + recAccumulator.name);
+                    recAccumulator = recAccumulator.children[partAsNumber] as SynthChain;
+                    break;
+                }
+                case recAccumulator instanceof AudioModule || recAccumulator instanceof Synth: {
+                    console.log("   looking for " + part + " is AudioModule " + recAccumulator.name);
+                    recAccumulator = findAudioModuleParamByName(recAccumulator, part);
+                    break recursionLoop
+                }
+                default: {
+                    console.error(
+                        "could not find parameter accessed by ",
+                        accessorString,
+                        "at",
+                        accessorParts.slice(0, i).join("."),
+                        recAccumulator
+                    );
+                    recAccumulator = undefined;
+                }
+            }
+            console.log("       results in", recAccumulator);
+            if (recAccumulator === undefined) {
+                return undefined;
+            }
         }
-        
-        const param = synth.params.find((p) => p.displayName === paramName);
-
-        if (!param) {
-            console.warn("param not found", paramName);
-            return undefined;
+        if (isValidParam(recAccumulator)) {
+            return recAccumulator;
+        } else {
+            console.error("Tried to get synth param, but access didn't lead to parameter, but this instead:", recAccumulator);
         }
-
-        console.log("found automated param ", param);
-        return param;
     }
 
 
@@ -415,9 +430,9 @@ export const useSynthStore = defineStore("synthesizers", () => {
      */
     const getLayerSynths = (layerNo: number): ReceivesNotes[] => {
         const channelNo = layerStore.layers[layerNo]?.channelSlot as number | undefined;
-        const channelIfExists = channels.value.chains[channelNo || 0] as SynthChain | undefined;
+        const channelIfExists = channels.value.children[channelNo || 0] as SynthChain | undefined;
         if (!channelIfExists) {
-            return channels.value.chains[0]?.getNoteReceivers() || [];
+            return channels.value.children[0]?.getNoteReceivers() || [];
         }
         return channelIfExists.getNoteReceivers();
     }
@@ -435,7 +450,6 @@ export const useSynthStore = defineStore("synthesizers", () => {
         getLayerSynths,
         applyChannelsDefinition,
         instanceAudioModule,
-        synthParamToAccessorString,
         accessorStringToSynthParam,
         testBeep: async () => {
             !isTauri() && console.warn("beep only works in tauri");

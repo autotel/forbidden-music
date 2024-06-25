@@ -25,17 +25,17 @@ const thereIsAudio = ref(false);
 
 watch(()=>synth.channels, (newVal, oldVal) => {
     console.log('synth.channels changed', newVal, oldVal);
-    bottomPaneState.activeLayerChannel = synth.channels.chains[0] ?? null;
+    bottomPaneState.activeLayerChannel = synth.channels.children[0] ?? null;
 });
 
-watch (()=>bottomPaneState.activeLayerChannel?.chain.length, (newVal, oldVal) => {
+watch (()=>bottomPaneState.activeLayerChannel?.children.length, (newVal, oldVal) => {
     console.log('bottomPaneState.activeLayerChannel.chain changed', newVal, oldVal);
 });
 
 onMounted(async() => {
     await audioContextStore.audioContextPromise;
     setTimeout(() => {
-        bottomPaneState.activeLayerChannel = synth.channels.chains[0] ?? null;
+        bottomPaneState.activeLayerChannel = synth.channels.children[0] ?? null;
     }, 0);
     thereIsAudio.value = true;
 });

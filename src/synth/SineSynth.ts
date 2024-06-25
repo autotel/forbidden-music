@@ -78,7 +78,7 @@ export class SineSynth extends Synth<EventParamsBase, SineVoice> {
         this.output.gain.value = 0.1;
         this.voices = Array.from({ length: 4 }, () => sineVoice(audioContext));
         const gain = createAutomatableAudioNodeParam(
-            outputGain.gain, 'gian', 0, 1
+            outputGain.gain, 'gain', 0, 1
         );
         this.params.push(gain);
     }

@@ -16,12 +16,12 @@ const getNoteReceivers = (
             acc.push(receivesNotes);
         } else if (chainItem instanceof SynthChain) {
             // it's a synth chain 
-            acc.push(...getNoteReceivers(chainItem.chain, recursionDepth + 1));
+            acc.push(...getNoteReceivers(chainItem.children, recursionDepth + 1));
         } else if (chainItem instanceof SynthStack) {
             // It's a parallel stack of audio modules, recurse
             const subReceivers: ReceivesNotes[] = [];
-            chainItem.chains.forEach(chain => subReceivers.push(
-                ...getNoteReceivers(chain.chain, recursionDepth + 1))
+            chainItem.children.forEach(chain => subReceivers.push(
+                ...getNoteReceivers(chain.children, recursionDepth + 1))
             );
             acc.push(...subReceivers);
         } else {
@@ -36,7 +36,7 @@ export class SynthChain implements PatcheableTrait {
     readonly chainStepType = PatcheableType.SynthChain;
     output: GainNode;
     input: GainNode;
-    chain: ChainStep[] = [];
+    children: ChainStep[] = [];
     chainChangedEventListeners = new Set<() => void>();
     readonly patcheableType = PatcheableType.SynthChain;
     readonly enable = false;
@@ -47,7 +47,7 @@ export class SynthChain implements PatcheableTrait {
         this.input = audioContext.createGain();
     }
     handleChanged = () => {
-        console.log("chain changed");
+        console.log("children changed");
         this.rewire();
         this.chainChangedEventListeners.forEach(listener => listener());
     }
@@ -62,10 +62,10 @@ export class SynthChain implements PatcheableTrait {
     }
     rewire = (recursion = 0) => {
         if (recursion > MAX_RECURSION) {
-            throw new Error("chain recursion depth exceeded");
+            throw new Error("children recursion depth exceeded");
         }
         let prevModule: PatcheableTrait | undefined;
-        for (let step of this.chain) {
+        for (let step of this.children) {
             if (step instanceof SynthStack) {
                 step.rewire(recursion + 1);
             }
@@ -89,15 +89,15 @@ export class SynthChain implements PatcheableTrait {
         }
     }
     getNoteReceivers = () => {
-        return getNoteReceivers(this.chain);
+        return getNoteReceivers(this.children);
     }
     addAudioModule = (position: number, newModule: PatcheableTrait) => {
-        this.chain.splice(position, 0, newModule);
+        this.children.splice(position, 0, newModule);
         this.rewire();
         this.handleChanged();
     }
     setAudioModules = (modules: PatcheableTrait[]) => {
-        this.chain = modules;
+        this.children = modules;
         this.rewire();
         this.handleChanged();
     }
@@ -105,29 +105,29 @@ export class SynthChain implements PatcheableTrait {
         removedModule: ChainStep,
         newModule: ChainStep,
     ) => {
-        const index = this.chain.indexOf(removedModule);
+        const index = this.children.indexOf(removedModule);
         if (index === -1) {
-            console.warn("module not found in chain");
+            console.warn("module not found in children");
             return;
         }
         removedModule.disable?removedModule.disable():undefined;
-        this.chain.splice(index, 1);
-        this.chain.splice(index, 0, newModule);
+        this.children.splice(index, 1);
+        this.children.splice(index, 0, newModule);
         this.rewire();
         this.handleChanged();
     }
     removeAudioModule = (step: ChainStep) => {
-        const index = this.chain.indexOf(step);
+        const index = this.children.indexOf(step);
         if (index === -1) {
-            console.warn("module not found in chain", this.chain, step);
+            console.warn("module not found in children", this.children, step);
             return;
         }
         this.removeAudioModuleAt(index);
     }
     removeAudioModuleAt = (index: number) => {
-        const step = this.chain[index];
+        const step = this.children[index];
         step.disable?step.disable():undefined;
-        this.chain.splice(index, 1);
+        this.children.splice(index, 1);
         this.rewire();
         this.handleChanged();
     }

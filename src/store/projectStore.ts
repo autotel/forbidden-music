@@ -153,7 +153,7 @@ export const useProjectStore = defineStore("current project", () => {
             version: LIBRARY_VERSION,
         } as LibraryItem;
         ret.version = LIBRARY_VERSION;
-        if (synth.channels.chains.length) {
+        if (synth.channels.children.length) {
             ret.channels = synth.getCurrentChannelsDefinition();
         }
         return ret;
@@ -188,8 +188,7 @@ export const useProjectStore = defineStore("current project", () => {
             layer.locked = locked;
             layer.channelSlot = channelSlot;
         });
-
-        lanes.applyAutomationLaneDefs(pDef.lanes);
+        
 
         if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
         if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
@@ -197,6 +196,7 @@ export const useProjectStore = defineStore("current project", () => {
         (async () => {
             await audioContextStore.audioContextPromise;
             synth.applyChannelsDefinition(pDef.channels);
+            lanes.applyAutomationLaneDefs(pDef.lanes);
         })();
 
         

@@ -7,12 +7,12 @@ import { useLibraryStore } from "./libraryStore";
 
 export const useBottomPaneStateStore = defineStore("bottom pane state store", () => {
     const synthStore = useSynthStore();
-    const activeLayerChannel = ref(synthStore.channels.chains[0] ?? null);
+    const activeLayerChannel = ref(synthStore.channels.children[0] ?? null);
     const project = useProjectStore();
     const libraryStore = useLibraryStore();
     const focusNewChannel = useThrottleFn(() => {
-        if (synthStore.channels.chains.length > 0) {
-            activeLayerChannel.value = synthStore.channels.chains[0];
+        if (synthStore.channels.children.length > 0) {
+            activeLayerChannel.value = synthStore.channels.children[0];
         }
     }, 200);
     watch(()=>synthStore.channels, () => { focusNewChannel() });

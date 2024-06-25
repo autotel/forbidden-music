@@ -15,12 +15,12 @@ const emits = defineEmits<{
     (e: 'change', newValue: SynthStack): void
 }>();
 
-const visibleChain = ref<SynthChain | null>(props.audioModule.chains[0] ?? null);
-const layersArray = ref([...props.audioModule.chains]);
+const visibleChain = ref<SynthChain | null>(props.audioModule.children[0] ?? null);
+const layersArray = ref([...props.audioModule.children]);
 
 const addLayer = () => {
     const newChain = props.audioModule.addChain();
-    layersArray.value = [...props.audioModule.chains];
+    layersArray.value = [...props.audioModule.children];
     emits('change', props.audioModule);
     setTimeout(() => {
         visibleChain.value = newChain;
@@ -29,7 +29,7 @@ const addLayer = () => {
 
 const removeLayer = (index: number) => {
     props.audioModule.removeChain(index);
-    layersArray.value = [...props.audioModule.chains];
+    layersArray.value = [...props.audioModule.children];
     visibleChain.value = null;
     emits('change', props.audioModule);
 }

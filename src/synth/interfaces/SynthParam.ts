@@ -91,11 +91,51 @@ type PatchedVoiceDef = {
     params: SynthParam[]
 }
 
-type VoicePatch = PatchedVoiceDef[]  
+type VoicePatch = PatchedVoiceDef[]
 
 export interface VoicePatchSynthParam extends SynthParamMinimum<VoicePatch> {
     type: ParamType.voicePatch,
     value: VoicePatch,
+}
+export const isValidParamType = (paramType: String) => {
+    return (<any>Object).values(ParamType).includes(paramType)
+}
+const hasAllTheProps = (param: any, props: string[], report = true): boolean => {
+    const ret = props.every(prop => prop in param)
+    if (ret) {
+        return ret;
+    } else if (report) {
+        console.log(param, "missing props: ", props.filter(prop => !(prop in param)));
+    }
+    return false;
+}
+/** not exhaustive */
+export const isValidParam = (param: unknown): param is SynthParam => {
+    if (!hasAllTheProps(param, ['type', 'value'])) return false
+    // @ts-ignore
+    if (!'type' in param) return false;
+    // @ts-ignore
+    switch (param.type) {
+        case ParamType.number:
+            return hasAllTheProps(param, ['type', 'value', 'displayName', 'min', 'max'])
+        case ParamType.progress:
+            return hasAllTheProps(param, ['type', 'value', 'displa<yName', 'min', 'max'])
+        case ParamType.boolean:
+            return hasAllTheProps(param, ['type', 'value', 'displayName'])
+        case ParamType.option:
+            return hasAllTheProps(param, ['type', 'value', 'options', 'displayName'])
+        case ParamType.infoText:
+            return hasAllTheProps(param, ['type', 'value', 'displayName'])
+        case ParamType.nArray:
+            return hasAllTheProps(param, ['type', 'value', 'displayName', 'min', 'max'])
+        case ParamType.readout:
+            return hasAllTheProps(param, ['type', 'value', 'displayName'])
+        case ParamType.voicePatch:
+            return hasAllTheProps(param, ['type', 'value'])
+        default:
+            console.log("invalid but present param type prop in ", param)
+    }
+    return false;
 }
 
 export type SynthParam =

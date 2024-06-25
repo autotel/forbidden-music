@@ -23,10 +23,10 @@ const props = defineProps<{
     synthChain: SynthChain
 }>();
 
-const stepsArray = ref(props.synthChain.chain);
+const stepsArray = ref(props.synthChain.children);
 
 const chainChangedHandler = () => {
-    stepsArray.value = [...props.synthChain.chain];
+    stepsArray.value = [...props.synthChain.children];
     props.synthChain.rewire();
 }
 
@@ -46,7 +46,7 @@ onMounted(() => {
 });
 
 const xClickHandler = (synthChain: SynthChain, index: number) => {
-    if (!confirm(`Are you sure you want to delete this ${synthChain.chain[index].name} module?`)) {
+    if (!confirm(`Are you sure you want to delete this ${synthChain.children[index].name} module?`)) {
         return;
     }
     synthChain.removeAudioModuleAt(index);

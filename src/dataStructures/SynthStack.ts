@@ -1,13 +1,13 @@
 import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
 import { SynthChain } from "./SynthChain";
-export const MAX_RECURSION = 10;
+export const MAX_RECURSION = 15;
 
 export class SynthStack implements PatcheableTrait {
     name = "SynthStack";
     readonly patcheableType = PatcheableType.SynthChain;
     output: AudioNode;
     input: AudioNode;
-    chains: SynthChain[] = [];
+    children: SynthChain[] = [];
     isSynthStack = true;
     addChain: () => SynthChain;
     enable: false | (() => void) = false;
@@ -20,7 +20,7 @@ export class SynthStack implements PatcheableTrait {
             // newChain.addChangeListener(() => this.rewire());
             newChain.output.connect(this.output);
             this.input.connect(newChain.input);
-            this.chains.push(newChain);
+            this.children.push(newChain);
             return newChain;
         }
     }
@@ -28,28 +28,28 @@ export class SynthStack implements PatcheableTrait {
         if (recursion > MAX_RECURSION) {
             throw new Error("recursion depth exceeded");
         }
-        if (this.chains.length === 0) {
+        if (this.children.length === 0) {
             this.input.connect(this.output);
         } else {
             this.input.disconnect();
         }
-        this.chains.forEach((synthChain, index) => {
+        this.children.forEach((synthChain, index) => {
             synthChain.rewire(recursion + 1);
             this.input.connect(synthChain.input);
             synthChain.output.connect(this.output);
         });
     }
     removeChain(index: number) {
-        this.chains[index].output.disconnect(this.output);
-        this.chains.splice(index, 1);
+        this.children[index].output.disconnect(this.output);
+        this.children.splice(index, 1);
         this.rewire();
     }
     empty() {
-        // this.chains.forEach(synthChain => synthChain.removeChangeListeners());
-        this.chains = [];
+        // this.children.forEach(synthChain => synthChain.removeChangeListeners());
+        this.children = [];
         this.rewire();
     }
     disable() {
-        this.chains.forEach(synthChain => synthChain.chain.map(({ disable }) => disable ? disable() : false));
+        this.children.forEach(synthChain => synthChain.children.map(({ disable }) => disable ? disable() : false));
     }
 }

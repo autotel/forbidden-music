@@ -14,4 +14,5 @@ export type PatcheableTrait = {
     disable: false | (() => void),
     enable: false | (() => void),
     patcheableType: PatcheableType;
+    children?: PatcheableTrait[];
 }

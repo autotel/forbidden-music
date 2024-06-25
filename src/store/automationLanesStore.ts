@@ -3,9 +3,13 @@ import { ref, watchEffect } from "vue";
 import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
 import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
 import { useSynthStore } from "./synthStore";
-import { SynthParam } from "../synth/interfaces/SynthParam";
+import { SynthParam, isValidParam } from "../synth/interfaces/SynthParam";
 import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automatable";
 import { filterMap } from "../functions/filterMap";
+import { PatcheableSynth } from "../synth/PatcheableSynth";
+import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
+import { AudioModule } from "../synth/interfaces/AudioModule";
+import { MAX_RECURSION } from "../dataStructures/SynthStack";
 
 
 
@@ -83,11 +87,19 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     }
     const castToSynthParam = (targetParameter: string | SynthParam | undefined): SynthParam | undefined => {
         if (typeof targetParameter === 'string') {
-            return synth.accessorStringToSynthParam(targetParameter);
+            console.group('castToSynthParam');
+            const result = synth.accessorStringToSynthParam(targetParameter);
+            console.groupEnd();
+            return result;
         }
-        return targetParameter;
+        if (isValidParam(targetParameter)) {
+            return targetParameter;
+        }
+        console.warn('could not cast to synth param', targetParameter);
+        return undefined;
     }
     const applyAutomationLaneDef = (automationLaneDef: AutomationLaneDef) => {
+        console.log("applyLaneDef", automationLaneDef);
         let targetParameter = castToSynthParam(automationLaneDef.targetParameter);
         if (!targetParameter) {
             console.warn('could not apply automation lane def as target parameter is', targetParameter, automationLaneDef)
@@ -101,15 +113,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         const automationPoints = automationLaneDef.content.map(automationPoint)
         addAutomationLane(automatable, automationPoints);
     }
-    const getAutomationLaneDef = (automationLane: AutomationLane): AutomationLaneDef => {
-        const parameterAccessorString = synth.synthParamToAccessorString(
-            automationLane.targetParameter
-        );
-        return {
-            ...automationLaneDef(automationLane),
-            targetParameter: parameterAccessorString,
-        };
-    }
+
     const getValueBetweenTwoPoints = (a: AutomationPoint, b: AutomationPoint, time: number) => {
         if (time < a.time) throw new Error('time is before the first point');
         if (time > b.time) throw new Error('time is after the second point');
@@ -121,11 +125,36 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     }
     const getAutomationLaneDefs = () => {
         const automationLaneDefs: AutomationLaneDef[] = [];
-        lanes.value.forEach((lane) => {
-            if (lane.content.length) {
-                automationLaneDefs.push(getAutomationLaneDef(lane));
+        const recurse = (chainStep: PatcheableTrait, accessorString: string, titleString: string, recursion = 0) => {
+            if (recursion > MAX_RECURSION) throw new Error('recursion depth exceeded')
+            if (chainStep.children) {
+                chainStep.children.forEach((child, index) => {
+                    const addAccessor = accessorString ? ('.' + index) : index;
+                    const addTitle = titleString ? ('/' + child.name) : child.name;
+                    return recurse(child, accessorString + addAccessor, titleString + addTitle, recursion + 1);
+                });
+            } else if (chainStep.patcheableType === PatcheableType.AudioModule) {
+                const stepIsAudioModule = chainStep as AudioModule;
+                stepIsAudioModule.params.forEach((param) => {
+                    const existingLane = lanes.value.get(param);
+                    if (existingLane) {
+                        automationLaneDefs.push({
+                            displayName: titleString + '/' + param.displayName,
+                            targetParameter: accessorString + '.' + param.displayName,
+                            content: existingLane.content.map((point) => {
+                                return {
+                                    time: point.time,
+                                    value: point.value,
+                                    layer: point.layer,
+                                }
+                            })
+                        });
+                    }
+                });
             }
-        });
+
+        }
+        recurse(synth.channels, '', '');
         return automationLaneDefs;
     }
     const applyAutomationLaneDefs = (automationLaneDefs: AutomationLaneDef[]) => {
@@ -291,7 +320,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         lanes,
         addAutomationLane,
         applyAutomationLaneDef,
-        getAutomationLaneDef,
         getAutomationLaneDefs,
         applyAutomationLaneDefs,
         getOrCreateAutomationLaneForParameter,

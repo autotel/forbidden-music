@@ -19,7 +19,7 @@ const addChannel = () => {
 </script>
 <template>
         <h3 class="padded">Synth chains</h3>
-        <template v-for="(synthChan, chanNo) in synth.channels.chains">
+        <template v-for="(synthChan, chanNo) in synth.channels.children">
             <Button :onClick="() => changeSynthChan(synthChan)" :active="synthChan === bottomPaneStore.activeLayerChannel"
                 style="width:calc(100% - 2em); display:flex; justify-content: space-between;"
                 :style="chanNo ? 'padding-left:2em' : ''" :active-color="layerNoteColorStrings[1]" class="padded"
@@ -32,7 +32,7 @@ const addChannel = () => {
                 </template>
                 {{ synthChan.name }}
 
-                <ButtonSub class="sub-button" danger :onClick="() => { synth.channels.chains.splice(chanNo, 1) }">
+                <ButtonSub class="sub-button" danger :onClick="() => { synth.channels.children.splice(chanNo, 1) }">
                     ×
                 </ButtonSub>
             </Button>
