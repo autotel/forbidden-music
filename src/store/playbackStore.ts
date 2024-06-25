@@ -18,6 +18,7 @@ import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/Autom
 import { filterMap } from '../functions/filterMap';
 import { SynthParam } from '../synth/interfaces/SynthParam';
 import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/interfaces/Automatable';
+import { probe } from '../functions/probe';
 
 
 interface MidiInputInterface {
@@ -169,7 +170,6 @@ export const usePlaybackStore = defineStore("playback", () => {
             console.warn("unexpected midi event shape", data, timeStamp)
         }
     }
-
     watch(currentMidiInput, (newMidiInput, oldMidiInput) => {
         if (newMidiInput) {
             console.log("activating midi input");
@@ -212,63 +212,24 @@ export const usePlaybackStore = defineStore("playback", () => {
         });
         return events;
     };
-    /** 
-     * Get the automation points corresponding to the given playback frame timerange
-     */
-    const getAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
-        /* 
-          The return of this function is a bit counterintuitive:
-          it returns the automation that follows whichever automation falls within the given range (fig 1.)
-          and if catch-up is set to true, it also retuns the last automation before the range end
-          
-          This is because we want to animate towards the following automation, but we want to get only the 
-          next automation on the first frame after the previous animation ended (fig 2) 
-          so that we don't schedule destinations redundantly.
-          
-          fig 1:
-          ----a--------a---------------a-------a--------
-                       |               |       
-                    in this moment     |
-                                      return this one
-                     
-          
-          fig 2:
-          ----a--------a--------a-------a--------
-                           |       
-                     in this moment, return nothing (unless catch-up)
-        */
-        const returnValue: {
-            param: AutomatableSynthParam,
-            point: AutomationPoint,
-        }[] = [];
 
-        automation.lanes.forEach((lane) => {
-            const param = lane.targetParameter;
-            if (!param) return;
-            if (!lane.content.length) return;
-            const selectedIndexes = filterMap(lane.content, (point, index) => {
-                if (point.time >= frameStartTime && point.time < frameEndTime) {
-                    return index + 1;
+    const catchUpAutomations = (scoreTime: number) => {
+        const catchUpAutomations = new Map<AutomatableSynthParam, AutomationPoint>();
+        probe(automation.getAutomationPointsAroundTime(scoreTime)
+            , "ap's").forEach((automationItem) => {
+                const { param, point } = automationItem;
+                const prevAutomation = catchUpAutomations.get(param);
+                if (prevAutomation) {
+                    const interpolated = automation.getValueBetweenTwoPoints(
+                        prevAutomation, point, scoreTime
+                    );
+                    param.value = automationRangeToParamRange(interpolated, {
+                        min: param.min, max: param.max
+                    });
+                } else {
+                    catchUpAutomations.set(param, point);
                 }
-                return false;
             })
-            if (catchUp) {
-                const prevPointIndex = selectedIndexes[0] - 1;
-                if (prevPointIndex >= 0) {
-                    selectedIndexes.unshift(prevPointIndex);
-                }
-            }
-
-            returnValue.push(...filterMap(selectedIndexes, (index) => {
-                const point = lane.content[index];
-                if (!point) return false;
-                return {
-                    param,
-                    point,
-                }
-            }))
-        });
-        return returnValue;
     }
 
     let isFirtClockAfterPlay = true;
@@ -322,7 +283,10 @@ export const usePlaybackStore = defineStore("playback", () => {
             playNotes.push(...loopStartNotes);
             currentScoreTime.value = loopRestarted.time + remainder;
             if (loopRestarted.repetitionsLeft) loopRestarted.repetitionsLeft--;
+        }
 
+        if (catchUp || loopRestarted) {
+            catchUpAutomations(scoreTimeFrameStart);
         }
 
         playNotes.forEach((editNote) => {
@@ -343,10 +307,9 @@ export const usePlaybackStore = defineStore("playback", () => {
                 console.error("could not schedule event", editNote, e);
             }
         });
-
-        getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
-            .forEach((automation) => {
-                const { param, point } = automation;
+        automation.getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
+            .forEach((automationItem) => {
+                const { param, point } = automationItem;
                 const mappedValue = automationRangeToParamRange(point.value, {
                     min: param.min, max: param.max
                 })
@@ -356,6 +319,9 @@ export const usePlaybackStore = defineStore("playback", () => {
                     addAutomationDestinationPoint(param, animationEndAbsolute, mappedValue);
                 }
             });
+        // if catchup, get prev and following automations, get value between and apply value to 
+        // corresponding params
+
 
         previousClockTime = tickTime;
 
@@ -371,11 +337,12 @@ export const usePlaybackStore = defineStore("playback", () => {
     const play = async () => {
         if (!isPaused) resetLoopRepetitions();
         const audioContext = audioContextStore.audioContext;
-        console.log("w audio context state");
+
         if (audioContext.state !== 'running') await audioContext.resume();
         console.log("play");
         playing.value = true;
         if (currentTimeout.value) throw new Error("timeout already exists");
+
         previousClockTime = audioContext.currentTime;
         isFirtClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
@@ -430,6 +397,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         stop,
         pause,
         resetLoopRepetitions,
+        catchUpAutomations,
         midiInputs, currentMidiInput,
         midiConectionModes, currentMidiConnectionMode,
         testBeep: async () => {

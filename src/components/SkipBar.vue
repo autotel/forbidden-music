@@ -13,6 +13,8 @@ const barSkip = (e: MouseEvent) => {
         playback.currentScoreTime = time;
         playback.timeReturnPoint = time;
         playback.resetLoopRepetitions();
+
+        playback.catchUpAutomations(time);
     }
 }
 

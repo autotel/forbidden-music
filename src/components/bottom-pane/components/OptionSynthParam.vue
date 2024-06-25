@@ -121,7 +121,7 @@ const selectOption = (i: number) => {
     border-radius: 0.5em;
     overflow: hidden;
     cursor: pointer;
-    z-index: 1;
+    z-index: 2;
     top:0;
     max-height: 100%;
     overflow-y: auto;

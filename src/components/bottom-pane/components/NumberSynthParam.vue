@@ -3,29 +3,42 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '../../../components/Tooltip.vue';
 import { abbreviate } from '../../../functions/abbreviate';
 import { NumberSynthParam } from '../../../synth/interfaces/SynthParam';
-import { isAutomatable } from '../../../synth/interfaces/Automatable';
+import { AutomatableSynthParam, isAutomatable } from '../../../synth/interfaces/Automatable';
 import { useAutomationLaneStore } from '../../../store/automationLanesStore';
 import { useToolStore } from '../../../store/toolStore';
 import { Tool } from '../../../dataTypes/Tool';
+import { usePlaybackStore } from '../../../store/playbackStore';
+import { AutomationLane } from '../../../dataTypes/AutomationLane';
+import { automationPoint } from '../../../dataTypes/AutomationPoint';
+import { useProjectStore } from '../../../store/projectStore';
 const props = defineProps<{
     param: NumberSynthParam
 }>();
 
 const emit = defineEmits(['update']);
-const lanes = useAutomationLaneStore();
+const automation = useAutomationLaneStore();
 const tool = useToolStore();
+const project = useProjectStore();
 let mouseDownPos = {
     x: 0, y: 0,
 };
+const playback = usePlaybackStore();
 const knobAngle = (angle: number) => {
     angle *= 270;
     angle -= 45;
     return `transform:rotate(${angle}deg)`;
 }
 
-const automated = computed(() => {
-    return lanes.isParameterAutomated(props.param);
+const automated = computed<AutomationLane | undefined>(() => {
+    if (automation.isParameterAutomated(props.param)) {
+        const aParam: AutomatableSynthParam = props.param as AutomatableSynthParam;
+        const lane = automation.getOrCreateAutomationLaneForParameter(aParam);
+        return lane;
+    } else {
+        return undefined;
+    }
 });
+
 const automationLaneIsOpen = computed(() => {
     return tool.laneBeingEdited && (tool.laneBeingEdited.targetParameter === props.param) && tool.current === Tool.Automation;
 });
@@ -35,13 +48,13 @@ const enterAutomation = () => {
     const automatable = isAutomatable(props.param);
     if (!automatable) throw new Error("param is not automatable");
     tool.current = Tool.Automation;
-    tool.laneBeingEdited = lanes.getOrCreateAutomationLaneForParameter(automatable);
+    tool.laneBeingEdited = automation.getOrCreateAutomationLaneForParameter(automatable);
 }
 const exitAutomation = () => {
     tool.current = Tool.Edit;
     tool.laneBeingEdited = undefined;
 }
-const automationClick = (e: MouseEvent) => {
+const toggleShowAutomation = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (automationLaneIsOpen.value) {
@@ -57,16 +70,25 @@ const abbreviatedName = computed(() => {
     // return props.param.displayName;
     return abbreviate(props.param.displayName, 10);
 });
+
 const paramValueToLocalValue = () => {
-    localValue.value = (props.param.value - props.param.min) / (props.param.max - props.param.min);
+    if (automated.value) {
+        const automationPointsAround = getAutomationPointsAroundCurrentTime();
+        const eitherPoint = automationPointsAround.find(({ point }) => point);
+        if (!eitherPoint) return;
+        localValue.value = eitherPoint.point.value;
+    } else {
+        localValue.value = (props.param.value - props.param.min) / (props.param.max - props.param.min);
+    }
 }
+
 const localValueToParamValue = () => {
     props.param.value = (localValue.value * (props.param.max - props.param.min) + props.param.min);
 }
+
 const mouseCaptureCanvas = ref<HTMLCanvasElement | null>(null);
 const localValue = ref(0);
 
-let valueOnDragStart = 0;
 const dragging = ref(false);
 const ww = 600;
 
@@ -74,7 +96,12 @@ watch(() => props.param.value, () => {
     paramValueToLocalValue();
     emit('update');
 });
+setInterval(() => {
 
+    paramValueToLocalValue();
+    emit('update');
+
+}, 200)
 const mouseWheeled = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -91,16 +118,46 @@ const mouseDrag = (e: MouseEvent) => {
     mouseDragDelta(delta);
 }
 
-const mouseDragDelta = ({ x, y }: { x: number, y: number }) => {
-    let val = localValue.value - (y / ww);
 
+const getAutomationPointsAroundCurrentTime = () => {
+    const lane = automated.value;
+    if (undefined === lane) throw new Error('lane is undefined');
+    const automationPointsAround = automation.getAutomationPointsAroundTime(playback.currentScoreTime, [lane]);
+    return automationPointsAround;
+}
+
+const clamp01 = (val: number) => {
     if (val > 1) {
-        val = 1;
+        return 1;
     }
     if (val < 0) {
-        val = 0;
+        return 0;
     }
-    localValue.value = val;
+    return val;
+}
+
+const mouseDragDelta = ({ x, y }: { x: number, y: number }) => {
+    const prevLocalValue = localValue.value;
+    let val = localValue.value - (y / ww);
+    val = clamp01(val);
+    if (automated.value) {
+        const valDelta = val - prevLocalValue;
+        const automationPointsAround = getAutomationPointsAroundCurrentTime();
+        if (automationPointsAround.length == 0) {
+            const np = automationPoint({
+                time: playback.currentScoreTime,
+                value: prevLocalValue,
+                layer: tool.currentLayerNumber,
+            })
+            automated.value.content.push(np);
+            automated.value.content.sort((a, b) => a.time - b.time);
+        }
+        automationPointsAround.forEach(({ point }) => {
+            point.value = clamp01(point.value + valDelta);
+        });
+    } else {
+        localValue.value = val;
+    }
     localValueToParamValue();
 }
 
@@ -122,7 +179,9 @@ const mouseDown = async (e: MouseEvent) => {
     catch (e) {
         console.warn('pointer lock did not work');
     }
-
+    if (automated.value) {
+        enterAutomation();
+    }
     window.addEventListener('mousemove', windowMouseMove);
     window.addEventListener('mouseup', mouseUp);
     dragging.value = true;
@@ -130,7 +189,6 @@ const mouseDown = async (e: MouseEvent) => {
         x: e.clientX,
         y: e.clientY,
     };
-    valueOnDragStart = localValue.value;
 }
 const mouseUp = (e: MouseEvent) => {
     e.stopPropagation();
@@ -161,18 +219,18 @@ const tooltip = computed(() => {
     <Tooltip :tooltip="tooltip" :force-hide="dragging">
         <div class="prevent-select knob-layout" :class="{ automated, automationLaneIsOpen }">
 
-            <div v-if="!automated" class="knob" @mousedown="mouseDown" @mouseenter="addWheelListeners" @mouseleave="removeWheelListeners">
+            <div v-if="true" class="knob" @mousedown="mouseDown" @mouseenter="addWheelListeners"
+                @mouseleave="removeWheelListeners">
                 <div :style="knobAngle(localValue)">
                     <canvas ref="mouseCaptureCanvas" width="8" height="2.5"></canvas>
                 </div>
             </div>
-            <div v-else="!automated" class="knob" @mousedown="automationClick">
-            </div>
             <small>{{ abbreviatedName }}</small>
             <small>{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
-            <Tooltip :tooltip="automated?'Edit automation. [Ctl+A] & [Del] To erase':'automate parameter'" :force-hide="dragging">
+            <Tooltip :tooltip="automated ? 'Edit automation. [Ctl+A] & [Del] To erase' : 'automate parameter'"
+                :force-hide="dragging">
                 <button class="animate-button" v-if="canBeAutomated" :class="{ on: automationLaneIsOpen }"
-                    @click="automationClick">A</button>
+                    @click="toggleShowAutomation">A</button>
             </Tooltip>
         </div>
     </Tooltip>

@@ -5,6 +5,7 @@ import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
 import { useSynthStore } from "./synthStore";
 import { SynthParam } from "../synth/interfaces/SynthParam";
 import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automatable";
+import { filterMap } from "../functions/filterMap";
 
 
 
@@ -38,7 +39,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
 
     const addAutomationLane = (targetParameter: AutomatableSynthParam, automationPoints: AutomationPoint[] = []) => {
         const exists = lanes.value.get(targetParameter);
-        if(exists) {
+        if (exists) {
             throw new Error('automation lane already exists for this parameter. Use getOrCreate instead')
         }
         const newLane = automationLane({
@@ -109,6 +110,15 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             targetParameter: parameterAccessorString,
         };
     }
+    const getValueBetweenTwoPoints = (a: AutomationPoint, b: AutomationPoint, time: number) => {
+        if (time < a.time) throw new Error('time is before the first point');
+        if (time > b.time) throw new Error('time is after the second point');
+
+        const vRange = b.value - a.value;
+        const timeRange = b.time - a.time;
+        const timeOffset = time - a.time;
+        return a.value + timeOffset / timeRange * vRange;
+    }
     const getAutomationLaneDefs = () => {
         const automationLaneDefs: AutomationLaneDef[] = [];
         lanes.value.forEach((lane) => {
@@ -152,6 +162,131 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     }
 
 
+    /** 
+     * Get the automation points corresponding to the given playback frame timerange
+     */
+    const getAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
+        /* 
+          The return of this function is a bit counterintuitive:
+          it returns the automation that follows whichever automation falls within the given range (fig 1.)
+          and if catch-up is set to true, it also retuns the last automation before the range end
+          
+          This is because we want to animate towards the following automation, but we want to get only the 
+          next automation on the first frame after the previous animation ended (fig 2) 
+          so that we don't schedule destinations redundantly.
+          
+          fig 1:
+          ----a--------a---------------a-------a--------
+                       |               |       
+                    in this moment     |
+                                      return this one
+                     
+          
+          fig 2:
+          ----a--------a--------a-------a--------
+                           |       
+                     in this moment, return nothing (unless catch-up)
+        */
+        const returnValue: {
+            param: AutomatableSynthParam,
+            point: AutomationPoint,
+        }[] = [];
+
+        lanes.value.forEach((lane) => {
+            const param = lane.targetParameter;
+            if (!param) return;
+            if (!lane.content.length) return;
+            const selectedIndexes = filterMap(lane.content, (point, index) => {
+                if (point.time >= frameStartTime && point.time < frameEndTime) {
+                    return index + 1;
+                }
+                return false;
+            })
+            if (catchUp) {
+                const prevPointIndex = selectedIndexes[0] - 1;
+                if (prevPointIndex >= 0) {
+                    selectedIndexes.unshift(prevPointIndex);
+                }
+            }
+
+            returnValue.push(...filterMap(selectedIndexes, (index) => {
+                const point = lane.content[index];
+                if (!point) return false;
+                return {
+                    param,
+                    point,
+                }
+            }))
+        });
+        return returnValue;
+    }
+
+
+    /**
+     * 
+     * Get automation lanes around a score time; in other words; the last point before the given time,
+     * and the first point after the given time.
+     * 
+     *--------a------x------------a--a--------
+     *        |      |            |       
+     *        |  for this moment  |
+     *        |                   |
+     *        -----return these ---
+     * 
+     *--------a------a------------a--a--------
+     *               |                   
+     *           for this moment,
+     *           return it
+     *                            
+     *         
+     * 
+     **/
+    const getAutomationPointsAroundTime = (time: number, fromLanes: AutomationLane[] = [...lanes.value.values()]) => {
+        let returnValue: {
+            param: AutomatableSynthParam,
+            point: AutomationPoint,
+        }[] = [];
+
+        fromLanes.forEach((lane) => {
+            const param = lane.targetParameter;
+            if (!param) return;
+            if (!lane.content.length) return;
+            // bizarrely, the foreach iterator is leading to very different 
+            // results than a loop
+            let broken = false;
+            let prevPoint: AutomationPoint | undefined = undefined;
+            lane.content.forEach((point, index) => {
+                if (broken) return;
+                if (point.time < time) {
+                    prevPoint = point;
+                } else {
+                    if (point.time === time) {
+                        returnValue.push({
+                            param,
+                            point,
+                        })
+                        broken = true;
+                    } else {
+                        if (prevPoint) {
+                            returnValue.push({
+                                param,
+                                point: prevPoint,
+                            })
+                        }
+                        returnValue.push({
+                            param,
+                            point,
+                        })
+                        broken = true;
+                    }
+                    return false;
+                }
+            });
+
+        });
+        return returnValue;
+    }
+
     return {
         lanes,
         addAutomationLane,
@@ -163,6 +298,9 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         isParameterAutomated,
         forEachAutomationPoint,
         deleteAutomationPoint,
+        getValueBetweenTwoPoints,
+        getAutomationsForTime,
+        getAutomationPointsAroundTime,
         clear,
     };
 });
