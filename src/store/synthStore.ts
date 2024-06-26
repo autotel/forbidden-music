@@ -34,6 +34,7 @@ import { abbreviate } from '../functions/abbreviate';
 import { PatcheableTrait, PatcheableType } from '../dataTypes/PatcheableTrait';
 import { PatcheableSynth } from '../synth/PatcheableSynth';
 import { access } from 'fs';
+import { SimpleDelayEffect } from '../synth/SimpleDelayEffect';
 
 type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
@@ -163,6 +164,7 @@ const getSynthConstructors = (
     addAvailableSynth(SineCluster);
     addAvailableSynth(SineSynth);
 
+    addAvailableSynth(SimpleDelayEffect);
     addAvailableSynth(RingModEffect);
     addAvailableSynth(AutoMaximizerEffect);
 

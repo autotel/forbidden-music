@@ -37,6 +37,7 @@ const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<Eve
             source.connect(output);
             source.playbackRate.value = frequency / synth.inherentSampleFrequency;
             source.start(absoluteStartTime);
+            output.gain.value = evtParams.velocity;
             return this;
         },
         scheduleEnd(absoluteStopTime?: number) {

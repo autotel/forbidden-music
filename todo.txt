@@ -1,8 +1,7 @@
 # Piano roll to-do
 
 ## bugs
-	when clearing project or changing project, bottom pane focuses on no-longer existing synth chain
-	Automations are not loaded 
+	undoing leads to laggy everything. Probable synths instance leak 
 ## Basics & architecture
 	tool to make sure sounds are on tune
 	make it possible to set the base frequency upon which octaves are calculated
