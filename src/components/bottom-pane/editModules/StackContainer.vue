@@ -73,7 +73,7 @@ const handleRemoveClick = () => {
 .chain-container {
     position: relative;
     display: flex;
-    top: -0.6em;
+    top: -0.55em;
     gap: 0.4em;
 }
 
