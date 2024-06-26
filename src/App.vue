@@ -26,7 +26,7 @@ import RightPane from './right-pane/RightPane.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 import { useHistoryStore } from './store/historyStore';
-import { useLibraryStore } from './store/libraryStore';
+import { AUTOSAVE_PROJECTNAME, useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
@@ -195,13 +195,11 @@ onMounted(() => {
         });
     }
     let autosaveCall = () => {
-        if (project.name === "unnamed (autosave)") {
-            libraryStore.saveCurrent();
-        }
+        libraryStore.autoSave();
     }
     tryLoadStart();
     if (autosaveTimeout.value) clearInterval(autosaveTimeout.value);
-    autosaveTimeout.value = setInterval(autosaveCall, 1000);
+    autosaveTimeout.value = setInterval(autosaveCall, 10000);
 
     mainInteraction.addEventListener(window, 'keydown', keyDownListener);
     mainInteraction.addEventListener(window, 'keyup', keyUpListener);

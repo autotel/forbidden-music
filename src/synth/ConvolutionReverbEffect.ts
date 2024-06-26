@@ -43,22 +43,23 @@ export class ConvolutionReverbEffect extends AudioModule {
         this.output = this.audioContext.createGain();
         this.input = this.audioContext.createGain();
         const dry = this.audioContext.createGain();
-        const wet = this.audioContext.createGain();
+        const send = this.audioContext.createGain();
         this.input.connect(dry);
         dry.connect(this.output);
-        this.input.connect(wet);
-        wet.gain.value = 0;
+        this.input.connect(send);
+        send.gain.value = 0;
         dry.gain.value = 1;
 
         const changeImplulseResponseUrl = async (path: string) => {
             if (!this.alreadyBuiltReverbs[path]) {
                 this.alreadyBuiltReverbs[path] = await createConvolutionReverb(path, this.audioContext);
             }
-            wet.disconnect();
+            send.disconnect();
             const alreadyBuilt = this.alreadyBuiltReverbs[path];
-            wet.connect(alreadyBuilt.input);
+            send.connect(alreadyBuilt.input);
             alreadyBuilt.output.connect(this.output);
         }
+
         const changeImpulseResponse = async (sampleDefinition:ImpulseResponseSampleDefinition) => {
             await changeImplulseResponseUrl(sampleDefinition.path);
             this.credits = sampleDefinition.readme;
@@ -84,8 +85,8 @@ export class ConvolutionReverbEffect extends AudioModule {
             },
             exportable: true,
         }
-        const wetParam =  createAutomatableAudioNodeParam(
-            wet.gain, 'Wet level', 0, 1
+        const sendParam =  createAutomatableAudioNodeParam(
+            send.gain, 'Send level', 0, 1
         );
         const dryParam: NumberSynthParam = createAutomatableAudioNodeParam(
             dry.gain, 'Dry level', 0, 1
@@ -93,7 +94,7 @@ export class ConvolutionReverbEffect extends AudioModule {
 
         this.params = [
             sampleChoiceDefinition,
-            wetParam,
+            sendParam,
             dryParam,
         ];
 

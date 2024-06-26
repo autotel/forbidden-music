@@ -9,8 +9,10 @@ import { useProjectStore } from './projectStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 import { SynthParamStored } from '../synth/interfaces/SynthParam';
 import { SynthChannelsDefinition } from './synthStore';
-import { L } from '@tauri-apps/api/event-41a9edf5';
+import { A } from '@tauri-apps/api/path-c062430b';
 
+export const AUTOSAVE_BACKUP_PROJECTNAME = "(autosave) Backup";
+export const AUTOSAVE_PROJECTNAME = "(autosave) Unnamed";
 
 const migrators = {
     "0.0.0": (obj: any) => {
@@ -59,7 +61,7 @@ const migrators = {
         return newObj;
     },
     "0.4.0": (obj: LibraryItem_0_4_0): LibraryItem_0_5_0 => {
-        const newChans:SynthChannelsDefinition = obj.channels.map(({ type, params }) => (
+        const newChans: SynthChannelsDefinition = obj.channels.map(({ type, params }) => (
             [{ type, params }]
         ));
         const newObj = {
@@ -162,6 +164,30 @@ export const useLibraryStore = defineStore("library store", () => {
         udpateItemsList();
     }
 
+    const autoSave = () => {
+
+        if (project.name === AUTOSAVE_PROJECTNAME) {
+            // thus saved as '(backup) Unnamed'
+            saveCurrent();
+        } else {
+            try {
+                const datePart = new Date().toISOString().split('T')[0]
+                const newName = `(autosave) ${datePart}`;
+                saveToLocalStorage(
+                    newName,
+                    {
+                        ...project.getProjectDefintion(),
+                        name: newName,
+                    }
+                );
+            } catch (e) {
+                console.error("could not save", e);
+                errorMessage.value = String(e);
+            }
+            udpateItemsList();
+        }
+
+    }
 
     const udpateItemsList = () => {
         filenamesList.value = listLocalStorageFiles();
@@ -187,7 +213,14 @@ export const useLibraryStore = defineStore("library store", () => {
         inSyncWithStorage.value = false;
     };
 
-    watch([project], () => inSyncWithStorage.value = false);
+    watch([
+        project.lanes,
+        project.loops,
+        // project.snaps, // causes unsync on mouse move over viewport
+        ()=>project.snaps.values,
+        ()=>project.name,
+        project.synths,
+    ], () => inSyncWithStorage.value = false);
 
     watchEffect(() => {
         if (errorMessage.value) {
@@ -217,7 +250,7 @@ export const useLibraryStore = defineStore("library store", () => {
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
-            console.log({iobj});
+            console.log({ iobj });
             project.setFromProjectDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             // assuming iobj is an array of notes
@@ -238,6 +271,7 @@ export const useLibraryStore = defineStore("library store", () => {
         saveToNewLibraryItem,
         loadFromLibraryItem,
         saveCurrent,
+        autoSave,
         deleteItemNamed,
 
         importJSONFileList,

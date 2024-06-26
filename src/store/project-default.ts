@@ -1,8 +1,9 @@
 import { LIBRARY_VERSION, LibraryItem } from "../dataTypes/LibraryItem";
+import { AUTOSAVE_PROJECTNAME } from "./libraryStore";
 
 
 export default {
-    "name": "unnamed (autosave)",
+    "name": AUTOSAVE_PROJECTNAME,
     "notes": [
         {
             "octave": 5,

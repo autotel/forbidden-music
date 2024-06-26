@@ -13,13 +13,13 @@ import { useLayerStore } from './layerStore';
 import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
 import { usePlaybackStore } from './playbackStore';
 import { useSnapStore } from './snapStore';
-import { normalizeLibraryItem } from './libraryStore';
+import { AUTOSAVE_PROJECTNAME, normalizeLibraryItem } from './libraryStore';
 import { useSynthStore } from './synthStore';
 import demoProject from './project-default';
 import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
 
 const emptyProjectDefinition: LibraryItem = {
-    name: "unnamed (autosave)",
+    name: AUTOSAVE_PROJECTNAME,
     notes: [],
     loops: [],
     lanes: [],
@@ -38,9 +38,9 @@ export const useProjectStore = defineStore("current project", () => {
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const playback = usePlaybackStore();
-    const synth = useSynthStore();
+    const synths = useSynthStore();
     const audioContextStore = useAudioContextStore();
-    const name = ref("unnamed (autosave)" as string);
+    const name = ref(AUTOSAVE_PROJECTNAME);
 
     const notes = ref<Note[]>([]);
     const loops = ref<Loop[]>([]);
@@ -153,8 +153,8 @@ export const useProjectStore = defineStore("current project", () => {
             version: LIBRARY_VERSION,
         } as LibraryItem;
         ret.version = LIBRARY_VERSION;
-        if (synth.channels.children.length) {
-            ret.channels = synth.getCurrentChannelsDefinition();
+        if (synths.channels.children.length) {
+            ret.channels = synths.getCurrentChannelsDefinition();
         }
         return ret;
     }
@@ -195,7 +195,7 @@ export const useProjectStore = defineStore("current project", () => {
 
         (async () => {
             await audioContextStore.audioContextPromise;
-            synth.applyChannelsDefinition(pDef.channels);
+            synths.applyChannelsDefinition(pDef.channels);
             lanes.applyAutomationLaneDefs(pDef.lanes);
         })();
 
@@ -289,7 +289,7 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     return {
-        notes, loops, lanes,
+        notes, loops, lanes, synths,
         append,
         sortLoops,
         loadEmptyProjectDefinition,
