@@ -4,10 +4,11 @@ import { useSynthStore } from "./synthStore";
 import { useThrottleFn } from "@vueuse/core";
 import { useProjectStore } from "./projectStore";
 import { useLibraryStore } from "./libraryStore";
+import { SynthChain } from "../dataStructures/SynthChain";
 
 export const useBottomPaneStateStore = defineStore("bottom pane state store", () => {
     const synthStore = useSynthStore();
-    const activeLayerChannel = ref(synthStore.channels.children[0] ?? null);
+    const activeLayerChannel = ref<SynthChain | null>(synthStore.channels.children[0] ?? null);
     const project = useProjectStore();
     const libraryStore = useLibraryStore();
     const focusNewChannel = useThrottleFn(() => {

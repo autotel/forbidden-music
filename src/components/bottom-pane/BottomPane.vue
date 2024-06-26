@@ -23,14 +23,22 @@ const audioContextStore = useAudioContextStore();
 const synthChain = computed<SynthChain | null>(() => bottomPaneState.activeLayerChannel);
 const thereIsAudio = ref(false);
 
-watch(()=>synth.channels, (newVal, oldVal) => {
+watch(()=>synth.channels.children, (newVal, oldVal) => {
     console.log('synth.channels changed', newVal, oldVal);
-    bottomPaneState.activeLayerChannel = synth.channels.children[0] ?? null;
+    hardForcePaneRefresh();
 });
 
-watch (()=>bottomPaneState.activeLayerChannel?.children.length, (newVal, oldVal) => {
-    console.log('bottomPaneState.activeLayerChannel.chain changed', newVal, oldVal);
-});
+// watch (()=>bottomPaneState.activeLayerChannel?.children, (newVal, oldVal) => {
+//     console.log('bottomPaneState.activeLayerChannel.chain changed', newVal, oldVal);
+//     hardForcePaneRefresh();
+// });
+
+const hardForcePaneRefresh = () => {
+    bottomPaneState.activeLayerChannel = null;
+    setTimeout(() => {
+        bottomPaneState.activeLayerChannel = synth.channels.children[0] ?? null;
+    }, 10);
+};
 
 onMounted(async() => {
     await audioContextStore.audioContextPromise;
