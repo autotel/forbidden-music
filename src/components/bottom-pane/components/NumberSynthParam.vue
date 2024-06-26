@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { ComputedRef, Ref, computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '../../../components/Tooltip.vue';
 import { abbreviate } from '../../../functions/abbreviate';
 import { NumberSynthParam } from '../../../synth/interfaces/SynthParam';
@@ -11,6 +11,7 @@ import { usePlaybackStore } from '../../../store/playbackStore';
 import { AutomationLane } from '../../../dataTypes/AutomationLane';
 import { automationPoint } from '../../../dataTypes/AutomationPoint';
 import { useProjectStore } from '../../../store/projectStore';
+import { useThrottleFn } from '@vueuse/core';
 const props = defineProps<{
     param: NumberSynthParam
 }>();
@@ -105,12 +106,7 @@ watch(() => props.param.value, () => {
     paramValueToLocalValue();
     emit('update');
 });
-// setInterval(() => {
-//     console.log("start interval", props.param.displayName);
-//     paramValueToLocalValue();
-//     emit('update');
 
-// }, 200)
 const mouseWheeled = (e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -144,8 +140,9 @@ const clamp01 = (val: number) => {
     }
     return val;
 }
+type MiniVec = { x: number, y: number };
 
-const mouseDragDelta = ({ x, y }: { x: number, y: number }) => {
+const mouseDragDelta = ({ x, y }: MiniVec) => {
     const prevLocalValue = localValue.value;
     let val = localValue.value - (y / ww);
     val = clamp01(val);
@@ -153,13 +150,7 @@ const mouseDragDelta = ({ x, y }: { x: number, y: number }) => {
         const valDelta = val - prevLocalValue;
         const automationPointsAround = getAutomationPointsAroundCurrentTime();
         if (automationPointsAround.length == 0) {
-            const np = automationPoint({
-                time: playback.currentScoreTime,
-                value: prevLocalValue,
-                layer: tool.currentLayerNumber,
-            })
-            automated.value.content.push(np);
-            automated.value.content.sort((a, b) => a.time - b.time);
+            addAutomationPointOnDrag(prevLocalValue, automated.value);
         }
         automationPointsAround.forEach(({ point }) => {
             point.value = clamp01(point.value + valDelta);
@@ -170,6 +161,17 @@ const mouseDragDelta = ({ x, y }: { x: number, y: number }) => {
     }
     localValueToParamValue();
 }
+
+const addAutomationPointOnDrag = useThrottleFn((prevLocalValue: number, automated: AutomationLane) => {
+    const isPlaying = playback.playing;
+    const np = automationPoint({
+        time: playback.currentScoreTime + (isPlaying ? 0.7 : 0),
+        value: prevLocalValue,
+        layer: tool.currentLayerNumber,
+    })
+    automated.content.push(np);
+    automated.content.sort((a, b) => a.time - b.time);
+}, 500);
 
 const windowMouseMove = (e: MouseEvent) => {
     if (!dragging.value) return;
