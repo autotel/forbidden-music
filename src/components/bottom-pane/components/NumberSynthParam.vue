@@ -165,6 +165,7 @@ const mouseDragDelta = ({ x, y }: MiniVec) => {
 const addAutomationPointOnDrag = useThrottleFn((prevLocalValue: number, automated: AutomationLane) => {
     const isPlaying = playback.playing;
     const np = automationPoint({
+        // if playing, create it in the future, otherwise the knob becomes unresponsive
         time: playback.currentScoreTime + (isPlaying ? 0.7 : 0),
         value: prevLocalValue,
         layer: tool.currentLayerNumber,
