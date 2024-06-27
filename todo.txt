@@ -1,7 +1,6 @@
 # Piano roll to-do
 
 ## bugs
-	undoing leads to laggy everything. Probable synths instance leak
 	it doesnt' take a lot to get the timing to break 
 ## Basics & architecture
 	tool to make sure sounds are on tune
