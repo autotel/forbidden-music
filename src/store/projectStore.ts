@@ -159,7 +159,7 @@ export const useProjectStore = defineStore("current project", () => {
         return ret;
     }
 
-    const setFromProjectDefinition = (pDef: LibraryItem) => {
+    const setFromProjectDefinition = (pDef: LibraryItem, recycleSynths = false) => {
         name.value = pDef.name;
         created.value = pDef.created;
         edited.value = pDef.edited;
@@ -195,7 +195,7 @@ export const useProjectStore = defineStore("current project", () => {
 
         (async () => {
             await audioContextStore.audioContextPromise;
-            synths.applyChannelsDefinition(pDef.channels);
+            synths.applyChannelsDefinition(pDef.channels, recycleSynths);
             lanes.applyAutomationLaneDefs(pDef.lanes);
         })();
 

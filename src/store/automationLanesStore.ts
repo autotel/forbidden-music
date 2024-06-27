@@ -56,6 +56,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         newLane.content = automationPoints;
         return newLane;
     }
+    
     const getOrCreateAutomationLaneForParameter = (targetParameter: AutomatableSynthParam) => {
         if (!isAutomatable(targetParameter)) {
             return undefined;
@@ -81,10 +82,12 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         }
         return lane;
     }
+
     const isParameterAutomated = (targetParameter: SynthParam) => {
         let lane = lanes.value.get(targetParameter)
         return lane !== undefined && lane.content.length > 0;
     }
+
     const castToSynthParam = (targetParameter: string | SynthParam | undefined): SynthParam | undefined => {
         if (typeof targetParameter === 'string') {
             console.group('castToSynthParam');
@@ -98,6 +101,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         console.warn('could not cast to synth param', targetParameter);
         return undefined;
     }
+
     const applyAutomationLaneDef = (automationLaneDef: AutomationLaneDef) => {
         console.log("applyLaneDef", automationLaneDef);
         let targetParameter = castToSynthParam(automationLaneDef.targetParameter);
@@ -111,7 +115,17 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             return
         }
         const automationPoints = automationLaneDef.content.map(automationPoint)
-        addAutomationLane(automatable, automationPoints);
+        
+        let existingAutomationLane = lanes.value.get(targetParameter);
+
+        if (existingAutomationLane) {
+            // this branch will happen on undo/redo, reopening the same project
+            existingAutomationLane.content = automationPoints;
+            return existingAutomationLane;
+        } else {
+            // this branch will happen on opening a new project
+            addAutomationLane(automatable, automationPoints);
+        }
     }
 
     const getValueBetweenTwoPoints = (a: AutomationPoint, b: AutomationPoint, time: number) => {

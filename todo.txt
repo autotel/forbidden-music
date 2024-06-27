@@ -10,9 +10,11 @@
 	mute layers
 	better mechanisms to catch up if playback started mid note/automation 
 		and if note begins before & ends after loop, to keep it playing as if it were midi
+	Making a loop "copy to the right" should affect automation points too
 ## Need refactor
 	'credits' modal & 'monomode interaction' 
 	automation
+	remove "isready" prop from synth, because it's not used
 ## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)

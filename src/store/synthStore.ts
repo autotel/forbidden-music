@@ -271,33 +271,58 @@ export const useSynthStore = defineStore("synthesizers", () => {
         });
         return abbreviated;
     }
-    const applyChainDefinition = (chain: SynthChain, definition: SynthChainDefinition) => {
+    const applyChainDefinition = (chain: SynthChain, definition: SynthChainDefinition, recycle = false) => {
         console.log("applying chain definition", definition);
         definition.forEach((chainStep: SynthChainStepDefinition, i) => {
             if (Array.isArray(chainStep)) {
                 // it's a stack
+                let stackInstance: SynthStack | undefined = undefined;
+                if (recycle && chain.children[i] instanceof SynthStack) {
+                    stackInstance = chain.children[i] as SynthStack;
+                    console.log("recycling", stackInstance.name);
+                }
                 const stackDef: SynthStackDefinition = chainStep;
-                const newStack = new SynthStack(audioContextStore.audioContext);
-                applyStackDefinition(newStack, stackDef);
-                chain.addAudioModule(i, newStack);
+                if (!stackInstance) {
+                    if (recycle) console.warn("recyclable stack not found in ", chain.children, "step", i, "described as", chainStep);
+                    stackInstance = new SynthStack(audioContextStore.audioContext);
+                    chain.addAudioModule(i, stackInstance);
+                }
+                applyStackDefinition(stackInstance, stackDef, recycle);
             } else {
                 // It's an audio module
-                let synthConstructor = synthConstructorWrappers.value.find((s) => s.name === chainStep.type);
-                if (!synthConstructor) {
-                    const regex = new RegExp(chainStep.type.slice(0, 3));
-                    const loosely = synthConstructorWrappers.value.find((s) => s.name.match(regex));
-                    if (loosely) {
-                        console.warn("synth named", chainStep.type, "not found, looking for similarly named: ", loosely?.name);
-                        synthConstructor = loosely;
+                let synth: AdmissibleSynthType | undefined = undefined;
+
+                if (recycle && chain.children[i] && chain.children[i].name === chainStep.type) {
+                    synth = chain.children[i] as AudioModule;
+                    console.log("recycling", synth.name);
+                }
+
+                if (!synth) {
+                    if (recycle) console.warn(
+                        "recyclable synth not found in ", [...chain.children],
+                        "step", i,
+                        "described as", chainStep,
+                        "not matching", chain.children[i]?.name, chainStep.type
+                    );
+                    let synthConstructor = synthConstructorWrappers.value.find((s) => s.name === chainStep.type);
+                    if (!synthConstructor) {
+                        const regex = new RegExp(chainStep.type.slice(0, 3));
+                        const loosely = synthConstructorWrappers.value.find((s) => s.name.match(regex));
+                        if (loosely) {
+                            console.warn("synth named", chainStep.type, "not found, looking for similarly named: ", loosely?.name);
+                            synthConstructor = loosely;
+                        }
                     }
+                    if (!synthConstructor) {
+                        console.warn("synth not found", chainStep.type);
+                        synthConstructor = synthConstructorWrappers.value[0];
+                    }
+                    synth = instanceAudioModule(synthConstructor);
+                    chain.addAudioModule(i, synth);
                 }
-                if (!synthConstructor) {
-                    console.warn("synth not found", chainStep.type);
-                    synthConstructor = synthConstructorWrappers.value[0];
-                }
-                const synth = instanceAudioModule(synthConstructor);
-                chain.addAudioModule(i, synth);
+
                 const paramsDef = chainStep.params;
+                
                 if (synth instanceof AudioModule && paramsDef) {
                     for (let paramDef of paramsDef) {
                         const synthParam = findAudioModuleParamByName(synth, paramDef.displayName || "");
@@ -312,23 +337,43 @@ export const useSynthStore = defineStore("synthesizers", () => {
         });
     }
 
-    const applyStackDefinition = (stack: SynthStack, definition: SynthStackDefinition) => {
-        definition.forEach((chainDef: SynthChainDefinition) => {
-            const newChain = stack.addChain();
-            applyChainDefinition(newChain, chainDef);
+    const applyStackDefinition = (stack: SynthStack, definition: SynthStackDefinition, recycle = false) => {
+        // TODO: replace foreach with for loop
+        definition.forEach((chainDef: SynthChainDefinition, i) => {
+            let chainInstance: SynthChain | undefined = undefined;
+            if (recycle && stack.children[i] instanceof SynthChain) {
+                chainInstance = stack.children[i] as SynthChain;
+                console.log("recycling", chainInstance.name);
+            }
+            if (!chainInstance) {
+                if (recycle) console.warn("recyclable chain not found in ", stack.children, "step", i, "described as", chainDef);
+                chainInstance = stack.addChain();
+            }
+            applyChainDefinition(chainInstance, chainDef, recycle);
         });
     }
 
-    const applyChannelsDefinition = (inChannels: SynthChannelsDefinition, addToCurrent = false) => {
-        console.log("applying channels definition", inChannels);
-        if (!addToCurrent) {
+    const applyChannelsDefinition = (inChannels: SynthChannelsDefinition, recycle = false) => {
+        console.group("applying channels definition", inChannels);
+        if (recycle) {
+            console.log("recycling synths");
+        } else {
             channels.value.empty();
         }
-        inChannels.forEach((chainDef) => {
+        inChannels.forEach((chainDef, i) => {
             console.log("loading channel chain", chainDef);
-            const newChain = channels.value.addChain();
-            applyChainDefinition(newChain, chainDef);
+            let chainInstance: SynthChain | undefined = undefined;
+            if (recycle && channels.value.children[i] instanceof SynthChain) {
+                chainInstance = channels.value.children[i] as SynthChain;
+                console.log("recycling", chainInstance.name);
+            }
+            if (!chainInstance) {
+                if (recycle) console.warn("recyclable chain not found in ", channels.value.children, "step", i, "described as", chainDef);
+                chainInstance = channels.value.addChain();
+            }
+            applyChainDefinition(chainInstance, chainDef, recycle);
         });
+        console.groupEnd();
     }
 
     const getDefinitionForAudioModule = (synth: AudioModule): AudioModuleDefinition => {
