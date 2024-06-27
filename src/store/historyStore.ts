@@ -10,7 +10,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
 
     const projectStateZipped = ref<string | null>(null);
 
-    const unpauseAltiro = (t=1) => {
+    const unpauseRightAway = (t=1) => {
         if(currentResumeTimeout.value) {
             clearTimeout(currentResumeTimeout.value);
         }
@@ -30,7 +30,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
         nextTick(() => {
             undoApplicator.resume();
         });
-        unpauseAltiro(500);
+        unpauseRightAway(500);
     });
 
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {
@@ -47,7 +47,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
             console.error("undo history seems to be corrupted");
             console.error(e);
         }
-        unpauseAltiro();
+        unpauseRightAway();
     });
 
     const { 

@@ -35,6 +35,7 @@ import { PatcheableTrait, PatcheableType } from '../dataTypes/PatcheableTrait';
 import { PatcheableSynth } from '../synth/PatcheableSynth';
 import { access } from 'fs';
 import { SimpleDelayEffect } from '../synth/SimpleDelayEffect';
+import { useAutomationLaneStore } from './automationLanesStore';
 
 type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
@@ -187,7 +188,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     const exclusives = useExclusiveContentsStore();
     const audioContextStore = useAudioContextStore();
     const masterEffectsStore = useMasterEffectsStore();
-
+    const automationStore = useAutomationLaneStore();
     const synthConstructorWrappers = ref<SynthConstructorWrapper[]>(getSynthConstructors(
         audioContextStore.audioContext,
         exclusives.enabled
@@ -334,8 +335,9 @@ export const useSynthStore = defineStore("synthesizers", () => {
         let params = synth.params.filter((param: SynthParam) => {
             return param.exportable;
         }).map((param: SynthParam) => {
+            const isAutomated = automationStore.isParameterAutomated(param);
             const ret = {
-                value: param.value,
+                value: isAutomated ? 0 : param.value,
             } as SynthParamStored
             if (param.displayName) {
                 ret.displayName = param.displayName;
