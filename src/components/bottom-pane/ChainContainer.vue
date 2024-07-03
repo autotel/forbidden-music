@@ -9,6 +9,7 @@ import { PatcheableSynth } from '../../synth/PatcheableSynth';
 import { ThingyScoreFx } from '../../synth/scoreEffects/Thingy';
 import ModuleContainer from './components/ModuleContainer.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
+import AutoMaximizerContainer from './editModules/AutoMaximizerContainer.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
@@ -18,6 +19,7 @@ import StackContainer from './editModules/StackContainer.vue';
 import { AudioModule } from '../../synth/interfaces/AudioModule';
 import { PatcheableSynthVoice, Synth } from '../../synth/super/Synth';
 import { FourierSynth } from '../../synth/FourierSynth';
+import { AutoMaximizerEffect } from '../../synth/AutoMaximizerEffect';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -73,6 +75,7 @@ const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is Patche
                 <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
                 <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
+                <AutoMaximizerContainer v-else-if="audioModule instanceof AutoMaximizerEffect" :audioModule="audioModule" />
                 <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
                 <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
                 <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->

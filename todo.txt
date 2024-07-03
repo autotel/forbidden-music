@@ -12,7 +12,7 @@
 	Making a loop "copy to the right" should affect automation points too
 ## Need refactor
 	'credits' modal & 'monomode interaction' 
-	automation
+	automation - current methods for listing points while playing is suboptimal
 	remove "isready" prop from synth, because it's not used
 ## Bottom pane version
 	automation activation on bottompane

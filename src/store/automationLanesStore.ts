@@ -11,8 +11,6 @@ import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
 import { AudioModule } from "../synth/interfaces/AudioModule";
 import { MAX_RECURSION } from "../dataStructures/SynthStack";
 
-
-
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const lanes = ref<Map<SynthParam, AutomationLane>>(new Map());
     const synth = useSynthStore();
@@ -56,7 +54,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         newLane.content = automationPoints;
         return newLane;
     }
-    
+
     const getOrCreateAutomationLaneForParameter = (targetParameter: AutomatableSynthParam) => {
         if (!isAutomatable(targetParameter)) {
             return undefined;
@@ -115,7 +113,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
             return
         }
         const automationPoints = automationLaneDef.content.map(automationPoint)
-        
+
         let existingAutomationLane = lanes.value.get(targetParameter);
 
         if (existingAutomationLane) {
@@ -263,8 +261,6 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         });
         return returnValue;
     }
-
-
     /**
      * 
      * Get automation lanes around a score time; in other words; the last point before the given time,
@@ -284,50 +280,8 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
      *         
      * 
      **/
-    const getAutomationPointsAroundTime = (time: number, fromLanes: AutomationLane[] = [...lanes.value.values()]) => {
-        let returnValue: {
-            param: AutomatableSynthParam,
-            point: AutomationPoint,
-        }[] = [];
-
-        fromLanes.forEach((lane) => {
-            const param = lane.targetParameter;
-            if (!param) return;
-            if (!lane.content.length) return;
-            // bizarrely, the foreach iterator is leading to very different 
-            // results than a loop
-            let broken = false;
-            let prevPoint: AutomationPoint | undefined = undefined;
-            lane.content.forEach((point, index) => {
-                if (broken) return;
-                if (point.time < time) {
-                    prevPoint = point;
-                } else {
-                    if (point.time === time) {
-                        returnValue.push({
-                            param,
-                            point,
-                        })
-                        broken = true;
-                    } else {
-                        if (prevPoint) {
-                            returnValue.push({
-                                param,
-                                point: prevPoint,
-                            })
-                        }
-                        returnValue.push({
-                            param,
-                            point,
-                        })
-                        broken = true;
-                    }
-                    return false;
-                }
-            });
-
-        });
-        return returnValue;
+    const getAutomationPointsAroundTime = (time: number, fromLanes: AutomationLane[] = [...lanes.value.values()]):AutomationPointsList => {
+        return getAutomationPointsAroundTime__version_2(time, fromLanes);
     }
 
     return {
@@ -346,3 +300,100 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         clear,
     };
 });
+
+type AutomationPointsList = {
+    param: AutomatableSynthParam,
+    point: AutomationPoint,
+}[]
+
+const getAutomationPointsAroundTime__version_1 = (time: number, fromLanes: AutomationLane[]) => {
+    console.time('__version_1');
+    let returnValue: AutomationPointsList = [];
+    const lanesValue = fromLanes
+    fromLanes.forEach((lane) => {
+        const param = lane.targetParameter;
+        if (!param) return;
+        if (!lane.content.length) return;
+
+        let broken = false;
+        let prevPoint: AutomationPoint | undefined = undefined;
+        lane.content.forEach((point, i) => {
+            if (broken) return;
+            if (point.time < time) {
+                prevPoint = point;
+            } else {
+                if (point.time === time) {
+                    returnValue.push({
+                        param,
+                        point,
+                    })
+                    broken = true;
+                } else {
+                    if (prevPoint) {
+                        returnValue.push({
+                            param,
+                            point: prevPoint,
+                        })
+                    }
+                    returnValue.push({
+                        param,
+                        point,
+                    })
+                    broken = true;
+                }
+                return false;
+            }
+        });
+
+    });
+    console.timeEnd('__version_1');
+    return returnValue;
+}
+const getAutomationPointsAroundTime__version_2 = (
+    time: number, 
+    fromLanes: AutomationLane[]
+):AutomationPointsList => {
+    console.time('__version_2');
+    let returnValue: AutomationPointsList = [];
+    const lanesValue = fromLanes;
+    lanesIteration: for (let lane of lanesValue) {
+        const param = lane.targetParameter;
+        if (!param) return [];
+        if (!lane.content.length) return [];
+        const contents = lane.content;
+
+        let broken = false;
+        let prevPoint: AutomationPoint | undefined = undefined;
+        pointsIteration: for (let i = 0; i < contents.length; i++) {
+            const point = contents[i];
+            if (point.time < time) {
+                prevPoint = point;
+            } else {
+                if (point.time === time) {
+                    returnValue.push({
+                        param,
+                        point,
+                    })
+                    break pointsIteration;
+                } else {
+                    if (prevPoint) {
+                        returnValue.push({
+                            param,
+                            point: prevPoint,
+                        })
+                    }
+                    returnValue.push({
+                        param,
+                        point,
+                    })
+                    break pointsIteration;
+                }
+                break pointsIteration;
+            }
+        }
+
+    }
+    console.timeEnd('__version_2');
+    return returnValue;
+}
+

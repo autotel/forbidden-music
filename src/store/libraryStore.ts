@@ -4,12 +4,11 @@ import { nextTick, ref, watch, watchEffect } from 'vue';
 import { LIBRARY_VERSION, LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0, LibraryItem_0_5_0, OldFormatLibraryItem } from '../dataTypes/LibraryItem';
 import { Note, note } from '../dataTypes/Note';
 import nsLocalStorage from '../functions/nsLocalStorage';
+import { SynthParamStored } from '../synth/interfaces/SynthParam';
 import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
-import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
-import { SynthParamStored } from '../synth/interfaces/SynthParam';
 import { SynthChannelsDefinition } from './synthStore';
-import { A } from '@tauri-apps/api/path-c062430b';
+import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 
 export const AUTOSAVE_BACKUP_PROJECTNAME = "(autosave) Backup";
 export const AUTOSAVE_PROJECTNAME = "(autosave) Unnamed";
