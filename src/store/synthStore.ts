@@ -7,19 +7,23 @@ import { SynthChain } from '../dataStructures/SynthChain';
 import { SynthStack } from '../dataStructures/SynthStack';
 import { AutomationPoint } from '../dataTypes/AutomationPoint';
 import { Note, getFrequency } from "../dataTypes/Note";
+import { PatcheableType } from '../dataTypes/PatcheableTrait';
+import { abbreviate } from '../functions/abbreviate';
 import isDev from '../functions/isDev';
 import isTauri, { tauriObject } from '../functions/isTauri';
 import { AutoMaximizerEffect } from '../synth/AutoMaximizerEffect';
 import { ConvolutionReverbEffect } from '../synth/ConvolutionReverbEffect';
 import { ExternalMidiSynth } from '../synth/ExternalMidiSynth';
 import { FmSynth } from '../synth/FmSynth';
-import { FourierSynth, FourierVoice } from '../synth/FourierSynth';
+import { FourierSynth } from '../synth/FourierSynth';
 import { GranularSampler } from '../synth/GranularSampler';
 import { KarplusSynth } from '../synth/KarplusSynth';
 import { KickSynth } from '../synth/KickSynth';
+import { PatcheableSynth } from '../synth/PatcheableSynth';
 import { PlaceholderSynth } from '../synth/PlaceholderSynth';
 import { RingModEffect } from '../synth/RingModEffect';
 import { Sampler } from '../synth/Sampler';
+import { SimpleDelayEffect } from '../synth/SimpleDelayEffect';
 import { SineCluster } from '../synth/SineCluster';
 import { SineSynth } from '../synth/SineSynth';
 import { AudioModule, ReceivesNotes } from '../synth/interfaces/AudioModule';
@@ -27,15 +31,10 @@ import { SynthParam, SynthParamStored, isValidParam } from '../synth/interfaces/
 import { ThingyScoreFx } from '../synth/scoreEffects/Thingy';
 import { PatcheableSynthVoice, Synth } from '../synth/super/Synth';
 import { useAudioContextStore } from "./audioContextStore";
+import { useAutomationLaneStore } from './automationLanesStore';
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
-import { abbreviate } from '../functions/abbreviate';
-import { PatcheableTrait, PatcheableType } from '../dataTypes/PatcheableTrait';
-import { PatcheableSynth } from '../synth/PatcheableSynth';
-import { access } from 'fs';
-import { SimpleDelayEffect } from '../synth/SimpleDelayEffect';
-import { useAutomationLaneStore } from './automationLanesStore';
 
 type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
@@ -104,8 +103,8 @@ const getSynthConstructors = (
 
     const addAvailableSynth = <T extends any[]>(
         constr: SynthMinimalConstructor,
+        name: string,
         extraParams?: T,
-        name?: string,
         isExclusive?: boolean,
         isOnlyLocal?: boolean,
     ) => {
@@ -119,7 +118,7 @@ const getSynthConstructors = (
         );
     }
 
-    addAvailableSynth(PlaceholderSynth);
+    addAvailableSynth(PlaceholderSynth, 'PlaceholderSynth');
 
     sampleDefinitions.forEach((sampleDefinition) => {
         const ps = [
@@ -129,9 +128,9 @@ const getSynthConstructors = (
         ];
         const sampleUname = sampleNameToUName(sampleDefinition.name);
         if (sampleDefinition.type === 'one shot') {
-            addAvailableSynth(Sampler, ps, sampleUname + " Sampler", sampleDefinition.exclusive, sampleDefinition.onlyLocal);
+            addAvailableSynth(Sampler, sampleUname + " Sampler", ps, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
         } else if (sampleDefinition.type === 'granular') {
-            addAvailableSynth(GranularSampler, ps, "Granular " + sampleUname, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
+            addAvailableSynth(GranularSampler, "Granular " + sampleUname, ps, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
         } else {
             throw new Error("type not supported " + sampleDefinition.type)
         }
@@ -157,26 +156,26 @@ const getSynthConstructors = (
     console.log("impulseResponseSampleDefinitions", impulseResponseSampleDefinitions);
     addAvailableSynth(
         ConvolutionReverbEffect,
-        [impulseResponseSampleDefinitions], "Convolver", true, false
+        "Convolver", [impulseResponseSampleDefinitions], true, false
     );
 
-    addAvailableSynth(KickSynth);
-    addAvailableSynth(KarplusSynth);
-    addAvailableSynth(SineCluster);
-    addAvailableSynth(SineSynth);
+    addAvailableSynth(KickSynth, 'KickSynth');
+    addAvailableSynth(KarplusSynth, 'KarplusSynth');
+    addAvailableSynth(SineCluster, 'SineCluster');
+    addAvailableSynth(SineSynth, 'SineSynth');
 
-    addAvailableSynth(SimpleDelayEffect);
-    addAvailableSynth(RingModEffect);
-    addAvailableSynth(AutoMaximizerEffect);
+    addAvailableSynth(SimpleDelayEffect, 'SimpleDelayEffect');
+    addAvailableSynth(RingModEffect, 'RingModEffect');
+    addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect');
 
+    addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
     if (isDev()) {
         // bc. unfinished
-        addAvailableSynth(FmSynth, [], "(xp) Fm Synth", false, true);
-        addAvailableSynth(FourierSynth, [], "(xp) Fourier Synth", false, true);
-        addAvailableSynth(ThingyScoreFx, [], "(xp) Thingy Score Effect");
-        addAvailableSynth(ExternalMidiSynth, [], "(xp) External Midi Synth");
+        addAvailableSynth(FmSynth, "(xp) Fm Synth", [], false, true);
+        addAvailableSynth(ThingyScoreFx, "(xp) Thingy Score Effect");
+        addAvailableSynth(ExternalMidiSynth, "(xp) External  [],Midi Synth");
 
-        addAvailableSynth(PatcheableSynth, [], "(xp) Dyna synth", false, true);
+        addAvailableSynth(PatcheableSynth, "(xp) Dyna synth", [], false, true);
     }
     console.log("available channels", returnArray.map(s => s.name));
 
@@ -322,7 +321,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
                 }
 
                 const paramsDef = chainStep.params;
-                
+
                 if (synth instanceof AudioModule && paramsDef) {
                     for (let paramDef of paramsDef) {
                         const synthParam = findAudioModuleParamByName(synth, paramDef.displayName || "");
@@ -421,29 +420,24 @@ export const useSynthStore = defineStore("synthesizers", () => {
 
     const accessorStringToSynthParam = (accessorString?: string): SynthParam | undefined => {
         if (!accessorString) return undefined;
-        console.log("accessorStringToSynthParam", accessorString);
         const accessorParts = accessorString.split(".");
         type EitherAccessible = AudioModule | SynthChain | SynthStack | SynthParam | undefined;
         let recAccumulator = channels.value as EitherAccessible
         recursionLoop: for (let i = 0; i < accessorParts.length; i++) {
-            console.log("getting in", accessorParts[i], "from", recAccumulator);
             const part = accessorParts[i];
             const partAsNumber = parseInt(part);
-            console.log("   part", part);
             switch (true) {
                 case recAccumulator instanceof SynthChain: {
-                    console.log("   looking for " + part + " is SynthChain " + recAccumulator.name);
-                    recAccumulator = recAccumulator.children[partAsNumber] as SynthChain;
+                    recAccumulator = (recAccumulator as SynthChain).children[partAsNumber] as SynthChain;
                     break;
                 }
                 case recAccumulator instanceof SynthStack: {
-                    console.log("   looking for " + part + " is SynthStack " + recAccumulator.name);
-                    recAccumulator = recAccumulator.children[partAsNumber] as SynthChain;
+                    recAccumulator = (recAccumulator as SynthStack).children[partAsNumber] as SynthChain;
                     break;
                 }
                 case recAccumulator instanceof AudioModule || recAccumulator instanceof Synth: {
-                    console.log("   looking for " + part + " is AudioModule " + recAccumulator.name);
-                    recAccumulator = findAudioModuleParamByName(recAccumulator, part);
+                    const audioModule = recAccumulator as AudioModule;
+                    recAccumulator = findAudioModuleParamByName(audioModule, part);
                     break recursionLoop
                 }
                 default: {
@@ -457,7 +451,6 @@ export const useSynthStore = defineStore("synthesizers", () => {
                     recAccumulator = undefined;
                 }
             }
-            console.log("       results in", recAccumulator);
             if (recAccumulator === undefined) {
                 return undefined;
             }

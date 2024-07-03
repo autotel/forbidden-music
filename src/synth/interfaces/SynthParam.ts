@@ -113,7 +113,7 @@ const hasAllTheProps = (param: any, props: string[], report = true): boolean => 
 export const isValidParam = (param: unknown): param is SynthParam => {
     if (!hasAllTheProps(param, ['type', 'value'])) return false
     // @ts-ignore
-    if (!'type' in param) return false;
+    if (!('type' in param)) return false;
     // @ts-ignore
     switch (param.type) {
         case ParamType.number:
