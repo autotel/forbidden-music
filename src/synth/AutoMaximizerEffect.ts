@@ -6,19 +6,22 @@ import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
 export class AutoMaximizerEffect extends AudioModule {
     output: GainNode;
     input: GainNode;
+    lastMeasuredLevel: number = 0;
+    readyListeners: (() => void)[] = [];
+    isReady: boolean = false;
     constructor(
         audioContext: AudioContext,
     ) {
         super();
         audioContext;
-
+        
         this.output = audioContext.createGain();
         this.input = audioContext.createGain();
         this.input.connect(this.output);
         this.input.gain.value = 1;
 
         const analyzer = audioContext.createAnalyser();
-        analyzer.fftSize = 256;
+        analyzer.fftSize = 2048;
 
         let maximizer: AudioNode | undefined;
         let envelopeFollower: AudioWorkletNode | undefined;
@@ -29,15 +32,15 @@ export class AutoMaximizerEffect extends AudioModule {
             if (!maximizer) {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
-            // if (!envelopeFollower) {
-            //     envelopeFollower = await createAudioEnvelopeWorklet(audioContext);
-            // }
+            if (!envelopeFollower) {
+                envelopeFollower = await createAudioEnvelopeWorklet(audioContext);
+            }
             this.input.disconnect();
             maximizer.connect(this.output);
             this.input.connect(maximizer);
-            // this.input.connect(envelopeFollower);
+            this.input.connect(envelopeFollower);
+            envelopeFollower.connect(this.output.gain);
 
-            /**
             envelopeFollower.connect(analyzer);
             // @ts-ignore
             let increaseRateParam: AudioParam | undefined = envelopeFollower.parameters.get('increaseRate');
@@ -45,20 +48,28 @@ export class AutoMaximizerEffect extends AudioModule {
             let decreaseRateParam: AudioParam | undefined = envelopeFollower.parameters.get('decreaseRate');
             // @ts-ignore
             let levelParam: AudioParam | undefined = envelopeFollower.parameters.get('level');
+            // @ts-ignore
+            let biasParam: AudioParam | undefined = envelopeFollower.parameters.get('bias');
+            // @ts-ignore
+            let outLevelParam: AudioParam | undefined = envelopeFollower.parameters.get('outputLevel');
 
-            if(!increaseRateParam || !decreaseRateParam || !levelParam) {
+            if (!increaseRateParam || !decreaseRateParam || !levelParam || !biasParam) {
                 throw new Error('Failed to get envelope follower parameters');
             }
 
-            this.params.push(createAutomatableAudioNodeParam(increaseRateParam, 'Increase Rate', 0, 1));
-            this.params.push(createAutomatableAudioNodeParam(decreaseRateParam, 'Decrease Rate', 0, 1));
+            levelParam.value = -1;
 
+            this.params.push(createAutomatableAudioNodeParam(increaseRateParam, 'Increase Rate'));
+            this.params.push(createAutomatableAudioNodeParam(decreaseRateParam, 'Decrease Rate'));
+            this.params.push(createAutomatableAudioNodeParam(biasParam, 'Env Bias'));
+            this.params.push(createAutomatableAudioNodeParam(levelParam, 'Expansion Level'));
 
-            this.getMeasuredLevel = () => {
-                if (!levelParam) return 0;
-                return levelParam.value;
+            envelopeFollower.port.onmessage = (event) => {
+                this.lastMeasuredLevel = event.data;
             }
-                */
+            this.isReady = true;
+            this.readyListeners.forEach(listener => listener());
+            this.readyListeners = [];
         }
         this.disable = () => {
         }
@@ -72,10 +83,17 @@ export class AutoMaximizerEffect extends AudioModule {
 
     }
     getMeasuredLevel() {
-        return 0;
+        return this.lastMeasuredLevel;
     }
     getWaveform() {
         return [0];
     }
-        
+    whenReady(callback: () => void) {
+        if (this.isReady) {
+            callback();
+        } else {
+            this.readyListeners.push(callback);
+        }
+    }
+
 }

@@ -1,36 +1,36 @@
 // @ts-check
 
-// class SampleBySampleOperator {
-//   /**
-//    * @param {number} inSample
-//    */
-//   operation = (inSample) => inSample;
-// }
+class SampleBySampleOperator {
+  /**
+   * @param {number} inSample
+   */
+  operation = (inSample) => inSample;
+}
 
 
-// class LpBoxcar extends SampleBySampleOperator {
-//   /** @type {number} */
-//   k
-//   /** 
-//    * @param {number} k
-//    */
-//   constructor(k) {
-//       super();
-//       this.k = k;
-//       let mem = 0;
-//       /** 
-//        * @param {number} x
-//        * @returns {number}
-//        */
-//       this.operation = (x) => {
-//           mem = this.k * x + (1 - this.k) * mem;
-//           return mem;
-//       }
-//       this.reset = () => {
-//           mem = 0;
-//       }
-//   }
-// }
+class LpBoxcar extends SampleBySampleOperator {
+  /** @type {number} */
+  k
+  /** 
+   * @param {number} k
+   */
+  constructor(k) {
+    super();
+    this.k = k;
+    let mem = 0;
+    /** 
+     * @param {number} x
+     * @returns {number}
+     */
+    this.operation = (x) => {
+      mem = this.k * x + (1 - this.k) * mem;
+      return mem;
+    }
+    this.reset = () => {
+      mem = 0;
+    }
+  }
+}
 
 // @ts-ignore
 class AudioEnvelope extends AudioWorkletProcessor {
@@ -39,20 +39,34 @@ class AudioEnvelope extends AudioWorkletProcessor {
     return [
       {
         name: "increaseRate",
-        defaultValue: 0.001,
+        defaultValue: 1,
         minValue: 0,
         maxValue: 1,
         automationRate: "k-rate", // k = per block; a = per sample
       },
       {
         name: "decreaseRate",
-        defaultValue: 0.001,
+        defaultValue: 0.45,
         minValue: 0,
         maxValue: 1,
         automationRate: "k-rate", // k = per block; a = per sample
       },
       {
+        name: "bias",
+        defaultValue: 0,
+        minValue: -1,
+        maxValue: 1,
+        automationRate: "k-rate", // k = per block; a = per sample
+      },
+      {
         name: "level",
+        defaultValue: 1,
+        minValue: -2,
+        maxValue: 2,
+        automationRate: "k-rate", // k = per block; a = per sample
+      },
+      {
+        name: "outputLevel",
         // Prolly made-up prop.
         readOnly: true,
         defaultValue: 0,
@@ -64,15 +78,32 @@ class AudioEnvelope extends AudioWorkletProcessor {
   }
 
   measuredLevel = 0;
+  filtered = new LpBoxcar(0.1);
 
 
   process(inputs, outputs, parameters) {
+    if (sampleRate === undefined) {
+      console.warn("sampleRate is undefined, using best guess");
+      sampleRate = 44100;
+    }
 
     const increaseRateParam = parameters["increaseRate"]
-    const increaseRate = increaseRateParam[0];
+    const increaseRate = Math.pow(increaseRateParam[0], 12);
+    const oppossiteIncreaseRate = 1 - increaseRate;
 
     const decreaseRateParam = parameters["decreaseRate"]
-    const decreaseRate = decreaseRateParam[0];
+    const decreaseRate = Math.pow(decreaseRateParam[0], 12);
+    const oppossiteDecreaseRate = 1 - decreaseRate;
+
+    const levelParam = parameters["level"]
+    // TODO: calculate these when changed only?
+    const outMult = levelParam[0];
+
+    const biasParam = parameters["bias"]
+    const bias = biasParam[0];
+
+    let newMeasuredLevel = this.measuredLevel;
+    let outputLevel = 0;
 
     inputs.forEach((input, inputNo) => {
       const correlativeOutput = outputs[inputNo];
@@ -83,29 +114,38 @@ class AudioEnvelope extends AudioWorkletProcessor {
         for (let sampleNo = 0; sampleNo < sampleCount; sampleNo++) {
           const sample = channel[sampleNo];
           const level = Math.abs(sample);
-          if (level > this.measuredLevel) {
-            const diff = level - this.measuredLevel;
-            this.measuredLevel = this.measuredLevel + diff * increaseRate;
+          if (level > newMeasuredLevel) {
+            newMeasuredLevel = (oppossiteIncreaseRate * newMeasuredLevel) + (increaseRate * level);
           } else {
-            if (this.measuredLevel > 0) {
-              const diff = this.measuredLevel - level;
-              this.measuredLevel = this.measuredLevel - diff * decreaseRate;
-            }
+            newMeasuredLevel = (oppossiteDecreaseRate * newMeasuredLevel) + (decreaseRate * level);
           }
-          correlativeOutput[channelNo][sampleNo] = this.measuredLevel;
+          if (newMeasuredLevel < 0) {
+            newMeasuredLevel = 0;
+          } else if (newMeasuredLevel > 2) {
+            newMeasuredLevel = 2;
+          }
+          outputLevel = newMeasuredLevel * outMult + bias;
+          correlativeOutput[channelNo][sampleNo] = outputLevel;
         }
       })
     });
+    if (newMeasuredLevel !== this.measuredLevel) {
+      this.sendLevel();
+    }
+    this.measuredLevel = newMeasuredLevel;
 
-    const levelParam = parameters["level"];
-    levelParam[0] = this.measuredLevel;
+    const outLevelParam = parameters["outputLevel"];
+    outLevelParam[0] = outputLevel;
 
     return true
   }
   constructor(...p) {
     super(...p);
   }
+  sendLevel = () => {
+    this.port.postMessage(this.measuredLevel);
+  }
 }
 
-// @ts-ignore
+//@ts-ignore
 registerProcessor('audioEnvelope', AudioEnvelope)
