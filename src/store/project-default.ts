@@ -1,5 +1,5 @@
+import { AUTOSAVE_PROJECTNAME } from "../consts/ProjectName";
 import { LIBRARY_VERSION, LibraryItem } from "../dataTypes/LibraryItem";
-import { AUTOSAVE_PROJECTNAME } from "./libraryStore";
 
 
 export default {

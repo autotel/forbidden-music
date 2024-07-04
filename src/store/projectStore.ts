@@ -1,6 +1,7 @@
 import { compress, decompress } from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
 import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
 import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
@@ -10,13 +11,12 @@ import { ifDev } from '../functions/isDev';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
-import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
+import {  normalizeLibraryItem } from './libraryStore';
 import { usePlaybackStore } from './playbackStore';
-import { useSnapStore } from './snapStore';
-import { AUTOSAVE_PROJECTNAME, normalizeLibraryItem } from './libraryStore';
-import { useSynthStore } from './synthStore';
 import demoProject from './project-default';
-import { SynthParam, SynthParamStored } from '../synth/interfaces/SynthParam';
+import { useSnapStore } from './snapStore';
+import { useSynthStore } from './synthStore';
+import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,

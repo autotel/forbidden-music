@@ -1,5 +1,5 @@
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeAll, describe, expect, it, vitest } from 'vitest';
 import { useLibraryStore } from './libraryStore';
 import { useProjectStore } from './projectStore';
 import demoProject from './project-default';
