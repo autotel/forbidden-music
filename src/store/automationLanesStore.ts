@@ -1,15 +1,14 @@
 import { defineStore } from "pinia";
 import { ref, watchEffect } from "vue";
-import { AutomationLane, AutomationLaneDef, automationLane, automationLaneDef } from "../dataTypes/AutomationLane";
+import { AutomationLane, AutomationLaneDef, automationLane } from "../dataTypes/AutomationLane";
 import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
-import { useSynthStore } from "./synthStore";
-import { SynthParam, isValidParam } from "../synth/interfaces/SynthParam";
-import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automatable";
-import { filterMap } from "../functions/filterMap";
-import { PatcheableSynth } from "../synth/PatcheableSynth";
 import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
+import { filterMap } from "../functions/filterMap";
 import { AudioModule } from "../synth/interfaces/AudioModule";
-import { MAX_RECURSION } from "../dataStructures/SynthStack";
+import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automatable";
+import { SynthParam, isValidParam } from "../synth/interfaces/SynthParam";
+import { useSynthStore } from "./synthStore";
+import { PATCHING_MAX_DEPTH } from "../consts/PatchingMaxDepth";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const lanes = ref<Map<SynthParam, AutomationLane>>(new Map());
@@ -138,7 +137,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     const getAutomationLaneDefs = () => {
         const automationLaneDefs: AutomationLaneDef[] = [];
         const recurse = (chainStep: PatcheableTrait, accessorString: string, titleString: string, recursion = 0) => {
-            if (recursion > MAX_RECURSION) throw new Error('recursion depth exceeded')
+            if (recursion > PATCHING_MAX_DEPTH) throw new Error('recursion depth exceeded')
             if (chainStep.children) {
                 chainStep.children.forEach((child, index) => {
                     const addAccessor = accessorString ? ('.' + index) : index;

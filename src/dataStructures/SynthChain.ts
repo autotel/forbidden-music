@@ -1,12 +1,13 @@
+import { PATCHING_MAX_DEPTH } from "../consts/PatchingMaxDepth";
 import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
 import { ReceivesNotes } from "../synth/interfaces/AudioModule";
-import { MAX_RECURSION, SynthStack } from "./SynthStack";
+import { SynthStack } from "./SynthStack";
 export type ChainStep = PatcheableTrait;
 const getNoteReceivers = (
     modules: (ChainStep | SynthChain | SynthStack)[],
     recursionDepth = 0,
 ): ReceivesNotes[] => {
-    if (recursionDepth > MAX_RECURSION) {
+    if (recursionDepth > PATCHING_MAX_DEPTH) {
         throw new Error("chain recursion depth exceeded");
     }
     return modules.reduce((acc, chainItem) => {
@@ -61,7 +62,7 @@ export class SynthChain implements PatcheableTrait {
         this.chainChangedEventListeners.clear();
     }
     rewire = (recursion = 0) => {
-        if (recursion > MAX_RECURSION) {
+        if (recursion > PATCHING_MAX_DEPTH) {
             throw new Error("children recursion depth exceeded");
         }
         let prevModule: PatcheableTrait | undefined;

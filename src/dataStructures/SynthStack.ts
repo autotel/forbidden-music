@@ -1,6 +1,6 @@
+import { PATCHING_MAX_DEPTH } from "../consts/PatchingMaxDepth";
 import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
 import { SynthChain } from "./SynthChain";
-export const MAX_RECURSION = 15;
 
 export class SynthStack implements PatcheableTrait {
     name = "SynthStack";
@@ -25,7 +25,7 @@ export class SynthStack implements PatcheableTrait {
         }
     }
     rewire(recursion = 0) {
-        if (recursion > MAX_RECURSION) {
+        if (recursion > PATCHING_MAX_DEPTH) {
             throw new Error("recursion depth exceeded");
         }
         if (this.children.length === 0) {
