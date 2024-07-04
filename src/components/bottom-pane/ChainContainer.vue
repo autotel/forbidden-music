@@ -10,6 +10,7 @@ import { ThingyScoreFx } from '../../synth/scoreEffects/Thingy';
 import ModuleContainer from './components/ModuleContainer.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
 import AutoMaximizerContainer from './editModules/AutoMaximizerContainer.vue';
+import FilterContainer from './editModules/FilterContainer.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
@@ -20,6 +21,7 @@ import { AudioModule } from '../../synth/interfaces/AudioModule';
 import { PatcheableSynthVoice, Synth } from '../../synth/super/Synth';
 import { FourierSynth } from '../../synth/FourierSynth';
 import { AutoMaximizerEffect } from '../../synth/AutoMaximizerEffect';
+import { FilterEffect } from '../../synth/FilterEffect';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -76,6 +78,7 @@ const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is Patche
                 <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
                 <AutoMaximizerContainer v-else-if="audioModule instanceof AutoMaximizerEffect" :audioModule="audioModule" />
+                <FilterContainer v-else-if="audioModule instanceof FilterEffect" :audioModule="audioModule" />
                 <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
                 <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
                 <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->
@@ -98,7 +101,7 @@ const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is Patche
 
 #hrow-items>* {
     display: inline-block;
-    margin: 0.5em;
+    margin: 0.25em;
     vertical-align: top;
     flex-shrink: 0;
     flex-grow: 0;

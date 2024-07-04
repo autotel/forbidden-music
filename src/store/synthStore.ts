@@ -35,6 +35,7 @@ import { useAutomationLaneStore } from './automationLanesStore';
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
+import { FilterEffect } from '../synth/FilterEffect';
 
 type AdmissibleSynthType = AudioModule | Synth | PatcheableSynthVoice;
 
@@ -167,6 +168,7 @@ const getSynthConstructors = (
     addAvailableSynth(SimpleDelayEffect, 'SimpleDelayEffect');
     addAvailableSynth(RingModEffect, 'RingModEffect');
     addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect');
+    addAvailableSynth(FilterEffect, 'FilterEffect');
 
     addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
     if (isDev()) {

@@ -5,6 +5,7 @@ import Tooltip from '../../Tooltip.vue';
 const triangleLeft = '◀';
 const triangleRight = '▶';
 const triangleDown = '▼';
+const triangleUp = '▲';
 
 const props = defineProps<{
     param: OptionSynthParam
@@ -73,9 +74,13 @@ const exitListener = () => {
         document.removeEventListener('keydown', exitListener);
     }
 }
-const openClickListener = (e: MouseEvent) => {
-    if (!open.value) {
-        document.addEventListener('mousedown', exitListener);
+const toggleOpen = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (open.value) {
+        open.value = false;
+    }else{
+        document.addEventListener('click', exitListener);
         document.addEventListener('keydown', exitListener);
         open.value = true;
     }
@@ -89,28 +94,58 @@ const selectOption = (i: number) => {
 
 </script>
 <template>
-    <div class="opener" @click="openClickListener">
-        <Tooltip :tooltip="readout">
-            <div class="sw-button">
-                {{ triangleDown }}
-            </div>
-        </Tooltip>
-    </div>
-    <div class="options-container" v-if="open">
-        <span class="option" v-for="(option, i) in param.options" @mousedown="selectOption(i)"
-            :class="{ selected: param.value === i }">
-            {{ option.displayName }}
-        </span>
-    </div>
-
+    <!-- <div class="container" v-bind="$attrs"> -->
+        <!-- <div class="readout">{{ param.displayName }}:</div> -->
+        <div class="opener" @click="toggleOpen">
+            <div class="val">{{ currentValueName }}</div>
+            <!-- <Tooltip :tooltip="readout"> -->
+                <div class="sw-button">
+                    {{ open? triangleDown : triangleUp}}
+                </div>
+            <!-- </Tooltip> -->
+        </div>
+        <div class="options-container" v-if="open">
+            <span class="option" v-for="(option, i) in param.options" @mousedown="selectOption(i)"
+                :class="{ selected: param.value === i }">
+                {{ option.displayName }}
+            </span>
+        </div>
+    <!-- </div> -->
 </template>
-<style>
+<style scoped>
+.container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
 .opener {
-    /* position: relative; */
+    width: 100%;
     overflow: visible;
     cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border: solid 1px;
+    border-radius: 5px;
+    padding: 0.2em;
+    position: relative;
 }
-
+.val {
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.val:hover {
+    text-wrap: none;
+    overflow: visible;
+    background-color: rgb(204, 204, 204);
+    color:rgb(53, 53, 53);
+    padding: 5px;
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    border-radius: 0.5em;
+}
 .options-container {
     position: absolute;
     display: flex;
@@ -122,7 +157,7 @@ const selectOption = (i: number) => {
     overflow: hidden;
     cursor: pointer;
     z-index: 2;
-    top:0;
+    top: 0;
     max-height: 100%;
     overflow-y: auto;
     scrollbar-width: thin;

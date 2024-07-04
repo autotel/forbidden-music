@@ -32,7 +32,7 @@ export class SimpleDelayEffect extends AudioModule {
             createAutomatableAudioNodeParam(send.gain, 'send', 0, 1),
 
             createAutomatableAudioNodeParam(filter.frequency, 'frequency', 0, 22000),
-            createAutomatableAudioNodeParam(filter.Q, 'Q', 0, 20),
+            createAutomatableAudioNodeParam(filter.Q, 'Q', 0, 3),
             createAutomatableAudioNodeParam(delay.delayTime, 'delayTime', 0, 10),
         ];
 

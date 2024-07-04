@@ -77,7 +77,7 @@ watch(() => tool.tooltipOwner, () => {
         <p>{{ tool.tooltip }}</p>
     </div>
 </template>
-<style>
+<style scoped>
 .container {
     position: fixed;
     z-index: 4;

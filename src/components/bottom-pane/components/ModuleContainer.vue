@@ -1,16 +1,29 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import ButtonSub from '../../ButtonSub.vue';
+import Eye from '../../icons/Eye.vue';
+import EyeNot from '../../icons/EyeNot.vue';
 
 const props = defineProps<{
     title: string,
     padding?: boolean
+    noCollapse?: boolean
 }>();
 const sideline = ref(false);
+const collapsed = ref(false);
 const mainContainer = ref<HTMLDivElement | null>(null);
+const collapsible = ref(!props.noCollapse);
 onMounted(() => {
-    if(!mainContainer.value) return;
+    if (!mainContainer.value) return;
     sideline.value = mainContainer.value.clientWidth > 40;
+    if(!sideline.value) {
+        collapsible.value = false;
+    }
 });
+const toggleCollapse = () => {
+    if (props.noCollapse) return;
+    collapsed.value = !collapsed.value;
+}
 </script>
 
 <template>
@@ -21,13 +34,23 @@ onMounted(() => {
                     {{ title }}
                 </span>
                 <div id="icons-slot-container">
+                    <span class="click-icon" v-if="collapsible" :onClick="toggleCollapse">
+                        <span v-if="collapsed">
+                            <Eye />
+                        </span>
+                        <span v-else>
+                            <EyeNot />
+                        </span>
+                    </span>
                     <slot name="icons"></slot>
                 </div>
             </div>
-        </div>
 
+        </div>
         <div id="slot-container" :class="{ padding }">
-            <slot></slot>
+            <template v-if="!collapsed">
+                <slot></slot>
+            </template>
         </div>
     </div>
 </template>
@@ -79,6 +102,19 @@ onMounted(() => {
     flex-direction: row;
     align-items: center;
     height: 100%;
+}
+
+.click-icon {
+    cursor: pointer;
+    margin-left: 0.5em;
+    opacity: 0.5;
+}
+.click-icon svg {
+    position: relative;
+    top: 3px
+}
+.click-icon:hover {
+    opacity: 1;
 }
 
 .sideline {
