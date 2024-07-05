@@ -66,42 +66,54 @@ let viewDragStartX = 0;
 let viewDragStartTime = 0;
 let viewDragStartY = 0;
 let viewDragStartOctave = 0;
+let viewTouchDistanceStart = 0;
+let viewDragStartOctaveHeight = 0;
 
 
 const mouseWheelListener = (e: WheelEvent) => {
     e.preventDefault();
-    const viewMousePositionBefore = {
-        time: view.pxToTimeWithOffset(e.clientX),
-        octave: -view.pxToOctaveWithOffset(e.clientY),
-    }
+    zoomAround(view.viewHeightOctaves ** (1 + e.deltaY / 1000), e.clientX, e.clientY);
+}
 
-    // not needed, thanks to applyRatio. Would be needed if zooming independently x and y
-    // const wouldViewWidthTime = view.viewWidthTime ** (1 + e.deltaY / 1000);
-    const wouldViewHeightOctaves = view.viewHeightOctaves ** (1 + e.deltaY / 1000);
+const zoomAround = (
+    wouldViewHeightOctaves: number,
+    zoomCenterX: number,
+    zoomCenterY: number
+) => {
+    
+    const OTDatumBefore = {
+        time: view.pxToTimeWithOffset(zoomCenterX),
+        octave: -view.pxToOctaveWithOffset(zoomCenterY),
+    };
 
     if (
-        // wouldViewWidthTime < 400 && 
+        wouldViewHeightOctaves < 200 &&
         wouldViewHeightOctaves > 0.1
     ) {
-        // view.viewWidthTime = wouldViewWidthTime;
         view.viewHeightOctaves = wouldViewHeightOctaves;
     }
 
-    // offset zoom center back 
-
-    const viewMousePositionAfter = {
-        time: view.pxToTimeWithOffset(e.clientX),
-        octave: -view.pxToOctaveWithOffset(e.clientY),
-    }
-
-    view.timeOffset += viewMousePositionBefore.time - viewMousePositionAfter.time;
-    view.octaveOffset += viewMousePositionBefore.octave - viewMousePositionAfter.octave;
     view.applyRatioToTime();
+
+    // offset zoom center back 
+    const OTDAtumAfter = {
+        time: view.pxToTimeWithOffset(zoomCenterX),
+        octave: -view.pxToOctaveWithOffset(zoomCenterY),
+    };
+
+    const OTDatumDelta = {
+        time: OTDatumBefore.time - OTDAtumAfter.time,
+        octave: OTDatumBefore.octave - OTDAtumAfter.octave,
+    };
+
+    console.log(OTDatumDelta);
+
+    view.timeOffset += OTDatumDelta.time;
+    view.octaveOffset += OTDatumDelta.octave;
 
     if (view.timeOffset < 0) {
         view.timeOffset = 0;
     }
-
 }
 
 const mouseMoveListener = (e: MouseEvent) => {
@@ -135,6 +147,7 @@ const mouseUpListener = (e: MouseEvent) => {
     // stop panning view, if it were
     draggingView = false;
 }
+
 const mouseDownListener = (e: MouseEvent) => {
     // middle wheel
     if (e.button === 1) {
@@ -150,6 +163,79 @@ const mouseDownListener = (e: MouseEvent) => {
         // left button
         tool.mouseDown(e);
     }
+}
+
+const touchDownListener = (e: TouchEvent) => {
+    if (e.touches.length === 2) {
+        const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const averageY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        e.stopPropagation();
+        e.preventDefault();
+        draggingView = true;
+        viewDragStartX = averageX;
+        viewDragStartTime = view.timeOffset;
+        viewDragStartY = averageY;
+        viewDragStartOctave = view.octaveOffset;
+        viewDragStartOctaveHeight = view.viewHeightOctaves;
+        viewTouchDistanceStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+}
+
+// let testTouchEl = document.createElement('div');
+// testTouchEl.style.position = 'fixed';
+// testTouchEl.style.borderTop = '1px solid red';
+// testTouchEl.style.borderLeft = '1px solid red';
+// testTouchEl.style.width = '10px';
+// testTouchEl.style.height = '10px';
+// testTouchEl.style.pointerEvents = 'none';
+// setTimeout(() => {
+//     document.querySelector('body').appendChild(testTouchEl);
+// }, 1000);
+
+const touchMoveListener = (e: TouchEvent) => {
+    const averageX = Array.from(e.touches).reduce((acc: number, t: { clientX: number }) => acc + t.clientX, 0) / e.touches.length;
+    const averageY = Array.from(e.touches).reduce((acc: number, t: { clientY: number }) => acc + t.clientY, 0) / e.touches.length;
+
+    console.log({
+        averageX,
+        averageY
+    });
+    if (mouseWidget.value) {
+        // TODO: Use a cursor instead, this is unnecessarily expensive
+        mouseWidget.value.style.left = averageX + 10 + "px";
+        mouseWidget.value.style.top = averageY + 10 + "px";
+    }
+    if (draggingView) {
+        // testTouchEl.style.left = averageX + 'px';
+        // testTouchEl.style.top = averageY + 'px';
+        // pan view, if dragging middle wheel
+        const deltaX = averageX - viewDragStartX;
+        const deltaY = averageY - viewDragStartY;
+
+        const newDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+
+        const touchDistanceDelta = newDistance - viewTouchDistanceStart;
+        const newOctaves = viewDragStartOctaveHeight + view.pxToOctave(touchDistanceDelta);
+        zoomAround(newOctaves, averageX, averageY);
+
+        view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
+        view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
+        // prevent timeOffset from going out of bounds
+        if (view.timeOffset < 0) {
+            view.timeOffset = 0;
+        }
+        if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+            view.timeOffset = view.scrollBound - view.viewWidthTime;
+        }
+    } else {
+
+        // tool.mouseMove(e);
+    }
+
+}
+
+const touchUpListener = (e: TouchEvent) => {
+    draggingView = false;
 }
 
 const keyUpListener = (e: KeyboardEvent) => {
@@ -215,6 +301,16 @@ onMounted(() => {
     mainInteraction.addEventListener($viewPort, 'mouseleave' as any, () => {
         snap.resetSnapExplanation();
     });
+
+    mainInteraction.addEventListener($viewPort, 'touchstart', touchDownListener);
+    mainInteraction.addEventListener($viewPort, 'touchmove', touchMoveListener);
+    mainInteraction.addEventListener($viewPort, 'touchend', (e: TouchEvent) => {
+        touchUpListener(e);
+        snap.resetSnapExplanation();
+    });
+
+
+
     window.addEventListener('resize', resize);
     resize();
 
@@ -332,6 +428,7 @@ const allowContextMenu = true;
     <UserDisclaimer />
     <TooltipDisplayer />
     <MousePopupDisplayer />
+
 </template>
 <style>
 * {
