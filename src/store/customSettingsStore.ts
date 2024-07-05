@@ -27,7 +27,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
             _multiTimbralityEnabled.value = value;
         }
     });
-    const effectsEnabled = ref(false);
     const _layersEnabled = ref(false);
     const layersEnabled = computed<boolean>({
         get() {
@@ -52,7 +51,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         performanceSettingsEnabled.value = true;
         physicalEnabled.value = false;
         octaveToTimeRatio.value = 2.8;
-        effectsEnabled.value = false;
         showHarp.value = false;
     }
 
@@ -70,7 +68,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
                 physicalEnabled.value = parsed.physicalEnabled;
                 octaveToTimeRatio.value = parsed.octaveToTimeRatio || 2.8;
-                effectsEnabled.value = parsed.effectsEnabled || false;
                 showHarp.value = parsed.showHarp || false;
             }
         } catch (e) {
@@ -90,7 +87,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 performanceSettingsEnabled: performanceSettingsEnabled.value,
                 physicalEnabled: physicalEnabled.value,
                 octaveToTimeRatio: octaveToTimeRatio.value,
-                effectsEnabled: effectsEnabled.value,
                 showHarp: showHarp.value,
             }));
             console.log('saved user performance settings');
@@ -111,7 +107,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         showFPS,
         fontSize,
         multiTimbralityEnabled,
-        effectsEnabled,
         layersEnabled,
         midiInputEnabled,
         performanceSettingsEnabled,

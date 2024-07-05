@@ -1,6 +1,6 @@
 import { findSampleSourceClosestToFrequency } from "./Sampler";
-import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam } from "./interfaces/SynthParam";
-import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
+import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam } from "../types/SynthParam";
+import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 
 interface SampleFileDefinition {
     name: string;

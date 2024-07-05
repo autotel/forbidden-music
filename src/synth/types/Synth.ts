@@ -1,12 +1,11 @@
 import { PatcheableTrait, PatcheableType } from "../../dataTypes/PatcheableTrait";
-import { ReceivesNotes } from "../interfaces/AudioModule";
-import { SynthParam } from "../interfaces/SynthParam";
+import { AudioModule, ReceivesNotes } from "./AudioModule";
+import { SynthParam } from "./SynthParam";
 
 export interface EventParamsBase {
     [key: string]: any,
     velocity: number,
 }
-
 
 export interface SynthVoice<A = EventParamsBase> {
     output?: AudioNode;
@@ -27,7 +26,7 @@ export interface PatcheableSynthVoice<A = EventParamsBase> extends SynthVoice<A>
     name: string,
     output: AudioNode,
     needsFetching?: boolean,
-    paramsRef: {value: SynthParam[]};
+    paramsRef: { value: SynthParam[] };
     receivesNotes?: boolean;
 }
 
@@ -46,7 +45,7 @@ export type synthVoiceFactory<
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
     V extends SynthVoice = SynthVoice<A>,
-> implements ReceivesNotes {
+> extends AudioModule implements ReceivesNotes {
     readonly receivesNotes = true;
     isReady = false;
     readonly patcheableType = PatcheableType.AudioModule;
@@ -57,7 +56,6 @@ export class Synth<
     enable = () => { this.isReady = true; }
     disable = () => { this.isReady = false; }
     output: GainNode;
-    input?: AudioNode;
     audioContext: AudioContext;
     params: SynthParam[] = [];
     needsFetching = false;
@@ -66,6 +64,7 @@ export class Synth<
         audioContext: AudioContext,
         factory?: synthVoiceFactory<V>,
     ) {
+        super();
         this.createVoice = () => {
             if (!factory) throw new Error("No factory provided to create voice");
             const voice = factory(

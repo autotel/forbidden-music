@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import NumberKnob from './NumberKnob.vue';
-import { ArraySynthParam } from '../../synth/interfaces/SynthParam';
+import { ArraySynthParam } from '../../synth/types/SynthParam';
 const props = defineProps({
     param: {
         type: Object as () => ArraySynthParam,
@@ -62,4 +62,4 @@ const update = (val:number, i: number) => {
     justify-content: center;
     width: 100%;
 }
-</style>import { ArraySynthParam } from '../../synth/interfaces/SynthParam';
+</style>

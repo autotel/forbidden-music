@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '../../../components/Tooltip.vue';
 import { abbreviate } from '../../../functions/abbreviate';
-import { BooleanSynthParam } from '../../../synth/interfaces/SynthParam';
+import { BooleanSynthParam } from '../../../synth/types/SynthParam';
 import Switch from '../../icons/Switch.vue';
 const props = defineProps<{
     param: BooleanSynthParam

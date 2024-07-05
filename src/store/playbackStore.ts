@@ -16,8 +16,8 @@ import { useViewStore } from './viewStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
 import { filterMap } from '../functions/filterMap';
-import { SynthParam } from '../synth/interfaces/SynthParam';
-import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/interfaces/Automatable';
+import { SynthParam } from '../synth/types/SynthParam';
+import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
 import { probe } from '../functions/probe';
 
 

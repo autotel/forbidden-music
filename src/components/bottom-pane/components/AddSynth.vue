@@ -1,13 +1,14 @@
 <script setup lang="ts">
 
 import { ref } from 'vue';
-import Button from '../../../components/Button.vue';
-import { useBottomPaneStateStore } from '../../../store/bottomPaneStateStore';
-import { SynthConstructorWrapper, useSynthStore } from '../../../store/synthStore';
+import Button from '@/components/Button.vue';
+import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
+import {  useSynthStore } from '@/store/synthStore';
 import SynthSelector from '../SynthSelector.vue';
-import { SynthChain } from '../../../dataStructures/SynthChain';
-import { SynthStack } from '../../../dataStructures/SynthStack';
-import { useAudioContextStore } from '../../../store/audioContextStore';
+import { SynthChain } from '@/dataStructures/SynthChain';
+import { SynthStack } from '@/dataStructures/SynthStack';
+import { useAudioContextStore } from '@/store/audioContextStore';
+import { SynthConstructorWrapper } from '@/synth/getSynthConstructors';
 const props = defineProps<{
     position: number
     targetChain: SynthChain

@@ -1,6 +1,6 @@
-import { AudioModule } from "./interfaces/AudioModule";
-import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
-import { ParamType, SynthParam } from "./interfaces/SynthParam";
+import { AudioModule } from "../types/AudioModule";
+import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { ParamType, SynthParam } from "../types/SynthParam";
 
 export class SimpleDelayEffect extends AudioModule {
     output: GainNode;
@@ -33,7 +33,7 @@ export class SimpleDelayEffect extends AudioModule {
 
             createAutomatableAudioNodeParam(filter.frequency, 'frequency', 0, 22000),
             createAutomatableAudioNodeParam(filter.Q, 'Q', 0, 3),
-            createAutomatableAudioNodeParam(delay.delayTime, 'delayTime', 0, 10),
+            createAutomatableAudioNodeParam(delay.delayTime, 'delayTime'),
         ];
 
         this.enable = async () => {

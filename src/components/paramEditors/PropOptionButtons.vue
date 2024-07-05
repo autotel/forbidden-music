@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Button from '../Button.vue';
-import { OptionSynthParam } from '../../synth/interfaces/SynthParam';
+import { OptionSynthParam } from '../../synth/types/SynthParam';
 
 const triangleLeft = '◀';
 const triangleRight = '▶';

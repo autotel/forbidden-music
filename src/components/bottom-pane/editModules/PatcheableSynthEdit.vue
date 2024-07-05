@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
 import { computed } from 'vue';
-import { PatcheableSynth } from '../../../synth/PatcheableSynth';
-import { ParamType } from '../../../synth/interfaces/SynthParam';
+import { PatcheableSynth } from '../../../synth/generators/PatcheableSynth';
+import { ParamType } from '../../../synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 
 const props = defineProps<{

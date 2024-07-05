@@ -1,6 +1,6 @@
 import { PATCHING_MAX_DEPTH } from "../consts/PatchingMaxDepth";
 import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
-import { ReceivesNotes } from "../synth/interfaces/AudioModule";
+import { ReceivesNotes } from "../synth/types/AudioModule";
 import { SynthStack } from "./SynthStack";
 export type ChainStep = PatcheableTrait;
 const getNoteReceivers = (
@@ -65,7 +65,12 @@ export class SynthChain implements PatcheableTrait {
         if (recursion > PATCHING_MAX_DEPTH) {
             throw new Error("children recursion depth exceeded");
         }
+        this.input.disconnect();
         let prevModule: PatcheableTrait | undefined;
+        if (this.children.length === 0) {
+            this.input.connect(this.output);
+            return;
+        }
         for (let step of this.children) {
             if (step instanceof SynthStack) {
                 step.rewire(recursion + 1);
@@ -111,7 +116,7 @@ export class SynthChain implements PatcheableTrait {
             console.warn("module not found in children");
             return;
         }
-        removedModule.disable?removedModule.disable():undefined;
+        removedModule.disable ? removedModule.disable() : undefined;
         this.children.splice(index, 1);
         this.children.splice(index, 0, newModule);
         this.rewire();
@@ -127,7 +132,7 @@ export class SynthChain implements PatcheableTrait {
     }
     removeAudioModuleAt = (index: number) => {
         const step = this.children[index];
-        step.disable?step.disable():undefined;
+        step.disable ? step.disable() : undefined;
         this.children.splice(index, 1);
         this.rewire();
         this.handleChanged();

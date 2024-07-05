@@ -1,7 +1,7 @@
-import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { AutomatableSynthParam, getTweenSlice } from "./interfaces/Automatable";
-import { ParamType, NumberSynthParam, SynthParam } from "./interfaces/SynthParam";
-import { EventParamsBase, Synth } from "./super/Synth";
+import { createMaximizerWorklet } from "../../functions/maximizerWorkletFactory";
+import { AutomatableSynthParam, getTweenSlice } from "../types/Automatable";
+import { ParamType, NumberSynthParam, SynthParam } from "../types/SynthParam";
+import { EventParamsBase, Synth } from "../types/Synth";
 
 
 type ClusterSineNoteParams = EventParamsBase & {

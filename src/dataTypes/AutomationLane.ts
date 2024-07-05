@@ -1,5 +1,5 @@
-import { AutomatableSynthParam } from "../synth/interfaces/Automatable"
-import { SynthParam } from "../synth/interfaces/SynthParam"
+import { AutomatableSynthParam } from "../synth/types/Automatable"
+import { SynthParam } from "../synth/types/SynthParam"
 import { AutomationPoint, AutomationPointDef, automationPoint, automationPointDef } from "./AutomationPoint"
 /** exportable/ importable definition of a automationLane */
 interface AutomationLaneDefA {

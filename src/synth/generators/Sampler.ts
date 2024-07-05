@@ -1,5 +1,5 @@
-import { ParamType, SynthParam, ProgressSynthParam, NumberSynthParam } from "./interfaces/SynthParam";
-import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
+import { ParamType, SynthParam, ProgressSynthParam, NumberSynthParam } from "../types/SynthParam";
+import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 
 interface SampleFileDefinition {
     name: string;

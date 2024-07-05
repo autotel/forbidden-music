@@ -1,4 +1,4 @@
-import { SynthParam } from "../synth/interfaces/SynthParam";
+import { SynthParam } from "../synth/types/SynthParam";
 
 export enum PatcheableType {
     AudioModule,

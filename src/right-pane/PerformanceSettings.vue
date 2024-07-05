@@ -76,11 +76,6 @@ const fullReset = () => {
             <div class="form-section">Experimental</div>
 
             <div class="form-row">
-                <Toggle v-model="userSettings.effectsEnabled" />
-                <label>Use audio FX</label>
-            </div>
-
-            <div class="form-row">
                 <Toggle v-model="userSettings.physicalEnabled" />
                 <label>Calculate frets</label>
             </div>

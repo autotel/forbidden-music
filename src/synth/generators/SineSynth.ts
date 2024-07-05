@@ -1,7 +1,7 @@
-import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
-import { ParamType, SynthParam } from "./interfaces/SynthParam";
-import { EventParamsBase, Synth, SynthVoice } from "./super/Synth";
+import { createMaximizerWorklet } from "../../functions/maximizerWorkletFactory";
+import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { ParamType, SynthParam } from "../types/SynthParam";
+import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 
 
 type SineNoteParams = EventParamsBase & {

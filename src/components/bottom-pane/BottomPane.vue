@@ -10,6 +10,7 @@ import ChannelSelector from './ChannelSelector.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import TransparentContainer from './components/TransparentContainer.vue';
 import NotesContainer from './editModules/NotesContainer.vue';
+import { useMasterEffectsStore } from '../../store/masterEffectsStore';
 defineProps<{
     paneHeight: number
 }>();
@@ -18,10 +19,11 @@ const synth = useSynthStore();
 const exclusivesStore = useExclusiveContentsStore();
 const bottomPaneState = useBottomPaneStateStore();
 const audioContextStore = useAudioContextStore();
+const masterEffects = useMasterEffectsStore();
 const synthChain = computed<SynthChain | null>(() => bottomPaneState.activeLayerChannel);
 const thereIsAudio = ref(false);
 
-watch(()=>synth.channels.children, (newVal, oldVal) => {
+watch(() => synth.channels.children, (newVal, oldVal) => {
     console.log('synth.channels changed', newVal, oldVal);
     hardForcePaneRefresh();
 });
@@ -32,7 +34,7 @@ watch(()=>synth.channels.children, (newVal, oldVal) => {
 // });
 
 const selectedChannelSlotNumber = computed(() => {
-    if(!bottomPaneState.activeLayerChannel) return -1;
+    if (!bottomPaneState.activeLayerChannel) return -1;
     const index = synth.channels.children.indexOf(bottomPaneState.activeLayerChannel);
     return index;
 });
@@ -44,7 +46,7 @@ const hardForcePaneRefresh = () => {
     }, 10);
 };
 
-onMounted(async() => {
+onMounted(async () => {
     await audioContextStore.audioContextPromise;
     setTimeout(() => {
         bottomPaneState.activeLayerChannel = synth.channels.children[0] ?? null;
@@ -60,9 +62,12 @@ onMounted(async() => {
                     <ChannelSelector v-if="exclusivesStore.enabled" />
                 </TransparentContainer>
                 <NotesContainer :channelSlotNo="selectedChannelSlotNumber" />
-                <ChainContainer v-if="synthChain" :synthChain="synthChain"/>
-                <ModuleContainer title="Master" :rows="0">
+                <ChainContainer v-if="synthChain" :synthChain="synthChain" />
+                <ModuleContainer title="Master" >
+                    <ChainContainer :synthChain="masterEffects.effectsChain" />
                 </ModuleContainer>
+                
+
             </template>
             <template v-else>
                 <div class="padded">

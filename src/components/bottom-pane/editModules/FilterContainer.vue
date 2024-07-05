@@ -1,15 +1,14 @@
 <script setup lang="ts">
 
+import { FilterEffect } from '@/synth/effects/FilterEffect';
 import { Ref, computed, inject } from 'vue';
 import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { AudioModule } from '../../../synth/interfaces/AudioModule';
-import { ParamType } from '../../../synth/interfaces/SynthParam';
+import { ParamType } from '../../../synth/types/SynthParam';
+import Button from '../../Button.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
-import Button from '../../Button.vue';
-import { FilterEffect } from '../../../synth/FilterEffect';
 
 const props = defineProps<{
     audioModule: FilterEffect

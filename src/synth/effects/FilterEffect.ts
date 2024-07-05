@@ -1,6 +1,7 @@
-import { AudioModule } from "./interfaces/AudioModule";
-import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
-import { ParamType, SynthParam } from "./interfaces/SynthParam";
+import { AudioModule } from "../types/AudioModule";
+import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { ParamType, SynthParam } from "../types/SynthParam";
+
 
 type BiquadFilterType = "lowpass" | "highpass" | "bandpass" | "lowshelf" | "highshelf" | "peaking" | "notch" | "allpass";
 type FilterOption = {

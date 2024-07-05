@@ -2,8 +2,8 @@
 import { ComputedRef, Ref, computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '../../../components/Tooltip.vue';
 import { abbreviate } from '../../../functions/abbreviate';
-import { NumberSynthParam } from '../../../synth/interfaces/SynthParam';
-import { AutomatableSynthParam, isAutomatable } from '../../../synth/interfaces/Automatable';
+import { NumberSynthParam } from '../../../synth/types/SynthParam';
+import { AutomatableSynthParam, isAutomatable } from '../../../synth/types/Automatable';
 import { useAutomationLaneStore } from '../../../store/automationLanesStore';
 import { useToolStore } from '../../../store/toolStore';
 import { Tool } from '../../../dataTypes/Tool';
@@ -104,7 +104,7 @@ const ww = 600;
 
 watch(() => props.param.value, () => {
     paramValueToLocalValue();
-    emit('update');
+    // emit('update');
 });
 
 const mouseWheeled = (e: WheelEvent) => {

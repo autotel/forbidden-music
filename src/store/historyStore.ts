@@ -7,11 +7,20 @@ import { useProjectStore } from './projectStore.js';
 export const useHistoryStore = defineStore("undo history store", () => {
     const project = useProjectStore();
     const currentResumeTimeout = ref<NodeJS.Timeout | null>(null);
-
     const projectStateZipped = ref<string | null>(null);
+    const lazyProjectDefinitionZipped = ref<string | null>(null);
 
-    const unpauseRightAway = (t=1) => {
-        if(currentResumeTimeout.value) {
+    setInterval(() => {
+        const json = JSON.stringify(project.getProjectDefintion());
+        const zipped = LZUTF8.compress(json, { outputEncoding: "Base64" });
+        if (zipped !== lazyProjectDefinitionZipped.value) {
+            console.log("store to undo history");
+            lazyProjectDefinitionZipped.value = zipped;
+        }
+    }, 1000);
+
+    const unpauseRightAway = (t = 1) => {
+        if (currentResumeTimeout.value) {
             clearTimeout(currentResumeTimeout.value);
         }
         currentResumeTimeout.value = setTimeout(() => {
@@ -19,14 +28,13 @@ export const useHistoryStore = defineStore("undo history store", () => {
         }, t);
     }
 
-    const undoStateWriter = watchPausable(project.getProjectDefintion, () => {
+    const undoStateWriter = watchPausable(lazyProjectDefinitionZipped, () => {
         // so that it stores fewer steps
         undoStateWriter.pause();
         // console.log("store to undo history");
-        const json = JSON.stringify(project.getProjectDefintion());
-        const zipped = LZUTF8.compress(json, { outputEncoding: "Base64" });
+        //////
         undoApplicator.pause();
-        projectStateZipped.value = zipped;
+        projectStateZipped.value = lazyProjectDefinitionZipped.value;
         nextTick(() => {
             undoApplicator.resume();
         });
@@ -35,7 +43,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
 
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {
         undoStateWriter.pause();
-        if(!zipped) {
+        if (!zipped) {
             return console.log("undo history is empty");
         }
         console.log("apply from undo history");
@@ -50,11 +58,11 @@ export const useHistoryStore = defineStore("undo history store", () => {
         unpauseRightAway();
     });
 
-    const { 
-        history, 
+    const {
+        history,
         undoStack, redoStack,
-        undo, redo, 
-        canRedo, canUndo 
+        undo, redo,
+        canRedo, canUndo
     } = useRefHistory(projectStateZipped, {
         capacity: 15,
     });

@@ -1,6 +1,6 @@
 import { buffer } from "stream/consumers";
-import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "./interfaces/SynthParam";
-import { SynthVoice, EventParamsBase, Synth } from "./super/Synth";
+import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { SynthVoice, EventParamsBase, Synth } from "../types/Synth";
 import { useThrottleFn } from "@vueuse/core";
 
 const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<EventParamsBase> => {

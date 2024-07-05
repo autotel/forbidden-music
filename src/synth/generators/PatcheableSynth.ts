@@ -1,8 +1,8 @@
-import { SynthChain } from "../dataStructures/SynthChain";
-import { PatcheableType } from "../dataTypes/PatcheableTrait";
+import { SynthChain } from "../../dataStructures/SynthChain";
+import { PatcheableType } from "../../dataTypes/PatcheableTrait";
 import { FourierVoice, defaultPericWaveContents } from "./FourierSynth";
-import { ParamType, SynthParam, VoicePatchSynthParam } from "./interfaces/SynthParam";
-import { EventParamsBase, PatcheableSynthVoice, Synth, SynthVoice, synthVoiceFactory } from "./super/Synth";
+import { ParamType, SynthParam, VoicePatchSynthParam } from "../types/SynthParam";
+import { EventParamsBase, PatcheableSynthVoice, Synth, SynthVoice, synthVoiceFactory } from "../types/Synth";
 class PatcheableVoice implements PatcheableSynthVoice {
     name = "voice";
     readonly patcheableType = PatcheableType.AudioVoiceModule;

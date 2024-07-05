@@ -1,4 +1,3 @@
-import { TimeRange, ValuePosition } from "../../dataTypes/TimelineItem";
 import { NumberSynthParam, ParamType, SynthParam } from "./SynthParam";
 
 export type CurrentTweenDef = {
@@ -132,7 +131,5 @@ export function createAutomatableAudioNodeParam(
         },
         exportable,
     } as NumberSynthParam & AutomatableSynthParam;
-
-    console.log("created automatable param", automatableParam);
     return automatableParam;
 }

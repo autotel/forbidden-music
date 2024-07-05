@@ -1,18 +1,18 @@
 import { compress, decompress } from 'lzutf8';
 import { defineStore } from 'pinia';
 import { nextTick, ref, watch, watchEffect } from 'vue';
-import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
+import { AUTOSAVE_PROJECTNAME } from '@/consts/ProjectName';
 import {
     LIBRARY_VERSION, LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0,
     LibraryItem_0_5_0, OldFormatLibraryItem
-} from '../dataTypes/LibraryItem';
-import { Note, note } from '../dataTypes/Note';
-import nsLocalStorage from '../functions/nsLocalStorage';
-import { SynthParamStored } from '../synth/interfaces/SynthParam';
-import { userShownDisclaimerLocalStorageKey } from '../texts/userDisclaimer';
+} from '@/dataTypes/LibraryItem';
+import { Note, note } from '@/dataTypes/Note';
+import nsLocalStorage from '@/functions/nsLocalStorage';
+import { SynthParamStored } from '@/synth/types/SynthParam';
+import { userShownDisclaimerLocalStorageKey } from '@/texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
-import { SynthChannelsDefinition } from './synthStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
+import { SynthChannelsDefinition } from '@/dataStructures/synthStructureFunctions';
 
 
 const migrators = {

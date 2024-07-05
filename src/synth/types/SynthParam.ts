@@ -1,4 +1,4 @@
-import { PatcheableSynthVoice } from "../super/Synth"
+import { PatcheableSynthVoice } from "./Synth"
 import { AudioModule } from "./AudioModule"
 
 export enum ParamType {

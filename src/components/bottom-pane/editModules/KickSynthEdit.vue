@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
 import { computed, onMounted, ref } from 'vue';
-import { KickSynth } from '../../../synth/KickSynth';
-import { ParamType } from '../../../synth/interfaces/SynthParam';
+import { KickSynth } from '../../../synth/generators/KickSynth';
+import { ParamType } from '../../../synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import { useThrottleFn } from '@vueuse/core';

@@ -1,7 +1,7 @@
-import { createAudioEnvelopeWorklet } from "../functions/audioEnvelopeWorkletFactory";
-import { createMaximizerWorklet } from "../functions/maximizerWorkletFactory";
-import { AudioModule } from "./interfaces/AudioModule";
-import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
+import { createAudioEnvelopeWorklet } from "../../functions/audioEnvelopeWorkletFactory";
+import { createMaximizerWorklet } from "../../functions/maximizerWorkletFactory";
+import { AudioModule } from "../types/AudioModule";
+import { createAutomatableAudioNodeParam } from "../types/Automatable";
 
 export class AutoMaximizerEffect extends AudioModule {
     output: GainNode;

@@ -1,6 +1,6 @@
 import { SynthParam } from "./SynthParam";
 import { PatcheableTrait, PatcheableType } from "../../dataTypes/PatcheableTrait";
-import { EventParamsBase, SynthVoice } from "../super/Synth";
+import { EventParamsBase, SynthVoice } from "./Synth";
 
 export class AudioModule implements PatcheableTrait {
     readonly patcheableType = PatcheableType.AudioModule;
@@ -12,6 +12,25 @@ export class AudioModule implements PatcheableTrait {
     input?: AudioNode;
     enable: false | (() => void) = false;
     disable: false | (() => void) = false;
+    findParamByName = (name: string): SynthParam | undefined => {
+        return AudioModule.findParamByName(this, name);
+    }
+    static findParamByName = (synth: AudioModule, name: string): SynthParam | undefined => {
+        console.log("           finding param", name, "in", synth);
+        const exact = synth.params.find((param) => {
+            console.log("               param", param.displayName, param.displayName === name ? "==" : "!=", name);
+            return param.displayName === name
+        });
+        if (exact) return exact;
+        const similar = synth.params.find((param) => param.displayName?.includes(name));
+        if (similar) return similar;
+        const abbrevName = name.slice(0, 5);
+        const abbreviated = synth.params.find((param) => {
+            if (!param.displayName) return false;
+            return param.displayName.includes(abbrevName)
+        });
+        return abbreviated;
+    }
 }
 
 
@@ -32,7 +51,7 @@ export interface ReceivesNotes extends AudioModule {
         absoluteStartTime: number,
         noteParameters: EventParamsBase
     ) => SynthVoice;
-    scheduleEnd: (when?:number) => void;
+    scheduleEnd: (when?: number) => void;
     output: GainNode;
 }
 

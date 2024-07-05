@@ -2,8 +2,8 @@
 
 import { Ref, computed, inject } from 'vue';
 import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { AudioModule } from '../../../synth/interfaces/AudioModule';
-import { ParamType } from '../../../synth/interfaces/SynthParam';
+import { AudioModule } from '../../../synth/types/AudioModule';
+import { ParamType } from '../../../synth/types/SynthParam';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';

@@ -1,5 +1,6 @@
 import { UserConfig, defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import { resolve } from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -33,7 +34,12 @@ export default defineConfig(async () => ({
   optimizeDeps: {
     esbuildOptions: { target: "es2020", supported: { bigint: true } },
   },
-
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '#root': resolve(__dirname)
+    }
+  },
   test: {
     browser: {
       enabled: true,

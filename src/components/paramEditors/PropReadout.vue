@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { ReadoutSynthParam } from '../../synth/interfaces/SynthParam';
+import { ReadoutSynthParam } from '../../synth/types/SynthParam';
 
 const props = defineProps<{
     param: ReadoutSynthParam,

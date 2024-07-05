@@ -1,4 +1,4 @@
-import { EventParamsBase, Synth } from "./super/Synth";
+import { EventParamsBase, Synth } from "../types/Synth";
 
 export class PlaceholderSynth extends Synth<EventParamsBase> {
     input: AudioNode;

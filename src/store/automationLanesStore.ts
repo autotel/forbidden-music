@@ -4,9 +4,9 @@ import { AutomationLane, AutomationLaneDef, automationLane } from "../dataTypes/
 import { AutomationPoint, automationPoint } from "../dataTypes/AutomationPoint";
 import { PatcheableTrait, PatcheableType } from "../dataTypes/PatcheableTrait";
 import { filterMap } from "../functions/filterMap";
-import { AudioModule } from "../synth/interfaces/AudioModule";
-import { AutomatableSynthParam, isAutomatable } from "../synth/interfaces/Automatable";
-import { SynthParam, isValidParam } from "../synth/interfaces/SynthParam";
+import { AudioModule } from "../synth/types/AudioModule";
+import { AutomatableSynthParam, isAutomatable } from "../synth/types/Automatable";
+import { SynthParam, isValidParam } from "../synth/types/SynthParam";
 import { useSynthStore } from "./synthStore";
 import { PATCHING_MAX_DEPTH } from "../consts/PatchingMaxDepth";
 

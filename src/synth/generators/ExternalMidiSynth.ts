@@ -1,8 +1,8 @@
-import { PatcheableType } from '../dataTypes/PatcheableTrait';
-import { frequencyToMidiNote } from '../functions/toneConverters';
-import { AudioModule } from './interfaces/AudioModule';
-import { ParamType, SynthParam } from './interfaces/SynthParam';
-import { EventParamsBase, SynthVoice } from './super/Synth';
+import { PatcheableType } from '../../dataTypes/PatcheableTrait';
+import { frequencyToMidiNote } from '../../functions/toneConverters';
+import { AudioModule } from '../types/AudioModule';
+import { ParamType, SynthParam } from '../types/SynthParam';
+import { EventParamsBase, SynthVoice } from '../types/Synth';
 
 
 //@ts-ignore

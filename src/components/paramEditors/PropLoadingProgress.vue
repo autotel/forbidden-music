@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { ProgressSynthParam } from '../../synth/interfaces/SynthParam';
+import { ProgressSynthParam } from '../../synth/types/SynthParam';
 
 const props = defineProps({
     param: {

@@ -1,6 +1,6 @@
-import { AudioModule } from "./interfaces/AudioModule";
-import { createAutomatableAudioNodeParam } from "./interfaces/Automatable";
-import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam } from "./interfaces/SynthParam";
+import { AudioModule } from "../types/AudioModule";
+import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam } from "../types/SynthParam";
 
 export interface ImpulseResponseSampleDefinition {
     name: string,

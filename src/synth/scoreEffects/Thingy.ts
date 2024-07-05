@@ -1,5 +1,5 @@
 import { PatcheableType } from "../../dataTypes/PatcheableTrait";
-import { Synth, SynthVoice } from "../super/Synth";
+import { Synth, SynthVoice } from "../types/Synth";
 
 
 

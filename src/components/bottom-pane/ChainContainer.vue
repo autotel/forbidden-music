@@ -1,27 +1,26 @@
 <script setup lang="ts">
+import { AutoMaximizerEffect } from '@/synth/effects/AutoMaximizerEffect';
+import { FilterEffect } from '@/synth/effects/FilterEffect';
+import { FourierSynth } from '@/synth/generators/FourierSynth';
+import { KickSynth } from '@/synth/generators/KickSynth';
+import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
+import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
+import { PatcheableSynthVoice, Synth } from '@/synth/types/Synth';
 import { onMounted, ref, watch } from 'vue';
 import Button from '../../components/Button.vue';
 import { SynthChain } from '../../dataStructures/SynthChain';
 import { SynthStack } from '../../dataStructures/SynthStack';
 import { PatcheableTrait, PatcheableType } from '../../dataTypes/PatcheableTrait';
-import { KickSynth } from '../../synth/KickSynth';
-import { PatcheableSynth } from '../../synth/PatcheableSynth';
-import { ThingyScoreFx } from '../../synth/scoreEffects/Thingy';
+import AddSynth from './components/AddSynth.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
-import KickSynthEdit from './editModules/KickSynthEdit.vue';
 import AutoMaximizerContainer from './editModules/AutoMaximizerContainer.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
-import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
+import KickSynthEdit from './editModules/KickSynthEdit.vue';
+import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
-import ThingyEdit from './editModules/ThingyEdit.vue';
-import AddSynth from './components/AddSynth.vue';
 import StackContainer from './editModules/StackContainer.vue';
-import { AudioModule } from '../../synth/interfaces/AudioModule';
-import { PatcheableSynthVoice, Synth } from '../../synth/super/Synth';
-import { FourierSynth } from '../../synth/FourierSynth';
-import { AutoMaximizerEffect } from '../../synth/AutoMaximizerEffect';
-import { FilterEffect } from '../../synth/FilterEffect';
+import ThingyEdit from './editModules/ThingyEdit.vue';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -88,7 +87,7 @@ const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is Patche
 
         <p v-else style="color: red;">Unknown module type</p>
     </template>
-    <AddSynth :position="stepsArray.length" :targetChain="synthChain" :force-expanded="stepsArray.length === 0" />
+    <AddSynth :position="stepsArray.length" :targetChain="synthChain" /><!--:force-expanded="stepsArray.length === 0" -->
 
 </template>
 <style scoped>
