@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { useToolStore } from '../../store/toolStore';
+import { useCommunicationStore } from '../../store/communicationStore';
 
 const props = defineProps<{
     x: number,
@@ -9,21 +9,19 @@ const props = defineProps<{
     tooltip?: string
 }>();
 
-const tool = useToolStore();
+const communications = useCommunicationStore();
 const body = ref<SVGRectElement>();
 const bodyMouseEnterListener = (e: MouseEvent) => {
     if (!props.tooltip) return;
     e.stopImmediatePropagation();
     if (body.value) {
-        tool.tooltip = props.tooltip;
-        tool.tooltipOwner = body.value;
+        communications.tooltip(props.tooltip, body.value);
     }
 }
 const bodyMouseLeaveListener = (e: MouseEvent) => {
-    if (tool.tooltipOwner !== body.value) return;
+    if (communications.currentTooltip?.owner !== body.value) return;
     e.stopImmediatePropagation();
-    tool.tooltip = '';
-    tool.tooltipOwner = null;
+    communications.tooltipOff();
 }
 
 onMounted(() => {

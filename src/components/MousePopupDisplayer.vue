@@ -1,35 +1,31 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useToolStore } from '../store/toolStore';
 import { useCommunicationStore } from '../store/communicationStore';
 const communications = useCommunicationStore();
 const container = ref<HTMLDivElement>();
 const currentShowTimeout = ref<NodeJS.Timeout | null>(null);
-// TODO: this ref no longer needed as currentTooltip now can be null
+// TODO: this ref no longer needed as currentMousePopup now can be null
 const show = ref(false);
 
-const tooltipContent = () => {
-    return communications.currentTooltip?.content;
+const mousePopupContent = () => {
+    return communications.currentMousePopup?.content;
 };
 
-const dismiss = (e?: Event) => {
-    if(e) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-    }
-    show.value = false;
-    communications.tooltipOff();
-    document.removeEventListener('mousedown', dismiss);
-    document.removeEventListener('keydown', dismiss);
-}
 const width = computed(() => {
-    const content = tooltipContent();
+    const content = mousePopupContent();
     if (!content) return "auto";
     const longestWord = content.split(" ").reduce((a, b) => a.length > b.length ? a : b, "");
     return (Math.max(longestWord.length / 2, content.length / 6) + 1) + "em";
 });
 const followMouse = true;
-
+const dismiss = (e:Event) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    show.value = false;
+    communications.mousePopupOff();
+    document.removeEventListener('mousedown', dismiss);
+    document.removeEventListener('keydown', dismiss);
+}
 const mousepos = (e: MouseEvent) => {
 
     if (!container.value) return;
@@ -53,10 +49,6 @@ const mousepos = (e: MouseEvent) => {
 
 onMounted(() => {
     if (!container.value) throw new Error("Container not found");
-
-    const clWidthH = window.innerWidth / 2;
-    const clHeightH = window.innerHeight / 2;
-
     if (followMouse) {
         document.addEventListener('mousemove', mousepos);
         document.addEventListener('mouseenter', mousepos);
@@ -73,19 +65,13 @@ onBeforeUnmount(() => {
     }
 });
 
-watch(() => communications.currentTooltip, () => {
-    if (currentShowTimeout.value) {
-        clearTimeout(currentShowTimeout.value);
-    }
-    if (communications.currentTooltip?.owner) {
-        currentShowTimeout.value = setTimeout(() => {
-            show.value = true;
-
-            document.addEventListener('mousedown', dismiss);
-            document.addEventListener('keydown', dismiss);
-        }, 500);
+watch(() => communications.currentMousePopup, () => {
+    if (communications.currentMousePopup?.owner) {
+        show.value = true;
+        document.addEventListener('mousedown', dismiss);
+        document.addEventListener('keydown', dismiss);
     } else {
-        dismiss();
+        show.value = false;
     }
 })
 
@@ -93,7 +79,8 @@ watch(() => communications.currentTooltip, () => {
 
 <template>
     <div class="container" ref="container" :class="{ hidden: !show }" :style="{ width }">
-        <p>{{ tooltipContent() }}</p>
+        <p>{{ mousePopupContent() }}</p>
+        <p class="smaller">[Esc] dismiss</p>
     </div>
 </template>
 <style scoped>
@@ -117,6 +104,10 @@ watch(() => communications.currentTooltip, () => {
 
 .container.hidden {
     opacity: 0;
+}
+.smaller {
+    font-size: 0.8em;
+    opacity: 0.7;
 }
 
 @media (prefers-color-scheme: dark) {

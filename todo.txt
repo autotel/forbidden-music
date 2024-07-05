@@ -2,6 +2,9 @@
 
 ## bugs
 	it doesnt' take a lot to get the timing to break 
+## GUI
+	touch (two fingers pan/zoom, hold to add note)
+	method for sending from layer to channel is confusing
 ## Basics & architecture
 	tool to make sure sounds are on tune
 	make it possible to set the base frequency upon which octaves are calculated
@@ -14,6 +17,7 @@
 	'credits' modal & 'monomode interaction' 
 	automation - current methods for listing points while playing is suboptimal
 	remove "isready" prop from synth, because it's not used
+	update documentation
 ## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)

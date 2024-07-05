@@ -4,19 +4,17 @@ import { SynthChain } from '../../dataStructures/SynthChain';
 import { useAudioContextStore } from '../../store/audioContextStore';
 import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
 import { useExclusiveContentsStore } from '../../store/exclusiveContentsStore';
-import { useMasterEffectsStore } from '../../store/masterEffectsStore';
 import { useSynthStore } from '../../store/synthStore';
-import AudioModuleContainer from './editModules/AudioModuleContainer.vue';
 import ChainContainer from './ChainContainer.vue';
 import ChannelSelector from './ChannelSelector.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import TransparentContainer from './components/TransparentContainer.vue';
+import NotesContainer from './editModules/NotesContainer.vue';
 defineProps<{
     paneHeight: number
 }>();
 
 const synth = useSynthStore();
-const effects = useMasterEffectsStore();
 const exclusivesStore = useExclusiveContentsStore();
 const bottomPaneState = useBottomPaneStateStore();
 const audioContextStore = useAudioContextStore();
@@ -32,6 +30,12 @@ watch(()=>synth.channels.children, (newVal, oldVal) => {
 //     console.log('bottomPaneState.activeLayerChannel.chain changed', newVal, oldVal);
 //     hardForcePaneRefresh();
 // });
+
+const selectedChannelSlotNumber = computed(() => {
+    if(!bottomPaneState.activeLayerChannel) return -1;
+    const index = synth.channels.children.indexOf(bottomPaneState.activeLayerChannel);
+    return index;
+});
 
 const hardForcePaneRefresh = () => {
     bottomPaneState.activeLayerChannel = null;
@@ -55,13 +59,9 @@ onMounted(async() => {
                 <TransparentContainer>
                     <ChannelSelector v-if="exclusivesStore.enabled" />
                 </TransparentContainer>
-                <ModuleContainer title="Notes" :rows="0">
-                </ModuleContainer>
+                <NotesContainer :channelSlotNo="selectedChannelSlotNumber" />
                 <ChainContainer v-if="synthChain" :synthChain="synthChain"/>
                 <ModuleContainer title="Master" :rows="0">
-                    <template v-for="fx in effects.effectsChain">
-                        <AudioModuleContainer :audioModule="fx" style="margin:-5px" undeletable/>
-                    </template>
                 </ModuleContainer>
             </template>
             <template v-else>
@@ -86,7 +86,7 @@ onMounted(async() => {
 
 #hrow-items>* {
     display: inline-block;
-    margin: 0.5em;
+    margin: 0.25em;
     margin-bottom: 0;
     vertical-align: top;
     flex-shrink: 0;

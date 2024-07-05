@@ -274,8 +274,6 @@ export const useToolStore = defineStore("tool", () => {
     const project = useProjectStore();
     const snap = useSnapStore();
     const lanes = useAutomationLaneStore();
-    const tooltip = ref("");
-    const tooltipOwner = ref<HTMLElement | SVGElement | null>(null);
 
     // TODO: should rename into currentMode and currentTool instead of current and currentLeftHand
     /** current tool: the current main tool, what the user is focusing on atm */
@@ -879,9 +877,6 @@ export const useToolStore = defineStore("tool", () => {
         mouse,
 
         currentLayerNumber,
-
-        tooltip,
-        tooltipOwner,
 
         noteThatWouldBeCreated,
         loopThatWouldBeCreated,

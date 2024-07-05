@@ -10,6 +10,7 @@ import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
+import MousePopupDisplayer from './components/MousePopupDisplayer.vue';
 import Transport from './components/Transport.vue';
 import AnglesDown from './components/icons/AnglesDown.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
@@ -26,7 +27,7 @@ import RightPane from './right-pane/RightPane.vue';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 import { useHistoryStore } from './store/historyStore';
-import { AUTOSAVE_PROJECTNAME, useLibraryStore } from './store/libraryStore';
+import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
@@ -330,6 +331,7 @@ const allowContextMenu = true;
     </Modal>
     <UserDisclaimer />
     <TooltipDisplayer />
+    <MousePopupDisplayer />
 </template>
 <style>
 * {

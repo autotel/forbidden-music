@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, useSlots } from 'vue';
-import { useToolStore } from '../store/toolStore';
+import { useSlots } from 'vue';
+import { useCommunicationStore } from '../store/communicationStore';
 const slots = useSlots()
-const tool = useToolStore();
+const communications = useCommunicationStore();
 
 const props = defineProps<{
     onClick: ((payload: MouseEvent) => void)
@@ -17,13 +17,12 @@ const props = defineProps<{
 const mouseEnter = (e: MouseEvent) => {
     let tooltip = props.tooltip || slots.tooltip?.toString();
     if (!tooltip) return;
-    tool.tooltip = tooltip;
-    tool.tooltipOwner = e.target as HTMLElement;
+    communications.tooltip(tooltip, e.target as HTMLElement);
+    
 }
 
-const mouseLeave = (e: MouseEvent) => {
-    tool.tooltip = '';
-    tool.tooltipOwner = null;
+const mouseLeave = () => {
+    communications.tooltipOff();
 }
 
 

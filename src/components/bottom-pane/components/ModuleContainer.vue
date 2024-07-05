@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import ButtonSub from '../../ButtonSub.vue';
+import { ref, watchEffect } from 'vue';
 import Eye from '../../icons/Eye.vue';
 import EyeNot from '../../icons/EyeNot.vue';
 
@@ -8,18 +7,19 @@ const props = defineProps<{
     title: string,
     padding?: boolean
     noCollapse?: boolean
+    defaultCollapsed?: boolean
 }>();
-const sideline = ref(false);
+
 const collapsed = ref(false);
 const mainContainer = ref<HTMLDivElement | null>(null);
-const collapsible = ref(!props.noCollapse);
-onMounted(() => {
-    if (!mainContainer.value) return;
-    sideline.value = mainContainer.value.clientWidth > 40;
-    if(!sideline.value) {
-        collapsible.value = false;
-    }
+const collapsible = ref(true);
+
+watchEffect(() => {
+    collapsible.value = !props.noCollapse;
+    
+    collapsed.value = props.defaultCollapsed ?? false;
 });
+
 const toggleCollapse = () => {
     if (props.noCollapse) return;
     collapsed.value = !collapsed.value;
@@ -28,7 +28,7 @@ const toggleCollapse = () => {
 
 <template>
     <div class="module-container" ref="mainContainer">
-        <div id="title-rotator" :class="{ sideline }">
+        <div id="title-rotator" >
             <div id="title">
                 <span>
                     {{ title }}
@@ -47,7 +47,7 @@ const toggleCollapse = () => {
             </div>
 
         </div>
-        <div id="slot-container" :class="{ padding }">
+        <div id="slot-container" :class="{ padding: padding && !collapsed }">
             <template v-if="!collapsed">
                 <slot></slot>
             </template>
@@ -94,7 +94,7 @@ const toggleCollapse = () => {
     justify-content: space-between;
     align-items: center;
     width: 16.5em;
-    height: 1em;
+    height: 0.9em;
 }
 
 #icons-slot-container {
@@ -109,16 +109,14 @@ const toggleCollapse = () => {
     margin-left: 0.5em;
     opacity: 0.5;
 }
+
 .click-icon svg {
     position: relative;
-    top: 3px
-}
-.click-icon:hover {
-    opacity: 1;
+    top: 2px
 }
 
-.sideline {
-    border-right: solid 1px #aaac;
+.click-icon:hover {
+    opacity: 1;
 }
 
 #title-rotator {
