@@ -1,4 +1,4 @@
-import { SynthChannelsDefinition } from "@/dataStructures/synthStructureFunctions";
+import { SynthChainDefinition, SynthChannelsDefinition } from "@/dataStructures/synthStructureFunctions";
 import { SynthParamStored } from "../synth/types/SynthParam";
 import { AutomationLane } from "./AutomationLane";
 import { AutomationPointDef } from "./AutomationPoint";
@@ -109,7 +109,10 @@ export interface LibraryItem_0_5_0 {
         visible: boolean;
         locked: boolean;
     }[];
+    
     channels: SynthChannelsDefinition;
+    masterEffects: SynthChainDefinition;
+
     customOctavesTable?: number[];
     snap_simplify?: number;
 

@@ -17,6 +17,7 @@ import demoProject from './project-default';
 import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
 import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
+import { useMasterEffectsStore } from './masterEffectsStore';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,
@@ -29,6 +30,7 @@ const emptyProjectDefinition: LibraryItem = {
     bpm: 120,
     layers: [],
     channels: [[]],
+    masterEffects: [],
     version: LIBRARY_VERSION,
 };
 
@@ -39,6 +41,7 @@ export const useProjectStore = defineStore("current project", () => {
     const created = ref(Date.now().valueOf() as Number);
     const playback = usePlaybackStore();
     const synths = useSynthStore();
+    const masterEffects = useMasterEffectsStore();
     const audioContextStore = useAudioContextStore();
     const name = ref(AUTOSAVE_PROJECTNAME);
 
@@ -150,6 +153,7 @@ export const useProjectStore = defineStore("current project", () => {
             bpm: playback.bpm,
             layers: layers.layers,
             channels: [],
+            masterEffects: masterEffects.getDefinition(),
             version: LIBRARY_VERSION,
         } as LibraryItem;
         ret.version = LIBRARY_VERSION;
@@ -197,6 +201,7 @@ export const useProjectStore = defineStore("current project", () => {
             await audioContextStore.audioContextPromise;
             synths.applyChannelsDefinition(pDef.channels, recycleSynths);
             lanes.applyAutomationLaneDefs(pDef.lanes);
+            masterEffects.applyDefinition(pDef.masterEffects, recycleSynths);
         })();
 
         

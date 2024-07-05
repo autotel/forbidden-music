@@ -27,6 +27,7 @@ export class AutoMaximizerEffect extends AudioModule {
         let envelopeFollower: AudioWorkletNode | undefined;
 
         this.params.push(createAutomatableAudioNodeParam(this.input.gain, 'Input Gain', 0, 10));
+        this.params.push(createAutomatableAudioNodeParam(this.output.gain, 'Output Gain', 0, 10));
 
         this.enable = async () => {
             if (!maximizer) {
@@ -59,10 +60,12 @@ export class AutoMaximizerEffect extends AudioModule {
 
             levelParam.value = -1;
 
-            this.params.push(createAutomatableAudioNodeParam(increaseRateParam, 'Increase Rate'));
-            this.params.push(createAutomatableAudioNodeParam(decreaseRateParam, 'Decrease Rate'));
-            this.params.push(createAutomatableAudioNodeParam(biasParam, 'Env Bias'));
-            this.params.push(createAutomatableAudioNodeParam(levelParam, 'Expansion Level'));
+            this.params.splice(1,0,
+                createAutomatableAudioNodeParam(increaseRateParam, 'Increase Rate'),
+                createAutomatableAudioNodeParam(decreaseRateParam, 'Decrease Rate'),
+                createAutomatableAudioNodeParam(biasParam, 'Env Bias'),
+                createAutomatableAudioNodeParam(levelParam, 'Expansion Level')
+            );
 
             envelopeFollower.port.onmessage = (event) => {
                 this.lastMeasuredLevel = event.data;

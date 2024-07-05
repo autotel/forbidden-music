@@ -685,5 +685,10 @@ export default {
         "params": [
         ]
     }]],
+    "masterEffects": [{
+        type: "SimpleDelay", params: []
+    },{
+        type: "AutoMaximizer", params: []
+    }],
     "version": LIBRARY_VERSION
 } as LibraryItem;

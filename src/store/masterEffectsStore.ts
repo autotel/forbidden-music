@@ -4,7 +4,7 @@ import { AudioModule } from "../synth/types/AudioModule";
 import { useAudioContextStore } from "./audioContextStore";
 import getSynthConstructors, { SynthConstructorWrapper } from "@/synth/getSynthConstructors";
 import { useExclusiveContentsStore } from "./exclusiveContentsStore";
-import { synthStructureManager } from "@/dataStructures/synthStructureFunctions";
+import { SynthChainDefinition, synthStructureManager } from "@/dataStructures/synthStructureFunctions";
 
 type admissibleEffectTypes = AudioModule;
 
@@ -37,12 +37,25 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
         output.connect(audioContextStore.audioContext.destination);
     });
 
+    const applyDefinition = (inChannels: SynthChainDefinition, recycle = false) => {
+        synthStructure.applyChainDefinition(
+            effectsChain,
+            inChannels,
+            recycle
+        );
+    }
+
+    const getDefinition = (): SynthChainDefinition => {
+        return synthStructure.getDefinitionForChain(effectsChain);
+    }
 
     return {
         myInput,
         effectsChain,
         addEffect,
         removeEffect,
+        applyDefinition,
+        getDefinition,
     }
 
 
