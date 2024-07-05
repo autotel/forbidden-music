@@ -106,8 +106,6 @@ const zoomAround = (
         octave: OTDatumBefore.octave - OTDAtumAfter.octave,
     };
 
-    console.log(OTDatumDelta);
-
     view.timeOffset += OTDatumDelta.time;
     view.octaveOffset += OTDatumDelta.octave;
 
@@ -196,10 +194,6 @@ const touchMoveListener = (e: TouchEvent) => {
     const averageX = Array.from(e.touches).reduce((acc: number, t: { clientX: number }) => acc + t.clientX, 0) / e.touches.length;
     const averageY = Array.from(e.touches).reduce((acc: number, t: { clientY: number }) => acc + t.clientY, 0) / e.touches.length;
 
-    console.log({
-        averageX,
-        averageY
-    });
     if (mouseWidget.value) {
         // TODO: Use a cursor instead, this is unnecessarily expensive
         mouseWidget.value.style.left = averageX + 10 + "px";
