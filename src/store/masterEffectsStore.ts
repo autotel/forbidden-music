@@ -37,10 +37,11 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
         output.connect(audioContextStore.audioContext.destination);
     });
 
-    const applyDefinition = (inChannels: SynthChainDefinition, recycle = false) => {
+    const applyDefinition = (definition: SynthChainDefinition, recycle = false) => {
+        console.log('Applying definition', definition, recycle);
         synthStructure.applyChainDefinition(
             effectsChain,
-            inChannels,
+            definition,
             recycle
         );
     }

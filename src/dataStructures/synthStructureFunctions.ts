@@ -37,6 +37,10 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
         recycle = false
     ) => {
         console.log("applying chain definition", definition);
+        if(targetChain === undefined) throw new Error("target chain is undefined");
+        if(!recycle) {
+            targetChain.setAudioModules([]);
+        }
         definition.forEach((chainStep: SynthChainStepDefinition, i) => {
             if (Array.isArray(chainStep)) {
                 // it's a stack
