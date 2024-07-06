@@ -10,11 +10,12 @@ export class AudioModule implements PatcheableTrait {
     needsFetching?: boolean;
     output?: AudioNode;
     input?: AudioNode;
-    enable: false | (() => void) = false;
+    enable: false | (() => Promise<void>) = false;
     disable: false | (() => void) = false;
     findParamByName = (name: string): SynthParam | undefined => {
         return AudioModule.findParamByName(this, name);
     }
+    
     static findParamByName = (synth: AudioModule, name: string): SynthParam | undefined => {
         console.log("           finding param", name, "in", synth);
         const exact = synth.params.find((param) => {

@@ -12,8 +12,6 @@ type FilterOption = {
 export class FilterEffect extends AudioModule {
     output: GainNode;
     input: GainNode;
-    enable: () => void;
-    disable: () => void;
     params: SynthParam[];
 
     constructor(

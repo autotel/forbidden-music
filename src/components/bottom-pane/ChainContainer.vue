@@ -57,9 +57,7 @@ const xClickHandler = (synthChain: SynthChain, index: number) => {
 const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
     return audioModule.patcheableType === PatcheableType.AudioModule
 }
-const isAudioVoiceModule = (audioModule: PatcheableTrait): audioModule is PatcheableSynthVoice => {
-    return audioModule.patcheableType === PatcheableType.AudioVoiceModule
-}
+
 </script>
 
 <template>

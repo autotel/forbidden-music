@@ -205,19 +205,17 @@ export class ExternalMidiSynth extends AudioModule {
         }] as SynthParam[];
     }
     params = [] as SynthParam[];
-    enable = () => {
+    enable = async () => {
         //@ts-ignore
         if (!navigator.requestMIDIAccess) return console.warn("no midi access possible");
-        (async () => {
 
-            //@ts-ignore
-            const midiAccess = await navigator.requestMIDIAccess();
-            this.midiOutputs = getMidiOutputsArray(midiAccess);
-            this.sendTestChord();
+        //@ts-ignore
+        const midiAccess = await navigator.requestMIDIAccess();
+        this.midiOutputs = getMidiOutputsArray(midiAccess);
+        this.sendTestChord();
 
-            this.updateParams();
-            this.isReady = true;
-        })();
+        this.updateParams();
+        this.isReady = true;
     }
     disable = () => { };
 }

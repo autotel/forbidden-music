@@ -53,7 +53,7 @@ export class Synth<
     /** voice instances */
     instances: V[] = [];
     createVoice: () => V;
-    enable = () => { this.isReady = true; }
+    enable = async () => { this.isReady = true; }
     disable = () => { this.isReady = false; }
     output: GainNode;
     audioContext: AudioContext;

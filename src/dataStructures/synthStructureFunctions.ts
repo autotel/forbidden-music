@@ -23,7 +23,7 @@ export type SynthChannelsDefinition = SynthStackDefinition;
 
 export interface SynthConstructorIdentifier {
     name: string;
-    create: () => AdmissibleSynthType;
+    create: (withParams?: SynthParamStored[]) => AdmissibleSynthType;
 }
 export const synthStructureManager = <ConstId extends SynthConstructorIdentifier>(
     audioContext: AudioContext,
@@ -37,8 +37,8 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
         recycle = false
     ) => {
         console.log("applying chain definition", definition);
-        if(targetChain === undefined) throw new Error("target chain is undefined");
-        if(!recycle) {
+        if (targetChain === undefined) throw new Error("target chain is undefined");
+        if (!recycle) {
             targetChain.setAudioModules([]);
         }
         definition.forEach((chainStep: SynthChainStepDefinition, i) => {
@@ -85,22 +85,13 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
                         console.warn("synth not found", chainStep.type);
                         synthConstructor = synthConstructorWrappers[0];
                     }
-                    synth = synthConstructor.create();
+
+                    const paramsDef = chainStep.params;
+                    synth = synthConstructor.create(paramsDef);
                     targetChain.addAudioModule(i, synth);
                 }
 
-                const paramsDef = chainStep.params;
 
-                if (synth instanceof AudioModule && paramsDef) {
-                    for (let paramDef of paramsDef) {
-                        const synthParam = paramDef.displayName ? synth.findParamByName(paramDef.displayName) : undefined;
-                        if (!synthParam) {
-                            console.warn("param not found", paramDef.displayName);
-                            continue;
-                        }
-                        synthParam.value = paramDef.value;
-                    }
-                }
             }
         });
     }
@@ -120,7 +111,7 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
             applyChainDefinition(chainInstance, chainDef, recycle);
         });
     }
-    
+
     const applyChannelsDefinition = (
         targetStack: SynthStack,
         definition: SynthChannelsDefinition,

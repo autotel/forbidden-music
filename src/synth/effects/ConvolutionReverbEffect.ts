@@ -30,8 +30,6 @@ export class ConvolutionReverbEffect extends AudioModule {
     name = "";
     output: AudioNode;
     params: SynthParam[] = [];
-    enable: () => void;
-    disable: () => void;
     credits: string = "-";
     alreadyBuiltReverbs: { [key: string]: { input: AudioNode, output: AudioNode } } = {};
     constructor(

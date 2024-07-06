@@ -28,11 +28,6 @@ watch(() => synth.channels.children, (newVal, oldVal) => {
     hardForcePaneRefresh();
 });
 
-// watch (()=>bottomPaneState.activeLayerChannel?.children, (newVal, oldVal) => {
-//     console.log('bottomPaneState.activeLayerChannel.chain changed', newVal, oldVal);
-//     hardForcePaneRefresh();
-// });
-
 const selectedChannelSlotNumber = computed(() => {
     if (!bottomPaneState.activeLayerChannel) return -1;
     const index = synth.channels.children.indexOf(bottomPaneState.activeLayerChannel);

@@ -259,8 +259,8 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
         if (credits) this.credits = credits;
         if (name) this.name = name + " Sampler";
 
-        this.enable = () => {
-            if (this.isReady) return;
+        this.enable = async () => {
+            if(this.isReady) return; // this will happen if recycling
             sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();

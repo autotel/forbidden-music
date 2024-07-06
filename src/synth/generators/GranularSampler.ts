@@ -404,8 +404,6 @@ export class GranularSampler extends Synth {
     loadingProgress = 0;
     credits: string = "";
     needsFetching=true;
-    enable: () => void;
-    disable: () => void;
     constructor(
         audioContext: AudioContext,
         sampleDefinitions: SampleFileDefinition[],
@@ -430,8 +428,8 @@ export class GranularSampler extends Synth {
             relativeSampleStartTime,
         } = createParameters(this);
 
-        this.enable = () => {
-            if(this.isReady) return;
+        this.enable = async () => {
+            if(this.isReady) return; // this will happen if recycling
             sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();

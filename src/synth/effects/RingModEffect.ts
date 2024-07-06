@@ -4,8 +4,6 @@ import { ParamType, SynthParam } from "../types/SynthParam";
 export class RingModEffect extends AudioModule {
     output: GainNode;
     input: GainNode;
-    enable: () => void;
-    disable: () => void;
     params: SynthParam[];
 
     constructor(

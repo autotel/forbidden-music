@@ -171,7 +171,7 @@ export class KickSynth extends Synth {
         this.currentBuffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
         this.output.gain.value = 0.1;
 
-        this.enable = () => {
+        this.enable = async () => {
             this.paramChanged = useThrottleFn(() => {
                 this.updateBuffer();
             }, 10)

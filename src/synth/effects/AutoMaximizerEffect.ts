@@ -30,6 +30,7 @@ export class AutoMaximizerEffect extends AudioModule {
         this.params.push(createAutomatableAudioNodeParam(this.output.gain, 'Output Gain', 0, 10));
 
         this.enable = async () => {
+            if(this.isReady) return; // this will happen if recycling
             if (!maximizer) {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
@@ -74,6 +75,7 @@ export class AutoMaximizerEffect extends AudioModule {
             this.readyListeners.forEach(listener => listener());
             this.readyListeners = [];
         }
+        
         this.disable = () => {
         }
 

@@ -134,11 +134,10 @@ export class FourierSynth extends Synth {
         value: null
     }
     periodicWaveContents = defaultPericWaveContents();
-    enable = () => {
+    enable = async () => {
         this.updatePeriodicWave();
         this.isReady = true;
     }
-    disable = () => { }
     levelsArrayParam: ArraySynthParam;
     phasesArrayParam: ArraySynthParam;
     constructor(
