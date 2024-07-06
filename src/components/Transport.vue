@@ -7,6 +7,13 @@ import Button from './Button.vue';
 const view = useViewStore();
 const playback = usePlaybackStore();
 const bpmSetter = ref<HTMLInputElement>();
+const jumpVal = ref(4);
+const jump = (steps: number) => {
+    playback.currentScoreTime += steps;
+    playback.timeReturnPoint = playback.currentScoreTime;
+    playback.resetLoopRepetitions();
+    playback.catchUpAutomations(playback.currentScoreTime);
+}
 const preventWheelPropagation = (e: WheelEvent) => {
     e.stopPropagation();
 }
@@ -25,46 +32,60 @@ onUnmounted(() => {
         <template v-if="playback.stopped || playback.paused">
             <Button :onClick="playback.play">
                 <!-- play svg -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"  fill="currentColor" >
-                    <path fill="none" stroke="none"  d="M0 0h24v24H0z" />
-                    <path d="M8 5v14l11-7z"  fill="currentColor" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path fill="none" stroke="none" d="M0 0h24v24H0z" />
+                    <path d="M8 5v14l11-7z" fill="currentColor" />
                 </svg>
             </Button>
         </template>
         <template v-else>
             <Button :onClick="playback.pause" :active="playback.paused">
                 <!-- pause svg -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                     <path fill="none" stroke="none" d="M0 0h24v24H0z" />
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"  fill="currentColor" />
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor" />
                 </svg>
             </Button>
         </template>
         <Button :onClick="playback.stop">
             <!-- stop svg -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                 <path fill="none" stroke="none" d="M0 0h24v24H0z" />
-                <path d="M6 6h12v12H6z"  fill="currentColor" />
+                <path d="M6 6h12v12H6z" fill="currentColor" />
             </svg>
         </Button>
         <!-- input that sets the bpm -->
         <input id="bpm" type="number" v-model="playback.bpm" ref="bpmSetter" />
-        <Button 
-            :active="view.followPlayback"
-            :onClick="()=>view.followPlayback=!view.followPlayback" 
-            tooltip="Follow playback: Keep moving the view to keep the current notes time at the center"
-        >
+        <Button :active="view.followPlayback" :onClick="() => view.followPlayback = !view.followPlayback"
+            tooltip="Follow playback: Keep moving the view to keep the current notes time at the center">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <text x="0" y="19" font-size="24px" fill="currentColor"  >
+                <text x="0" y="19" font-size="24px" fill="currentColor">
                     ⇹
                 </text>
             </svg>
         </Button>
+        <!-- jump buttons -->
+        <div class="pillgroup">
+            <Button :onClick="() => jump(-jumpVal)" tooltip="Jump back">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path fill="none" stroke="none" d="M0 0h24v24H0z" />
+                    <path d="M5 12h14" fill="currentColor" />
+                    <path d="M12 5l-7 7 7 7" fill="currentColor" />
+                </svg>
+            </Button>
+            <input type="number" v-model="jumpVal" style="width:2em; font-size: 1.2em; text-align: center;" />
+            <Button :onClick="() => jump(jumpVal)" tooltip="Jump forward">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path fill="none" stroke="none" d="M0 0h24v24H0z" />
+                    <path d="M5 12h14" fill="currentColor" />
+                    <path d="M12 5l7 7-7 7" fill="currentColor" />
+                </svg>
+            </Button>
+        </div>
 
     </div>
 </template>
 <style scoped>
-
 #transport-controls {
     bottom: 0;
     display: flex;
@@ -72,7 +93,8 @@ onUnmounted(() => {
     align-items: center;
     flex-wrap: wrap;
 }
-#transport-controls>*{
+
+#transport-controls>* {
     height: 2.6rem;
     display: block;
     box-sizing: border-box;
@@ -92,18 +114,28 @@ onUnmounted(() => {
     font-size: 26px;
     width: 4em;
 
-    
-}
 
+}
+/* .pillgroup {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    height: 14px;
+    border: solid 1px #b6b6b6;
+    border-radius: 0.7em;
+    margin: 3px 3px;
+} */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /* Firefox */
 input[type=number] {
-  -moz-appearance: textfield;
+    -moz-appearance: textfield;
 }
 
 #bpm:active {
