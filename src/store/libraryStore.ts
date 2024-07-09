@@ -171,19 +171,21 @@ export const useLibraryStore = defineStore("library store", () => {
             // thus saved as '(backup) Unnamed'
             saveCurrent();
         } else {
-            try {
-                const datePart = new Date().toISOString().split('T')[0]
-                const newName = `(autosave) ${datePart}`;
-                saveToLocalStorage(
-                    newName,
-                    {
-                        ...project.getProjectDefintion(),
-                        name: newName,
-                    }
-                );
-            } catch (e) {
-                console.error("could not save", e);
-                errorMessage.value = String(e);
+            if (project.name.includes("(autosave)")) {
+            } else {
+                try {
+                    const newName = `(autosave) ${project.name}`;
+                    saveToLocalStorage(
+                        newName,
+                        {
+                            ...project.getProjectDefintion(),
+                            name: newName,
+                        }
+                    );
+                } catch (e) {
+                    console.error("could not save", e);
+                    errorMessage.value = String(e);
+                }
             }
             udpateItemsList();
         }
@@ -218,8 +220,8 @@ export const useLibraryStore = defineStore("library store", () => {
         project.lanes,
         project.loops,
         // project.snaps, // causes unsync on mouse move over viewport
-        ()=>project.snaps.values,
-        ()=>project.name,
+        () => project.snaps.values,
+        () => project.name,
         project.synths,
     ], () => inSyncWithStorage.value = false);
 
