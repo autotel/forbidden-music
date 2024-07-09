@@ -1,7 +1,7 @@
 import { buffer } from "stream/consumers";
 import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { SynthVoice, EventParamsBase, Synth } from "../types/Synth";
-import { useThrottleFn } from "@vueuse/core";
+import { useDebounceFn, useThrottleFn } from "@vueuse/core";
 
 const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<EventParamsBase> => {
 
@@ -145,7 +145,7 @@ export class KickSynth extends Synth {
         this.currentBuffer = newBuffer;
         this.waitingResponseSince ? console.log("calc took", Date.now() - this.waitingResponseSince, "ms") : null;
         this.waitingResponseSince = false;
-        if(this.newWaveListener) this.newWaveListener(this.currentWave);
+        if (this.newWaveListener) this.newWaveListener(this.currentWave);
     }
     requestNewWave: () => void;
     constructor(
@@ -154,6 +154,14 @@ export class KickSynth extends Synth {
         super(audioContext, kickVoice);
         this.currentBuffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
         this.output.gain.value = 0.1;
+        this.params = [
+            this.startOctave,
+            this.vDecayTime,
+            this.vcurve,
+            this.fDecayTime,
+            this.fcurve,
+            this.alias,
+        ];
         this.requestNewWave = () => {
             if (this.waitingResponseSince) {
                 const length = Date.now() - this.waitingResponseSince;
@@ -161,7 +169,8 @@ export class KickSynth extends Synth {
                     console.error(this.name, "worker timed out");
                     this.waitingResponseSince = false;
                 } else {
-                    console.log(this.name, "request while worker still working, result will come outdated!");
+                    console.warn(this.name, "worker recalc request while waiting for a prev one");
+                    // this.worker?.terminate();
                     return;
                 }
             }
@@ -181,14 +190,6 @@ export class KickSynth extends Synth {
             });
             this.waitingResponseSince = Date.now();
         }
-        this.params = [
-            this.startOctave,
-            this.vDecayTime,
-            this.vcurve,
-            this.fDecayTime,
-            this.fcurve,
-            this.alias,
-        ];
         this.enable = async () => {
             if (this.worker && this.isReady) return;
             this.worker = new Worker(
@@ -198,7 +199,10 @@ export class KickSynth extends Synth {
             this.worker.onmessage = (e: MessageEvent<Float32Array>) => {
                 this.applyNewWave(audioContext, e.data);
             }
-            this.paramChanged = useThrottleFn(this.requestNewWave, 20)
+            this.paramChanged = useDebounceFn(() => {
+                console.log("param changed", this.alias.value);
+                this.requestNewWave()
+            }, 100);
             this.paramChanged();
             this.isReady = true;
         }
