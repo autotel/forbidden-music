@@ -202,7 +202,7 @@ export class KickSynth extends Synth {
             this.paramChanged = useDebounceFn(() => {
                 console.log("param changed", this.alias.value);
                 this.requestNewWave()
-            }, 100);
+            }, 10);
             this.paramChanged();
             this.isReady = true;
         }

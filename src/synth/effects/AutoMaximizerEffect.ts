@@ -9,6 +9,7 @@ export class AutoMaximizerEffect extends AudioModule {
     lastMeasuredLevel: number = 0;
     readyListeners: (() => void)[] = [];
     isReady: boolean = false;
+    isWaiting: boolean = false;
     constructor(
         audioContext: AudioContext,
     ) {
@@ -30,7 +31,8 @@ export class AutoMaximizerEffect extends AudioModule {
         this.params.push(createAutomatableAudioNodeParam(this.output.gain, 'Output Gain', 0, 10));
 
         this.enable = async () => {
-            if(this.isReady) return; // this will happen if recycling
+            if(this.isReady || this.isWaiting) return; // this will happen if recycling
+            this.isWaiting = true;
             if (!maximizer) {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
@@ -52,8 +54,6 @@ export class AutoMaximizerEffect extends AudioModule {
             let levelParam: AudioParam | undefined = envelopeFollower.parameters.get('level');
             // @ts-ignore
             let biasParam: AudioParam | undefined = envelopeFollower.parameters.get('bias');
-            // @ts-ignore
-            let outLevelParam: AudioParam | undefined = envelopeFollower.parameters.get('outputLevel');
 
             if (!increaseRateParam || !decreaseRateParam || !levelParam || !biasParam) {
                 throw new Error('Failed to get envelope follower parameters');
@@ -71,9 +71,10 @@ export class AutoMaximizerEffect extends AudioModule {
             envelopeFollower.port.onmessage = (event) => {
                 this.lastMeasuredLevel = event.data;
             }
-            this.isReady = true;
             this.readyListeners.forEach(listener => listener());
             this.readyListeners = [];
+            this.isReady = true;
+            this.isWaiting = false;
         }
         
         this.disable = () => {

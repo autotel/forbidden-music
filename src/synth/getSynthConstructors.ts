@@ -20,6 +20,7 @@ import { SineSynth } from "./generators/SineSynth";
 import { ThingyScoreFx } from "./scoreEffects/Thingy";
 import { AudioModule } from "./types/AudioModule";
 import { SynthParamStored } from "./types/SynthParam";
+import { GainEffect } from "./effects/GainEffect";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
@@ -159,6 +160,7 @@ export default function getSynthConstructors(
     addAvailableSynth(RingModEffect, 'RingModEffect');
     addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect');
     addAvailableSynth(FilterEffect, 'FilterEffect');
+    addAvailableSynth(GainEffect, 'GainEffect');
 
     addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
     if (isDev()) {

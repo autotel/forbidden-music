@@ -65,21 +65,13 @@ onUnmounted(() => {
             </svg>
         </Button>
         <!-- jump buttons -->
-        <div class="pillgroup">
+        <div class="skip-group">
             <Button :onClick="() => jump(-jumpVal)" tooltip="Jump back">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                    <path fill="none" stroke="none" d="M0 0h24v24H0z" />
-                    <path d="M5 12h14" fill="currentColor" />
-                    <path d="M12 5l-7 7 7 7" fill="currentColor" />
-                </svg>
+                &lt;&lt;
             </Button>
             <input type="number" v-model="jumpVal" style="width:2em; font-size: 1.2em; text-align: center;" />
             <Button :onClick="() => jump(jumpVal)" tooltip="Jump forward">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                    <path fill="none" stroke="none" d="M0 0h24v24H0z" />
-                    <path d="M5 12h14" fill="currentColor" />
-                    <path d="M12 5l7 7-7 7" fill="currentColor" />
-                </svg>
+                &gt;&gt;
             </Button>
         </div>
 
@@ -116,17 +108,25 @@ onUnmounted(() => {
 
 
 }
-/* .pillgroup {
+
+#transport-controls>.skip-group {
     position: relative;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    height: 14px;
+    height: 2em;
     border: solid 1px #b6b6b6;
     border-radius: 0.7em;
-    margin: 3px 3px;
-} */
+    margin-left: 1em;
+}
+
+.skip-group>* {
+    height: 100%;
+    border-radius: 0;
+    display: block;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
