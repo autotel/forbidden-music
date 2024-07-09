@@ -17,9 +17,9 @@ export class AudioModule implements PatcheableTrait {
     }
     
     static findParamByName = (synth: AudioModule, name: string): SynthParam | undefined => {
-        console.log("           finding param", name, "in", synth);
+        // console.log("           finding param", name, "in", synth);
         const exact = synth.params.find((param) => {
-            console.log("               param", param.displayName, param.displayName === name ? "==" : "!=", name);
+            // console.log("               param", param.displayName, param.displayName === name ? "==" : "!=", name);
             return param.displayName === name
         });
         if (exact) return exact;
