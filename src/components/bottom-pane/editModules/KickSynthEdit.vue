@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
 import { KickSynth } from '../../../synth/generators/KickSynth';
 import { ParamType } from '../../../synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
@@ -37,10 +37,8 @@ const getWaveValueAt = (iMin: number, iMax: number) => {
         return [vs, vs];
     }
 }
-const draw = () => {
+const draw = (wave: number[]) => {
     if (!context.value) return;
-    console.log('draw');
-    const wave = props.audioModule.currentWave;
     const ctx = context.value;
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, ...canvasSize);
@@ -85,22 +83,42 @@ const draw = () => {
     ctx.stroke();
 
 }
-const paramChangedListener = useThrottleFn(() => {
-    draw();
-}, 20);
+
+const waveChangedListener = (wave: number[]) => { draw(wave) }
+
+const removeNewWaveListeners = (of: KickSynth) => {
+    if (of.newWaveListener === waveChangedListener) {
+        of.newWaveListener = false;
+    }
+}
+const addNewWaveListeners = (of: KickSynth) => {
+    of.newWaveListener = waveChangedListener;
+}
+
+// watch(props.audioModule, (oldVal:KickSynth, newVal: KickSynth) => {
+//     removeNewWaveListeners(oldVal);
+//     addNewWaveListeners(newVal);
+// });
 
 onMounted(() => {
-    draw();
+    addNewWaveListeners(props.audioModule);
+    setTimeout(() => draw(props.audioModule.currentWave), 0);
+});
+
+onBeforeUnmount(() => {
+    removeNewWaveListeners(props.audioModule);
 });
 
 </script>
 <template>
     <div style="text-align: center;">
-        <canvas ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]" style="flex-grow: 0; flex-shrink: 0;"></canvas>
-        <div style="display: flex; flex-direction: row; margin-top:1em; flex-wrap: wrap; width: 20em; align-items: center;">
+        <canvas ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]"
+            style="flex-grow: 0; flex-shrink: 0;"></canvas>
+        <div
+            style="display: flex; flex-direction: row; margin-top:1em; flex-wrap: wrap; width: 20em; align-items: center;">
             <template v-for="param in audioModule.params">
-                <NumberSynthParam v-if="param.type === ParamType.number" :param="param" @update="paramChangedListener" />
-                <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" @update="paramChangedListener" />
+                <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
+                <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
             </template>
         </div>
     </div>

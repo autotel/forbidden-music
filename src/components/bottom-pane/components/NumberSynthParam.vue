@@ -104,7 +104,7 @@ const ww = 600;
 
 watch(() => props.param.value, () => {
     paramValueToLocalValue();
-    // emit('update');
+    emit('update');
 });
 
 const mouseWheeled = (e: WheelEvent) => {

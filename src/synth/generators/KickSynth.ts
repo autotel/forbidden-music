@@ -96,14 +96,6 @@ const chageTrigBoolParam = ({
         exportable: true,
     } as BooleanSynthParam
 }
-const curveFunction = (t: number, curve: number) => {
-    // crossfades between exp and linear
-    // result is value between 0 and 1 as function of t (seconds) 
-    return Math.max(0, 1 - Math.pow(t, curve));
-}
-const clampAudio = (v: number) => {
-    return Math.min(1, Math.max(-1, v));
-}
 export class KickSynth extends Synth {
     paramChanged = () => { };
     startOctave = chageTrigNumParam({
@@ -139,45 +131,56 @@ export class KickSynth extends Synth {
     currentBuffer: AudioBuffer;
     params: SynthParam[];
     inherentSampleFrequency = 80;
-    updateBuffer = (): AudioBuffer => {
-        this.currentWave = [];
-        const sampleRate = this.audioContext.sampleRate;
-        const decaySamples = (this.vDecayTime.value * sampleRate) || 1;
-        const newBuffer = this.audioContext.createBuffer(1, decaySamples, sampleRate);
+    worker: undefined | Worker = undefined;
+    waitingResponseSince: false | number = 0;
+    newWaveListener = false as false | ((wave: number[]) => void);
+    applyNewWave = (audioContext: AudioContext, newWave: Float32Array) => {
+        const newBuffer = audioContext.createBuffer(1, newWave.length, audioContext.sampleRate);
         const data = newBuffer.getChannelData(0);
-        const aliasError = this.alias.value;
-        let phase = 0;
-        for (let i = 0; i < decaySamples; i++) {
-            const t = i / decaySamples;
-            const secs = i / sampleRate;
-            const octaveAdd = (
-                this.startOctave.value * curveFunction(secs / this.fDecayTime.value, this.fcurve.value)
-            );
-            let oct = 1 + octaveAdd;
-            if(aliasError) oct *= 10;
-            const frequency = this.inherentSampleFrequency * Math.pow(2, oct);
-            phase += frequency / sampleRate;
-            this.currentWave[i] = Math.sin(Math.PI * 2 * phase) * curveFunction(t, this.vcurve.value);
-            data[i] = clampAudio(this.currentWave[i]);
+        for (let i = 0; i < newWave.length; i++) {
+            if (isNaN(newWave[i])) newWave[i] = 0;
+            data[i] = newWave[i];
         }
+        this.currentWave = Array.from(newWave);
         this.currentBuffer = newBuffer;
-        // just so that I can definitely define buffer @ contstructor
-        return newBuffer;
+        this.waitingResponseSince ? console.log("calc took", Date.now() - this.waitingResponseSince, "ms") : null;
+        this.waitingResponseSince = false;
+        if(this.newWaveListener) this.newWaveListener(this.currentWave);
     }
+    requestNewWave: () => void;
     constructor(
         audioContext: AudioContext
     ) {
         super(audioContext, kickVoice);
         this.currentBuffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
         this.output.gain.value = 0.1;
-
-        this.enable = async () => {
-            this.paramChanged = useThrottleFn(() => {
-                this.updateBuffer();
-            }, 10)
-            this.paramChanged();
+        this.requestNewWave = () => {
+            if (this.waitingResponseSince) {
+                const length = Date.now() - this.waitingResponseSince;
+                if (length > 1000) {
+                    console.error(this.name, "worker timed out");
+                    this.waitingResponseSince = false;
+                } else {
+                    console.log(this.name, "request while worker still working, result will come outdated!");
+                    return;
+                }
+            }
+            if (!this.worker) {
+                console.error(this.name, "worker not loaded");
+                return;
+            }
+            this.worker.postMessage({
+                inherentSampleFrequency: this.inherentSampleFrequency,
+                startOctave: this.startOctave.value,
+                vDecayTime: this.vDecayTime.value,
+                vcurve: this.vcurve.value,
+                fDecayTime: this.fDecayTime.value,
+                fcurve: this.fcurve.value,
+                aliasError: this.alias.value,
+                sampleRate: audioContext.sampleRate,
+            });
+            this.waitingResponseSince = Date.now();
         }
-
         this.params = [
             this.startOctave,
             this.vDecayTime,
@@ -186,7 +189,18 @@ export class KickSynth extends Synth {
             this.fcurve,
             this.alias,
         ];
-
-
+        this.enable = async () => {
+            if (this.worker && this.isReady) return;
+            this.worker = new Worker(
+                new URL('./KickSampleGenWorker.js', import.meta.url),
+                { type: 'module' }
+            );
+            this.worker.onmessage = (e: MessageEvent<Float32Array>) => {
+                this.applyNewWave(audioContext, e.data);
+            }
+            this.paramChanged = useThrottleFn(this.requestNewWave, 20)
+            this.paramChanged();
+            this.isReady = true;
+        }
     }
 }
