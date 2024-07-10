@@ -171,21 +171,25 @@ export const useLibraryStore = defineStore("library store", () => {
             // thus saved as '(backup) Unnamed'
             saveCurrent();
         } else {
+            let newName;
             if (project.name.includes("(autosave)")) {
+                console.log("autosaving this project");
+                newName = `${project.name}`;
             } else {
-                try {
-                    const newName = `(autosave) ${project.name}`;
-                    saveToLocalStorage(
-                        newName,
-                        {
-                            ...project.getProjectDefintion(),
-                            name: newName,
-                        }
-                    );
-                } catch (e) {
-                    console.error("could not save", e);
-                    errorMessage.value = String(e);
-                }
+                newName = `(autosave) ${project.name}`;
+                console.log("autosaving to", newName);
+            }
+            try {
+                saveToLocalStorage(
+                    newName,
+                    {
+                        ...project.getProjectDefintion(),
+                        name: newName,
+                    }
+                );
+            } catch (e) {
+                console.error("could not save", e);
+                errorMessage.value = String(e);
             }
             udpateItemsList();
         }

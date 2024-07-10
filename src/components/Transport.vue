@@ -67,11 +67,11 @@ onUnmounted(() => {
         <!-- jump buttons -->
         <div class="skip-group">
             <Button :onClick="() => jump(-jumpVal)" tooltip="Jump back">
-                &lt;&lt;
+                «
             </Button>
             <input type="number" v-model="jumpVal" style="width:2em; font-size: 1.2em; text-align: center;" />
             <Button :onClick="() => jump(jumpVal)" tooltip="Jump forward">
-                &gt;&gt;
+                »
             </Button>
         </div>
 
@@ -123,8 +123,23 @@ onUnmounted(() => {
 
 .skip-group>* {
     height: 100%;
+    text-align: center;
     border-radius: 0;
     display: block;
+}
+.skip-group input{
+    /* border: none; */
+    /* background-color: transparent; */
+    font-size: 1.2em;
+    text-align: center;
+    /* width: 2em; */
+    /* padding: 0;
+    margin: 0; */
+    line-height: 1;
+    font-family: monospace;
+    /* border-left: solid 1px #b6b6b6;
+    border-right: solid 1px #b6b6b6; */
+
 }
 
 input::-webkit-outer-spin-button,

@@ -127,7 +127,6 @@ const toggleCollapse = () => {
     height: 100%;
     margin: 0.6em;
     box-sizing: border-box;
-    overflow: hidden;
 }
 
 @media (prefers-color-scheme: light) {
