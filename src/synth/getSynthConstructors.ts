@@ -21,6 +21,7 @@ import { ThingyScoreFx } from "./scoreEffects/Thingy";
 import { AudioModule } from "./types/AudioModule";
 import { SynthParamStored } from "./types/SynthParam";
 import { GainEffect } from "./effects/GainEffect";
+import { PerxThingy } from "./generators/PerxThingy";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
@@ -155,20 +156,21 @@ export default function getSynthConstructors(
     addAvailableSynth(KarplusSynth, 'KarplusSynth');
     addAvailableSynth(SineCluster, 'SineCluster');
     addAvailableSynth(SineSynth, 'SineSynth');
-
+    
     addAvailableSynth(SimpleDelayEffect, 'SimpleDelayEffect');
     addAvailableSynth(RingModEffect, 'RingModEffect');
     addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect');
     addAvailableSynth(FilterEffect, 'FilterEffect');
     addAvailableSynth(GainEffect, 'GainEffect');
-
+    
     addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
     if (isDev()) {
         // bc. unfinished
         addAvailableSynth(FmSynth, "(xp) Fm Synth", [], false, true);
         addAvailableSynth(ThingyScoreFx, "(xp) Thingy Score Effect");
         addAvailableSynth(ExternalMidiSynth, "(xp) External  [],Midi Synth");
-
+        
+        addAvailableSynth(PerxThingy, 'PerxThingy');
         addAvailableSynth(PatcheableSynth, "(xp) Dyna synth", [], false, true);
     }
     console.log("available channels", returnArray.map(s => s.name));

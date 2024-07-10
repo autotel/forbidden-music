@@ -60,7 +60,7 @@ interface CTPP {
     max: number,
     value: number,
 }
-const chageTrigNumParam = ({
+const changeTrigNumParam = ({
     displayName, min, max, value
 }: CTPP, listener: () => void) => {
     return {
@@ -98,27 +98,27 @@ const chageTrigBoolParam = ({
 }
 export class KickSynth extends Synth {
     paramChanged = () => { };
-    startOctave = chageTrigNumParam({
+    startOctave = changeTrigNumParam({
         displayName: "start octave",
         min: 0, max: 4,
         value: 2.273,
     }, () => this.paramChanged())
-    vDecayTime = chageTrigNumParam({
+    vDecayTime = changeTrigNumParam({
         displayName: "amplitude decay time",
         min: 0, max: 2,
         value: 0.5,
     }, () => this.paramChanged())
-    fDecayTime = chageTrigNumParam({
+    fDecayTime = changeTrigNumParam({
         displayName: "frequency decay time",
         min: 0, max: 2,
         value: 0.04,
     }, () => this.paramChanged())
-    vcurve = chageTrigNumParam({
+    vcurve = changeTrigNumParam({
         displayName: "amplitude curve",
         min: 0, max: 1,
         value: 0.5,
     }, () => this.paramChanged())
-    fcurve = chageTrigNumParam({
+    fcurve = changeTrigNumParam({
         displayName: "frequency curve",
         min: 0, max: 1,
         value: 0.5,

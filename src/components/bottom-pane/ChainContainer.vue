@@ -3,6 +3,7 @@ import { AutoMaximizerEffect } from '@/synth/effects/AutoMaximizerEffect';
 import { FilterEffect } from '@/synth/effects/FilterEffect';
 import { FourierSynth } from '@/synth/generators/FourierSynth';
 import { KickSynth } from '@/synth/generators/KickSynth';
+import { PerxThingy } from '@/synth/generators/PerxThingy';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
 import { PatcheableSynthVoice, Synth } from '@/synth/types/Synth';
@@ -17,10 +18,12 @@ import AutoMaximizerContainer from './editModules/AutoMaximizerContainer.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
+import PerxThingyEdit from './editModules/PerxThingyEdit.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
+import { SineCluster } from '@/synth/generators/SineCluster';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -71,6 +74,7 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
             <template #default>
                 <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
                 <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
+                <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
                 <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
                 <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />

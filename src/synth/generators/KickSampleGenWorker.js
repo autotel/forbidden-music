@@ -20,15 +20,15 @@ const generate = (
     aliasError
 ) => {
 
-    requireNotToBeNaN({
-        sampleRate,
-        inherentSampleFrequency,
-        startOctave,
-        vDecayTime,
-        fDecayTime,
-        vcurve,
-        fcurve
-    });
+    // requireNotToBeNaN({
+    //     sampleRate,
+    //     inherentSampleFrequency,
+    //     startOctave,
+    //     vDecayTime,
+    //     fDecayTime,
+    //     vcurve,
+    //     fcurve
+    // });
 
 
     const decaySamples = Math.round(vDecayTime * sampleRate) || 1;
@@ -50,7 +50,7 @@ const generate = (
     return result;
 }
 /**
- * @param {[key:string]:number} valDict
+ * @param {Object} valDict
  */
 const requireNotToBeNaN = (valDict) => {
     for (const key in valDict) {
@@ -64,8 +64,6 @@ const requireNotToBeNaN = (valDict) => {
  * @param {number} curve curve exp
  */
 const curveFunction = (t, curve) => {
-    // crossfades between exp and linear
-    // result is value between 0 and 1 as function of t (seconds) 
     return Math.max(0, 1 - Math.pow(t, curve));
 }
 /**
