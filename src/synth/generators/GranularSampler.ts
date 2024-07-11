@@ -424,20 +424,16 @@ export class GranularSampler extends Synth {
 
         if (credits) this.credits = credits;
 
-        const {
-            relativeSampleStartTime,
-        } = createParameters(this);
+        createParameters(this);
+
+        let enableCalled = false;
 
         this.enable = async () => {
-            if(this.isReady) return; // this will happen if recycling
-            sampleSources.forEach(async (sampleSource) => {
-                if (sampleSource.isLoading || sampleSource.isLoaded) return;
-                await sampleSource.load();
-                this.loadingProgress += 1;
-                if(this.loadingProgress >= sampleSources.length) {
-                    this.isReady = true;
-                }
-            });
+            if (enableCalled) return;
+            enableCalled = true;
+            let sampleSourcePromises = sampleSources.map((sampleSource) => sampleSource.load());
+            await Promise.all(sampleSourcePromises);
+            this.markReady();
         }
         this.disable = () => {
         }

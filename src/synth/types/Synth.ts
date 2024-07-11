@@ -44,27 +44,29 @@ export type synthVoiceFactory<
 
 export class Synth<
     A extends EventParamsBase = EventParamsBase,
-    V extends SynthVoice = SynthVoice<A>,
+    Voice extends SynthVoice = SynthVoice<A>,
 > extends AudioModule implements ReceivesNotes {
+    // Basic Traits
     readonly receivesNotes = true;
-    isReady = false;
     readonly patcheableType = PatcheableType.AudioModule;
+
+    // AudioModule
     name = "Synth";
-    /** voice instances */
-    instances: V[] = [];
-    createVoice: () => V;
-    enable = async () => { this.isReady = true; }
-    disable = () => { this.isReady = false; }
     output: GainNode;
-    audioContext: AudioContext;
     params: SynthParam[] = [];
-    needsFetching = false;
+
+    // Synth
+    /** voice instances */
+    instances: Voice[] = [];
+    createVoice: () => Voice;
     transformTriggerParams?: (p: EventParamsBase) => A;
+
     constructor(
         audioContext: AudioContext,
-        factory?: synthVoiceFactory<V>,
+        factory?: synthVoiceFactory<Voice>,
     ) {
         super();
+
         this.createVoice = () => {
             if (!factory) throw new Error("No factory provided to create voice");
             const voice = factory(
@@ -75,13 +77,13 @@ export class Synth<
             return voice;
         }
         this.output = audioContext.createGain();
-        this.audioContext = audioContext;
     }
 
     findFreeVoice() {
         const freeVoice = this.instances.find((voice) => !voice.inUse);
         return freeVoice || null;
     }
+
     allocateVoice() {
         const freeVoice = this.findFreeVoice();
         if (freeVoice) {
@@ -92,6 +94,7 @@ export class Synth<
             return voice;
         }
     }
+
     scheduleStart(
         frequency: number,
         absoluteStartTime: number,
@@ -104,6 +107,7 @@ export class Synth<
         voice.scheduleStart(frequency, absoluteStartTime, noteParameters);
         return voice;
     }
+
     schedulePerc(
         frequency: number,
         absoluteStartTime: number,
@@ -122,6 +126,7 @@ export class Synth<
         );
         return voice;
     }
+
     scheduleEnd = (when?: number | undefined) => {
         this.instances.forEach((voice) => {
             voice.scheduleEnd(when);

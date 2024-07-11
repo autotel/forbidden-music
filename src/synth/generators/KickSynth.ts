@@ -190,8 +190,11 @@ export class KickSynth extends Synth {
             });
             this.waitingResponseSince = Date.now();
         }
-        this.enable = async () => {
-            if (this.worker && this.isReady) return;
+        let enableCalled = false;
+        // TODO: hmm.. this could've been done on constructor
+        this.enable = () => {
+            if (enableCalled) return;
+            enableCalled = true;
             this.worker = new Worker(
                 new URL('./KickSampleGenWorker.js', import.meta.url),
                 { type: 'module' }
@@ -203,8 +206,8 @@ export class KickSynth extends Synth {
                 console.log("param changed", this.alias.value);
                 this.requestNewWave()
             }, 10);
+            this.markReady();
             this.paramChanged();
-            this.isReady = true;
         }
     }
 }

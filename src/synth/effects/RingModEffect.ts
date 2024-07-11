@@ -1,6 +1,8 @@
 import { AudioModule } from "../types/AudioModule";
 import { ParamType, SynthParam } from "../types/SynthParam";
 
+type OscillatorType = "sine" | "square" | "sawtooth" | "triangle";
+
 export class RingModEffect extends AudioModule {
     output: GainNode;
     input: GainNode;

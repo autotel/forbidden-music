@@ -77,7 +77,6 @@ export class ExternalMidiSynth extends AudioModule {
         super();
         this.updateParams();
     }
-    isReady = false;
     //@ts-ignore
     midiOutputs: MIDIOutput[] = [];
     selectedMidiOutputIndex = 0;
@@ -215,7 +214,7 @@ export class ExternalMidiSynth extends AudioModule {
         this.sendTestChord();
 
         this.updateParams();
-        this.isReady = true;
+        this.markReady();
     }
     disable = () => { };
 }

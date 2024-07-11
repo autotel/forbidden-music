@@ -253,14 +253,16 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
 
         super(audioContext, (a) => samplerVoice(a, sampleSources));
 
-        this.output = this.audioContext.createGain();
+        this.output = audioContext.createGain();
         this.output.gain.value = 0.3;
 
         if (credits) this.credits = credits;
         if (name) this.name = name + " Sampler";
-
+        let enableCalled = false;
         this.enable = async () => {
-            if(this.isReady) return; // this will happen if recycling
+            if (enableCalled) return;
+            enableCalled = true;
+            
             sampleSources.forEach(async (sampleSource) => {
                 if (sampleSource.isLoading || sampleSource.isLoaded) return;
                 await sampleSource.load();
@@ -268,10 +270,8 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
                 if (
                     this.loadingProgress > 2 ||
                     this.loadingProgress == sampleDefinitions.length
-                ) this.isReady = true;
+                ) this.markReady();
             });
-        }
-        this.disable = () => {
         }
 
         const parent = this;

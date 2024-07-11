@@ -86,6 +86,7 @@ export class FilterEffect extends AudioModule {
 
             dry.connect(this.output);
             wet.connect(this.output);
+            this.markReady();
         }
 
         this.disable = () => {

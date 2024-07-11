@@ -280,7 +280,6 @@ export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
     ) {
         super(audioContext, sineVoice);
         this.output.gain.value = 0.1;
-        let maximizer: AudioNode | undefined;
         this.transformTriggerParams = (params: EventParamsBase) => {
             const { relativeOctaves, gains } = this.getCluster(audioContext.currentTime);
             params.relativeOctaves = relativeOctaves;
@@ -292,22 +291,6 @@ export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
                 // perc: false,
             } as ClusterSineNoteParams;
         }
-
-        this.enable = async () => {
-            if (!maximizer) {
-                // TODO: fix how FX work and move maximizer out of here
-                maximizer = await createMaximizerWorklet(audioContext);
-            }
-            maximizer.connect(this.output);
-            this.isReady = true;
-        }
-        this.disable = () => {
-            if (maximizer) {
-                maximizer.disconnect();
-            }
-            this.isReady = false;
-        }
-
         const {
             octavesIntervalParam
         } = buildParams(this);

@@ -88,7 +88,6 @@ export class FmSynth extends Synth {
             return voiceFactory({ engine })
         });
         this.output.gain.value = 0.6;
-        this.audioContext = audioContext;
         createFmWorklet(audioContext).then((engine) => {
             this.engine = engine;
             this.engine.connect(this.output);

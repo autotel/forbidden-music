@@ -136,10 +136,11 @@ export class FourierSynth extends Synth {
     periodicWaveContents = defaultPericWaveContents();
     enable = async () => {
         this.updatePeriodicWave();
-        this.isReady = true;
+        this.markReady();
     }
     levelsArrayParam: ArraySynthParam;
     phasesArrayParam: ArraySynthParam;
+    audioContext: AudioContext;
     constructor(
         audioContext: AudioContext
     ) {
@@ -147,6 +148,7 @@ export class FourierSynth extends Synth {
             audioContext,
             () => (new FourierVoice(audioContext, this.periodicWaveRef as SimpleRef<PeriodicWave>))
         );
+        this.audioContext = audioContext;
         this.output.gain.value = 0.1;
         this.periodicWaveRef = {
             value: null

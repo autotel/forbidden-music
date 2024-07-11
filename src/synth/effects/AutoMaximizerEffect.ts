@@ -7,9 +7,7 @@ export class AutoMaximizerEffect extends AudioModule {
     output: GainNode;
     input: GainNode;
     lastMeasuredLevel: number = 0;
-    readyListeners: (() => void)[] = [];
-    isReady: boolean = false;
-    isWaiting: boolean = false;
+    enabledCalled: boolean = false;
     constructor(
         audioContext: AudioContext,
     ) {
@@ -31,8 +29,8 @@ export class AutoMaximizerEffect extends AudioModule {
         this.params.push(createAutomatableAudioNodeParam(this.output.gain, 'Output Gain', 0, 10));
 
         this.enable = async () => {
-            if(this.isReady || this.isWaiting) return; // this will happen if recycling
-            this.isWaiting = true;
+            if(this.enabledCalled) return; // this will happen if recycling
+            this.enabledCalled = true;
             if (!maximizer) {
                 maximizer = await createMaximizerWorklet(audioContext);
             }
@@ -71,10 +69,8 @@ export class AutoMaximizerEffect extends AudioModule {
             envelopeFollower.port.onmessage = (event) => {
                 this.lastMeasuredLevel = event.data;
             }
-            this.readyListeners.forEach(listener => listener());
-            this.readyListeners = [];
-            this.isReady = true;
-            this.isWaiting = false;
+
+            this.markReady();
         }
         
         this.disable = () => {
@@ -93,13 +89,6 @@ export class AutoMaximizerEffect extends AudioModule {
     }
     getWaveform() {
         return [0];
-    }
-    whenReady(callback: () => void) {
-        if (this.isReady) {
-            callback();
-        } else {
-            this.readyListeners.push(callback);
-        }
     }
 
 }

@@ -2,16 +2,14 @@
 
 import { Ref, computed, inject, onMounted, ref } from 'vue';
 import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { AudioModule } from '../../../synth/types/AudioModule';
+import { AutoMaximizerEffect } from '../../../synth/effects/AutoMaximizerEffect';
 import { ParamType } from '../../../synth/types/SynthParam';
+import Button from '../../Button.vue';
+import ButtonSub from '../../ButtonSub.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
-import Button from '../../Button.vue';
-import { useThrottleFn } from '@vueuse/core';
-import { AutoMaximizerEffect } from '../../../synth/effects/AutoMaximizerEffect';
-import ButtonSub from '../../ButtonSub.vue';
 
 const props = defineProps<{
     audioModule: AutoMaximizerEffect
@@ -27,7 +25,7 @@ const showInfo = (info: string) => {
 }
 
 const moduleReady = ref(false);
-props.audioModule.whenReady(() => moduleReady.value = true);
+props.audioModule.waitReady.then(() => moduleReady.value = true);
 type microVec = [number, number];
 const canvasSize: microVec = [300, 100];
 const canvas = ref<HTMLCanvasElement | null>(null);

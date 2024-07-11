@@ -135,13 +135,13 @@ export class PerxThingy extends Synth<EventParamsBase> {
         }
 
         let enableCalled = false;
-        this.envelopeGen = oneShotEnvelope(this.audioContext);
+        this.envelopeGen = oneShotEnvelope(audioContext);
 
         this.enable = async () => {
             if (enableCalled) return;
             enableCalled = true;
 
-            const foldedSaturator = await createFoldedSaturatorWorklet(this.audioContext);
+            const foldedSaturator = await createFoldedSaturatorWorklet(audioContext);
             // @ts-ignore
             const preGainParam = foldedSaturator.parameters.get("preGain") as AudioParam;
             // @ts-ignore
@@ -178,15 +178,8 @@ export class PerxThingy extends Synth<EventParamsBase> {
                 return voice;
             }
 
-
-
-            this.isReady = true;
+            this.markReady();
         }
-
-        this.disable = () => {
-            this.isReady = false;
-        }
-
     }
     params = [] as SynthParam[];
 }

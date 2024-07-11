@@ -9,7 +9,7 @@ import { AutomationPoint } from '../dataTypes/AutomationPoint';
 import { Note, getFrequency } from "../dataTypes/Note";
 import isTauri, { tauriObject } from '../functions/isTauri';
 import { PlaceholderSynth } from '../synth/generators/PlaceholderSynth';
-import { ReceivesNotes } from '../synth/types/AudioModule';
+import { AudioModule, ReceivesNotes } from '../synth/types/AudioModule';
 import { SynthParam } from '../synth/types/SynthParam';
 import { useAudioContextStore } from "./audioContextStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
@@ -67,25 +67,10 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const releaseAll = () => channels.value.children.forEach((chain) => chain.releaseAll());
-
-    const instanceAudioModule = (audioModule: SynthConstructorWrapper) => {
+    
+    // TODO: we could skip this call and call audioModule.create directly
+    const instanceAudioModule = (audioModule: SynthConstructorWrapper):AudioModule => {
         const newModule = audioModule.create();
-        // to reduce traffic
-        const enable = newModule.enable;
-        if (enable) {
-            if ('needsFetching' in newModule) {
-                console.log("newModule needs fetching");
-                if (exclusives.enabled) {
-                    enable();
-                } else {
-                    setTimeout(() => {
-                        enable();
-                    }, 5000);
-                }
-            } else {
-                enable();
-            }
-        }
         return newModule;
     }
 

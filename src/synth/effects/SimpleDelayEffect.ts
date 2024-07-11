@@ -1,6 +1,6 @@
 import { AudioModule } from "../types/AudioModule";
 import { createAutomatableAudioNodeParam } from "../types/Automatable";
-import { ParamType, SynthParam } from "../types/SynthParam";
+import { SynthParam } from "../types/SynthParam";
 
 export class SimpleDelayEffect extends AudioModule {
     output: GainNode;

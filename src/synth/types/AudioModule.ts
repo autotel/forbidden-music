@@ -1,22 +1,37 @@
-import { SynthParam } from "./SynthParam";
+import { AsyncEnableObject } from "@/dataTypes/AsyncEnableObject";
 import { PatcheableTrait, PatcheableType } from "../../dataTypes/PatcheableTrait";
 import { EventParamsBase, SynthVoice } from "./Synth";
+import { SynthParam } from "./SynthParam";
 
-export class AudioModule implements PatcheableTrait {
+export class AudioModule implements PatcheableTrait, AsyncEnableObject {
+    // PatcheableTrait
     readonly patcheableType = PatcheableType.AudioModule;
-    params: SynthParam[] = [];
+
+    // AsyncEnableObject
+    waitReady = Promise.resolve();
+    markReady: () => void;
+
+    // AudioModule
     name: string = "AudioModule";
-    credits?: string;
-    needsFetching?: boolean;
+    params: SynthParam[] = [];
     output?: AudioNode;
     input?: AudioNode;
-    enable: false | (() => void) = false;
-    disable: false | (() => void) = false;
-    waitReady?: Promise<void>;  
+    /**
+     * The disabling mechanism is not well thought around the app 
+     * generally don't use synths that've been disabled.
+     * There will be no clear warning if such is done.
+     */
+    disable = () => {};
+    enable = () => {
+        this.markReady();
+    };
     findParamByName = (name: string): SynthParam | undefined => {
         return AudioModule.findParamByName(this, name);
     }
-    
+
+    needsFetching?: boolean;
+    credits?: string;
+
     static findParamByName = (synth: AudioModule, name: string): SynthParam | undefined => {
         // console.log("           finding param", name, "in", synth);
         const exact = synth.params.find((param) => {
@@ -33,14 +48,17 @@ export class AudioModule implements PatcheableTrait {
         });
         return abbreviated;
     }
+
+    constructor() {
+        this.markReady = () => { throw new Error("MarkReady incorrectly set") };
+        this.waitReady = new Promise<void>((resolve) => {
+            this.markReady = resolve;
+        });
+    }
 }
 
 
 export interface ReceivesNotes extends AudioModule {
-    // enable: () => void;
-    // disable: () => void;
-    // params: SynthParam[];
-    // isReady: boolean;
     receivesNotes: true;
     transformTriggerParams?: (p: EventParamsBase) => EventParamsBase;
     scheduleStart: (

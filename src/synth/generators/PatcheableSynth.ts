@@ -112,7 +112,6 @@ const voiceChainFactory: synthVoiceFactory<PatchedVoice> = (audioContext, synthP
 }
 
 export class PatcheableSynth extends Synth<EventParamsBase, PatchedVoice> {
-
     constructorsChainParam: VoicePatchSynthParam = {
         type: ParamType.voicePatch,
         value: [
@@ -129,11 +128,13 @@ export class PatcheableSynth extends Synth<EventParamsBase, PatchedVoice> {
         ],
         exportable: true,
     }
+    audioContext: AudioContext;
     paramsRef: { value: SynthParam[]; };
     constructor(
         audioContext: AudioContext,
     ) {
         super(audioContext, voiceChainFactory);
+        this.audioContext = audioContext;
         this.params = [this.constructorsChainParam];
         this.paramsRef = { value: this.params };
     }
