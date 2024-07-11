@@ -46,7 +46,7 @@ watch(rightEdge, (newVal, oldVal) => {
     />
     <rect  
         ref="rightEdge"
-        v-if="eventRect.rightEdge && isEditable" class="length-handle" 
+        v-if="eventRect.rightEdge && isEditable" class="edge-handle" 
         :class="{
             selected: eventRect.event.selected,
             editable: isEditable,

@@ -178,10 +178,11 @@ g#notes-being-created rect.body {
     opacity: 0.3;
 }
 
-.traces-container .length-handle {
+.traces-container .edge-handle {
     fill: #f88a;
     stroke: none;
     opacity: 0.1;
+    cursor: ew-resize;
 }
 
 .traces-container .body:hover {

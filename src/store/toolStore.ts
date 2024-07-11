@@ -36,6 +36,7 @@ interface ToolMouse {
             y: number,
         },
         alreadyDuplicated: boolean,
+        isLeftEdge: boolean,
         isRightEdge: boolean,
         traces: Trace[],
         /** Maybe could be removed */
@@ -48,6 +49,7 @@ interface ToolMouse {
     hovered?: {
         trace?: Trace,
         traceRightEdge?: Trace,
+        traceLeftEdge?: Trace,
     },
     tracesBeingCreated: Trace[],
     pos: {
@@ -245,6 +247,38 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, project, se
     const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
+const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, project, selection }: Stores) => {
+    if (!drag) throw new Error('misused drag handler');
+    if (!drag.trace) throw new Error('no drag.trace');
+    if (!('timeEnd' in drag.trace)) return;
+
+    const traceWithTimeEnd = drag.trace as Trace & TimeRange;
+    snap.resetSnapExplanation();
+
+    if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
+    const timeMovement = view.pxToTime(drag.delta.x);
+    
+    traceWithTimeEnd.timeEnd = drag.traceWhenDragStarted.timeEnd;
+    traceWithTimeEnd.time = drag.traceWhenDragStarted.time + timeMovement;
+
+    const snapped = snap.snapIfSnappable(
+        traceWithTimeEnd,
+        project.notes,
+        true,
+    );
+    const timeAfterSnap = snapped.time;
+    const afterSnapTimeChange = timeAfterSnap - drag.traceWhenDragStarted.time;
+    drag.trace.time = timeAfterSnap;
+
+    const selectedTraces = selection.getTraces();
+    selectedTraces.forEach((trace, index) => {
+        const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
+        if (trace === drag.trace) return;
+        trace.time = correlativeDragStartClone.time + afterSnapTimeChange;
+    });
+    const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
+    sanitizeTimeRanges(...selectedTimeRanges);
+}
 
 export enum MouseDownActions {
     None,
@@ -258,6 +292,7 @@ export enum MouseDownActions {
     CreateLoop,
     CreateAutomationPoint,
     LengthenTrace,
+    LengthenAndMoveTrace,
     DragNoteVelocity,
     CopyNote,
     AreaSelectNotes,
@@ -334,14 +369,16 @@ export const useToolStore = defineStore("tool", () => {
         let traceWhenDragStarted = false as PolyfillTrace | false;
         let trace = false as Trace | false;
         let isRightEdge = false;
+        let isLeftEdge = false;
 
         if (mouse.hovered?.traceRightEdge) {
             trace = mouse.hovered?.traceRightEdge;
             isRightEdge = true;
+        } else if (mouse.hovered?.traceLeftEdge) {
+            trace = mouse.hovered?.traceLeftEdge;
+            isLeftEdge = true;
         } else if (mouse.hovered?.trace) {
             trace = mouse.hovered?.trace;
-        } else {
-            //
         }
 
         if (trace) {
@@ -356,6 +393,7 @@ export const useToolStore = defineStore("tool", () => {
                 y: 0,
             },
             isRightEdge,
+            isLeftEdge,
             traces: selection.getTraces(),
             trace,
             traceWhenDragStarted,
@@ -427,9 +465,21 @@ export const useToolStore = defineStore("tool", () => {
         }
     }
 
+    const timelineItemLeftEdgeMouseEnter = (trace: Trace) => {
+        // unhover all other but don't unhover item body
+        loopThatWouldBeCreated.value = false;
+        noteThatWouldBeCreated.value = false;
+        mouse.hovered = {
+            trace: trace,
+            traceLeftEdge: trace
+        }
+    }
+
     const timelineItemMouseLeave = () => {
         if (!mouse.hovered) return;
         if (!mouse.hovered.traceRightEdge) {
+            delete mouse.hovered;
+        } else if (!mouse.hovered.traceLeftEdge) {
             delete mouse.hovered;
         } else {
             delete mouse.hovered.trace;
@@ -442,6 +492,13 @@ export const useToolStore = defineStore("tool", () => {
             timelineItemMouseEnter(mouse.hovered.trace);
         }
         delete mouse.hovered.traceRightEdge;
+    }
+    const timelineItemLeftEdgeMouseLeave = () => {
+        if (!mouse.hovered) return;
+        if (mouse.hovered.trace) {
+            timelineItemMouseEnter(mouse.hovered.trace);
+        }
+        delete mouse.hovered.traceLeftEdge;
     }
 
     const whatWouldMouseDownDo = () => {
@@ -483,6 +540,13 @@ export const useToolStore = defineStore("tool", () => {
         ) {
             if (mouse.hovered?.traceRightEdge) {
                 ret = MouseDownActions.LengthenTrace;
+                if (selection.selected.size > 1) {
+                    currentMouseStringHelper.value = "⟺";
+                } else {
+                    currentMouseStringHelper.value = "⟷";
+                }
+            } else if (mouse.hovered?.traceLeftEdge) {
+                ret = MouseDownActions.LengthenAndMoveTrace;
                 if (selection.selected.size > 1) {
                     currentMouseStringHelper.value = "⟺";
                 } else {
@@ -552,6 +616,12 @@ export const useToolStore = defineStore("tool", () => {
                 if (!mouse.hovered?.traceRightEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceRightEdge);
                 if (!selection.isSelected(mouse.hovered?.traceRightEdge)) {
                     selection.select(mouse.hovered?.traceRightEdge);
+                }
+                break;
+            case MouseDownActions.LengthenAndMoveTrace:
+                if (!mouse.hovered?.traceLeftEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceLeftEdge);
+                if (!selection.isSelected(mouse.hovered?.traceLeftEdge)) {
+                    selection.select(mouse.hovered?.traceLeftEdge);
                 }
                 break;
             case MouseDownActions.AddToSelection:
@@ -799,6 +869,10 @@ export const useToolStore = defineStore("tool", () => {
                     mouseDragTracesRightEdge(
                         mouse, storesPill
                     );
+                } else if (mouse.drag.trace && mouse.drag.isLeftEdge) {
+                    mouseDragTracesLeftEdge(
+                        mouse, storesPill
+                    );
                 } else if (
                     mouse.currentAction === MouseDownActions.MoveTraces
                     || mouse.currentAction === MouseDownActions.MoveItem
@@ -855,8 +929,10 @@ export const useToolStore = defineStore("tool", () => {
 
         timelineItemMouseEnter,
         timelineItemRightEdgeMouseEnter,
+        timelineItemLeftEdgeMouseEnter,
         timelineItemMouseLeave,
         timelineItemRightEdgeMouseLeave,
+        timelineItemLeftEdgeMouseLeave,
 
         laneBeingEdited,
 

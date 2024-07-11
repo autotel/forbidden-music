@@ -13,12 +13,13 @@ const tool = useToolStore();
 const props = defineProps<{
     eventRect: TimelineRect<Loop>
     interactionDisabled?: boolean,
-    greyed?:boolean,
+    greyed?: boolean,
 }>();
 const project = useProjectStore();
 
 const noteBody = ref<SVGRectElement>();
-const lengthHandle = ref<SVGRectElement>();
+const rightDragHandle = ref<SVGRectElement>();
+const leftDragHandle = ref<SVGRectElement>();
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
     tool.timelineItemMouseEnter(props.eventRect.event);
@@ -27,24 +28,40 @@ const bodyMouseLeaveListener = (e: MouseEvent) => {
     tool.timelineItemMouseLeave();
 }
 
-const lengthHandleMouseEnterListener = (e: MouseEvent) => {
+const rightDragHandleMouseEnterListener = (e: MouseEvent) => {
     tool.timelineItemRightEdgeMouseEnter(props.eventRect.event);
 }
-const lengthHandleMouseLeaveListener = (e: MouseEvent) => {
+const rightDragHandleMouseLeaveListener = (e: MouseEvent) => {
     tool.timelineItemRightEdgeMouseLeave();
 }
+const leftDragHandleMouseEnterListener = (e: MouseEvent) => {
+    tool.timelineItemLeftEdgeMouseEnter(props.eventRect.event);
+}
+const leftDragHandleMouseLeaveListener = (e: MouseEvent) => {
+    tool.timelineItemLeftEdgeMouseLeave();
+}
 
-watch(lengthHandle, (newVal, oldVal) => {
+watch(rightDragHandle, (newVal, oldVal) => {
     if (oldVal) {
-        oldVal.removeEventListener('mouseenter', lengthHandleMouseEnterListener);
-        oldVal.removeEventListener('mouseleave', lengthHandleMouseLeaveListener);
+        oldVal.removeEventListener('mouseenter', rightDragHandleMouseEnterListener);
+        oldVal.removeEventListener('mouseleave', rightDragHandleMouseLeaveListener);
     }
     if (newVal) {
-        newVal.addEventListener('mouseenter', lengthHandleMouseEnterListener);
-        newVal.addEventListener('mouseleave', lengthHandleMouseLeaveListener);
+        newVal.addEventListener('mouseenter', rightDragHandleMouseEnterListener);
+        newVal.addEventListener('mouseleave', rightDragHandleMouseLeaveListener);
     }
 })
 
+watch(leftDragHandle, (newVal, oldVal) => {
+    if (oldVal) {
+        oldVal.removeEventListener('mouseenter', leftDragHandleMouseEnterListener);
+        oldVal.removeEventListener('mouseleave', leftDragHandleMouseLeaveListener);
+    }
+    if (newVal) {
+        newVal.addEventListener('mouseenter', leftDragHandleMouseEnterListener);
+        newVal.addEventListener('mouseleave', leftDragHandleMouseLeaveListener);
+    }
+})
 onMounted(() => {
     if (props.interactionDisabled) return;
     if (noteBody.value) {
@@ -70,34 +87,39 @@ const showButtons = computed(() => {
             selected: eventRect.event.selected,
             greyed: greyed,
         }" :x="eventRect.x" :y="0" :width=eventRect.width :height="eventRect.height" />
-
-        <rect v-if="!interactionDisabled && eventRect.rightEdge && !greyed" ref="lengthHandle" class="length-handle"
-            :class="{
+        <template v-if="!interactionDisabled && eventRect.rightEdge && !greyed">
+            <rect ref="rightDragHandle" class="right edge-handle" :class="{
                 greyed: greyed
             }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
-        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx" stroke="currentColor"
-            stroke-width="1" />
+            <rect ref="leftDragHandle" class="left edge-handle" :class="{
+                greyed: greyed
+            }" :x="eventRect.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
+        </template>
+        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx"
+            stroke="currentColor" stroke-width="1" />
 
         <template v-if="!props.interactionDisabled && showButtons">
-            <SvgLittleButton :x="eventRect.x + 5" :y="30" :onClick="() => eventRect.event.count--"
+            <SvgLittleButton :x="eventRect.x + 10" :y="30" :onClick="() => eventRect.event.count--"
                 tooltip="less repetitions"> -
             </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + 25" :y="30" :onClick="() => eventRect.event.count++"
+            <SvgLittleButton :x="eventRect.x + 30" :y="30" :onClick="() => eventRect.event.count++"
                 tooltip="more repetitions"> +
             </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + 5" :y="50" :onClick="() => eventRect.event.count = 0" tooltip="disable loop">
+            <SvgLittleButton :x="eventRect.x + 10" :y="50" :onClick="() => eventRect.event.count = 0"
+                tooltip="disable loop">
                 ∅
             </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + 25" :y="50" :onClick="() => eventRect.event.count = Infinity"
+            <SvgLittleButton :x="eventRect.x + 30" :y="50" :onClick="() => eventRect.event.count = Infinity"
                 tooltip="infinite repetitions"> ∞ </SvgLittleButton>
         </template>
         <template v-if="!props.interactionDisabled">
-        <SvgLittleButton :x="eventRect.x + eventRect.width - 25" :y="30"
-            :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
-        </SvgLittleButton>
+            <SvgLittleButton :x="eventRect.x + eventRect.width - 25" :y="30"
+                :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
+            </SvgLittleButton>
         </template>
 
-        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20"  v-if="!interactionDisabled && eventRect.rightEdge">
+        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20"
+            v-if="!interactionDisabled && eventRect.rightEdge">
             {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
             {{ eventRect.event.count }}
         </text>
