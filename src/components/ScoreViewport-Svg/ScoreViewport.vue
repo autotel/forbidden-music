@@ -52,15 +52,15 @@ onBeforeUnmount(() => {
             <ToneGrid />
         </g>
         <!-- traces that would be created upon click -->
-        <g id="note-would-be-created" v-if="tool.current===Tool.Edit">
+        <g id="note-would-be-created" v-if="tool.current === Tool.Edit">
             <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
                 interactionDisabled />
         </g>
-        <g id="loop-would-be-created" v-if="tool.current===Tool.Loop">
-            <LoopRangeElement v-if="tool.loopThatWouldBeCreated" :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)"
-                interactionDisabled />
+        <g id="loop-would-be-created" v-if="tool.current === Tool.Loop">
+            <LoopRangeElement v-if="tool.loopThatWouldBeCreated"
+                :eventRect="view.rectOfLoop(tool.loopThatWouldBeCreated)" interactionDisabled />
         </g>
-        <g id="automation-point-would-be-created" v-if="tool.current===Tool.Automation">
+        <g id="automation-point-would-be-created" v-if="tool.current === Tool.Automation">
             <AutomationCircle v-if="tool.automationPointThatWouldBeCreated"
                 :circle="view.dotOfAutomationPoint(tool.automationPointThatWouldBeCreated)" interactionDisabled />
         </g>
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
             </template>
         </g>
 
-        <g id="tone-relations" v-if="tool.current===Tool.Edit">
+        <g id="tone-relations" v-if="tool.current === Tool.Edit">
             <ToneRelation />
         </g>
         <RangeSelection />
@@ -99,6 +99,7 @@ onBeforeUnmount(() => {
 #tone-relations {
     pointer-events: none;
 }
+
 svg#viewport {
     width: 100%;
     height: 100%;
@@ -112,8 +113,9 @@ svg#viewport.cursor-note-length {
 svg #playbar {
     stroke: rgb(95, 0, 0);
 }
+
 @media (prefers-color-scheme: dark) {
-        
+
     svg #playbar {
         stroke: rgba(193, 167, 223, 0.479);
     }
@@ -143,12 +145,13 @@ svg#viewport {
 }
 
 @media (prefers-color-scheme: dark) {
-    
+
     svg#viewport {
         border: 1px solid rgba(230, 223, 215, 0.527);
     }
 
 }
+
 g#notes-being-created rect.body {
     fill: transparent;
 }
@@ -172,6 +175,12 @@ g#notes-being-created rect.body {
     stroke: #0005;
     fill: #0001;
     opacity: 0.4;
+}
+
+@media (prefers-color-scheme: dark) {
+    .traces-container .body.greyed {
+        stroke: rgba(255, 255, 255, 0.438);
+    }
 }
 
 .traces-container .body.muted {
