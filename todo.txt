@@ -6,8 +6,6 @@
 	touch (two fingers pan/zoom, hold to add note)
 	method for sending from layer to channel is confusing
 ## Basics & architecture
-	
-
 	tool to make sure sounds are on tune
 	make it possible to set the base frequency upon which octaves are calculated
 	dont fetch typographies from google
@@ -20,7 +18,6 @@
 	update documentation
 	Synths should receive octave, as it's the variable that relates to human perception of tone; not frequency
 	Should add a "voice mixer" or something like that argument; so that it's not necessary to redefine the voice creation method when the destination of voices is different than this.output
-	AutomationLanesStore return types of automation point filter functions would be better structured as Map<Lane,Points> (and param is acquired from lane)
 ## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)

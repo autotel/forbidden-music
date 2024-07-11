@@ -11,6 +11,7 @@ import { useSynthStore } from "./synthStore";
 import { PATCHING_MAX_DEPTH } from "../consts/PatchingMaxDepth";
 
 export const useAutomationLaneStore = defineStore("automation lanes", () => {
+    // TODO: reference to synthparam is twice: once as map key, and another as prop of AutomationLane
     const lanes = ref<Map<SynthParam, AutomationLane>>(new Map());
     const synth = useSynthStore();
 
@@ -206,7 +207,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     /** 
      * Get the automation points corresponding to the given playback frame timerange
      */
-    const getAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
+    const getAutomationsForTime = (frameStartTime: number, frameEndTime: number, catchUp = false): FilteredAutomations => {
         /* 
           The return of this function is a bit counterintuitive:
           it returns the automation that follows whichever automation falls within the given range (fig 1.)
@@ -228,16 +229,14 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
                            |       
                      in this moment, return nothing (unless catch-up)
         */
-        const returnValue: {
-            param: AutomatableSynthParam,
-            point: AutomationPoint,
-            lane: AutomationLane,
-        }[] = [];
+        const returnValue:FilteredAutomations = new Map();
 
-        lanes.value.forEach((lane) => {
-            const param = lane.targetParameter;
-            if (!param) return;
-            if (!lane.content.length) return;
+        for(let lane of lanes.value.values()) {
+            if (!lane.content.length) continue;
+
+            const filteredContents:AutomationPoint[] = [];
+            returnValue.set(lane, filteredContents);
+
             const selectedIndexes = filterMap(lane.content, (point, index) => {
                 if (point.time >= frameStartTime && point.time < frameEndTime) {
                     return index + 1;
@@ -251,16 +250,12 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
                 }
             }
 
-            returnValue.push(...filterMap(selectedIndexes, (index) => {
+            filteredContents.push(...filterMap(selectedIndexes, (index) => {
                 const point = lane.content[index];
                 if (!point) return false;
-                return {
-                    param,
-                    point,
-                    lane,
-                }
+                return point;
             }))
-        });
+        }
         return returnValue;
     }
     /**
@@ -282,8 +277,8 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
      *         
      * 
      **/
-    const getAutomationPointsAroundTime = (time: number, fromLanes: AutomationLane[] = [...lanes.value.values()]):AutomationPointsList => {
-        return getAutomationPointsAroundTime__version_2(time, fromLanes);
+    const getAutomationsAroundTime = (time: number, fromLanes: AutomationLane[] = [...lanes.value.values()]): FilteredAutomations => {
+        return getAutomationsAroundTime_static(time, fromLanes);
     }
 
     return {
@@ -298,73 +293,28 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         deleteAutomationPoint,
         getValueBetweenTwoPoints,
         getAutomationsForTime,
-        getAutomationPointsAroundTime,
+        getAutomationsAroundTime,
         clear,
     };
 });
 
-type AutomationPointsList = {
-    param: AutomatableSynthParam,
-    point: AutomationPoint,
-}[]
+type FilteredAutomations = Map<AutomationLane, AutomationPoint[]>;
 
-const getAutomationPointsAroundTime__version_1 = (time: number, fromLanes: AutomationLane[]) => {
-    console.time('__version_1');
-    let returnValue: AutomationPointsList = [];
-    const lanesValue = fromLanes
-    fromLanes.forEach((lane) => {
-        const param = lane.targetParameter;
-        if (!param) return;
-        if (!lane.content.length) return;
-
-        let broken = false;
-        let prevPoint: AutomationPoint | undefined = undefined;
-        lane.content.forEach((point, i) => {
-            if (broken) return;
-            if (point.time < time) {
-                prevPoint = point;
-            } else {
-                if (point.time === time) {
-                    returnValue.push({
-                        param,
-                        point,
-                    })
-                    broken = true;
-                } else {
-                    if (prevPoint) {
-                        returnValue.push({
-                            param,
-                            point: prevPoint,
-                        })
-                    }
-                    returnValue.push({
-                        param,
-                        point,
-                    })
-                    broken = true;
-                }
-                return false;
-            }
-        });
-
-    });
-    console.timeEnd('__version_1');
-    return returnValue;
-}
-const getAutomationPointsAroundTime__version_2 = (
-    time: number, 
+const getAutomationsAroundTime_static = (
+    time: number,
     fromLanes: AutomationLane[]
-):AutomationPointsList => {
+): FilteredAutomations => {
     console.time('__version_2');
-    let returnValue: AutomationPointsList = [];
+    let returnValue: FilteredAutomations = new Map();
     const lanesValue = fromLanes;
     lanesIteration: for (let lane of lanesValue) {
         const param = lane.targetParameter;
-        if (!param) return [];
-        if (!lane.content.length) return [];
+        if (!param) continue;
+        if (!lane.content.length) continue;
         const contents = lane.content;
+        const contentsResult: AutomationPoint[] = [];
+        returnValue.set(lane, contentsResult);
 
-        let broken = false;
         let prevPoint: AutomationPoint | undefined = undefined;
         pointsIteration: for (let i = 0; i < contents.length; i++) {
             const point = contents[i];
@@ -372,22 +322,13 @@ const getAutomationPointsAroundTime__version_2 = (
                 prevPoint = point;
             } else {
                 if (point.time === time) {
-                    returnValue.push({
-                        param,
-                        point,
-                    })
+                    contentsResult.push(point);
                     break pointsIteration;
                 } else {
                     if (prevPoint) {
-                        returnValue.push({
-                            param,
-                            point: prevPoint,
-                        })
+                        contentsResult.push(prevPoint);
                     }
-                    returnValue.push({
-                        param,
-                        point,
-                    })
+                    contentsResult.push(point);
                     break pointsIteration;
                 }
                 break pointsIteration;

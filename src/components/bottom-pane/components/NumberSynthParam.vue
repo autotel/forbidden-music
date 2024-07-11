@@ -77,15 +77,15 @@ const paramValueToLocalValue = () => {
         const automationPointsAround = getAutomationPointsAroundCurrentTime();
         if (automationPointsAround.length > 1) {
             const interpValue = automation.getValueBetweenTwoPoints(
-                automationPointsAround[0].point,
-                automationPointsAround[1].point,
+                automationPointsAround[0],
+                automationPointsAround[1],
                 playback.currentScoreTime
             );
             localValue.value = interpValue;
         } else {
-            const eitherPoint = automationPointsAround.find(({ point }) => point);
+            const eitherPoint = automationPointsAround.find(( point ) => point);
             if (!eitherPoint) return;
-            localValue.value = eitherPoint.point.value;
+            localValue.value = eitherPoint.value;
         }
     } else {
         localValue.value = (props.param.value - props.param.min) / (props.param.max - props.param.min);
@@ -127,8 +127,8 @@ const mouseDrag = (e: MouseEvent) => {
 const getAutomationPointsAroundCurrentTime = () => {
     const lane = automated.value;
     if (undefined === lane) throw new Error('lane is undefined');
-    const automationPointsAround = automation.getAutomationPointsAroundTime(playback.currentScoreTime, [lane]);
-    return automationPointsAround;
+    const automationPointsAround = automation.getAutomationsAroundTime(playback.currentScoreTime, [lane]);
+    return automationPointsAround.get(lane) || [];
 }
 
 const clamp01 = (val: number) => {
@@ -152,7 +152,7 @@ const mouseDragDelta = ({ x, y }: MiniVec) => {
         if (automationPointsAround.length == 0) {
             addAutomationPointOnDrag(prevLocalValue, automated.value);
         }
-        automationPointsAround.forEach(({ point }) => {
+        automationPointsAround.forEach((point) => {
             point.value = clamp01(point.value + valDelta);
         });
         paramValueToLocalValue();

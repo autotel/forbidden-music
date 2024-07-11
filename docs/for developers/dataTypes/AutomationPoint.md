@@ -7,24 +7,21 @@ Automation points extend [Trace](./Trace.md), [Selectable](./Selectable.md) and 
 Usage of automation points in playback loop, on the playback store.
 
 ``` typescript
-getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
-    .forEach((automation) => {
-        const { param, point } = automation;
-        // Map the automation point values (0 to 1) into the range of the parameter
+const automationsInTime = automation.getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp);
+for(let [lane, contents] of automationsInTime){
+    const param = lane.targetParameter;
+    if (!param) continue;
+    for(let point of contents){
         const mappedValue = automationRangeToParamRange(point.value, {
             min: param.min, max: param.max
-        })
-        let eventStartAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
-        if (eventStartAbsolute < 0) {
-            eventStartAbsolute = 0;
+        });
+        let animationEndAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
+        // only if my new point happens later than the last scheduled
+        if ((param.currentTween?.timeEnd || 0) < animationEndAbsolute) {
+            addAutomationDestinationPoint(param, animationEndAbsolute, mappedValue);
         }
-        try {
-            param.animate?.(startTime, eventStartAbsolute, mappedValue);
-        } catch (e) {
-            console.error("could not schedule event", point, e);
-        }
-    });
-
+    }
+}
 ```
 
 ## Automation point manipulation functions

@@ -240,18 +240,10 @@ export const useProjectStore = defineStore("current project", () => {
 
     const magicLoopDuplicator = (originalLoop: Loop) => {
         /** Automation points after loop start */
-        const automationPointsAfterLoop = new Map<AutomationLane, AutomationPoint[]>();
-
-        lanes.getAutomationsForTime(
+        const automationPointsAfterLoop = lanes.getAutomationsForTime(
             originalLoop.time, Infinity, true
-        ).forEach(({ point, lane }) => {
-            const entry = automationPointsAfterLoop.get(lane);
-            if (entry) {
-                entry.push(point);
-            } else {
-                automationPointsAfterLoop.set(lane, [point]);
-            }
-        });
+        );
+
         /** Notes after loop start */
         const notesAfterLoop = getNotesInRange(notes.value, {
             time: originalLoop.time,

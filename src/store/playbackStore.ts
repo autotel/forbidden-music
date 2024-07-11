@@ -215,8 +215,11 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const catchUpAutomations = (scoreTime: number) => {
         const catchUpAutomations = new Map<AutomatableSynthParam, AutomationPoint>();
-        automation.getAutomationPointsAroundTime(scoreTime).forEach((automationItem) => {
-                const { param, point } = automationItem;
+        const filteredAutomations = automation.getAutomationsAroundTime(scoreTime);
+        for (let [lane, contents] of filteredAutomations){
+            const param = lane.targetParameter;
+            if (!param) continue;
+            for(let point of contents){
                 const prevAutomation = catchUpAutomations.get(param);
                 if (prevAutomation) {
                     const interpolated = automation.getValueBetweenTwoPoints(
@@ -228,7 +231,8 @@ export const usePlaybackStore = defineStore("playback", () => {
                 } else {
                     catchUpAutomations.set(param, point);
                 }
-            })
+            }
+        }
     }
 
     let isFirtClockAfterPlay = true;
@@ -306,22 +310,23 @@ export const usePlaybackStore = defineStore("playback", () => {
                 console.error("could not schedule event", editNote, e);
             }
         });
-        automation.getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp)
-            .forEach((automationItem) => {
-                const { param, point } = automationItem;
+        
+        const automationsInTime = automation.getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp);
+        for(let [lane, contents] of automationsInTime){
+            const param = lane.targetParameter;
+            if (!param) continue;
+            for(let point of contents){
                 const mappedValue = automationRangeToParamRange(point.value, {
                     min: param.min, max: param.max
-                })
+                });
                 let animationEndAbsolute = tickTime + musicalTimeToWebAudioTime(point.time - scoreTimeFrameStart);
                 // only if my new point happens later than the last scheduled
                 if ((param.currentTween?.timeEnd || 0) < animationEndAbsolute) {
                     addAutomationDestinationPoint(param, animationEndAbsolute, mappedValue);
                 }
-            });
-        // if catchup, get prev and following automations, get value between and apply value to 
-        // corresponding params
-
-
+            }
+        }
+        
         previousClockTime = tickTime;
 
         if (currentTimeout.value) clearTimeout(currentTimeout.value);
