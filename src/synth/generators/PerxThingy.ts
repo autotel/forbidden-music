@@ -1,5 +1,6 @@
+import { createFoldedSaturatorWorklet } from "@/functions/foldedSaturatorWorkletFactory";
 import { oneShotEnvelope } from "../features/oneShotEnvelope";
-import { AutomatableSynthParam, getTweenSlice } from "../types/Automatable";
+import { AutomatableSynthParam, createAutomatableAudioNodeParam, getTweenSlice } from "../types/Automatable";
 import { EventParamsBase, Synth } from "../types/Synth";
 import { NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 
@@ -9,13 +10,19 @@ type PerxThingyNoteParams = {
     velocity: number,
 }
 
-const perxVoice = (audioContext: AudioContext) => {
+const perxVoice = (audioContext: AudioContext, parentSynth: PerxThingy) => {
 
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
+    const filterNode = audioContext.createBiquadFilter();
+    const filterQamp = audioContext.createGain();
     gainNode.gain.value = 0;
-    
-    oscillator.connect(gainNode);
+    filterQamp.gain.value = 56;
+    oscillator.type = "sawtooth";
+    filterNode.type = "bandpass";
+
+    oscillator.connect(filterNode)
+    filterNode.connect(gainNode);
     oscillator.start();
 
     let audioBufferSource = audioContext.createBufferSource();
@@ -42,9 +49,14 @@ const perxVoice = (audioContext: AudioContext) => {
             const buffer = params.envelopeBuffer;
             this.inUse = true;
             oscillator.frequency.value = frequency;
+            filterNode.frequency.value = frequency;
             audioBufferSource = audioContext.createBufferSource();
             audioBufferSource.buffer = buffer;
             audioBufferSource.connect(gainNode.gain);
+            audioBufferSource.connect(filterQamp);
+            filterQamp.connect(filterNode.frequency);
+            filterQamp.connect(filterNode.Q);
+            filterQamp.gain.value = 60 + 20 * noteVelocity;
             audioBufferSource.start(absoluteStartTime);
 
             return this;
@@ -77,7 +89,7 @@ const perxVoice = (audioContext: AudioContext) => {
 
 type PerxThingyVoice = ReturnType<typeof perxVoice>;
 
-export class PerxThingy extends Synth<EventParamsBase, PerxThingyVoice> {
+export class PerxThingy extends Synth<EventParamsBase> {
     voices: PerxThingyVoice[] = [];
 
     envelopeGen: ReturnType<typeof oneShotEnvelope>;
@@ -112,10 +124,10 @@ export class PerxThingy extends Synth<EventParamsBase, PerxThingyVoice> {
     constructor(
         audioContext: AudioContext,
     ) {
-        super(audioContext, perxVoice);
-        this.output.gain.value = 0.1;
+        super(audioContext);
 
-        this.transformTriggerParams = (params: EventParamsBase):PerxThingyNoteParams => {
+
+        this.transformTriggerParams = (params: EventParamsBase): PerxThingyNoteParams => {
             return {
                 ...params,
                 envelopeBuffer: this.envelopeGen.currentBuffer.value,
@@ -129,6 +141,13 @@ export class PerxThingy extends Synth<EventParamsBase, PerxThingyVoice> {
             if (enableCalled) return;
             enableCalled = true;
 
+            const foldedSaturator = await createFoldedSaturatorWorklet(this.audioContext);
+            // @ts-ignore
+            const preGainParam = foldedSaturator.parameters.get("preGain") as AudioParam;
+            // @ts-ignore
+            const postGainParam = foldedSaturator.parameters.get("postGain") as AudioParam;
+            if (!preGainParam || !postGainParam) throw new Error("no preGain or postGain");
+
             const {
                 attackParam,
                 decayParam,
@@ -136,7 +155,30 @@ export class PerxThingy extends Synth<EventParamsBase, PerxThingyVoice> {
                 decayCurveParam,
             } = this.envelopeGen;
 
+            attackParam.max = 0.5;
+
             this.params.push(attackParam, decayParam, attackCurveParam, decayCurveParam);
+
+            this.params.push(createAutomatableAudioNodeParam(
+                preGainParam, 'fold pre-gain', 0, 1.5
+            ));
+            this.params.push(createAutomatableAudioNodeParam(
+                postGainParam, 'gain'
+            ));
+
+            foldedSaturator.connect(this.output);
+
+
+            this.createVoice = () => {
+                const voice = perxVoice(
+                    audioContext,
+                    this
+                );
+                if (voice.output) voice.output.connect(foldedSaturator);
+                return voice;
+            }
+
+
 
             this.isReady = true;
         }

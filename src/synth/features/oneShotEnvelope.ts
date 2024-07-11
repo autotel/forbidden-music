@@ -34,11 +34,12 @@ interface SimpleRef<T> {
 export const oneShotEnvelope = (audioContext: AudioContext) => {
     let worker: undefined | Worker = undefined;
     let waitingResponseSince: false | number = 0;
-
+    
     const paramChanged = () => {
         requestNewWave();
     };
-
+    
+    const curveExtremes = 10;
     const currentWave = { value: new Float32Array(0) } as SimpleRef<Float32Array>;
     const currentBuffer: SimpleRef<AudioBuffer> = { value: audioContext.createBuffer(1, 1, audioContext.sampleRate) };
     let getNewWaveAfterThis = false;
@@ -56,7 +57,6 @@ export const oneShotEnvelope = (audioContext: AudioContext) => {
         max: 2,
         value: 0.26,
     }, paramChanged);
-    const curveExtremes = 16;
     const attackCurveParam = changeTrigNumParam({
         displayName: 'Attack Curve',
         min: 1/curveExtremes,

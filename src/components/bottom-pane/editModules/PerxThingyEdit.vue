@@ -5,9 +5,10 @@ import { SineCluster } from '../../../synth/generators/SineCluster';
 import { ParamType } from '../../../synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
+import { PerxThingy } from '@/synth/generators/PerxThingy';
 
 const props = defineProps<{
-    audioModule: SineCluster
+    audioModule: PerxThingy;
 }>();
 
 

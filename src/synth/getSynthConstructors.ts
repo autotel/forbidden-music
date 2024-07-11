@@ -40,6 +40,9 @@ export class SynthConstructorWrapper {
 
         const afterCreation = () => {
             if (instance instanceof AudioModule && withParams) {
+                if('isReady' in instance && (!instance.isReady)) {
+                    throw new Error("instance not ready");
+                }
                 for (let paramDef of withParams) {
                     const synthParam = paramDef.displayName ? instance.findParamByName(paramDef.displayName) : undefined;
                     if (!synthParam) {
@@ -57,15 +60,16 @@ export class SynthConstructorWrapper {
             if ('needsFetching' in instance) {
                 console.log("instance needs fetching");
                 if (this.instantFetch) {
-                    enable().then(afterCreation);
+                    enable()
                 } else {
                     setTimeout(() => {
-                        enable().then(afterCreation);
+                        enable()
                     }, 5000);
                 }
             } else {
-                enable().then(afterCreation);
+                enable()
             }
+            instance.waitReady?.then(afterCreation);
         } else {
             afterCreation();
         }

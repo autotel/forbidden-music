@@ -10,8 +10,9 @@ export class AudioModule implements PatcheableTrait {
     needsFetching?: boolean;
     output?: AudioNode;
     input?: AudioNode;
-    enable: false | (() => Promise<void>) = false;
+    enable: false | (() => void) = false;
     disable: false | (() => void) = false;
+    waitReady?: Promise<void>;  
     findParamByName = (name: string): SynthParam | undefined => {
         return AudioModule.findParamByName(this, name);
     }

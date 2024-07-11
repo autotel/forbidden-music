@@ -6,6 +6,12 @@
 	touch (two fingers pan/zoom, hold to add note)
 	method for sending from layer to channel is confusing
 ## Basics & architecture
+	
+	problem: only first caller to synth.enable gets the correct promise.
+		synth enable might be called more than once. Avoid this. Instead; when enable starts, synth creates and self-assigns a "waitReady" promise.
+		this waitReady promise helps the module not re-enable, but wait for that prev promise, aswell as it serves other places where
+		the synth is expected to be ready
+
 	tool to make sure sounds are on tune
 	make it possible to set the base frequency upon which octaves are calculated
 	dont fetch typographies from google
