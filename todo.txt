@@ -14,13 +14,13 @@
 	mute layers
 	better mechanisms to catch up if playback started mid note/automation 
 		and if note begins before & ends after loop, to keep it playing as if it were midi
-	Making a loop "copy to the right" should affect automation points too
 ## Need refactor
 	'credits' modal & 'monomode interaction' 
 	automation - current methods for listing points while playing is suboptimal
 	update documentation
 	Synths should receive octave, as it's the variable that relates to human perception of tone; not frequency
 	Should add a "voice mixer" or something like that argument; so that it's not necessary to redefine the voice creation method when the destination of voices is different than this.output
+	AutomationLanesStore return types of automation point filter functions would be better structured as Map<Lane,Points> (and param is acquired from lane)
 ## Bottom pane version
 	automation activation on bottompane
 	controllers for the other type of parameters (option, array)

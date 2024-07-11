@@ -11,13 +11,15 @@ import { ifDev } from '../functions/isDev';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
-import {  normalizeLibraryItem } from './libraryStore';
+import { normalizeLibraryItem } from './libraryStore';
 import { usePlaybackStore } from './playbackStore';
 import demoProject from './project-default';
 import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
 import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
 import { useMasterEffectsStore } from './masterEffectsStore';
+import { automationPoint, AutomationPoint } from '@/dataTypes/AutomationPoint';
+import { AutomationLane } from '@/dataTypes/AutomationLane';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,
@@ -192,7 +194,7 @@ export const useProjectStore = defineStore("current project", () => {
             layer.locked = locked;
             layer.channelSlot = channelSlot;
         });
-        
+
 
         if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
         if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
@@ -204,7 +206,7 @@ export const useProjectStore = defineStore("current project", () => {
             masterEffects.applyDefinition(pDef.masterEffects, recycleSynths);
         })();
 
-        
+
     }
 
     const clearScore = () => {
@@ -237,39 +239,71 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const magicLoopDuplicator = (originalLoop: Loop) => {
-        const notesInLoop = getNotesInRange(notes.value, originalLoop).filter((note) => {
-            // dont copy notes that started earlier bc. we are already copying notes that end after
-            // also dont copy notes that start right at the end of originalLoop
-            return note.time >= originalLoop.time && note.time < originalLoop.timeEnd
+        /** Automation points after loop start */
+        const automationPointsAfterLoop = new Map<AutomationLane, AutomationPoint[]>();
+
+        lanes.getAutomationsForTime(
+            originalLoop.time, Infinity, true
+        ).forEach(({ point, lane }) => {
+            const entry = automationPointsAfterLoop.get(lane);
+            if (entry) {
+                entry.push(point);
+            } else {
+                automationPointsAfterLoop.set(lane, [point]);
+            }
         });
+        /** Notes after loop start */
         const notesAfterLoop = getNotesInRange(notes.value, {
-            time: originalLoop.timeEnd,
+            time: originalLoop.time,
             timeEnd: Infinity,
-        }).filter((note) => {
-            return !notesInLoop.includes(note)
         });
-        const loopsAfterLoop = loops.value.filter((otherLoop) => {
+
+        const loopsAfterLoopEnd = loops.value.filter((otherLoop) => {
             return otherLoop.time >= originalLoop.timeEnd;
         });
+
         const loopLength = originalLoop.timeEnd - originalLoop.time;
-        notesAfterLoop.forEach((note) => {
-            transposeTime(note, loopLength);
-        })
-        loopsAfterLoop.forEach((originalLoop) => {
+        // shift loops
+        loopsAfterLoopEnd.forEach((originalLoop) => {
             console.log("shift originalLoop", originalLoop.time);
             originalLoop.time += loopLength;
             originalLoop.timeEnd += loopLength;
             console.log(" >> ", originalLoop.time);
         })
 
-        // clone all notes in originalLoop
-        notes.value.push(...notesInLoop.map(note));
+        const insideCloneArea = (time: number) => {
+            return time >= originalLoop.time && time < originalLoop.timeEnd;
+        }
 
-        notesInLoop.forEach((note) => {
-            note.time += loopLength;
-            note.timeEnd += loopLength;
-        })
-
+        // clone autom. 
+        for (let [lane, points] of automationPointsAfterLoop) {
+            // if within loop time, clone, otherwise only shift
+            const toPush: AutomationPoint[] = [];
+            points.forEach((point) => {
+                // counter-intuitiely, the cloned points are the ones who remain in the same time
+                if (insideCloneArea(point.time)) {
+                    toPush.push(automationPoint(point));
+                }
+                transposeTime(
+                    point,
+                    loopLength
+                )
+            });
+            lane.content.push(...toPush);
+        }
+        // clone notes
+        let notesToPush: Note[] = [];
+        notesAfterLoop.forEach((originalNote) => {
+            if (insideCloneArea(originalNote.time)) {
+                notesToPush.push(note(originalNote));
+            }
+            transposeTime(
+                originalNote,
+                loopLength
+            );
+        });
+        notes.value.push(...notesToPush);
+        // add new loop
         loops.value.push(loop({
             time: originalLoop.time + loopLength,
             timeEnd: originalLoop.timeEnd + loopLength,

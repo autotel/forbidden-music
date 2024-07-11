@@ -33,6 +33,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
     watchEffect(() => {
         lanes.value.forEach((lane) => {
             if (lane.content.length !== lane.sizeWhenLastSorted) {
+                console.log("sort autom.points", lane.displayName);
                 sortPointsByTime(lane);
             }
         });
@@ -230,6 +231,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
         const returnValue: {
             param: AutomatableSynthParam,
             point: AutomationPoint,
+            lane: AutomationLane,
         }[] = [];
 
         lanes.value.forEach((lane) => {
@@ -255,6 +257,7 @@ export const useAutomationLaneStore = defineStore("automation lanes", () => {
                 return {
                     param,
                     point,
+                    lane,
                 }
             }))
         });
