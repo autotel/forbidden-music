@@ -16,10 +16,6 @@
 		and if note begins before & ends after loop, to keep it playing as if it were midi
 	Making a loop "copy to the right" should affect automation points too
 ## Need refactor
-	problem: only first caller to synth.enable gets the correct promise.
-		synth enable might be called more than once. Avoid this. Instead; when enable starts, synth creates and self-assigns a "waitReady" promise.
-		this waitReady promise helps the module not re-enable, but wait for that prev promise, aswell as it serves other places where
-		the synth is expected to be ready
 	'credits' modal & 'monomode interaction' 
 	automation - current methods for listing points while playing is suboptimal
 	update documentation

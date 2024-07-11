@@ -1,7 +1,6 @@
-import { buffer } from "stream/consumers";
+import { useDebounceFn } from "@vueuse/core";
+import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
-import { SynthVoice, EventParamsBase, Synth } from "../types/Synth";
-import { useDebounceFn, useThrottleFn } from "@vueuse/core";
 
 const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<EventParamsBase> => {
 
@@ -190,24 +189,17 @@ export class KickSynth extends Synth {
             });
             this.waitingResponseSince = Date.now();
         }
-        let enableCalled = false;
-        // TODO: hmm.. this could've been done on constructor
-        this.enable = () => {
-            if (enableCalled) return;
-            enableCalled = true;
-            this.worker = new Worker(
-                new URL('./KickSampleGenWorker.js', import.meta.url),
-                { type: 'module' }
-            );
-            this.worker.onmessage = (e: MessageEvent<Float32Array>) => {
-                this.applyNewWave(audioContext, e.data);
-            }
-            this.paramChanged = useDebounceFn(() => {
-                console.log("param changed", this.alias.value);
-                this.requestNewWave()
-            }, 10);
-            this.markReady();
-            this.paramChanged();
+        this.worker = new Worker(
+            new URL('./KickSampleGenWorker.js', import.meta.url),
+            { type: 'module' }
+        );
+        this.worker.onmessage = (e: MessageEvent<Float32Array>) => {
+            this.applyNewWave(audioContext, e.data);
         }
+        this.paramChanged = useDebounceFn(() => {
+            console.log("param changed", this.alias.value);
+            this.requestNewWave()
+        }, 10);
+        this.paramChanged();
     }
 }
