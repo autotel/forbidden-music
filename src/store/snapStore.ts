@@ -129,7 +129,7 @@ interface SnapDefinition {
         }
         
 *///: { [key: string]: SnapDefinition } 
-const snaps= {
+const snaps = {
     customFrequencyTable: {
         description: "Snap to custom frequency table",
         icon: "Custom",
@@ -456,30 +456,46 @@ export const useSnapStore = defineStore("snap", () => {
             EDOSsnap(48, targetOctave, toneSnap, snapValues.equal48);
         }
 
-
         /** 
          * target / other = other * 1 / target
          * mycandidate = other
         **/
         if (otherTraces) {
-            type TonalTrace = Note & { frequency: number };
-            const tonalTraces: (TonalTrace)[] =
-                (otherTraces.filter(t => t.type === TraceType.Note) as Note[])
-                    .map((note) => {
-                        // TODO: calculate only upon need, memoization
-                        const frequency = octaveToFrequency(note.octave);
-                        return {
-                            ...note,
-                            frequency,
+            /**
+             * list of traces including additional frequency property, and only
+             * one per tone
+             */
+            const tonalTracesGetter = (() => {
+                type TonalTrace = Note & { frequency: number };
+                let result: TonalTrace[] | undefined;
+                let skipTones = new Set<number>();
+                const get = (): TonalTrace[] => {
+                    if (result) return result;
+
+                    result = filterMap(
+                        (otherTraces.filter(t => t.type === TraceType.Note) as Note[]),
+                        (note) => {
+                            if(skipTones.has(note.octave)) return;
+                            skipTones.add(note.octave);
+                            // TODO: memoize beyond the scope of this call - I just don't know how to evaluate obsolescence of the data
+                            const frequency = octaveToFrequency(note.octave);
+                            return {
+                                ...note,
+                                frequency,
+                            }
                         }
-                    }) as TonalTrace[];
+                    ) as TonalTrace[];
+                    return result;
+                }
+                return { get }
+            })();
 
             if (snapValues.arbitraryGridEDO.active === true) {
                 const gcd = (a: number, b: number): number => {
                     if (b === 0) return a;
                     return gcd(b, a % b);
                 }
-
+                const tonalTraces = tonalTracesGetter.get();
                 const lowestTwoNotes = tonalTraces.sort((a, b) => a.octave - b.octave).slice(0, 2);
                 if (lowestTwoNotes.length === 2) {
                     const lowestNote = lowestTwoNotes[0];
@@ -514,6 +530,7 @@ export const useSnapStore = defineStore("snap", () => {
                     return gcd(b, a % b);
                 }
 
+                const tonalTraces = tonalTracesGetter.get();
                 const lowestTwoNotes = tonalTraces.sort((a, b) => a.frequency - b.frequency).slice(0, 2);
                 if (lowestTwoNotes.length === 2) {
                     const lowestNote = lowestTwoNotes[0];
@@ -545,6 +562,7 @@ export const useSnapStore = defineStore("snap", () => {
 
 
             if (snapValues.hzRelationFraction.active === true) {
+                const tonalTraces = tonalTracesGetter.get();
                 for (const otherNote of tonalTraces) {
                     const otherHz = otherNote.frequency;
                     const fraction = new Fraction(targetHz).div(otherHz).simplify(simplify.value);
@@ -562,6 +580,7 @@ export const useSnapStore = defineStore("snap", () => {
                 // It is presumed that fraction includes all these possibilites
 
                 if (snapValues.hzMult.active === true) {
+                    const tonalTraces = tonalTracesGetter.get();
                     for (const otherNote of tonalTraces) {
                         const relatedNumber = Math.round(targetHz / otherNote.frequency) * otherNote.frequency;
                         let txt = "multiple of ";
@@ -576,6 +595,7 @@ export const useSnapStore = defineStore("snap", () => {
                 };
 
                 if (snapValues.hzHalfOrDouble.active === true) {
+                    const tonalTraces = tonalTracesGetter.get();
                     for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 2
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
@@ -602,6 +622,7 @@ export const useSnapStore = defineStore("snap", () => {
                     }
                 }
                 if (snapValues.hzThird.active === true) {
+                    const tonalTraces = tonalTracesGetter.get();
                     for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 3
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
@@ -621,6 +642,7 @@ export const useSnapStore = defineStore("snap", () => {
                     }
                 }
                 if (snapValues.hzFifth.active === true) {
+                    const tonalTraces = tonalTracesGetter.get();
                     for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 5
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
@@ -640,6 +662,7 @@ export const useSnapStore = defineStore("snap", () => {
                     }
                 }
                 if (snapValues.hzSeventh.active === true) {
+                    const tonalTraces = tonalTracesGetter.get();
                     for (const otherNote of tonalTraces) {
                         const myCandidateHzDouble = otherNote.frequency * 7
                         const myCandidateOctaveDouble = frequencyToOctave(myCandidateHzDouble);
