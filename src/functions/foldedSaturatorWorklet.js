@@ -5,8 +5,9 @@ const fold = (v) => {
   if(v<1 && v>-1){
     return v;
   }
-  return (Math.abs(v) % 1) * Math.sign(v);
+  return Math.abs(2 - Math.abs(1 - v)) - 1;
 }
+
 class FoldedSaturator extends AudioWorkletProcessor {
 
   static get parameterDescriptors() {
