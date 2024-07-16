@@ -21,7 +21,7 @@ const disclaimerOkButtonPressed = () => {
     >
         <div>
             <h1>Disclaimer</h1>
-            <p>
+            <p style="white-space: pre-wrap;">
                 {{ disclaimer }}
             </p>
         </div>
