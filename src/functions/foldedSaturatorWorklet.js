@@ -29,19 +29,12 @@ class FoldedSaturator extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    let min = 0;
-    let max = 0;
-
-    let slowerGain = this.slowerGain;
-
-
     const preGainParam = parameters["preGain"]
     const preGain = Math.pow(preGainParam[0], 12);
 
     const postGainParam = parameters["postGain"]
     const postGain = Math.pow(postGainParam[0], 12);
-
-
+    
     inputs.forEach((input, inputNo) => {
       input.forEach((channel, channelNo) => {
         let sampleCount = input[channelNo].length;
@@ -53,6 +46,7 @@ class FoldedSaturator extends AudioWorkletProcessor {
         };
       })
     });
+    return true;
   }
   constructor(...p) {
     super(...p);
