@@ -43,6 +43,7 @@ export class SimpleDelayEffect extends AudioModule {
             feedback.connect(delay);
             filter.connect(output);
             direct.connect(output);
+            this.markReady();
         }
 
         this.disable = () => {

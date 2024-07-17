@@ -96,7 +96,7 @@ const selectOption = (i: number) => {
 <template>
     <!-- <div class="container" v-bind="$attrs"> -->
         <!-- <div class="readout">{{ param.displayName }}:</div> -->
-        <div class="opener" @click="toggleOpen">
+        <div class="opener" @click="toggleOpen" v-bind="$attrs">
             <div class="val">{{ currentValueName }}</div>
             <!-- <Tooltip :tooltip="readout"> -->
                 <div class="sw-button">
@@ -104,7 +104,7 @@ const selectOption = (i: number) => {
                 </div>
             <!-- </Tooltip> -->
         </div>
-        <div class="options-container" v-if="open">
+        <div class="options-container" v-if="open" v-bind="$attrs">
             <span class="option" v-for="(option, i) in param.options" @mousedown="selectOption(i)"
                 :class="{ selected: param.value === i }">
                 {{ option.displayName }}

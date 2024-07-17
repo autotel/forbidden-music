@@ -3,6 +3,7 @@ import { AutoMaximizerEffect } from '@/synth/effects/AutoMaximizerEffect';
 import { FilterEffect } from '@/synth/effects/FilterEffect';
 import { FourierSynth } from '@/synth/generators/FourierSynth';
 import { KickSynth } from '@/synth/generators/KickSynth';
+import { ClassicSynth } from '@/synth/generators/ClassicSynth';
 import { PerxThingy } from '@/synth/generators/PerxThingy';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
@@ -14,7 +15,8 @@ import { SynthStack } from '../../dataStructures/SynthStack';
 import { PatcheableTrait, PatcheableType } from '../../dataTypes/PatcheableTrait';
 import AddSynth from './components/AddSynth.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
-import AutoMaximizerContainer from './editModules/AutoMaximizerContainer.vue';
+import AutoMaximizerEdit from './editModules/AutoMaximizerEdit.vue';
+import ClassicSynthEdit from './editModules/ClassicSynthEdit.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
@@ -76,9 +78,11 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                 <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
                 <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
                 <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
+                <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
                 <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
-                <AutoMaximizerContainer v-else-if="audioModule instanceof AutoMaximizerEffect" :audioModule="audioModule" />
+                <AutoMaximizerEdit v-else-if="audioModule instanceof AutoMaximizerEffect"
+                    :audioModule="audioModule" />
                 <FilterContainer v-else-if="audioModule instanceof FilterEffect" :audioModule="audioModule" />
                 <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
                 <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
@@ -89,7 +93,8 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
 
         <p v-else style="color: red;">Unknown module type</p>
     </template>
-    <AddSynth :position="stepsArray.length" :targetChain="synthChain" /><!--:force-expanded="stepsArray.length === 0" -->
+    <AddSynth :position="stepsArray.length" :targetChain="synthChain" />
+    <!--:force-expanded="stepsArray.length === 0" -->
 
 </template>
 <style scoped>

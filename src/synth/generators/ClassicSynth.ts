@@ -1,7 +1,7 @@
 import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
 import { createAutomatableAudioNodeParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { env } from "process";
 
 type SineNoteParams = EventParamsBase & {
@@ -130,7 +130,7 @@ class EnvelopeParamsList {
         min: 0,
         max: 1,
         exportable: true,
-    }
+    } as NumberSynthParam;
     decayParam = extenseTimeParam("Decay", 0.3);
     sustainParam = {
         type: ParamType.number,
@@ -139,7 +139,7 @@ class EnvelopeParamsList {
         min: 0,
         max: 1,
         exportable: true,
-    }
+    } as NumberSynthParam;
     releaseParam = extenseTimeParam("Release", 0.3);
     list = [
         this.attackParam,
@@ -172,7 +172,7 @@ export class ClassicSynth extends Synth {
         }],
         value: 0,
         exportable: true,
-    }
+    } as OptionSynthParam;
     filterOctaveParam = {
         type: ParamType.number,
         displayName: "Filter frequency",
@@ -184,7 +184,7 @@ export class ClassicSynth extends Synth {
         min: 0,
         max: 15,
         exportable: true,
-    }
+    } as NumberSynthParam;
     filterQParam = {
         type: ParamType.number,
         displayName: "Filter Q",
@@ -192,7 +192,7 @@ export class ClassicSynth extends Synth {
         min: 0,
         max: 6,
         exportable: true,
-    }
+    } as NumberSynthParam;
     filterEnvParam = {
         type: ParamType.number,
         displayName: "Filter envelope amount",
@@ -200,7 +200,7 @@ export class ClassicSynth extends Synth {
         min: 0,
         max: 10000,
         exportable: true,
-    }
+    } as NumberSynthParam;
     filterTypeParam = {
         type: ParamType.option,
         displayName: 'Filter type',
@@ -222,7 +222,7 @@ export class ClassicSynth extends Synth {
         }],
         value: 0,
         exportable: true,
-    };
+    } as OptionSynthParam;
 
     envelopes = [
         new EnvelopeParamsList(),
@@ -239,6 +239,7 @@ export class ClassicSynth extends Synth {
         ...this.envelopes.map(e => e.list).flat(),
     ] as SynthParam[];
 
+    gainParam: NumberSynthParam;
 
     adsrWorkletManager?: Awaited<ReturnType<typeof adsrWorkletManager>>;
 
@@ -249,12 +250,14 @@ export class ClassicSynth extends Synth {
         const outputGain = this.output;
         this.output.gain.value = 0.1;
         const gain = createAutomatableAudioNodeParam(
-            outputGain.gain, 'gain', 0, 1
+            outputGain.gain, 'out gain', 0, 1
         );
+        this.gainParam = gain;
         this.params.push(gain);
 
         this.enable = async () => {
             this.adsrWorkletManager = await adsrWorkletManager(audioContext);
+            this.markReady();
         }
 
     }
