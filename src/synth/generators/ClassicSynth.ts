@@ -1,7 +1,7 @@
 import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
 import { createAutomatableAudioNodeParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { ParamType, SynthParam } from "../types/SynthParam";
+import { NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { env } from "process";
 
 type SineNoteParams = EventParamsBase & {
@@ -14,7 +14,7 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
     const gainNode = audioContext.createGain();
     const filter = audioContext.createBiquadFilter();
 
-    if(!parentSynth.adsrWorkletManager) {
+    if (!parentSynth.adsrWorkletManager) {
         throw new Error("ADSR worklet manager not enabled");
     }
     const env1 = parentSynth.adsrWorkletManager.create();
@@ -32,17 +32,17 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         filter.frequency.value = parentSynth.filterOctaveParam.getHertz();
         oscillator.type = parentSynth.waveShapeParam.getType();
 
-        env1.params.attack.value = parentSynth.envelopes[0].attackParam.value;
+        env1.params.attack.value = parentSynth.envelopes[0].attackParam.mappedValue;
         env1.params.attackcurve.value = parentSynth.envelopes[0].attackCurveParam.value;
-        env1.params.decay.value = parentSynth.envelopes[0].decayParam.value;
+        env1.params.decay.value = parentSynth.envelopes[0].decayParam.mappedValue;
         env1.params.sustain.value = parentSynth.envelopes[0].sustainParam.value;
-        env1.params.release.value = parentSynth.envelopes[0].releaseParam.value;
+        env1.params.release.value = parentSynth.envelopes[0].releaseParam.mappedValue;
 
-        env2.params.attack.value = parentSynth.envelopes[1].attackParam.value;
+        env2.params.attack.value = parentSynth.envelopes[1].attackParam.mappedValue;
         env2.params.attackcurve.value = parentSynth.envelopes[1].attackCurveParam.value;
-        env2.params.decay.value = parentSynth.envelopes[1].decayParam.value;
+        env2.params.decay.value = parentSynth.envelopes[1].decayParam.mappedValue;
         env2.params.sustain.value = parentSynth.envelopes[1].sustainParam.value;
-        env2.params.release.value = parentSynth.envelopes[1].releaseParam.value;
+        env2.params.release.value = parentSynth.envelopes[1].releaseParam.mappedValue;
 
         env2Mapper.gain.value = parentSynth.filterEnvParam.value;
     }
@@ -64,8 +64,8 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         ) {
             noteVelocity = params.velocity;
             this.inUse = true;
-            
-            gainNode.gain.value=0;
+
+            gainNode.gain.value = 0;
 
             env1.triggerAtTime(absoluteStartTime, params.velocity);
             env2.triggerAtTime(absoluteStartTime, 1);
@@ -83,7 +83,7 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         scheduleEnd(absoluteEndTime?: number) {
             if (absoluteEndTime) {
                 const noteDuration = absoluteEndTime - noteStarted;
-                
+
                 env1.triggerStopAtTime(absoluteEndTime);
                 env2.triggerStopAtTime(absoluteEndTime);
 
@@ -105,15 +105,24 @@ type BiquadFilterType = "allpass" | "bandpass" | "highpass" | "highshelf" | "low
 type OscillatorType = "sine" | "square" | "sawtooth" | "triangle"
 
 
+const extenseTimeParam = (displayName: string, value = 0.01): NumberSynthParam & { mappedValue: number } => ({
+    type: ParamType.number,
+    displayName,
+    _mapFn: (val: number) => Math.pow(val, 5) * 60,
+    get displayValue() {
+        return this.mappedValue.toFixed(3) + 's';
+    },
+    get mappedValue() {
+        return this._mapFn(this.value);
+    },
+    value,
+    min: 0,
+    max: 1,
+    exportable: true,
+});
+
 class EnvelopeParamsList {
-    attackParam = {
-        type: ParamType.number,
-        displayName: "Attack",
-        value: 0.01,
-        min: 0,
-        max: 60,
-        exportable: true,
-    }
+    attackParam = extenseTimeParam("Attack");
     attackCurveParam = {
         type: ParamType.number,
         displayName: "Attack curve",
@@ -122,14 +131,7 @@ class EnvelopeParamsList {
         max: 1,
         exportable: true,
     }
-    decayParam = {
-        type: ParamType.number,
-        displayName: "Decay",
-        value: 0.7,
-        min: 0,
-        max: 60,
-        exportable: true,
-    }
+    decayParam = extenseTimeParam("Decay", 0.3);
     sustainParam = {
         type: ParamType.number,
         displayName: "Sustain",
@@ -138,14 +140,7 @@ class EnvelopeParamsList {
         max: 1,
         exportable: true,
     }
-    releaseParam = {
-        type: ParamType.number,
-        displayName: "Release",
-        value: 0.3,
-        min: 0,
-        max: 60,
-        exportable: true,
-    }
+    releaseParam = extenseTimeParam("Release", 0.3);
     list = [
         this.attackParam,
         this.attackCurveParam,

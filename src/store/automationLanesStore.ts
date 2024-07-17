@@ -304,7 +304,6 @@ const getAutomationsAroundTime_static = (
     time: number,
     fromLanes: AutomationLane[]
 ): FilteredAutomations => {
-    console.time('__version_2');
     let returnValue: FilteredAutomations = new Map();
     const lanesValue = fromLanes;
     lanesIteration: for (let lane of lanesValue) {
@@ -336,7 +335,6 @@ const getAutomationsAroundTime_static = (
         }
 
     }
-    console.timeEnd('__version_2');
     return returnValue;
 }
 
