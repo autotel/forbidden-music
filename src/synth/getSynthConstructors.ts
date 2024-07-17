@@ -23,6 +23,7 @@ import { ThingyScoreFx } from "./scoreEffects/Thingy";
 import { AudioModule } from "./types/AudioModule";
 import { SynthParamStored } from "./types/SynthParam";
 import { WaveFolderEffect } from "./effects/WaveFoldEffect";
+import { ClassicSynth } from "./generators/ClassicSynth";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
@@ -157,6 +158,7 @@ export default function getSynthConstructors(
     addAvailableSynth(KarplusSynth, 'KarplusSynth');
     addAvailableSynth(SineCluster, 'SineCluster');
     addAvailableSynth(SineSynth, 'SineSynth');
+    addAvailableSynth(ClassicSynth, 'ClassicSynth');
 
     addAvailableSynth(SimpleDelayEffect, 'SimpleDelayEffect');
     addAvailableSynth(RingModEffect, 'RingModEffect');

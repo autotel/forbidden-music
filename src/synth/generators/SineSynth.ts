@@ -69,7 +69,6 @@ type SineVoice = ReturnType<typeof sineVoice>;
 
 export class SineSynth extends Synth<EventParamsBase, SineVoice> {
     voices: SineVoice[] = [];
-    credits = "Minimal sine synth, Autotel";
     constructor(
         audioContext: AudioContext,
     ) {

@@ -1,16 +1,20 @@
-// Heavily based on 
+// Based on 
 // https://github.com/g200kg/audioworklet-adsrnode
-// TODO: get this from web audio, not const
-// @ts-ignore
-const sampleRate = 44100;
 
-class Adsr extends AudioWorkletProcessor {
+declare let sampleRate: number;
+
+if (sampleRate === undefined) {
+    console.warn("sampleRate is undefined, using best guess");
+    sampleRate = 44100;
+}
+
+export class Adsr extends AudioWorkletProcessor {
     _lasttrig;
     _trig;
     _phase;
     _value;
 
-    constructor(options: AudioWorkletNodeOptions | undefined) {
+    constructor() {
         super();
         this._lasttrig = 0;
         this._trig = 0;
@@ -38,12 +42,12 @@ class Adsr extends AudioWorkletProcessor {
         const atkRatio = 1 - Math.pow(1 - (1 / atkmax), 1 / (sampleRate * parameters.attack[0]));
         const decRatio = 1 - Math.pow(0.36787944, 1 / (sampleRate * dec));
         const relRatio = 1 - Math.pow(0.36787944, 1 / (sampleRate * rel));
-        
-        if(trigs[0]){
-            console.log("t",parameters.trigger);
+
+        if (trigs[0]) {
+            // console.log("t", parameters.trigger);
         }
-        if(this._trig){
-            console.log("_t",this._trig);
+        if (this._trig) {
+            // console.log("_t", this._trig);
         }
         if (trigs.length == 1)
             this._trig = trigs[0];

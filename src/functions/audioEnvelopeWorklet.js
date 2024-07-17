@@ -82,8 +82,10 @@ class AudioEnvelope extends AudioWorkletProcessor {
 
 
   process(inputs, outputs, parameters) {
+    // @ts-ignore
     if (sampleRate === undefined) {
       console.warn("sampleRate is undefined, using best guess");
+      // @ts-ignore
       sampleRate = 44100;
     }
 

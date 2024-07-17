@@ -3,6 +3,7 @@ import { PatcheableTrait, PatcheableType } from "../../dataTypes/PatcheableTrait
 import { EventParamsBase, SynthVoice } from "./Synth";
 import { SynthParam } from "./SynthParam";
 
+
 export class AudioModule implements PatcheableTrait, AsyncEnableObject {
     // PatcheableTrait
     readonly patcheableType = PatcheableType.AudioModule;

@@ -42,9 +42,6 @@ export class RingModEffect extends AudioModule {
                 return `${oscillator.frequency.value.toFixed(3)}`;
             },
             animate(startTime: number, destTime: number, destValue: number) {
-                // oscillator.frequency.cancelScheduledValues(startTime);
-                // oscillator.frequency.setValueAtTime(oscillator.frequency.value, startTime);
-
                 // the representation of the segment between points in the automation
                 // lane is not going to be precise, because the value interpolates
                 // nonlinearly while the automation assumes linear interpolation.
