@@ -10,6 +10,10 @@ import { usePlaybackStore } from '../store/playbackStore';
 import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 import Collapsible from './Collapsible.vue';
+import WorkletWorkbench from '../WorkletWorkbench.vue';
+import { useMonoModeInteraction } from '@/store/monoModeInteraction';
+
+const monoModeInteraction = useMonoModeInteraction();
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();
@@ -21,6 +25,10 @@ const viewportTechs = [
 const fullReset = () => {
     window.localStorage.clear();
     window.location.reload();
+}
+const workletWorkbench = () => {
+    // e.stopImmediatePropagation()
+    monoModeInteraction.activate("plot util")
 }
 
 </script>
@@ -105,10 +113,18 @@ const fullReset = () => {
                 <label> Delete all settings, including projects </label>
             </div>
 
-            <Button @click="userSettings.deleteSettings"
-                tooltip="Delete locally stored settings and use default values">Unsave settings</Button>
-            <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>
+            <div v-if="isDev()" class="form-row">
+                <Button v-if="isDev()" @click="workletWorkbench()" tooltip="Open worklet workbench">Worklet
+                    workbench
+                </Button>
 
+            </div>
+
+            <Button @click="userSettings.deleteSettings"
+                tooltip="Delete locally stored settings and use default values">Unsave
+                settings</Button>
+            <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>
+            
 
 
 

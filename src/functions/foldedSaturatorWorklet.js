@@ -1,13 +1,18 @@
 
 // @ts-ignore
 
-const fold = (v) => {
-  if(v<1 && v>-1){
-    return v;
+const fold = sample => {
+  const off1 = sample + 1;
+  const invert = -(
+    (Math.floor(Math.abs(off1 / 2)) % 2) * 2 - 1
+  );
+  if (off1 > 1) {
+    return invert * (2 * ((off1 / 2) % 1) - 1);
+  } else if (off1 < 0) {
+    return invert * (2 * -((off1 / 2) % 1) - 1);
   }
-  return Math.abs(2 - Math.abs(1 - v)) - 1;
+  return sample;
 }
-
 class FoldedSaturator extends AudioWorkletProcessor {
 
   static get parameterDescriptors() {
@@ -35,7 +40,7 @@ class FoldedSaturator extends AudioWorkletProcessor {
 
     const postGainParam = parameters["postGain"]
     const postGain = Math.pow(postGainParam[0], 12);
-    
+
     inputs.forEach((input, inputNo) => {
       input.forEach((channel, channelNo) => {
         let sampleCount = input[channelNo].length;

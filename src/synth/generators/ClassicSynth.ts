@@ -1,7 +1,7 @@
 import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
 import { automatableNumberSynthParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { env } from "process";
 import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
 
@@ -14,16 +14,16 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     const filter = audioContext.createBiquadFilter();
-    
+
     if (!parentSynth.adsrWorkletManager) {
         throw new Error("ADSR worklet manager not enabled");
     }
     const env1 = parentSynth.adsrWorkletManager.create();
     const env2 = parentSynth.adsrWorkletManager.create();
-    
+
     const env2Mapper = audioContext.createGain();
 
-    if(!parentSynth.waveFolderWorkletManager) {
+    if (!parentSynth.waveFolderWorkletManager) {
         throw new Error("Wave folder worklet manager not enabled");
     }
     const waveFolder = parentSynth.waveFolderWorkletManager.create();
@@ -53,7 +53,7 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         env2Mapper.gain.value = parentSynth.filterEnvParam.value;
 
         waveFolder.params.preGain.value = parentSynth.waveFoldParam.value;
-        waveFolder.params.postGain.value = 1 / parentSynth.waveFoldParam.value;
+        // waveFolder.params.postGain.value = 1 / parentSynth.waveFoldParam.value;
     }
 
     let noteStarted = 0;
@@ -164,19 +164,7 @@ export class ClassicSynth extends Synth {
         getType(): OscillatorType {
             return this.options[this.value].value as OscillatorType;
         },
-        options: [{
-            value: 'sine',
-            displayName: 'Sine',
-        }, {
-            value: 'square',
-            displayName: 'Square',
-        }, {
-            value: 'sawtooth',
-            displayName: 'Sawtooth',
-        }, {
-            value: 'triangle',
-            displayName: 'Triangle',
-        }],
+        options: castToOptionDefList(['sine', 'square', 'sawtooth', 'triangle'] as OscillatorType[]),
         value: 0,
         exportable: true,
     } as OptionSynthParam;
@@ -214,19 +202,16 @@ export class ClassicSynth extends Synth {
         getType(): BiquadFilterType {
             return this.options[this.value].value as BiquadFilterType;
         },
-        options: [{
-            value: 'lowpass',
-            displayName: 'Lowpass',
-        }, {
-            value: 'highpass',
-            displayName: 'Highpass',
-        }, {
-            value: 'bandpass',
-            displayName: 'Bandpass',
-        }, {
-            value: 'notch',
-            displayName: 'Notch',
-        }],
+        options: castToOptionDefList([
+            'lowpass',
+            'highpass',
+            'bandpass',
+            'lowshelf',
+            'highshelf',
+            'peaking',
+            'notch',
+            'allpass'
+        ] as BiquadFilterType[]),
         value: 0,
         exportable: true,
     } as OptionSynthParam;
@@ -235,7 +220,7 @@ export class ClassicSynth extends Synth {
         type: ParamType.number,
         displayName: "Wave fold",
         value: 1,
-        min: 1,
+        min: 0,
         max: 2,
         exportable: true,
     } as NumberSynthParam;

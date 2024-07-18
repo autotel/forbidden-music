@@ -56,15 +56,15 @@ export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
     displayName: string,
     default?: boolean,
 }
-
+type OptionDef = {
+    value: string | number,
+    displayName: string,
+}
 export interface OptionSynthParam extends SynthParamMinimum<number> {
     type: ParamType.option,
     /** choice number */
     value: number,
-    options: {
-        value: string | number,
-        displayName: string,
-    }[]
+    options: OptionDef[]
     displayName?: string,
     default?: number
 }
@@ -183,5 +183,32 @@ export function numberSynthParam(
         },
         exportable,
     } as NumberSynthParam;
+    return synthParam;
+}
+
+export const castToOptionDefList = (optionsList: (OptionDef | string)[]): OptionDef[] => {
+    return optionsList.map(opt => typeof opt === 'string' ? { value: opt, displayName: opt } : opt)
+}
+
+export function optionSynthParam(
+    targetParam: AudioParam,
+    optionsList: (OptionDef | string)[],
+    displayName?: string,
+    exportable = true,
+): OptionSynthParam {
+    displayName = displayName || Object.prototype.toString.call(targetParam);
+    const currentParamValue = targetParam.value;
+    const options = castToOptionDefList(optionsList);
+    let currentValueIndex = options.findIndex(opt => opt.value === currentParamValue);
+    if(currentValueIndex === -1) {
+        currentValueIndex = 0;
+    }
+    const synthParam = {
+        type: ParamType.option,
+        value: currentValueIndex,
+        options,
+        displayName,
+        exportable,
+    } as OptionSynthParam;
     return synthParam;
 }

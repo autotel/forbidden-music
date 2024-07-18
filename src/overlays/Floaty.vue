@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { watch } from 'fs';
 import { start } from 'repl';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 
 const props = defineProps<{
     x?: number,
@@ -19,6 +20,13 @@ const box = ref({
     y: props.y || 0,
     width: props.width || 100,
     height: props.height || 100
+});
+
+watchEffect(() => {
+    box.value.x = props.x || 0;
+    box.value.y = props.y || 0;
+    box.value.width = props.width || 100;
+    box.value.height = props.height || 100;
 });
 
 const mouse = ref({
@@ -73,17 +81,18 @@ onBeforeUnmount(() => {
     window.removeEventListener('mousemove', drag);
     window.removeEventListener('mouseup', stopDrag);
 });
-const toPx = (box: { x: number, y: number, width: number, height: number }) => {
+const boxPx = computed(()=> {
+    const bVal = box.value;
     return {
-        left: box.x + 'px',
-        top: box.y + 'px',
-        width: box.width + 'px',
-        height: box.height + 'px'
+        left: bVal.x + 'px',
+        top: bVal.y + 'px',
+        width: bVal.width + 'px',
+        height: bVal.height + 'px'
     }
-}
+});
 </script>
 <template>
-    <div style="backdrop-filter: blur(5px); position:absolute" :style="toPx(box)">
+    <div style="backdrop-filter: blur(5px); position:absolute" :style="boxPx">
         <div ref="dragHandle" @mousedown="startDrag" class="dragHandle" :class="{
             dragging: mouse.moving,
         }">

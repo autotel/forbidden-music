@@ -35,6 +35,7 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
+import WorkletWorkbench from '@/WorkletWorkbench.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -390,6 +391,9 @@ const allowContextMenu = true;
     </Modal>
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
+    </Modal>
+    <Modal name="plot util" style="display:block; width:90vw; height:90vh;">
+        <WorkletWorkbench />
     </Modal>
     <Modal name="relation fraction editor">
         <div class="form-row">
