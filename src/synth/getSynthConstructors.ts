@@ -24,6 +24,7 @@ import { AudioModule } from "./types/AudioModule";
 import { SynthParamStored } from "./types/SynthParam";
 import { WaveFolderEffect } from "./effects/WaveFoldEffect";
 import { ClassicSynth } from "./generators/ClassicSynth";
+import { OscilloScope } from "./scope/OscilloScope";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
@@ -159,6 +160,9 @@ export default function getSynthConstructors(
     addAvailableSynth(SineCluster, 'SineCluster');
     addAvailableSynth(SineSynth, 'SineSynth');
     addAvailableSynth(ClassicSynth, 'ClassicSynth');
+    addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
+
+    addAvailableSynth(OscilloScope, 'Oscilloscope');
 
     addAvailableSynth(SimpleDelayEffect, 'SimpleDelayEffect');
     addAvailableSynth(RingModEffect, 'RingModEffect');
@@ -167,7 +171,6 @@ export default function getSynthConstructors(
     addAvailableSynth(GainEffect, 'GainEffect');
     addAvailableSynth(WaveFolderEffect, 'WaveFolderEffect');
 
-    addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
     if (isDev()) {
         // bc. unfinished
         addAvailableSynth(FmSynth, "(xp) Fm Synth", [], false, true);

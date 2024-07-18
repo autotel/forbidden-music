@@ -1,6 +1,6 @@
 import { AudioModule } from "../types/AudioModule";
 import { createAutomatableAudioNodeParam } from "../types/Automatable";
-import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam } from "../types/SynthParam";
+import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam, BooleanSynthParam } from "../types/SynthParam";
 
 export interface ImpulseResponseSampleDefinition {
     name: string,
@@ -26,6 +26,7 @@ const createConvolutionReverb = async (
 export class ConvolutionReverbEffect extends AudioModule {
     private audioContext: AudioContext;
     private loadingProgress = 0;
+    
     input: AudioNode;
     name = "";
     output: AudioNode;
@@ -38,6 +39,7 @@ export class ConvolutionReverbEffect extends AudioModule {
     ) {
         super();
         this.audioContext = audioContext;
+        const dcOffsetRemover = audioContext.createBiquadFilter();
         this.output = this.audioContext.createGain();
         this.input = this.audioContext.createGain();
         const dry = this.audioContext.createGain();
@@ -47,22 +49,52 @@ export class ConvolutionReverbEffect extends AudioModule {
         this.input.connect(send);
         send.gain.value = 0;
         dry.gain.value = 1;
+        dcOffsetRemover.type = 'highpass';
+        dcOffsetRemover.frequency.value = 30;
+        let currentConvolver: Awaited<ReturnType<typeof createConvolutionReverb>> | undefined;
+
+        dcOffsetRemover.connect(this.output);
+        const sup = this;
+        const dcOffsetRemoverParam = {
+            type: ParamType.boolean,
+            displayName: 'DC Offset Remover',
+            _v: true,
+            set value(value: boolean) {
+                this._v = value;
+                if (currentConvolver) {
+                    currentConvolver.output.disconnect();
+                    if (this._v) {
+                        currentConvolver.output.connect(dcOffsetRemover);
+                    } else {
+                        currentConvolver.output.connect(sup.output);
+                    }
+                }
+            },
+            get value() {
+                return this._v;
+            },
+            exportable: true,
+        } as BooleanSynthParam;
 
         const changeImplulseResponseUrl = async (path: string) => {
             if (!this.alreadyBuiltReverbs[path]) {
                 this.alreadyBuiltReverbs[path] = await createConvolutionReverb(path, this.audioContext);
             }
             send.disconnect();
-            const alreadyBuilt = this.alreadyBuiltReverbs[path];
-            send.connect(alreadyBuilt.input);
-            alreadyBuilt.output.connect(this.output);
+            currentConvolver = this.alreadyBuiltReverbs[path];
+            send.connect(currentConvolver.input);
+            if (dcOffsetRemoverParam.value) {
+                currentConvolver.output.connect(dcOffsetRemover);
+            } else {
+                currentConvolver.output.connect(this.output);
+            }
         }
-
-        const changeImpulseResponse = async (sampleDefinition:ImpulseResponseSampleDefinition) => {
+        let currentSampleDefinition: ImpulseResponseSampleDefinition = sampleDefinitions[0];
+        const changeImpulseResponse = async (sampleDefinition: ImpulseResponseSampleDefinition) => {
             await changeImplulseResponseUrl(sampleDefinition.path);
+            currentSampleDefinition = sampleDefinition;
             this.credits = sampleDefinition.readme;
         }
-
 
         const sampleChoiceDefinition: OptionSynthParam = {
             type: ParamType.option,
@@ -83,7 +115,7 @@ export class ConvolutionReverbEffect extends AudioModule {
             },
             exportable: true,
         }
-        const sendParam =  createAutomatableAudioNodeParam(
+        const sendParam = createAutomatableAudioNodeParam(
             send.gain, 'Send level', 0, 1
         );
         const dryParam: NumberSynthParam = createAutomatableAudioNodeParam(
@@ -94,6 +126,7 @@ export class ConvolutionReverbEffect extends AudioModule {
             sampleChoiceDefinition,
             sendParam,
             dryParam,
+            dcOffsetRemoverParam,
         ];
 
         this.enable = async () => {

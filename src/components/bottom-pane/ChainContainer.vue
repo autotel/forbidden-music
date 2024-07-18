@@ -16,6 +16,7 @@ import { PatcheableTrait, PatcheableType } from '../../dataTypes/PatcheableTrait
 import AddSynth from './components/AddSynth.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import AutoMaximizerEdit from './editModules/AutoMaximizerEdit.vue';
+import OscilloScopeEdit from './editModules/OscilloScopeEdit.vue';
 import ClassicSynthEdit from './editModules/ClassicSynthEdit.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
@@ -26,6 +27,7 @@ import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
 import { SineCluster } from '@/synth/generators/SineCluster';
+import { OscilloScope } from '@/synth/scope/OscilloScope';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -82,6 +84,8 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                 <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
                 <AutoMaximizerEdit v-else-if="audioModule instanceof AutoMaximizerEffect"
+                    :audioModule="audioModule" />
+                <OscilloScopeEdit v-else-if="audioModule instanceof OscilloScope"
                     :audioModule="audioModule" />
                 <FilterContainer v-else-if="audioModule instanceof FilterEffect" :audioModule="audioModule" />
                 <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
