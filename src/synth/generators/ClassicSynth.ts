@@ -3,6 +3,7 @@ import { createAutomatableAudioNodeParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { env } from "process";
+import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
 
 type SineNoteParams = EventParamsBase & {
     perc: boolean,
@@ -13,14 +14,19 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     const filter = audioContext.createBiquadFilter();
-
+    
     if (!parentSynth.adsrWorkletManager) {
         throw new Error("ADSR worklet manager not enabled");
     }
     const env1 = parentSynth.adsrWorkletManager.create();
     const env2 = parentSynth.adsrWorkletManager.create();
-
+    
     const env2Mapper = audioContext.createGain();
+
+    if(!parentSynth.waveFolderWorkletManager) {
+        throw new Error("Wave folder worklet manager not enabled");
+    }
+    const waveFolder = parentSynth.waveFolderWorkletManager.create();
 
     env1.worklet.connect(gainNode.gain);
     env2.worklet.connect(env2Mapper);
@@ -45,12 +51,15 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         env2.params.release.value = parentSynth.envelopes[1].releaseParam.mappedValue;
 
         env2Mapper.gain.value = parentSynth.filterEnvParam.value;
+
+        waveFolder.params.preGain.value = parentSynth.waveFoldParam.value;
+        waveFolder.params.postGain.value = 1 / parentSynth.waveFoldParam.value;
     }
 
     let noteStarted = 0;
-    let noteVelocity = 0;
 
-    oscillator.connect(filter);
+    oscillator.connect(waveFolder.worklet);
+    waveFolder.worklet.connect(filter);
     filter.connect(gainNode);
     oscillator.start();
 
@@ -62,7 +71,6 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
             absoluteStartTime: number,
             params: SineNoteParams
         ) {
-            noteVelocity = params.velocity;
             this.inUse = true;
 
             gainNode.gain.value = 0;
@@ -82,7 +90,6 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         },
         scheduleEnd(absoluteEndTime?: number) {
             if (absoluteEndTime) {
-                const noteDuration = absoluteEndTime - noteStarted;
 
                 env1.triggerStopAtTime(absoluteEndTime);
                 env2.triggerStopAtTime(absoluteEndTime);
@@ -224,6 +231,15 @@ export class ClassicSynth extends Synth {
         exportable: true,
     } as OptionSynthParam;
 
+    waveFoldParam = {
+        type: ParamType.number,
+        displayName: "Wave fold",
+        value: 1,
+        min: 1,
+        max: 2,
+        exportable: true,
+    } as NumberSynthParam;
+
     envelopes = [
         new EnvelopeParamsList(),
         new EnvelopeParamsList(),
@@ -231,6 +247,7 @@ export class ClassicSynth extends Synth {
 
     params = [
         this.waveShapeParam,
+        this.waveFoldParam,
         this.filterOctaveParam,
         this.filterQParam,
         this.filterEnvParam,
@@ -242,6 +259,7 @@ export class ClassicSynth extends Synth {
     gainParam: NumberSynthParam;
 
     adsrWorkletManager?: Awaited<ReturnType<typeof adsrWorkletManager>>;
+    waveFolderWorkletManager?: Awaited<ReturnType<typeof foldedSaturatorWorkletManager>>;
 
     constructor(
         audioContext: AudioContext,
@@ -257,6 +275,7 @@ export class ClassicSynth extends Synth {
 
         this.enable = async () => {
             this.adsrWorkletManager = await adsrWorkletManager(audioContext);
+            this.waveFolderWorkletManager = await foldedSaturatorWorkletManager(audioContext);
             this.markReady();
         }
 

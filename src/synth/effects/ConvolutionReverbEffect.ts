@@ -98,6 +98,7 @@ export class ConvolutionReverbEffect extends AudioModule {
 
         this.enable = async () => {
             sampleChoiceDefinition.value = 0;
+            this.markReady();
         }
         this.disable = () => {
         }

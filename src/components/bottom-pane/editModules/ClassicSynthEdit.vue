@@ -52,12 +52,13 @@ const groups = computed(() => [
 
 </script>
 <template>
-    <div style="width:36em" class="layout">
-        <div class="group" style="">
-            <OptionSynthParam :param="props.audioModule.waveShapeParam"  style="width:5em" />
-            <NumberSynthParam :param="props.audioModule.gainParam" />
+    <div style="width:37em" class="layout">
+        <div class="group" style="width: 14em">
+            <div class="title"><p>Wave</p></div>
+            <OptionSynthParam :param="props.audioModule.waveShapeParam"  style="width:7em" />
+            <NumberSynthParam :param="props.audioModule.waveFoldParam" />
         </div>
-        <div class="group" style="width:22em">
+        <div class="group" style="width:21em">
             <div class="title"><p>Filter</p></div>
             <OptionSynthParam :param="props.audioModule.filterTypeParam" style="width:8em"/>
             <NumberSynthParam :param="props.audioModule.filterOctaveParam" />
@@ -80,16 +81,24 @@ const groups = computed(() => [
             <NumberSynthParam :param="props.audioModule.envelopes[1].sustainParam" />
             <NumberSynthParam :param="props.audioModule.envelopes[1].releaseParam" />
         </div>
-        <Button style="background-color: #ccc1;" v-if="audioModule.credits" @click="showInfo(audioModule.credits)"
-            class="credits-button">Info</Button>
+        
+        <div class="group" style="">
+            <NumberSynthParam :param="props.audioModule.gainParam" />
+        </div>
+
+        <div class="group" style="">
+        <Button style="background-color: #ccc1;" @click="showInfo('All these parameters are applied on note on, therefore their effect is not heard until a new note is played.')"
+            class="credits-button">* Note </Button>
+        </div>
     </div>
 </template>
 <style scoped>
 .group {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background-color: rgba(204, 204, 204, 0.473);
+    justify-content: space-between;
+    /* background-color: rgba(177, 176, 176, 0.1); */
+    /* border:solid 1px; */
     border-radius: 1em;
     margin: 0 0.5em;
     height: 5em;
@@ -111,7 +120,7 @@ const groups = computed(() => [
     left:0;
     transform:  translate(1em, 0) rotate(-90deg);
     transform-origin:bottom left;
-    background-color: rgba(179, 179, 179, 0.938);
+    background-color: rgba(153, 153, 153, 0.938);
     color: rgba(255, 255, 255, 0.603);
     padding: 0 0.5em;
 }
@@ -120,7 +129,7 @@ const groups = computed(() => [
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: left;
     height: 100%;
 }
 </style>

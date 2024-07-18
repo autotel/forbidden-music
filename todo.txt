@@ -13,6 +13,7 @@
 	better mechanisms to catch up if playback started mid note/automation 
 		and if note begins before & ends after loop, to keep it playing as if it were midi
 ## Need refactor
+	I'd like to convert workletfactories into workletmanager (see e.g. adsrWorkletManager opposed to other workletFactory files)
 	'credits' modal & 'monomode interaction' 
 	automation - current methods for listing points while playing is suboptimal
 	update documentation
