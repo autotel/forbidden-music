@@ -1,5 +1,5 @@
 import { AudioModule } from "../types/AudioModule";
-import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { automatableNumberSynthParam } from "../types/Automatable";
 import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam, BooleanSynthParam } from "../types/SynthParam";
 
 export interface ImpulseResponseSampleDefinition {
@@ -115,10 +115,10 @@ export class ConvolutionReverbEffect extends AudioModule {
             },
             exportable: true,
         }
-        const sendParam = createAutomatableAudioNodeParam(
+        const sendParam = automatableNumberSynthParam(
             send.gain, 'Send level', 0, 1
         );
-        const dryParam: NumberSynthParam = createAutomatableAudioNodeParam(
+        const dryParam: NumberSynthParam = automatableNumberSynthParam(
             dry.gain, 'Dry level', 0, 1
         );
 

@@ -1,6 +1,6 @@
 import { createFoldedSaturatorWorklet } from "@/functions/foldedSaturatorWorkletFactory";
 import { oneShotEnvelope } from "../features/oneShotEnvelope";
-import { AutomatableSynthParam, createAutomatableAudioNodeParam, getTweenSlice } from "../types/Automatable";
+import { AutomatableSynthParam, automatableNumberSynthParam, getTweenSlice } from "../types/Automatable";
 import { EventParamsBase, Synth } from "../types/Synth";
 import { NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 
@@ -159,10 +159,10 @@ export class PerxThingy extends Synth<EventParamsBase> {
 
             this.params.push(attackParam, decayParam, attackCurveParam, decayCurveParam);
 
-            this.params.push(createAutomatableAudioNodeParam(
+            this.params.push(automatableNumberSynthParam(
                 preGainParam, 'fold pre-gain', 0, 1.5
             ));
-            this.params.push(createAutomatableAudioNodeParam(
+            this.params.push(automatableNumberSynthParam(
                 postGainParam, 'gain'
             ));
 

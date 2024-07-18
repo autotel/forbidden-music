@@ -3,7 +3,7 @@
 
 // should be done in jsdoc bc worklets won't import stuffs
 
-interface AudioWorkletProcessor {
+declare interface AudioWorkletProcessor {
   readonly port: MessagePort;
   process(
     inputs: Float32Array[][],
@@ -12,8 +12,8 @@ interface AudioWorkletProcessor {
   ): boolean;
 }
 
-export interface AudioWorkletNodeOptions {}
-export interface AudioParamDescriptor {
+declare interface AudioWorkletNodeOptions {}
+declare interface AudioParamDescriptor {
   name: string;
   defaultValue?: number;
   minValue?: number;
@@ -36,3 +36,11 @@ declare function registerProcessor(
   name: string,
   processorType: new () => AudioWorkletProcessor
 ): void
+
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/AudioWorkletGlobalScope/currentFrame) */
+declare var currentFrame: number;
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/AudioWorkletGlobalScope/currentTime) */
+declare var currentTime: number;
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/AudioWorkletGlobalScope/sampleRate) */
+declare var sampleRate: number;
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/AudioWorkletGlobalScope/registerProcessor) */

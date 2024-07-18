@@ -1,5 +1,5 @@
 import { AudioModule } from "../types/AudioModule";
-import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { automatableNumberSynthParam } from "../types/Automatable";
 import { ParamType, SynthParam } from "../types/SynthParam";
 
 
@@ -28,9 +28,9 @@ export class FilterEffect extends AudioModule {
         filter.type = "lowpass";
 
         this.params = [
-            createAutomatableAudioNodeParam(this.output.gain, 'gain', 0, 1),
-            createAutomatableAudioNodeParam(filter.frequency, 'frequency', 2, 20000),
-            createAutomatableAudioNodeParam(filter.Q, 'Q', 0.0001, 6),
+            automatableNumberSynthParam(this.output.gain, 'gain', 0, 1),
+            automatableNumberSynthParam(filter.frequency, 'frequency', 2, 20000),
+            automatableNumberSynthParam(filter.Q, 'Q', 0.0001, 6),
             {
                 type: ParamType.number,
                 displayName: "wet",

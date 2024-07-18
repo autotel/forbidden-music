@@ -148,3 +148,40 @@ export type SynthParam =
     ArraySynthParam |
     VoicePatchSynthParam
 
+
+
+
+export function numberSynthParam(
+    targetParam: AudioParam,
+    displayName?: string,
+    min?: number,
+    max?: number,
+    exportable = true,
+): NumberSynthParam {
+    displayName = displayName || Object.prototype.toString.call(targetParam);
+
+    min = (undefined === min) ? targetParam.minValue : min;
+    max = (undefined === max) ? targetParam.maxValue : max;
+
+    const synthParam = {
+        type: ParamType.number,
+        _v: targetParam.value,
+        get value() {
+            return targetParam.value;
+        },
+        set value(v: number) {
+            targetParam.value = v;
+        },
+        min,
+        max,
+        displayName,
+        animate(startTime: number, destTime: number, destValue: number) {
+            targetParam.linearRampToValueAtTime(destValue, destTime);
+        },
+        stopAnimations(startTime: number = 0) {
+            targetParam.cancelScheduledValues(startTime || 0);
+        },
+        exportable,
+    } as NumberSynthParam;
+    return synthParam;
+}

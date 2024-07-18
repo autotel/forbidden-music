@@ -1,6 +1,6 @@
 import { createFoldedSaturatorWorklet } from "@/functions/foldedSaturatorWorkletFactory";
 import { AudioModule } from "../types/AudioModule";
-import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { automatableNumberSynthParam } from "../types/Automatable";
 
 export class WaveFolderEffect extends AudioModule {
     output: GainNode;
@@ -29,10 +29,10 @@ export class WaveFolderEffect extends AudioModule {
             if (!preGainParam || !postGainParam) throw new Error("no preGain or postGain params");
 
 
-            this.params.push(createAutomatableAudioNodeParam(
+            this.params.push(automatableNumberSynthParam(
                 preGainParam, 'fold pre-gain', 0, 5
             ));
-            this.params.push(createAutomatableAudioNodeParam(
+            this.params.push(automatableNumberSynthParam(
                 postGainParam, 'gain', 0, 1
             ));
 

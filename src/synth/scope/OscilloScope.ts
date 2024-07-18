@@ -1,7 +1,7 @@
 import { createAudioEnvelopeWorklet } from "../../functions/audioEnvelopeWorkletFactory";
 import { createMaximizerWorklet } from "../../functions/maximizerWorkletFactory";
 import { AudioModule } from "../types/AudioModule";
-import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { automatableNumberSynthParam } from "../types/Automatable";
 import { NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 
 export class OscilloScope extends AudioModule {

@@ -1,7 +1,7 @@
 import { createAudioEnvelopeWorklet } from "../../functions/audioEnvelopeWorkletFactory";
 import { createMaximizerWorklet } from "../../functions/maximizerWorkletFactory";
 import { AudioModule } from "../types/AudioModule";
-import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { automatableNumberSynthParam } from "../types/Automatable";
 
 export class AutoMaximizerEffect extends AudioModule {
     output: GainNode;
@@ -25,8 +25,8 @@ export class AutoMaximizerEffect extends AudioModule {
         let maximizer: AudioNode | undefined;
         let envelopeFollower: AudioWorkletNode | undefined;
 
-        this.params.push(createAutomatableAudioNodeParam(this.input.gain, 'Input Gain', 0, 10));
-        this.params.push(createAutomatableAudioNodeParam(this.output.gain, 'Output Gain', 0, 10));
+        this.params.push(automatableNumberSynthParam(this.input.gain, 'Input Gain', 0, 10));
+        this.params.push(automatableNumberSynthParam(this.output.gain, 'Output Gain', 0, 10));
 
         this.enable = async () => {
             if(this.enabledCalled) return; // this will happen if recycling
@@ -60,10 +60,10 @@ export class AutoMaximizerEffect extends AudioModule {
             levelParam.value = -1;
 
             this.params.splice(1,0,
-                createAutomatableAudioNodeParam(increaseRateParam, 'Increase Rate'),
-                createAutomatableAudioNodeParam(decreaseRateParam, 'Decrease Rate'),
-                createAutomatableAudioNodeParam(biasParam, 'Env Bias'),
-                createAutomatableAudioNodeParam(levelParam, 'Expansion Level')
+                automatableNumberSynthParam(increaseRateParam, 'Increase Rate'),
+                automatableNumberSynthParam(decreaseRateParam, 'Decrease Rate'),
+                automatableNumberSynthParam(biasParam, 'Env Bias'),
+                automatableNumberSynthParam(levelParam, 'Expansion Level')
             );
 
             envelopeFollower.port.onmessage = (event) => {

@@ -99,7 +99,7 @@ const accessProp = <T, K extends keyof T>(obj: T, key: K) => obj[key];
 const isValidAudioParam = (param: unknown): param is AudioParam => {
     return param instanceof AudioParam;
 }
-export function createAutomatableAudioNodeParam(
+export function automatableNumberSynthParam(
     targetParam: AudioParam,
     displayName?: string,
     min?: number,

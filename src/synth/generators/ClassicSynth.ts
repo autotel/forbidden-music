@@ -1,7 +1,7 @@
 import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
-import { createAutomatableAudioNodeParam } from "../types/Automatable";
+import { automatableNumberSynthParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { env } from "process";
 import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
 
@@ -257,7 +257,7 @@ export class ClassicSynth extends Synth {
     ] as SynthParam[];
 
     gainParam: NumberSynthParam;
-
+    input: GainNode;
     adsrWorkletManager?: Awaited<ReturnType<typeof adsrWorkletManager>>;
     waveFolderWorkletManager?: Awaited<ReturnType<typeof foldedSaturatorWorkletManager>>;
 
@@ -265,13 +265,17 @@ export class ClassicSynth extends Synth {
         audioContext: AudioContext,
     ) {
         super(audioContext, classicSynthVoice);
+        this.input = audioContext.createGain();
+
         const outputGain = this.output;
         this.output.gain.value = 0.1;
-        const gain = createAutomatableAudioNodeParam(
+        const gain = automatableNumberSynthParam(
             outputGain.gain, 'out gain', 0, 1
         );
+
         this.gainParam = gain;
         this.params.push(gain);
+        this.params.unshift(numberSynthParam(this.input.gain, 'input', 0, 1));
 
         this.enable = async () => {
             this.adsrWorkletManager = await adsrWorkletManager(audioContext);
