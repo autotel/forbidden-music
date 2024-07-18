@@ -1,3 +1,4 @@
+// @ts-nocheck
 class Noise extends AudioWorkletProcessor {
     process(inputs: Float32Array[][], outputs: Float32Array[][]) {
         const output = outputs[0][0];

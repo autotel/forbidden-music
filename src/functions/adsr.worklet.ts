@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Based on 
 // https://github.com/g200kg/audioworklet-adsrnode
 

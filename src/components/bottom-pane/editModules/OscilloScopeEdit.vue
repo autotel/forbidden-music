@@ -2,7 +2,7 @@
 
 import { Ref, computed, inject, onMounted, ref } from 'vue';
 import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { OscilloScope } from '../../../synth/effects/OscilloScope';
+import { OscilloScope } from '../../../synth/scope/OscilloScope';
 import { ParamType } from '../../../synth/types/SynthParam';
 import Button from '../../Button.vue';
 import ButtonSub from '../../ButtonSub.vue';

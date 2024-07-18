@@ -465,7 +465,7 @@ export const useSnapStore = defineStore("snap", () => {
              * list of traces including additional frequency property, and only
              * one per tone
              */
-            const tonalTracesGetter = (() => {
+            const tonalTracesGetter = ((otherTraces) => {
                 type TonalTrace = Note & { frequency: number };
                 let result: TonalTrace[] | undefined;
                 let skipTones = new Set<number>();
@@ -488,7 +488,7 @@ export const useSnapStore = defineStore("snap", () => {
                     return result;
                 }
                 return { get }
-            })();
+            })(otherTraces);
 
             if (snapValues.arbitraryGridEDO.active === true) {
                 const gcd = (a: number, b: number): number => {
