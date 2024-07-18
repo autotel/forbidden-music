@@ -1,13 +1,6 @@
-// @ts-nocheck
 // Based on 
 // https://github.com/g200kg/audioworklet-adsrnode
 
-declare let sampleRate: number;
-
-if (sampleRate === undefined) {
-    console.warn("sampleRate is undefined, using best guess");
-    sampleRate = 44100;
-}
 
 export class Adsr extends AudioWorkletProcessor {
     _lasttrig;
@@ -32,7 +25,19 @@ export class Adsr extends AudioWorkletProcessor {
             { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "a-rate" },
         ];
     }
-    process(inputs: Float32Array[][], outputs: Float32Array[][], parameters: Record<string, Float32Array>) {
+    /**
+     * @param {Float32Array[][]} inputs
+     * @param {Float32Array[][]} outputs
+     * @param {Record<string, Float32Array>} parameters
+     * @returns {boolean}
+     */
+    process(inputs, outputs, parameters) {
+
+
+        if (sampleRate === undefined) {
+            console.warn("sampleRate is undefined, using best guess");
+            sampleRate = 44100;
+        }
         let output = outputs[0];
         let input = inputs[0];
         const trigs = parameters.trigger;
