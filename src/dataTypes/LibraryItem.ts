@@ -108,6 +108,7 @@ export interface LibraryItem_0_5_0 {
         channelSlot: number;
         visible: boolean;
         locked: boolean;
+        name?: string;
     }[];
     
     channels: SynthChannelsDefinition;
@@ -120,9 +121,11 @@ export interface LibraryItem_0_5_0 {
     loops: LoopDef[];
     lanes: AutomationLane[];
 }
+
 export type OldFormatLibraryItem =
     LibraryItem_0_1_0 |
     LibraryItem_0_2_0 |
     LibraryItem_0_3_0 |
     LibraryItem_0_4_0;
+
 export type LibraryItem = LibraryItem_0_5_0;

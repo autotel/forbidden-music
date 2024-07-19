@@ -16,6 +16,7 @@ dist-ssr
 
 ## dist folder
 forbidden-music/**
+forbudden-music
 
 # Editor directories and files
 .vscode/*

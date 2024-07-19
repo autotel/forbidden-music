@@ -53,6 +53,15 @@ const addChannel = () => {
         focusOnLayer(layerStore.layers.indexOf(newLayer));
     }
 }
+
+// Easy to implement at runtime, but needs more thought abt. how to make it storeable
+// @input="(e:InputEvent) => channelNameInputHandler(e, synthChan, chanNo)"
+const channelNameInputHandler = (e: InputEvent, synthChan: SynthChain, chanNo: number) => {
+    const target = e.target;
+    if(!(target instanceof HTMLInputElement)) return;
+    synthChan.name = target.innerText;
+}
+
 </script>
 <template>
     <h3 class="padded">Synth chains</h3>
@@ -67,7 +76,9 @@ const addChannel = () => {
             <template v-else>
                 <span class="encircled">{{ chanNo }}</span>
             </template>
-            {{ synthChan.name }}
+            <p>
+                {{ synthChan.name }}
+            </p>
 
             <ButtonSub class="sub-button" danger :onClick="() => { synth.channels.children.splice(chanNo, 1) }">
                 ×

@@ -167,6 +167,7 @@ export const useProjectStore = defineStore("current project", () => {
 
     const setFromProjectDefinition = (pDef: LibraryItem, recycleSynths = false) => {
         name.value = pDef.name;
+        
         created.value = pDef.created;
         edited.value = pDef.edited;
 
@@ -188,11 +189,16 @@ export const useProjectStore = defineStore("current project", () => {
 
 
         layers.clear();
-        pDef.layers.forEach(({ channelSlot, visible, locked }, index) => {
+        pDef.layers.forEach(({ channelSlot, visible, locked, name }, index) => {
             const layer = layers.getOrMakeLayerWithIndex(index);
             layer.visible = visible;
             layer.locked = locked;
             layer.channelSlot = channelSlot;
+            if (name) {
+                layer.name = name;
+            }else{
+                delete layer.name;
+            }
         });
 
 

@@ -349,7 +349,11 @@ export const useSnapStore = defineStore("snap", () => {
         returnValue = returnValue.filter((trace) => {
             if ('layer' in trace) {
                 const layer = layers.layers[trace.layer];
-                return layer.visible;
+                if(!layer) {
+                    console.error("trace in nonexisting layer no", trace.layer);
+                    return false
+                }
+                return layer.visible
             }
             return true;
         });

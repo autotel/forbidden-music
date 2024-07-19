@@ -13,6 +13,7 @@ export interface Layer {
     visible: boolean;
     locked: boolean;
     channelSlot: number;
+    name?: string;
 }
 
 export const useLayerStore = defineStore("layer", () => {
@@ -45,6 +46,7 @@ export const useLayerStore = defineStore("layer", () => {
             locked: false,
             channelSlot: 0,
         };
+        
         return layers.value[layer];
     }
 
