@@ -14,15 +14,15 @@ git pull;
 git merge $current_branch;
 git push;
 
-# npm install;
-# npm run build;
+npm install;
+npm run build;
 
-# npm run docs:build;
-# mkdir ./forbidden-music/docs/;
-# cp ./docs/.vuepress/dist/* ./forbidden-music/docs/ -r;
-# echo "will run tests now, press ctrl+c to cancel";
-# sleep 5;
-# npm run test;
+npm run docs:build;
+mkdir ./forbidden-music/docs/;
+cp ./docs/.vuepress/dist/* ./forbidden-music/docs/ -r;
+echo "will run tests now, press ctrl+c to cancel";
+sleep 5;
+npm run test;
 
 git checkout $current_branch;
 
