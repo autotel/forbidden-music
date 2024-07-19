@@ -2,7 +2,7 @@
 
 current_branch=$(git branch --show-current);
 
-read -p "Will merge $current_branch into main. Contiune?" -n 1 -r
+read -p "Will merge $current_branch into main. Press y to continue" -n 1 -r
 echo    # move to a new line
 
 
