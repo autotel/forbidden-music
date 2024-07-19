@@ -4,7 +4,9 @@ import { Trace } from '../dataTypes/Trace';
 import { SelectableRange } from '../store/selectStore';
 export const getNotesInRange = (
     notes: Note[],
-    range: SelectableRange
+    range: SelectableRange,
+    // get notes touching the range, or get only notes fully inside the range
+    greedy = false,
 ) => {
     // range is expected to come in positive ranges
     const timeStart = range.time;
@@ -15,7 +17,14 @@ export const getNotesInRange = (
         // deemed as in octave range if said restriction is not set
         const octaveInRange = (octaveStart === undefined)
             || (editNote.octave >= octaveStart && editNote.octave <= octaveEnd!);
-        const timeInRange = editNote.timeEnd >= timeStart && editNote.time <= timeEnd;
+            
+        let timeInRange = greedy?(
+                editNote.time <= timeEnd && (editNote.timeEnd >= timeStart)
+            ):(
+                editNote.time >= timeStart && editNote.timeEnd <= timeEnd
+            );
+        
+        
         return octaveInRange && timeInRange;
     });
 };
