@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import Button from '../../../components/Button.vue';
-import { useCommunicationStore } from '../../../store/communicationStore';
 import { useCustomSettingsStore } from '../../../store/customSettingsStore';
 import { useLayerStore } from '../../../store/layerStore';
-import { useProjectStore } from '../../../store/projectStore';
-import { useToolStore } from '../../../store/toolStore';
 import ModuleContainer from '../components/ModuleContainer.vue';
 import NoteLayerAssociator from './NotesContainer/NoteLayerAssociator.vue';
 
@@ -13,9 +10,6 @@ defineProps<{
 }>();
 
 const layersStore = useLayerStore();
-const toolStore = useToolStore();
-const project = useProjectStore();
-const communications = useCommunicationStore();
 const customSettingsStore = useCustomSettingsStore();
 
 const addLayer = () => {
@@ -24,10 +18,19 @@ const addLayer = () => {
 </script>
 
 <template>
-    <ModuleContainer title="Notes input" default-collapsed :no-collapse="!customSettingsStore.layersEnabled" :padding="customSettingsStore.layersEnabled">
+    <ModuleContainer 
+        title="Notes input" 
+        default-collapsed 
+        :no-collapse="!customSettingsStore.layersEnabled" 
+        :padding="customSettingsStore.layersEnabled"
+    >
         <template #default>
             <div class="col" v-if="customSettingsStore.layersEnabled">
-                <h3 class="padded">Receive layers</h3>
+                
+                <div class="padded">
+                    <h3>Receive layers</h3>
+                    <small>Layers connected to this synth channel</small>
+                </div>
                 <template v-for="(layer, no) in layersStore.layers">
                     <NoteLayerAssociator :no="no" :channel-slot-no="channelSlotNo" />
                 </template>

@@ -28,19 +28,19 @@ const isLayerAssociatedToMe = computed<boolean>({
     }
 });
 
-const addLayer = () => {
-    layersStore.getOrMakeLayerWithIndex(layersStore.layers.length);
-}
-
-
 const layerClickHandler = (no: number) => {
     toolStore.currentLayerNumber = no;
 }
+
+const getSwitchTooltip = (isLayerAssociatedToMe: boolean) => {
+    return isLayerAssociatedToMe ? 'Connect this layer to default channel (0)' : 'Send notes from this layer to this Synth channel';
+}
+
 </script>
 <template>
     <Button :onClick="() => layerClickHandler(no)" :class="{ active: toolStore.currentLayerNumber === no }"
         style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
-        <Tooltip tooltip="Route this layer's notes to this channel">
+        <Tooltip :tooltip="getSwitchTooltip(isLayerAssociatedToMe)">
             <Toggle v-model="isLayerAssociatedToMe" :hidden="channelSlotNo === 0 && isLayerAssociatedToMe" />
         </Tooltip>
         {{ no ? 'Layer' + no : 'Base Layer' }}

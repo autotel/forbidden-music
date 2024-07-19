@@ -27,12 +27,14 @@ export const useLayerStore = defineStore("layer", () => {
     }
 
     const addLayer = () => {
-        layers.value.push({
+        const newLayer = {
             visible: true,
             locked: false,
             channelSlot: 0,
-        });
+        }
+        layers.value.push(newLayer);
         console.log("layers.value", layers.value); 
+        return newLayer;
     }
 
     const getOrMakeLayerWithIndex = (layer: number) => {
