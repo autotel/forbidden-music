@@ -19,8 +19,9 @@ export const getNotesInRange = (
             || (editNote.octave >= octaveStart && editNote.octave <= octaveEnd!);
             
         let timeInRange = greedy?(
-                editNote.time <= timeEnd && (editNote.timeEnd >= timeStart)
+                editNote.time <= timeEnd && editNote.timeEnd >= timeStart
             ):(
+                // note that a note spanning all through & beyond the range is skipped
                 editNote.time >= timeStart && editNote.timeEnd <= timeEnd
             );
         
