@@ -14,6 +14,7 @@ import { useProjectStore } from '../../../store/projectStore';
 import { useThrottleFn } from '@vueuse/core';
 const props = defineProps<{
     param: NumberSynthParam
+    label?: boolean | string
 }>();
 
 const emit = defineEmits(['update']);
@@ -66,7 +67,8 @@ const toggleShowAutomation = (e: MouseEvent) => {
 }
 
 
-const abbreviatedName = computed(() => {
+const computedLabel = computed(() => {
+    if (props.label !== undefined) return props.label;
     if (!props.param.displayName) return '';
     // return props.param.displayName;
     return abbreviate(props.param.displayName, 10);
@@ -83,7 +85,7 @@ const paramValueToLocalValue = () => {
             );
             localValue.value = interpValue;
         } else {
-            const eitherPoint = automationPointsAround.find(( point ) => point);
+            const eitherPoint = automationPointsAround.find((point) => point);
             if (!eitherPoint) return;
             localValue.value = eitherPoint.value;
         }
@@ -238,7 +240,7 @@ const tooltip = computed(() => {
                     <canvas ref="mouseCaptureCanvas" width="8" height="2.5"></canvas>
                 </div>
             </div>
-            <small>{{ abbreviatedName }}</small>
+            <small v-if="label !== false">{{ computedLabel }}</small>
             <small>{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
             <Tooltip :tooltip="automated ? 'Edit automation. [Ctl+A] & [Del] To erase' : 'automate parameter'"
                 :force-hide="dragging">

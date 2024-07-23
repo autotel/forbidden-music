@@ -114,7 +114,7 @@ export async function fmWorkletManager(
           name: `operators[${i}].decay1Rate`,
           defaultValue: op.decay1Rate,
           minValue: 0,
-          maxValue: 1,
+          maxValue: 8,
           automationRate: "k-rate",
         },
         {
@@ -128,7 +128,7 @@ export async function fmWorkletManager(
           name: `operators[${i}].decay2Rate`,
           defaultValue: op.decay2Rate,
           minValue: 0,
-          maxValue: 1,
+          maxValue: 8,
           automationRate: "k-rate",
         },
       ]

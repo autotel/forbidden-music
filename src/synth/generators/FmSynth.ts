@@ -1,8 +1,11 @@
 import { fmWorkletManager } from '@/functions/fmWorkletManager';
 import { frequencyToNote12 } from '../../functions/toneConverters';
 import { EventParamsBase, Synth, SynthVoice } from '../types/Synth';
-import { NumberSynthParam, ParamType, SynthParam, numberSynthParam } from '../types/SynthParam';
+import { NumberSynthParam, OptionSynthParam, ParamType, SynthParam, numberSynthParam } from '../types/SynthParam';
 import { ifDev } from '@/functions/isDev';
+import { filterMap } from '@/functions/filterMap';
+
+
 
 
 interface FmStopVoiceMessage {
@@ -46,7 +49,7 @@ const voiceFactory = (worklet: FmWorklet, workletParams: FmWorkletParams, params
                     if (displayName in workletParams) {
                         // @ts-ignore
                         workletParam = workletParams[displayName];
-                    }else{
+                    } else {
                         throw new Error(`Param ${displayName} not found in worklet`);
                     }
                     // // @ts-ignore
@@ -58,11 +61,11 @@ const voiceFactory = (worklet: FmWorklet, workletParams: FmWorkletParams, params
                     console.error(e);
                 }
             });
-            if(desist) continue;
+            if (desist) continue;
             // console.log("setting", displayName, value);
             // @ts-ignore
             workletParam.value = value;
-            
+
         }
     }
     const stop = () => {
@@ -125,16 +128,39 @@ const voiceFactory = (worklet: FmWorklet, workletParams: FmWorkletParams, params
 export class FmSynth extends Synth {
     workletParams?: NumberSynthParam[];
     needsFetching = true;
+    presetSynthParam: OptionSynthParam;
     constructor(audioContext: AudioContext) {
         super(audioContext, () => {
             if (!workletManager) throw new Error("No engine");
             const { worklet, params } = workletManager.create();
             const ownWorkletParams = this.workletParams;
-            if(!ownWorkletParams) throw new Error("No own worklet params");
+            if (!ownWorkletParams) throw new Error("No own worklet params");
             return voiceFactory(worklet, params, ownWorkletParams);
         });
         this.output.gain.value = 0.6;
 
+
+        this.presetSynthParam = {
+            type: ParamType.option,
+            displayName: "Preset",
+            _v: 0,
+            options: presets.map((preset, i) => {
+                return {
+                    displayName: presetNames[i],
+                    value: i,
+                }
+            }),
+            set value(val) {
+                const preset = presets[val];
+                selectPreset(preset);
+                this._v = val;
+            },
+            get value() {
+                return this._v;
+            },
+            exportable: false,
+        } as OptionSynthParam;
+        this.params.push(this.presetSynthParam);
 
         const workletManagerPromise = fmWorkletManager(audioContext);
         let workletManager: ResolvedFmWorkletManager;
@@ -151,6 +177,23 @@ export class FmSynth extends Synth {
             });
             this.params.push(...this.workletParams);
             this.markReady();
+        }
+        const selectPreset = (vals: Preset) => {
+            const valKeys = Object.keys(vals);
+            if (!this.workletParams) {
+                console.error("No worklet params");
+                return;
+            }
+            for (let keyName of valKeys) {
+                if (keyName === "presetName") continue;
+                const param = this.workletParams.find((param) => param.displayName === keyName);
+                if (!param) {
+                    console.warn(`Param ${keyName} not found in synth`);
+                    continue;
+                } else {
+                    param.value = vals[keyName];
+                }
+            }
         }
 
     }
@@ -179,3 +222,138 @@ export class FmSynth extends Synth {
     `
 
 }
+
+type Preset = { [key: string]: number };
+
+const presetNames :string[] = [
+    'Pluck 1',
+    'Aggressive',
+    'Minimal',
+];
+
+const presets: Preset[] = [
+    {
+        "connection[0,0]": 0,
+        "connection[0,1]": 0,
+        "connection[0,2]": 0,
+        "connection[0,3]": 0,
+        "connection[1,0]": 0,
+        "connection[1,1]": 0,
+        "connection[1,2]": 0,
+        "connection[1,3]": 0,
+        "connection[2,0]": 0,
+        "connection[2,1]": 0,
+        "connection[2,2]": 0,
+        "connection[2,3]": 0,
+        "connection[3,0]": 0,
+        "connection[3,1]": 0,
+        "connection[3,2]": 0.7049999999999997,
+        "connection[3,3]": 0,
+        "connection[4,0]": 0,
+        "connection[4,1]": 0,
+        "connection[4,2]": 0.6700000000000003,
+        "connection[4,3]": 1,
+        "operators[0].totalLevel": 1,
+        "operators[0].multiple": 14,
+        "operators[0].decay1Rate": 0.9998844821426083,
+        "operators[0].decay1Level": 0.5,
+        "operators[0].decay2Rate": 0.9999422394031608,
+        "operators[1].totalLevel": 0.125,
+        "operators[1].multiple": 1,
+        "operators[1].decay1Rate": 0.9999566792395862,
+        "operators[1].decay1Level": 0.5,
+        "operators[1].decay2Rate": 0.9999422394031608,
+        "operators[2].totalLevel": 0.04710678118654763,
+        "operators[2].multiple": 4.133333333333336,
+        "operators[2].decay1Rate": 8,
+        "operators[2].decay1Level": 0,
+        "operators[2].decay2Rate": 8,
+        "operators[3].totalLevel": 0.19500000000000003,
+        "operators[3].multiple": 1,
+        "operators[3].decay1Rate": 4.826666666666666,
+        "operators[3].decay1Level": 0.7750000000000001,
+        "operators[3].decay2Rate": 3.36
+    }, {
+        "connection[0,0]": 0,
+        "connection[0,1]": 0,
+        "connection[0,2]": 0,
+        "connection[0,3]": 0,
+        "connection[1,0]": 1,
+        "connection[1,1]": 0,
+        "connection[1,2]": 0,
+        "connection[1,3]": 0,
+        "connection[2,0]": 0,
+        "connection[2,1]": 0,
+        "connection[2,2]": 0,
+        "connection[2,3]": 0,
+        "connection[3,0]": 0,
+        "connection[3,1]": 0,
+        "connection[3,2]": 1,
+        "connection[3,3]": 0,
+        "connection[4,0]": 0,
+        "connection[4,1]": 1,
+        "connection[4,2]": 0,
+        "connection[4,3]": 1,
+        "operators[0].totalLevel": 1,
+        "operators[0].multiple": 14,
+        "operators[0].decay1Rate": 0.9998844821426083,
+        "operators[0].decay1Level": 0.5,
+        "operators[0].decay2Rate": 0.9999422394031608,
+        "operators[1].totalLevel": 0.125,
+        "operators[1].multiple": 1,
+        "operators[1].decay1Rate": 0.9999566792395862,
+        "operators[1].decay1Level": 0.5,
+        "operators[1].decay2Rate": 0.9999422394031608,
+        "operators[2].totalLevel": 0.7071067811865475,
+        "operators[2].multiple": 1,
+        "operators[2].decay1Rate": 0.9999855595380028,
+        "operators[2].decay1Level": 0,
+        "operators[2].decay2Rate": 0,
+        "operators[3].totalLevel": 0.125,
+        "operators[3].multiple": 1,
+        "operators[3].decay1Rate": 0.9999855595380028,
+        "operators[3].decay1Level": 0,
+        "operators[3].decay2Rate": 0
+    }, {
+        "connection[0,0]": 0,
+        "connection[0,1]": 0,
+        "connection[0,2]": 0,
+        "connection[0,3]": 0,
+        "connection[1,0]": 0,
+        "connection[1,1]": 0,
+        "connection[1,2]": 0,
+        "connection[1,3]": 0,
+        "connection[2,0]": 0,
+        "connection[2,1]": 0,
+        "connection[2,2]": 0,
+        "connection[2,3]": 0,
+        "connection[3,0]": 0,
+        "connection[3,1]": 0,
+        "connection[3,2]": 0,
+        "connection[3,3]": 0,
+        "connection[4,0]": 0,
+        "connection[4,1]": 0,
+        "connection[4,2]": 0,
+        "connection[4,3]": 1,
+        "operators[0].totalLevel": 0.5,
+        "operators[0].multiple": 4,
+        "operators[0].decay1Rate": 1,
+        "operators[0].decay1Level": 0.5,
+        "operators[0].decay2Rate": 0,
+        "operators[1].totalLevel": 0.5,
+        "operators[1].multiple": 3,
+        "operators[1].decay1Rate": 1,
+        "operators[1].decay1Level": 0.5,
+        "operators[1].decay2Rate": 0,
+        "operators[2].totalLevel": 0.5,
+        "operators[2].multiple": 2,
+        "operators[2].decay1Rate": 1,
+        "operators[2].decay1Level": 0.5,
+        "operators[2].decay2Rate": 0,
+        "operators[3].totalLevel": 0.5,
+        "operators[3].multiple": 1,
+        "operators[3].decay1Rate": 1,
+        "operators[3].decay1Level": 0.5,
+        "operators[3].decay2Rate": 0,
+    }
+];

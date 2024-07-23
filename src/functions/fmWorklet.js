@@ -240,7 +240,7 @@ class FMSynthesizer extends AudioWorkletProcessor {
                         name: `operators[${i}].decay1Rate`,
                         defaultValue: op.decay1Rate,
                         minValue: 0,
-                        maxValue: 1,
+                        maxValue: 8,
                         automationRate: "k-rate", // k = per block; a = per sample
                     },
                     {
@@ -254,7 +254,7 @@ class FMSynthesizer extends AudioWorkletProcessor {
                         name: `operators[${i}].decay2Rate`,
                         defaultValue: op.decay2Rate,
                         minValue: 0,
-                        maxValue: 1,
+                        maxValue: 8,
                         automationRate: "k-rate", // k = per block; a = per sample
                     },
                 ]
@@ -343,9 +343,10 @@ class FMSynthesizer extends AudioWorkletProcessor {
         defaultOperators.map((_, i) => {
             this._operators[i].totalLevel = parameters[`operators[${i}].totalLevel`][0];
             this._operators[i].multiple = parameters[`operators[${i}].multiple`][0];
-            this._operators[i].decay1Rate = parameters[`operators[${i}].decay1Rate`][0];
             this._operators[i].decay1Level = parameters[`operators[${i}].decay1Level`][0];
-            this._operators[i].decay2Rate = parameters[`operators[${i}].decay2Rate`][0];
+
+            this._operators[i].decay1Rate = Math.pow(2, -parameters[`operators[${i}].decay1Rate`][0] / sampleRate);
+            this._operators[i].decay2Rate = Math.pow(2, -parameters[`operators[${i}].decay2Rate`][0] / sampleRate);
         });
         if (outputs.length >= 1) {
             for (let k = 0; k < outputs[0][0].length; ++k) {
