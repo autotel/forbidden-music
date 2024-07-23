@@ -55,7 +55,7 @@ const handleRemoveClick = (no: number, element: HTMLElement) => {
 }
 </script>
 <template>
-    <Collapsible v-if="settings.layersEnabled"
+    <Collapsible
         tooltip="Distribute the notes into different layers if that makes editing easier">
         <template #icon>
             <Layers clas="icon" />
@@ -74,7 +74,7 @@ const handleRemoveClick = (no: number, element: HTMLElement) => {
                 <Button inline tooltip="Set selection's layer to this layer" :onClick="setSelectedNotesLayerToCurrent">
                     <SquarePlus />
                 </Button>
-                <Tooltip tooltip="Assign a synth channel to this layer." v-if="settings.multiTimbralityEnabled">
+                <Tooltip tooltip="Assign a synth channel to this layer.">
                     <input type="number" step="1" style="width: 2em; overflow: hidden;" v-model="layer.channelSlot" />
                 </Tooltip>
                 <span v-on:click="switchLayerVisibility(layerNo)">

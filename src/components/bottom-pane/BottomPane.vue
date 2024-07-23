@@ -3,7 +3,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { SynthChain } from '../../dataStructures/SynthChain';
 import { useAudioContextStore } from '../../store/audioContextStore';
 import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
-import { useExclusiveContentsStore } from '../../store/exclusiveContentsStore';
 import { useSynthStore } from '../../store/synthStore';
 import ChainContainer from './ChainContainer.vue';
 import ChannelSelector from './ChannelSelector.vue';
@@ -16,7 +15,6 @@ defineProps<{
 }>();
 
 const synth = useSynthStore();
-const exclusivesStore = useExclusiveContentsStore();
 const bottomPaneState = useBottomPaneStateStore();
 const audioContextStore = useAudioContextStore();
 const masterEffects = useMasterEffectsStore();
@@ -54,7 +52,7 @@ onMounted(async () => {
         <div id="hrow-items">
             <template v-if="thereIsAudio">
                 <TransparentContainer>
-                    <ChannelSelector v-if="exclusivesStore.enabled" />
+                    <ChannelSelector />
                 </TransparentContainer>
                 <NotesContainer :channelSlotNo="selectedChannelSlotNumber" />
                 <ChainContainer v-if="synthChain" :synthChain="synthChain" />

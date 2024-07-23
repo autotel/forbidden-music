@@ -1,41 +1,21 @@
 import { defineStore } from "pinia";
-import { computed, onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import nsLocalStorage from "../functions/nsLocalStorage";
-import { useExclusiveContentsStore } from "./exclusiveContentsStore";
-import { useViewStore } from "./viewStore";
 import userCustomPerformanceSettingsKey from "./userCustomPerformanceSettingsKey";
+import { useViewStore } from "./viewStore";
 
 export enum ViewportTech {
     Pixi, Svg
 }
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
-    const exclusives = useExclusiveContentsStore();
     const view = useViewStore();
     const viewportTech = ref(ViewportTech.Svg);
     const showFPS = ref(false);
     const fontSize = ref(12);
     const octaveToTimeRatio = ref(2.8);
     const showHarp = ref(false);
-    // polyphony cannot be undertood or used without layers thus far
-    const _multiTimbralityEnabled = ref(false);
-    const multiTimbralityEnabled = computed<boolean>({
-        get() {
-            return _multiTimbralityEnabled.value && layersEnabled.value;
-        },
-        set(value) {
-            _multiTimbralityEnabled.value = value;
-        }
-    });
-    const _layersEnabled = ref(false);
-    const layersEnabled = computed<boolean>({
-        get() {
-            return _layersEnabled.value && exclusives.enabled;
-        },
-        set(value) {
-            _layersEnabled.value = value;
-        }
-    });
+    
     const midiInputEnabled = ref(false);
     const performanceSettingsEnabled = ref(true);
     const physicalEnabled = ref(false);
@@ -45,8 +25,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         viewportTech.value = ViewportTech.Svg;
         showFPS.value = false;
         fontSize.value = 12;
-        multiTimbralityEnabled.value = false;
-        layersEnabled.value = false;
         midiInputEnabled.value = false;
         performanceSettingsEnabled.value = true;
         physicalEnabled.value = false;
@@ -62,8 +40,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 viewportTech.value = parsed.viewportTech;
                 showFPS.value = parsed.showFPS;
                 fontSize.value = parsed.fontSize;
-                multiTimbralityEnabled.value = parsed.multiTimbralityEnabled;
-                layersEnabled.value = parsed.layersEnabled;
                 midiInputEnabled.value = parsed.midiInputEnabled;
                 performanceSettingsEnabled.value = parsed.performanceSettingsEnabled;
                 physicalEnabled.value = parsed.physicalEnabled;
@@ -81,8 +57,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
                 viewportTech: viewportTech.value,
                 showFPS: showFPS.value,
                 fontSize: fontSize.value,
-                multiTimbralityEnabled: multiTimbralityEnabled.value,
-                layersEnabled: layersEnabled.value,
                 midiInputEnabled: midiInputEnabled.value,
                 performanceSettingsEnabled: performanceSettingsEnabled.value,
                 physicalEnabled: physicalEnabled.value,
@@ -106,8 +80,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         viewportTech,
         showFPS,
         fontSize,
-        multiTimbralityEnabled,
-        layersEnabled,
         midiInputEnabled,
         performanceSettingsEnabled,
         physicalEnabled,

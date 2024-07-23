@@ -82,7 +82,7 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
       :class="{ active: snap.onlyWithNotesInView }" tooltip="only with notes in the screen's range">
       In view
     </Button>
-    <template v-if="userSettings.layersEnabled">
+    <template>
       <Button :onClick="onlyWithNotesInTheSameLayerToggle" :class="{ active: snap.onlyWithNotesInTheSameLayer }"
         tooltip="only with notes in the same layer">
         == layer
