@@ -1,8 +1,5 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { usePlaybackStore } from "./playbackStore";
-import { useSynthStore } from "./synthStore";
-import { SynthChain } from "../dataStructures/SynthChain";
 
 export interface LayerSynthAssociation {
     layer: number;
@@ -12,12 +9,12 @@ export interface LayerSynthAssociation {
 export interface Layer {
     visible: boolean;
     locked: boolean;
+    mute: boolean;
     channelSlot: number;
     name?: string;
 }
 
 export const useLayerStore = defineStore("layer", () => {
-    const synth = useSynthStore();
     const layers = ref<Layer[]>([]);
 
     const isVisible = (layer: number): boolean => {
@@ -27,10 +24,18 @@ export const useLayerStore = defineStore("layer", () => {
         return layers.value[layer].visible;
     }
 
+    const isMute = (layer: number): boolean => {
+        if(!layers.value[layer]) {
+            return true;
+        }
+        return layers.value[layer].mute;
+    }
+
     const addLayer = () => {
         const newLayer = {
             visible: true,
             locked: false,
+            mute: false,
             channelSlot: 0,
         }
         layers.value.push(newLayer);
@@ -44,6 +49,7 @@ export const useLayerStore = defineStore("layer", () => {
         layers.value[layer] = {
             visible: true,
             locked: false,
+            mute: false,
             channelSlot: 0,
         };
         
@@ -64,7 +70,7 @@ export const useLayerStore = defineStore("layer", () => {
     return {
         layers,
         getOrMakeLayerWithIndex,
-        isVisible,
+        isVisible, isMute,
         addLayer,
         clear,
     };

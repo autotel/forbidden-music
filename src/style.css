@@ -92,10 +92,6 @@ input:hover, input:focus {
   margin-right: 5px;
 }
 
-svg {
-  fill: #3b3b3b22;
-}
-
 svg text{
   stroke: none;
 }

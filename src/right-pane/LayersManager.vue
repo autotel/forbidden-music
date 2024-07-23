@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ToggleLayerMute from "@/components/inputs/ToggleLayerMute.vue";
 import Button from "../components/Button.vue";
 import ButtonSub from "../components/ButtonSub.vue";
 import Tooltip from "../components/Tooltip.vue";
@@ -81,6 +82,7 @@ const handleRemoveClick = (no: number, element: HTMLElement) => {
                     <Eye v-if="layers.isVisible(layerNo)" />
                     <EyeNot v-else />
                 </span>
+                <ToggleLayerMute :layerObject="layer" />
             </Button>
         </div>
         <Button @click="addLayer">+</Button>
