@@ -20,12 +20,10 @@ const addLayer = () => {
 <template>
     <ModuleContainer 
         title="Notes input" 
-        default-collapsed 
-        :no-collapse="!customSettingsStore.layersEnabled" 
-        :padding="customSettingsStore.layersEnabled"
+        default-collapsed
     >
         <template #default>
-            <div class="col" v-if="customSettingsStore.layersEnabled">
+            <div class="col">
                 
                 <div class="padded">
                     <h3>Receive layers</h3>

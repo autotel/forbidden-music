@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { useCommunicationStore } from '../../../../store/communicationStore';
-import { useLayerStore } from '../../../../store/layerStore';
-import { useProjectStore } from '../../../../store/projectStore';
-import { useToolStore } from '../../../../store/toolStore';
-
-import Button from '../../../../components/Button.vue';
-import ButtonSub from '../../../../components/ButtonSub.vue';
-import Toggle from '../../../inputs/Toggle.vue';
 import { computed } from 'vue';
-import Tooltip from '../../../Tooltip.vue';
+import Button from '@/components/Button.vue';
+import { useLayerStore } from '@/store/layerStore';
+import { useProjectStore } from '@/store/projectStore';
+import { useToolStore } from '@/store/toolStore';
+import ToggleLayerMute from '@/components/inputs/ToggleLayerMute.vue';
+import Toggle from '@/components/inputs/Toggle.vue';
+import Tooltip from '@/components/Tooltip.vue';
 const props = defineProps<{
     no: number;
     channelSlotNo: number;
@@ -44,6 +42,7 @@ const getSwitchTooltip = (isLayerAssociatedToMe: boolean) => {
             <Toggle v-model="isLayerAssociatedToMe" :hidden="channelSlotNo === 0 && isLayerAssociatedToMe" />
         </Tooltip>
         {{ no ? 'Layer' + no : 'Base Layer' }}
+        <ToggleLayerMute :layerObject="layersStore.layers[no]" />
     </Button>
 </template>
 <style scoped>

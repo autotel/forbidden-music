@@ -8,19 +8,18 @@ import PerformanceSettings from './PerformanceSettings.vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import LayersManager from './LayersManager.vue';
 import Physical from './Physical.vue';
-import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 defineProps<{
     paneWidth: number
     paneHeight: number
 }>()
-const exclusives = useExclusiveContentsStore();
+
 </script>
 <template>
     <div class="right-pane"
         :style="{ width: paneWidth + 'px', height: paneHeight + 'px', display: paneWidth ? 'unset' : 'none' }">
         <WorkingMemory startExpanded />
         <FileManager />
-        <LayersManager v-if="exclusives.enabled" />
+        <LayersManager />
         <SnapSelector startExpanded />
         <MidiInputConfig />
         <Physical />

@@ -19,6 +19,7 @@ import { filterMap } from '../functions/filterMap';
 import { SynthParam } from '../synth/types/SynthParam';
 import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
 import { probe } from '../functions/probe';
+import { useLayerStore } from './layerStore';
 
 
 interface MidiInputInterface {
@@ -110,6 +111,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const automation = useAutomationLaneStore();
     const audioContextStore = useAudioContextStore();
     const synth = useSynthStore();
+    const layers = useLayerStore();
     // TODO: many of these need not to be refs nor be exported.
     const playing = ref(false);
     // time units per second?
@@ -208,6 +210,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const getNotesBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
         const events = project.notes.filter((editNote) => {
+            if(layers.isMute(editNote.layer)) return false;
             return (catchUp ? editNote.timeEnd : editNote.time) >= frameStartTime && editNote.time < frameEndTime;
         });
         return events;

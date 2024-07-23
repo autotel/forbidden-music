@@ -85,7 +85,7 @@ const channelNameInputHandler = (e: InputEvent, synthChan: SynthChain, chanNo: n
             </ButtonSub>
         </Button>
     </template>
-    <Button v-if="userSettings.multiTimbralityEnabled" :on-click="addChannel" class="padded"
+    <Button :on-click="addChannel" class="padded"
         tooltip="Add a new synth channel">
         + Channel
     </Button>

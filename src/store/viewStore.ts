@@ -134,7 +134,7 @@ export const useViewStore = defineStore("view", () => {
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
             octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
-        }, true);
+        },true);
     });
 
     const visibleLoops = computed((): Loop[] => {

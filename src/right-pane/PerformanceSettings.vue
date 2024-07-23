@@ -71,16 +71,6 @@ const workletWorkbench = () => {
                 <label>MIDI Input</label>
             </div>
 
-            <div class="form-row" :class="{ disabled: !exclusives.enabled }">
-                <Toggle v-model="userSettings.layersEnabled" />
-                <label>Multi-layer</label>
-            </div>
-
-            <div class="form-row" :class="{ disabled: !userSettings.layersEnabled }">
-                <Toggle v-model="userSettings.multiTimbralityEnabled" />
-                <label>Multi-timbre</label>
-            </div>
-
             <div class="form-section">Experimental</div>
 
             <div class="form-row">
@@ -124,7 +114,7 @@ const workletWorkbench = () => {
                 tooltip="Delete locally stored settings and use default values">Unsave
                 settings</Button>
             <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>
-            
+
 
 
 
