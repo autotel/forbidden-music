@@ -159,8 +159,10 @@ export const useSelectStore = defineStore("select", () => {
                 if(currentLane) whatToSelect.push(...currentLane.content)
                 break;
             }
-            default:
-                whatToSelect.push(...project.notes)
+            default: {
+                const visibleLayerNotes = project.notes.filter(n => layers.isVisible(n.layer))
+                whatToSelect.push(...visibleLayerNotes)
+            }
         }
         
         select(...whatToSelect);
