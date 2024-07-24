@@ -225,10 +225,11 @@ export class FmSynth extends Synth {
 
 type Preset = { [key: string]: number };
 
-const presetNames :string[] = [
+const presetNames: string[] = [
     'Pluck 1',
     'Aggressive',
     'Minimal',
+    'Mini bass',
 ];
 
 const presets: Preset[] = [
@@ -355,5 +356,46 @@ const presets: Preset[] = [
         "operators[3].decay1Rate": 1,
         "operators[3].decay1Level": 0.5,
         "operators[3].decay2Rate": 0,
+    }, {
+        "connection[0,0]": 0,
+        "connection[0,1]": 0,
+        "connection[0,2]": 0,
+        "connection[0,3]": 0,
+        "connection[1,0]": 0,
+        "connection[1,1]": 0,
+        "connection[1,2]": 0,
+        "connection[1,3]": 0,
+        "connection[2,0]": 0,
+        "connection[2,1]": 0,
+        "connection[2,2]": 0,
+        "connection[2,3]": 0,
+        "connection[3,0]": 0,
+        "connection[3,1]": 0,
+        "connection[3,2]": 0.4283333333333336,
+        "connection[3,3]": 0,
+        "connection[4,0]": 0,
+        "connection[4,1]": 0,
+        "connection[4,2]": 0,
+        "connection[4,3]": 1,
+        "operators[0].totalLevel": 1,
+        "operators[0].multiple": 14,
+        "operators[0].decay1Rate": 0.9998844821426083,
+        "operators[0].decay1Level": 0.5,
+        "operators[0].decay2Rate": 0.9999422394031608,
+        "operators[1].totalLevel": 0.125,
+        "operators[1].multiple": 1,
+        "operators[1].decay1Rate": 0.9999566792395862,
+        "operators[1].decay1Level": 0.5,
+        "operators[1].decay2Rate": 0.9999422394031608,
+        "operators[2].totalLevel": 0.31210678118654744,
+        "operators[2].multiple": 0.3333333333333345,
+        "operators[2].decay1Rate": 1.039985559538003,
+        "operators[2].decay1Level": 0,
+        "operators[2].decay2Rate": 0,
+        "operators[3].totalLevel": 0.26000000000000006,
+        "operators[3].multiple": 1,
+        "operators[3].decay1Rate": 0.9999855595380028,
+        "operators[3].decay1Level": 0,
+        "operators[3].decay2Rate": 0
     }
 ];

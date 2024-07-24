@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import { FmSynth } from '@/synth/generators/FmSynth';
-import { Ref, computed, inject } from 'vue';
+import { Ref, computed, inject, ref } from 'vue';
 import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
 import Button from '../../Button.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
@@ -44,11 +44,17 @@ const colLabels = computed(() =>
     }))
 );
 
+// this is a workaround for a bug:
+// knobs are not updated upon loading a preset
+// two-faced interface forces redraw of knobs between preset changes
+const presetsMode = ref(true);
+
 
 </script>
 <template>
-    <div style="width:55em" class="layout">
-        <template v-for="(group, k) in groups">
+    <div style="width:52em" class="layout">
+
+        <template v-if="!presetsMode" v-for="(group, k) in groups">
             <div v-if="group" class="group" :style="`width: ${4 * group.length / 4}em`">
 
                 <template v-for="(label, l) in colLabels[k]">
@@ -60,12 +66,19 @@ const colLabels = computed(() =>
             </div>
         </template>
 
-        <div class="group" style="flex-direction: column; align-items: flex-end; justify-content: end; height: 100%">
-            <div style="display:block; width: 5em;">
-                <OptionSynthParam style="width:5em;" :param="audioModule.presetSynthParam" />
-            </div>
+        <div class="group"
+            style="flex-direction: column; align-items: flex-end; justify-content: end; height: 100%">
+            
             <Button @click="showInfo(audioModule.credits)" class="credits-button">worklet credits </Button>
             <Button v-if="isDev()" @click="printPreset" class="credits-button">print preset</Button>
+            <div style="display:block;" v-if="presetsMode">
+                <OptionSynthParam style="width:10em;" :param="audioModule.presetSynthParam" />
+            </div>
+            <Button 
+                @click="presetsMode = !presetsMode" class="credits-button"
+            >
+                {{ presetsMode ? 'edit' : 'presets' }}
+            </Button>
         </div>
     </div>
 </template>
