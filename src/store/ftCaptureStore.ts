@@ -28,9 +28,7 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
 
     const recordToNotes = ref(false);
 
-    const debugValues = false;
     const capturedTones = ref<Map<number, CapturedTone>>(new Map());
-
 
     const analyser = audioContextStore.audioContext.createAnalyser();
     analyser.fftSize = 4096 * 2;
@@ -138,7 +136,8 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
         const thresholdedData: number[] = [...dataArray].map((d, i) => {
             const thresh = lowPassedData[i] * 4 / 5;
             if (d < thresh) return 0;
-            return d + 127;
+            const dpp = d + 127;
+            return dpp > 0 ? dpp : 0;
         });
 
         const filteredData = thresholdedData;
@@ -207,9 +206,9 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
         minBin, maxBin,
         analyze,
         topPeaksTracker, capturedTones,
-        activate, deactivate, 
+        activate, deactivate,
         deleteCapturedTonesAtTime, flushCapturedTones,
-        
+
         addAnalyzedCallback, removeAnalyzedCallback,
         recordToNotes,
     }

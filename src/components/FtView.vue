@@ -41,11 +41,8 @@ const capturedToneMouseEnter = (e: MouseEvent, captured: CapturedTone) => {
 
 const updateFtPath: AnalyzedCallback = ({ filteredData }) => {
     const {
-        analyser,
-        dataArray,
-        octaveToFtBin, ftBinToFreq, pxToFtBin,
-        minBin, maxBin,
-        topPeaksTracker, capturedTones,
+        octaveToFtBin, ftBinToFreq, 
+        minBin, maxBin, capturedTones,
     } = ftCapture;
     // console.log('updating ft path');
     const currentXPos = view.timeToPxWithOffset(playback.currentScoreTime);
@@ -90,18 +87,6 @@ const updateFtPath: AnalyzedCallback = ({ filteredData }) => {
             textCount++;
         }
         c++;
-    }
-
-    for (let [key, capTone] of capturedTones) {
-        const octave = capTone.octave;
-        const y = view.octaveToPxWithOffset(octave);
-        if (isNaN(y)) continue;
-        if (!texts.value[textCount]) texts.value[textCount] = { x: 0, y: 0, text: '' };
-        texts.value[textCount].x = currentXPos;
-        texts.value[textCount].y = y;
-        texts.value[textCount].text = `[${capTone.identifier}] ${octave.toFixed(2)}}`;
-        textCount++;
-
     }
 
     pathD.value = path;

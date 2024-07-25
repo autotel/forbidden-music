@@ -37,6 +37,7 @@ import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
 import WorkletWorkbench from '@/WorkletWorkbench.vue';
 import FtView from './components/FtView.vue';
+import { useFtCaptureStore } from './store/ftCaptureStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
