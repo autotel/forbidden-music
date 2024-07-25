@@ -5,19 +5,15 @@ import { frequencyToOctave, octaveToFrequency } from '@/functions/toneConverters
 import { useAudioCaptureStore } from '@/store/audioCaptureStore';
 import { AnalyzedCallback, CapturedTone, useFtCaptureStore } from '@/store/ftCaptureStore';
 import { useToolStore } from '@/store/toolStore';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
 
 const view = useViewStore();
 const playback = usePlaybackStore();
-const audioCaptureStore = useAudioCaptureStore();
-await audioCaptureStore.requestAudioCapture();
-const tool = useToolStore();
 const ftCapture = useFtCaptureStore();
 const pathD = ref('M 10 10 L 100 100');
 
-const debugValues = false;
 
 interface Text {
     x: number;
@@ -29,19 +25,23 @@ const texts = ref<Text[]>([
     { x: 10, y: 20, text: 'Ft' }
 ]);
 
-
-const capturedToneMouseEnter = (e: MouseEvent, captured: CapturedTone) => {
-    const nNote = note(captured);
-    // project.notes.push(nNote);
-    tool.noteThatWouldBeCreated = nNote;
-    // capturedTones.value.delete(captured.identifier);
-
-}
-
+const filterText = computed(() => {
+    // x = currentXPos + 100;
+    const octave = ftCapture.audioParams.filterFreqParam.octaveValue;
+    const displayValue = ftCapture.audioParams.filterFreqParam.displayValue;
+    // texts.value[textCount].y = view.octaveToPxWithOffset(octave);
+    // texts.value[textCount].text = `FILTER FQ = ${displayValue}`;
+    // textCount++;
+    return {
+        x: view.timeToPxWithOffset(playback.currentScoreTime),
+        t: view.octaveToPxWithOffset(octave),
+        text: `FILTER FQ = ${displayValue}`
+    }
+});
 
 const updateFtPath: AnalyzedCallback = ({ filteredData }) => {
     const {
-        octaveToFtBin, ftBinToFreq, 
+        octaveToFtBin, ftBinToFreq,
         minBin, maxBin, capturedTones,
     } = ftCapture;
     // console.log('updating ft path');
@@ -72,24 +72,31 @@ const updateFtPath: AnalyzedCallback = ({ filteredData }) => {
         if (binNo < 1) continue;
         const octave = frequencyToOctave(ftBinToFreq(binNo));
         const px = view.octaveToPxWithOffset(octave)
-        const y = px;
         const y2 = px;
         const x2 = currentXPos + filteredData[binNo];
         if (isNaN(x2) || isNaN(y2)) continue;
 
         path += ` ${c ? 'L' : 'M'} ${x2} ${y2}`;
 
-        if (debugValues) {
-            if (!texts.value[textCount]) texts.value[textCount] = { x: 0, y: 0, text: '' };
-            texts.value[textCount].x = currentXPos;
-            texts.value[textCount].y = y;
-            texts.value[textCount].text = `0${octave.toFixed(1)} = hz ${octaveToFrequency(octave).toFixed(2)} bin ${binNo}`;
-            textCount++;
-        }
         c++;
     }
 
     pathD.value = path;
+
+    if (ftCapture.showText) {
+        texts.value = [];
+        for (let peak of ftCapture.topPeaksTracker.peaks) {
+            if (!peak.keep) continue;
+            if (!texts.value[textCount]) texts.value[textCount] = { x: 0, y: 0, text: '' };
+            texts.value[textCount].x = currentXPos + (filteredData[Math.floor(peak.bin)] ?? 0);
+            const frequency = ftBinToFreq(peak.bin);
+            const octave = frequencyToOctave(frequency);
+            texts.value[textCount].y = view.octaveToPxWithOffset(octave);
+            texts.value[textCount].text = `${octave.toFixed(1)} = hz ${frequency.toFixed(2)} bin ${peak.bin.toFixed(2)}`;
+            textCount++;
+        }
+
+    }
 
 }
 
@@ -105,28 +112,33 @@ onBeforeUnmount(() => {
     ftCapture.deactivate();
 })
 
-
 const ctoneRectHeight = 7;
 const ctoneRectHalfHeight = ctoneRectHeight / 2;
 </script>
 
 <template>
     <svg id="magic-ft">
-        <template v-for="t in texts" :key="t.text">
-            <line :x1="t.x" :y1="t.y" :x2="t.x + 10" :y2="t.y" stroke="black" />
-            <text :x="t.x" :y="t.y" font-size="14">{{ t.text }}</text>
+        <template v-if="ftCapture.showText" v-for="t in texts" :key="t.text">
+            <line :x1="t.x - 10" :y1="t.y" :x2="t.x + 10" :y2="t.y" stroke="black" />
+            <text :x="t.x + 15" :y="t.y" :font-size="ctoneRectHeight * 2" opacity="0.5" dominant-baseline="middle">{{
+                t.text }}</text>
+            
         </template>
-
-        <path :d="pathD" fill="none" stroke="red" stroke-width="2" />
+        <text v-if="ftCapture.showText"
+            :x="filterText.x - 10" :y="filterText.t" 
+            :font-size="ctoneRectHeight * 2" 
+            opacity="0.5" 
+            dominant-baseline="middle"
+            text-anchor="end"
+        >
+            {{ filterText.text }}
+        </text>
+        <path :d="pathD" fill="none" :class="ftCapture.recordToNotes ? 'rec' : 'scope'" stroke-width="2" />
 
         <template v-for="[k, capturedTone] in ftCapture.capturedTones">
-            <rect class="clickable" :x="view.timeToPxWithOffset(capturedTone.time)"
-                :width="view.timeToPx(getDuration(capturedTone))"
-                :y="view.octaveToPxWithOffset(capturedTone.octave) - ctoneRectHalfHeight" :height="ctoneRectHeight"
-                @mousemove="(e) => capturedToneMouseEnter(e, capturedTone)" />
-            />
-            <!-- <text :x="view.timeToPxWithOffset(capturedTone.time)" :y="view.octaveToPxWithOffset(capturedTone.octave)"
-                font-size="14">{{ k }}</text> -->
+            <rect :x="view.timeToPxWithOffset(capturedTone.time)" :width="view.timeToPx(getDuration(capturedTone))"
+                :y="view.octaveToPxWithOffset(capturedTone.octave) - ctoneRectHalfHeight" :height="ctoneRectHeight" />
+
         </template>
 
     </svg>
@@ -141,10 +153,22 @@ const ctoneRectHalfHeight = ctoneRectHeight / 2;
     pointer-events: none;
 }
 
-.clickable {
-    fill: rgba(0, 0, 0, 0.5);
-    pointer-events: all;
-    cursor: pointer;
-    z-index: 10;
+#magic-ft text{
+    fill:currentColor;
+}
+#magic-ft * {
+    pointer-events: none;
+}
+
+path.rec {
+    stroke: rgb(255, 0, 106);
+}
+
+path.scope {
+    stroke: rgba(135, 227, 255, 1)
+}
+
+#magic-ft rect {
+    fill: rgba(135, 227, 255, 0.2)
 }
 </style>

@@ -61,7 +61,7 @@ const presetsMode = ref(true);
                     <p class="colLabel">{{ label }}</p>
                 </template>
                 <template v-for="(param, l) in group">
-                    <NumberSynthParam :param="param" :label="false" />
+                    <NumberSynthParam :param="param" no-label />
                 </template>
             </div>
         </template>

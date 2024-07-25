@@ -6,6 +6,7 @@ import { useAudioContextStore } from '@/store/audioContextStore';
 import { useMasterEffectsStore } from '@/store/masterEffectsStore';
 import { useProjectStore } from '@/store/projectStore';
 import { useToolStore } from '@/store/toolStore';
+import { NumberSynthParam, ParamType, numberSynthParam, optionSynthParam } from '@/synth/types/SynthParam';
 import { defineStore } from "pinia";
 import { ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
@@ -25,12 +26,53 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
     const audioCaptureStore = useAudioCaptureStore();
     const project = useProjectStore();
     const tool = useToolStore();
-
+    const showText = ref(false);
     const recordToNotes = ref(false);
 
     const capturedTones = ref<Map<number, CapturedTone>>(new Map());
 
     const analyser = audioContextStore.audioContext.createAnalyser();
+    const filter = audioContextStore.audioContext.createBiquadFilter();
+    filter.frequency.value = 440;
+    filter.Q.value = 10;
+    filter.type = "bandpass";
+
+    const filterFreqParam = {
+        displayName: 'Filter frequency',
+        type: ParamType.number,
+        set value(v: number) {
+            filter.frequency.value = octaveToFrequency(v);
+            this.octaveValue = v;
+        },
+        get value() {
+            return this.octaveValue;
+        },
+        get displayValue() {
+            return filter.frequency.value.toFixed(2) + ' Hz';
+        },
+        label: 'Filter frequency',
+        min: 1,
+        max: 8,
+        exportable: false,
+        octaveValue: frequencyToOctave(filter.frequency.value),
+    } as NumberSynthParam & { octaveValue: number };
+
+    const filterQParam = numberSynthParam(filter.Q, 'Filter Q', 0, 90, false, false);
+    // const filterGainParam = numberSynthParam(filter.gain, 'Filter gain', -40, 40, false, false);
+    const filterTypeParam = optionSynthParam(filter, 'type', [
+        'lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'peaking', 'notch', 'allpass'
+    ], 'Filter type', false);
+
+    const audioParams = {
+        filterTypeParam,
+        filterFreqParam,
+        filterQParam,
+        // filterGainParam,
+    };
+
+    filter.type = "highpass";
+    filter.frequency.value = 40;
+
     analyser.fftSize = 4096 * 2;
     const ftFrequency = audioContextStore.audioContext.sampleRate / analyser.fftSize;
     const bufferLength = analyser.frequencyBinCount;
@@ -65,7 +107,7 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
         return binNo * ftFrequency;
     }
 
-    const minBin = freqToFtBin(110);
+    const minBin = freqToFtBin(50);
     const maxBin = freqToFtBin(6000);
 
     const topPeaksTracker = createPeaksTracker(maxBin, minBin);
@@ -182,8 +224,11 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
     const activate = async () => {
 
         await audioCaptureStore.requestAudioCapture()
-        audioCaptureStore.inputNode.connect(analyser);
-        masterFx.myInput.connect(analyser);
+
+        masterFx.myInput.connect(filter);
+        audioCaptureStore.inputNode.connect(filter);
+
+        filter.connect(analyser);
 
         if (currentScheduledUpdate) cancelAnimationFrame(currentScheduledUpdate);
         currentScheduledUpdate = requestAnimationFrame(analyze);
@@ -193,7 +238,11 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
         cancelAnimationFrame(currentScheduledUpdate);
         capturedTones.value.clear();
         try {
-            audioCaptureStore.inputNode.disconnect(analyser);
+
+            audioCaptureStore.inputNode.disconnect(filter);
+            masterFx.myInput.disconnect(filter);
+            filter.disconnect(analyser);
+
         } catch (e) { console.error(e) }
         try {
             masterFx.myInput.disconnect(analyser);
@@ -211,6 +260,10 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
 
         addAnalyzedCallback, removeAnalyzedCallback,
         recordToNotes,
+
+        audioParams,
+
+        showText,
     }
 
 

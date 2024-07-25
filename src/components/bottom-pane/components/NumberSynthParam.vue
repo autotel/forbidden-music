@@ -14,7 +14,7 @@ import { useProjectStore } from '../../../store/projectStore';
 import { useThrottleFn } from '@vueuse/core';
 const props = defineProps<{
     param: NumberSynthParam
-    label?: boolean | string
+    noLabel?: boolean
 }>();
 
 const emit = defineEmits(['update']);
@@ -68,7 +68,7 @@ const toggleShowAutomation = (e: MouseEvent) => {
 
 
 const computedLabel = computed(() => {
-    if (props.label !== undefined) return props.label;
+    if (props.noLabel) return '';
     if (!props.param.displayName) return '';
     // return props.param.displayName;
     return abbreviate(props.param.displayName, 10);
@@ -240,7 +240,7 @@ const tooltip = computed(() => {
                     <canvas ref="mouseCaptureCanvas" width="8" height="2.5"></canvas>
                 </div>
             </div>
-            <small v-if="label !== false">{{ computedLabel }}</small>
+            <small v-if="!noLabel">{{ computedLabel }}</small>
             <small>{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
             <Tooltip :tooltip="automated ? 'Edit automation. [Ctl+A] & [Del] To erase' : 'automate parameter'"
                 :force-hide="dragging">

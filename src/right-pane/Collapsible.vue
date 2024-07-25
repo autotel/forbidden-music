@@ -11,17 +11,6 @@ const props = defineProps<{
 }>();
 const content = ref<HTMLElement | null>(null);
 const expanded = ref(props.startExpanded ?? true);
-// const measureContentHeight = () => {
-//     if (content.value) {
-//         content.value.style.height = "auto";
-//         // content.value.style.transition = "none";
-//         const height = content.value.clientHeight;
-//         content.value.style.height = "0";
-//         // content.value.style.transition = '';
-//         return height;
-//     }
-//     return 0;
-// }
 
 </script>
 

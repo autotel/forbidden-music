@@ -58,16 +58,6 @@ onUnmounted(() => {
                 <path d="M6 6h12v12H6z" fill="currentColor" />
             </svg>
         </Button>
-        <Button :onClick="()=> tool.ftRec = !tool.ftRec" :active="tool.ftRec">
-            FT
-        </Button>
-        <Button 
-            v-if="tool.ftRec" 
-            :onClick="()=> ftCaptureStore.recordToNotes = !ftCaptureStore.recordToNotes" 
-            :active="ftCaptureStore.recordToNotes"
-        >
-             REC
-        </Button>
         <!-- input that sets the bpm -->
         <input id="bpm" type="number" v-model="playback.bpm" ref="bpmSetter" />
         <Button :active="view.followPlayback" :onClick="() => view.followPlayback = !view.followPlayback"

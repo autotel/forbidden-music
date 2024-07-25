@@ -8,6 +8,7 @@ import PerformanceSettings from './PerformanceSettings.vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import LayersManager from './LayersManager.vue';
 import Physical from './Physical.vue';
+import FtCaptureManager from './FtCaptureManager.vue';
 defineProps<{
     paneWidth: number
     paneHeight: number
@@ -21,6 +22,7 @@ defineProps<{
         <FileManager />
         <LayersManager />
         <SnapSelector startExpanded />
+        <FtCaptureManager />
         <MidiInputConfig />
         <Physical />
         <PerformanceSettings />
