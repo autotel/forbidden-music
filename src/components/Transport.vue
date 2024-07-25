@@ -3,11 +3,13 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
 import Button from './Button.vue';
+import { useToolStore } from '@/store/toolStore';
 
 const view = useViewStore();
 const playback = usePlaybackStore();
 const bpmSetter = ref<HTMLInputElement>();
 const jumpVal = ref(4);
+const tool = useToolStore();
 const jump = (steps: number) => {
     playback.currentScoreTime += steps;
     playback.timeReturnPoint = playback.currentScoreTime;
@@ -53,6 +55,9 @@ onUnmounted(() => {
                 <path fill="none" stroke="none" d="M0 0h24v24H0z" />
                 <path d="M6 6h12v12H6z" fill="currentColor" />
             </svg>
+        </Button>
+        <Button :onClick="()=> tool.ftRec = !tool.ftRec" :active="tool.ftRec">
+            FTREC
         </Button>
         <!-- input that sets the bpm -->
         <input id="bpm" type="number" v-model="playback.bpm" ref="bpmSetter" />

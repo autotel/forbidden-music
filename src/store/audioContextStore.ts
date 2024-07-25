@@ -3,7 +3,6 @@ import { defineStore } from "pinia";
 export const useAudioContextStore = defineStore('audio-context', () => {
     let audioContext = new AudioContext();
 
-
     let audioContextListenerAlreadyStarted = false;
 
     const startContextListener = async () => {

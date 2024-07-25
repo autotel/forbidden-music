@@ -71,7 +71,7 @@ onBeforeUnmount(() => {
                 :greyed="loopsAreGreyed" />
         </g>
         <g id="notes-container" class="traces-container notes">
-            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect" :greyed="notesAreGreyed" />
+            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect" :greyed="notesAreGreyed"/>
         </g>
         <g id="automation-container" class="traces-container automation">
             <AutomationCircle v-for="(circle, index) in view.visibleAutomationPointDrawables" :circle="circle"

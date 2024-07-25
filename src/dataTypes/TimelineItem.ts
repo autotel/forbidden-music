@@ -41,7 +41,7 @@ export const sanitizeTimeRanges = (...items: TimeRange[]) => {
     });
 }
 
-export const getDuration = (timeRange: Trace): number => {
+export const getDuration = (timeRange: TimeRange | TimePosition): number => {
     if (!('timeEnd' in timeRange)) {
         return 0;
     }
@@ -51,7 +51,7 @@ export const getDuration = (timeRange: Trace): number => {
     return timeRange.timeEnd - timeRange.time;
 }
 
-export const hasDuration = (timeRange: Trace): boolean => {
+export const hasDuration = (timeRange: TimeRange): boolean => {
     if (!('timeEnd' in timeRange)) {
         return false;
     }

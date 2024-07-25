@@ -309,6 +309,7 @@ export const useToolStore = defineStore("tool", () => {
     const project = useProjectStore();
     const snap = useSnapStore();
     const lanes = useAutomationLaneStore();
+    const ftRec = ref(false);
 
     // TODO: should rename into currentMode and currentTool instead of current and currentLeftHand
     /** current tool: the current main tool, what the user is focusing on atm */
@@ -960,5 +961,7 @@ export const useToolStore = defineStore("tool", () => {
 
         loopsBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Loop) as Loop[]),
         notesBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Note) as Note[]),
+
+        ftRec,
     }
 })

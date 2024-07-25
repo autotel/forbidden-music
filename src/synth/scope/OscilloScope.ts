@@ -33,22 +33,22 @@ export class OscilloScope extends AudioModule {
         this.input = audioContext.createGain();
         this.output = audioContext.createGain();
 
-        const analyzer = audioContext.createAnalyser();
-        analyzer.fftSize = 2048;
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
 
-        this.input.connect(analyzer);
+        this.input.connect(analyser);
         this.input.connect(this.output);
 
         let prevValue = 0;
         
         this.getWaveform = () => {
             const returnLength = this.bufferLengthParam.value;
-            const bufferLength = analyzer.frequencyBinCount;
+            const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
             let searchUntil = bufferLength - returnLength;
             let highestValue = 0;
             let triggerIndex = 0;
-            analyzer.getByteTimeDomainData(dataArray);
+            analyser.getByteTimeDomainData(dataArray);
             for(let i = 0; i < searchUntil; i++) {
                 if(
                     dataArray[i] > highestValue 

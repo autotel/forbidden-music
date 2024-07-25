@@ -36,6 +36,7 @@ import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
 import WorkletWorkbench from '@/WorkletWorkbench.vue';
+import FtView from './components/FtView.vue';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -344,6 +345,9 @@ const allowContextMenu = true;
             <ScoreViewportSvg v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
                 :height="viewportSize.height" />
             <TimeScrollBar style="position:absolute; left:0; bottom:0;" />
+            <Suspense>
+                <FtView v-if="tool.ftRec" />
+            </Suspense>
         </div>
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}

@@ -19,8 +19,8 @@ export class AutoMaximizerEffect extends AudioModule {
         this.input.connect(this.output);
         this.input.gain.value = 1;
 
-        const analyzer = audioContext.createAnalyser();
-        analyzer.fftSize = 2048;
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
 
         let maximizer: AudioNode | undefined;
         let envelopeFollower: AudioWorkletNode | undefined;
@@ -43,7 +43,7 @@ export class AutoMaximizerEffect extends AudioModule {
             this.input.connect(envelopeFollower);
             envelopeFollower.connect(this.output.gain);
 
-            envelopeFollower.connect(analyzer);
+            envelopeFollower.connect(analyser);
             // @ts-ignore
             let increaseRateParam: AudioParam | undefined = envelopeFollower.parameters.get('increaseRate');
             // @ts-ignore
@@ -77,9 +77,9 @@ export class AutoMaximizerEffect extends AudioModule {
         }
 
         this.getWaveform = () => {
-            const bufferLength = analyzer.frequencyBinCount;
+            const bufferLength = analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
-            analyzer.getByteTimeDomainData(dataArray);
+            analyser.getByteTimeDomainData(dataArray);
             return [...dataArray];
         }
 
