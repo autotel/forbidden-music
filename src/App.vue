@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import WorkletWorkbench from '@/WorkletWorkbench.vue';
 import Fraction from 'fraction.js';
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
-import BottomPane from './components/bottom-pane/BottomPane.vue';
 import Button from './components/Button.vue';
+import FtView from './components/FtView.vue';
+import MousePopupDisplayer from './components/MousePopupDisplayer.vue';
 import Pianito from './components/Pianito.vue';
 import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportSvg from './components/ScoreViewport-Svg/ScoreViewport.vue';
@@ -10,8 +12,8 @@ import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
-import MousePopupDisplayer from './components/MousePopupDisplayer.vue';
 import Transport from './components/Transport.vue';
+import BottomPane from './components/bottom-pane/BottomPane.vue';
 import AnglesDown from './components/icons/AnglesDown.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
@@ -35,9 +37,6 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-import WorkletWorkbench from '@/WorkletWorkbench.vue';
-import FtView from './components/FtView.vue';
-import { useFtCaptureStore } from './store/ftCaptureStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -167,31 +166,26 @@ const mouseDownListener = (e: MouseEvent) => {
 }
 
 const touchDownListener = (e: TouchEvent) => {
-    if (e.touches.length === 2) {
-        const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        const averageY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        e.stopPropagation();
-        e.preventDefault();
-        draggingView = true;
-        viewDragStartX = averageX;
-        viewDragStartTime = view.timeOffset;
-        viewDragStartY = averageY;
-        viewDragStartOctave = view.octaveOffset;
-        viewDragStartOctaveHeight = view.viewHeightOctaves;
-        viewTouchDistanceStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    switch (e.touches.length) {
+        case 1: {
+            break;
+        }
+        case 2: {
+            const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const averageY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            e.stopPropagation();
+            e.preventDefault();
+            draggingView = true;
+            viewDragStartX = averageX;
+            viewDragStartTime = view.timeOffset;
+            viewDragStartY = averageY;
+            viewDragStartOctave = view.octaveOffset;
+            viewDragStartOctaveHeight = view.viewHeightOctaves;
+            viewTouchDistanceStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            break;
+        }
     }
 }
-
-// let testTouchEl = document.createElement('div');
-// testTouchEl.style.position = 'fixed';
-// testTouchEl.style.borderTop = '1px solid red';
-// testTouchEl.style.borderLeft = '1px solid red';
-// testTouchEl.style.width = '10px';
-// testTouchEl.style.height = '10px';
-// testTouchEl.style.pointerEvents = 'none';
-// setTimeout(() => {
-//     document.querySelector('body').appendChild(testTouchEl);
-// }, 1000);
 
 const touchMoveListener = (e: TouchEvent) => {
     const averageX = Array.from(e.touches).reduce((acc: number, t: { clientX: number }) => acc + t.clientX, 0) / e.touches.length;
@@ -233,6 +227,7 @@ const touchMoveListener = (e: TouchEvent) => {
 
 const touchUpListener = (e: TouchEvent) => {
     draggingView = false;
+
 }
 
 const keyUpListener = (e: KeyboardEvent) => {

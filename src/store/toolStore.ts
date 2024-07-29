@@ -1,6 +1,6 @@
 import { clamp, useThrottleFn } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed, defineCustomElement, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { AutomationLane } from '../dataTypes/AutomationLane';
 import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
 import { dragEnd, dragStart } from '../dataTypes/Draggable';
@@ -147,7 +147,7 @@ const mouseDragSelectedTraces = ({
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (!correlativeDragStartClone) throw new Error('no correlativeDragStartClone');
 
-        if(!disallowTimeChange) {
+        if (!disallowTimeChange) {
             draggedTrace.time = timeDeltaAfterSnap + correlativeDragStartClone.time;
         }
 
@@ -192,7 +192,7 @@ const mouseDragAutomationSelectedTraces = (
 ) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) return;
-    
+
     const valueDelta = view.pxToValue(-drag.delta.y);
     const timeDelta = view.pxToTime(drag.delta.x);
 
@@ -205,11 +205,11 @@ const mouseDragAutomationSelectedTraces = (
         trace.value = valueWhenDragStarted + valueDelta;
         trace.time = traceWhenDragStarted.time + timeDelta;
 
-        if(trace.prev?.time && trace.prev?.time > trace.time) {
+        if (trace.prev?.time && trace.prev?.time > trace.time) {
             trace.time = trace.prev.time;
             // trace.prev.time = trace.time;
         }
-        if(trace.next?.time && trace.next?.time < trace.time) {
+        if (trace.next?.time && trace.next?.time < trace.time) {
             trace.time = trace.next.time;
             // trace.next.time = trace.time;
         }
@@ -257,7 +257,7 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, project, sel
 
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
     const timeMovement = view.pxToTime(drag.delta.x);
-    
+
     traceWithTimeEnd.timeEnd = drag.traceWhenDragStarted.timeEnd;
     traceWithTimeEnd.time = drag.traceWhenDragStarted.time + timeMovement;
 
@@ -700,7 +700,7 @@ export const useToolStore = defineStore("tool", () => {
         }
     }
 
-    const refreshAndApplyRangeSelection = useThrottleFn((e: MouseEvent) => {
+    const refreshAndApplyRangeSelection = useThrottleFn((e: { clientX: number, clientY: number }) => {
         const x = e.clientX;
         const y = e.clientY;
 
@@ -820,7 +820,7 @@ export const useToolStore = defineStore("tool", () => {
         lanes,
     } as Stores;
 
-    const mouseMove = (e: MouseEvent) => {
+    const mouseMove = (e: { clientX: number, clientY: number }) => {
         registerMouseMove({
             x: e.clientX,
             y: e.clientY,
@@ -894,7 +894,7 @@ export const useToolStore = defineStore("tool", () => {
         }
     }
 
-    const mouseUp = (e: MouseEvent) => {
+    const mouseUp = (e: any) => {
         if (mouse.drag) {
             mouse.drag.traces.forEach(editNote => {
                 // prolly unneeded

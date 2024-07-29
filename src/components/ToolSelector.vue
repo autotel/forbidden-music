@@ -39,6 +39,13 @@ const toggleSelectTool = () => {
       Copy
     </Button>
 
+    <Button 
+      :active="tool.currentLeftHand === Tool.Select" 
+      :onClick="() => tool.currentLeftHand===Tool.Select?(tool.currentLeftHand=Tool.Edit):(tool.currentLeftHand=Tool.Select)"
+      tooltip="Select mode [Ctl]">
+      Select
+    </Button>
+
 
     <Button :tooltip="`undo [${k(KeyActions.Undo)}]`" :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
       ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
