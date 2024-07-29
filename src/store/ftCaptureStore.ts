@@ -8,7 +8,7 @@ import { useProjectStore } from '@/store/projectStore';
 import { useToolStore } from '@/store/toolStore';
 import { NumberSynthParam, ParamType, numberSynthParam, optionSynthParam } from '@/synth/types/SynthParam';
 import { defineStore } from "pinia";
-import { ref } from 'vue';
+import { ref, watch, watchEffect } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
 
@@ -36,7 +36,7 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
     filter.frequency.value = 440;
     filter.Q.value = 10;
     filter.type = "bandpass";
-
+    
     const filterFreqParam = {
         displayName: 'Filter frequency',
         type: ParamType.number,
@@ -69,9 +69,6 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
         filterQParam,
         // filterGainParam,
     };
-
-    filter.type = "highpass";
-    filter.frequency.value = 40;
 
     analyser.fftSize = 4096 * 2;
     const ftFrequency = audioContextStore.audioContext.sampleRate / analyser.fftSize;

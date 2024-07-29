@@ -2,26 +2,19 @@
 import { useFtCaptureStore } from "@/store/ftCaptureStore";
 import Button from "../components/Button.vue";
 import Layers from "../components/icons/Layers.vue";
-import { useCommunicationStore } from "../store/communicationStore";
-import { useCustomSettingsStore } from "../store/customSettingsStore";
-import { useLayerStore } from "../store/layerStore";
-import { useProjectStore } from "../store/projectStore";
-import { useSelectStore } from "../store/selectStore";
 import { useToolStore } from "../store/toolStore";
 import Collapsible from "./Collapsible.vue";
 
-import { ParamType } from '@/synth/types/SynthParam';
 import NumberSynthParam from '@/components/bottom-pane/components/NumberSynthParam.vue';
 import OptionSynthParam from '@/components/bottom-pane/components/OptionSynthParam.vue';
+import { ParamType } from '@/synth/types/SynthParam';
 
-const communications = useCommunicationStore();
 const tool = useToolStore();
-const selection = useSelectStore();
-const layers = useLayerStore();
-const settings = useCustomSettingsStore();
-const project = useProjectStore();
 const ftCapture = useFtCaptureStore();
-
+const toggleFtRec = () => {
+    ftCapture.capturedTones.clear(); 
+    tool.ftRec = !tool.ftRec;
+}
 </script>
 <template>
     <Collapsible :start-expanded="true"
@@ -33,7 +26,7 @@ const ftCapture = useFtCaptureStore();
         <br>
         <div class="contents">
 
-            <Button :onClick="() => tool.ftRec = !tool.ftRec" :active="tool.ftRec">
+            <Button :onClick="toggleFtRec" :active="tool.ftRec">
                 Active
             </Button>
             <Button :onClick="() => ftCapture.showText = !ftCapture.showText" :active="ftCapture.showText">
@@ -42,9 +35,6 @@ const ftCapture = useFtCaptureStore();
             <Button :onClick="() => ftCapture.recordToNotes = !ftCapture.recordToNotes"
                 :active="ftCapture.recordToNotes">
                 Record to notes
-            </Button>
-            <Button :onClick="() => ftCapture.capturedTones.clear()">
-                Clear traces
             </Button>
             <div class="audio-filter-params">
                 <h4>Audio Filter Parameters</h4>

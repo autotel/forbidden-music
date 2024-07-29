@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { note } from '@/dataTypes/Note';
 import { getDuration } from '@/dataTypes/TimelineItem';
-import { frequencyToOctave, octaveToFrequency } from '@/functions/toneConverters';
-import { useAudioCaptureStore } from '@/store/audioCaptureStore';
-import { AnalyzedCallback, CapturedTone, useFtCaptureStore } from '@/store/ftCaptureStore';
-import { useToolStore } from '@/store/toolStore';
+import { frequencyToOctave } from '@/functions/toneConverters';
+import { AnalyzedCallback, useFtCaptureStore } from '@/store/ftCaptureStore';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
@@ -44,7 +41,7 @@ const updateFtPath: AnalyzedCallback = ({ filteredData }) => {
         octaveToFtBin, ftBinToFreq,
         minBin, maxBin, capturedTones,
     } = ftCapture;
-    // console.log('updating ft path');
+    
     const currentXPos = view.timeToPxWithOffset(playback.currentScoreTime);
 
     const octaveEdges = [
