@@ -579,7 +579,27 @@ export const useToolStore = defineStore("tool", () => {
         snap.resetSnapExplanation();
     }
 
-    const mouseDown = (e: MouseEvent) => {
+    let dblTapMaxInterval = 300;
+    let lastTapTime = 0;
+
+    const touchDown = (touch:{clientX: number, clientY:number}) => {
+        const now = Date.now();
+        const interval = now - lastTapTime;
+        if (interval < dblTapMaxInterval) {
+            mouseDown(touch);
+        }
+        lastTapTime = Date.now();
+    }
+
+    const touchUp = (touch:{clientX: number, clientY:number}) => {
+        mouseUp(touch);
+    }
+
+    const touchMove = (touch:{clientX: number, clientY:number}) => {
+        mouseMove(touch);
+    }
+    
+    const mouseDown = (e: {clientX: number, clientY:number}) => {
         registerDragStart({
             x: e.clientX,
             y: e.clientY,
@@ -963,5 +983,6 @@ export const useToolStore = defineStore("tool", () => {
         notesBeingCreated: computed(() => mouse.tracesBeingCreated.filter(n => n.type === TraceType.Note) as Note[]),
 
         ftRec,
+        touchDown, touchUp, touchMove,
     }
 })

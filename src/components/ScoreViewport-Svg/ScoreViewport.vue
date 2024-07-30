@@ -54,7 +54,7 @@ onBeforeUnmount(() => {
         <!-- traces that would be created upon click -->
         <g id="note-would-be-created" v-if="tool.current === Tool.Edit">
             <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
-                interactionDisabled />
+                interactionDisabled fill="#11aacc55"/>
         </g>
         <g id="loop-would-be-created" v-if="tool.current === Tool.Loop">
             <LoopRangeElement v-if="tool.loopThatWouldBeCreated"
@@ -151,6 +151,7 @@ svg#viewport {
     }
 
 }
+
 
 g#notes-being-created rect.body {
     fill: transparent;

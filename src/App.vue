@@ -59,6 +59,7 @@ const userSettings = useCustomSettingsStore();
 const exclusiveContentsStore = useExclusiveContentsStore();
 let transportHeight = 50;
 
+
 provide('modalText', modalText);
 
 
@@ -168,6 +169,7 @@ const mouseDownListener = (e: MouseEvent) => {
 const touchDownListener = (e: TouchEvent) => {
     switch (e.touches.length) {
         case 1: {
+            tool.touchDown(e.touches[0]);
             break;
         }
         case 2: {
@@ -219,15 +221,16 @@ const touchMoveListener = (e: TouchEvent) => {
             view.timeOffset = view.scrollBound - view.viewWidthTime;
         }
     } else {
-
-        // tool.mouseMove(e);
+        tool.touchMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
     }
 
 }
 
 const touchUpListener = (e: TouchEvent) => {
     draggingView = false;
-
+    if(e.touches.length === 0) {
+        tool.touchUp(e.changedTouches[0]);
+    }
 }
 
 const keyUpListener = (e: KeyboardEvent) => {
@@ -293,16 +296,20 @@ onMounted(() => {
     mainInteraction.addEventListener($viewPort, 'mouseleave' as any, () => {
         snap.resetSnapExplanation();
     });
-
     mainInteraction.addEventListener($viewPort, 'touchstart', touchDownListener);
     mainInteraction.addEventListener($viewPort, 'touchmove', touchMoveListener);
     mainInteraction.addEventListener($viewPort, 'touchend', (e: TouchEvent) => {
         touchUpListener(e);
         snap.resetSnapExplanation();
     });
-
-
-
+    
+    
+    
+    window.addEventListener('contextmenu', (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
     window.addEventListener('resize', resize);
     resize();
 

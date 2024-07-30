@@ -114,7 +114,7 @@ const retrieveFromLocalStorage = (filename: string) => {
 }
 
 const listLocalStorageFiles = () => {
-    return Object.keys(nsLocalStorage).filter(n => !reservedEntryNames.includes(n));
+    return nsLocalStorage.getKeys().filter(n => !reservedEntryNames.includes(n));
 }
 
 const exists = (filename: string) => {
@@ -211,6 +211,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const deleteItemNamed = (filename: string) => {
+        console.log("deleting", filename);
         deleteItem(filename);
         udpateItemsList();
     }
