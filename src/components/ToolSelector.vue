@@ -31,6 +31,10 @@ const toggleSelectTool = () => {
   tool.currentLeftHand === Tool.Select ? (tool.currentLeftHand = Tool.Edit) : (tool.currentLeftHand = Tool.Select)
 }
 
+const toggleEraserTool = () => {
+  tool.current === Tool.Eraser ? (tool.current = Tool.Edit) : (tool.current = Tool.Eraser)
+}
+
 const deleteSelected = () => {
   selection.deleteSelected();
 }
@@ -77,6 +81,11 @@ const showDeleteButton = computed(() => {
       tool.current = tool.current === Tool.Loop ? Tool.Edit : Tool.Loop;
     }" :active="tool.current == Tool.Loop" :tooltip="`Loop mode [${k(KeyActions.ActivateLoopMode)}]`">
       Loop
+    </Button>
+    <Button :active="tool.current === Tool.Eraser"
+      :onClick="toggleEraserTool"
+      :tooltip="`Eraser mode ${k(KeyActions.ActivateEraserMode)}`">
+      Eraser
     </Button>
     <div class="group">
       <label>Constrain</label>

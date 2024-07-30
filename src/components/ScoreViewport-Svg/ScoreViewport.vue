@@ -125,6 +125,10 @@ svg#viewport.cursor-draw {
     cursor: url("../../assets/icons-iconarchive-pen.png") 3 3, crosshair;
 }
 
+svg#viewport.cursor-eraser {
+    cursor: url("../../assets/eraser.png") 7 7, crosshair;
+}
+
 svg#viewport.cursor-move {
     cursor: move;
 }

@@ -15,6 +15,7 @@ import { useProjectStore } from './projectStore';
 import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
+import { findTraceInRange, getTracesInRange } from '@/functions/getEventsInRange';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -279,7 +280,22 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, project, sel
     const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
-
+const mouseErase = ({ pos }: ToolMouse, { project, view }: Stores) => {
+    const pxRange = 5;
+    const time = view.pxToTimeWithOffset(pos.x - pxRange);
+    const timeEnd = view.pxToTimeWithOffset(pos.x + pxRange);
+    const octave = view.pxToOctaveWithOffset(pos.y + pxRange);
+    const octaveEnd = view.pxToOctaveWithOffset(pos.y - pxRange);
+    const visibleTraces = view.visibleNotes;
+    const note = findTraceInRange(visibleTraces, {
+        time, timeEnd, octave, octaveEnd
+    });
+    const projectNoteIndex = note?project.notes.indexOf(note):-1;
+    if(projectNoteIndex !== -1) {
+        console.log("erase note", note);
+        project.notes.splice(projectNoteIndex, 1);
+    }
+}
 export enum MouseDownActions {
     None,
     AddToSelection,
@@ -299,6 +315,7 @@ export enum MouseDownActions {
     MoveTraces,
     LengthenItem,
     MoveItem,
+    Erase,
 }
 
 // maybe doesn't need to be a store, but something else
@@ -338,7 +355,6 @@ export const useToolStore = defineStore("tool", () => {
     const showReferenceKeyboard = ref(false)
     const currentMouseStringHelper = ref("");
 
-    let newLoopDragX = 0;
 
     // TODO: add a enum to select different abstractions of tone.
     // so, if using 12 tet, the text in the note is going to be semitones
@@ -351,6 +367,8 @@ export const useToolStore = defineStore("tool", () => {
     const noteThatWouldBeCreated = ref<Note | false>(false);
     const loopThatWouldBeCreated = ref<Loop | false>(false);
     const automationPointThatWouldBeCreated = ref<AutomationPoint | false>(false);
+
+    let erasing = false;
 
     let mouse: ToolMouse = reactive({
         tracesBeingCreated: [] as Trace[],
@@ -438,6 +456,8 @@ export const useToolStore = defineStore("tool", () => {
             }
             case MouseDownActions.AreaSelectNotes:
                 return 'cursor-area-select';
+            case MouseDownActions.Erase:
+                return 'cursor-eraser';
             case MouseDownActions.CreateNote:
             case MouseDownActions.CreateAutomationPoint:
             case MouseDownActions.CreateLoop:
@@ -525,6 +545,8 @@ export const useToolStore = defineStore("tool", () => {
                 ret = MouseDownActions.AreaSelectNotes;
                 currentMouseStringHelper.value = "⃞";
             }
+        } else if (current.value === Tool.Eraser) {
+            ret = MouseDownActions.Erase;
         } else if (current.value === Tool.Modulation) {
             if (mouse.hovered?.trace) {
                 if (selection.isSelected(mouse.hovered.trace)) {
@@ -567,7 +589,7 @@ export const useToolStore = defineStore("tool", () => {
             } else {
                 ret = MouseDownActions.CreateNote;
             }
-        }
+        } 
         return ret;
     }
 
@@ -582,24 +604,26 @@ export const useToolStore = defineStore("tool", () => {
     let dblTapMaxInterval = 300;
     let lastTapTime = 0;
 
-    const touchDown = (touch:{clientX: number, clientY:number}) => {
+    const touchDown = (touch: { clientX: number, clientY: number }) => {
         const now = Date.now();
         const interval = now - lastTapTime;
-        if (interval < dblTapMaxInterval) {
+        if (whatWouldMouseDownDo() === MouseDownActions.Erase){
+            mouseDown(touch);
+        }else if (interval < dblTapMaxInterval) {
             mouseDown(touch);
         }
         lastTapTime = Date.now();
     }
 
-    const touchUp = (touch:{clientX: number, clientY:number}) => {
+    const touchUp = (touch: { clientX: number, clientY: number }) => {
         mouseUp(touch);
     }
 
-    const touchMove = (touch:{clientX: number, clientY:number}) => {
+    const touchMove = (touch: { clientX: number, clientY: number }) => {
         mouseMove(touch);
     }
-    
-    const mouseDown = (e: {clientX: number, clientY:number}) => {
+
+    const mouseDown = (e: { clientX: number, clientY: number }) => {
         registerDragStart({
             x: e.clientX,
             y: e.clientY,
@@ -687,7 +711,6 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.CreateLoop: {
                 if (!loopThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
-                newLoopDragX = e.clientX;
                 selection.clear();
                 const cloned = cloneTrace(loopThatWouldBeCreated.value);
                 mouse.tracesBeingCreated = [cloned];
@@ -698,7 +721,6 @@ export const useToolStore = defineStore("tool", () => {
             }
             case MouseDownActions.CreateNote: {
                 if (!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
-                newLoopDragX = e.clientX;
                 selection.clear();
                 const cloned = cloneTrace(noteThatWouldBeCreated.value);
                 mouse.tracesBeingCreated = [cloned];
@@ -713,6 +735,10 @@ export const useToolStore = defineStore("tool", () => {
                 laneBeingEdited.value?.content.push(
                     automationPointThatWouldBeCreated.value
                 );
+                break;
+            }
+            case MouseDownActions.Erase: {
+                console.log("start erasing");
                 break;
             }
             default:
@@ -862,7 +888,9 @@ export const useToolStore = defineStore("tool", () => {
                 localDelta.x = 0;
             }
 
-            if (current.value === Tool.Modulation) {
+            if (mouse.currentAction === MouseDownActions.Erase) {
+                mouseErase(mouse, storesPill);
+            } else if (current.value === Tool.Modulation) {
                 mouseDragModulationSelectedTraces(
                     mouse, storesPill, lastVelocitySet
                 );

@@ -37,6 +37,7 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
+import isDev, { ifDev } from './functions/isDev';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -83,7 +84,7 @@ const zoomAround = (
     zoomCenterX: number,
     zoomCenterY: number
 ) => {
-    
+
     const OTDatumBefore = {
         time: view.pxToTimeWithOffset(zoomCenterX),
         octave: -view.pxToOctaveWithOffset(zoomCenterY),
@@ -228,7 +229,7 @@ const touchMoveListener = (e: TouchEvent) => {
 
 const touchUpListener = (e: TouchEvent) => {
     draggingView = false;
-    if(e.touches.length === 0) {
+    if (e.touches.length === 0) {
         tool.touchUp(e.changedTouches[0]);
     }
 }
@@ -302,14 +303,15 @@ onMounted(() => {
         touchUpListener(e);
         snap.resetSnapExplanation();
     });
-    
-    
-    
+
+
+
     window.addEventListener('contextmenu', (e: MouseEvent) => {
+        if (isDev()) return;
         e.preventDefault();
         e.stopPropagation();
     });
-    
+
     window.addEventListener('resize', resize);
     resize();
 
@@ -336,11 +338,10 @@ watch([sidePaneWidth, bottomPaneHeight], () => {
     resize();
 })
 
-const allowContextMenu = true;
 
 </script>
 <template>
-    <div id="app-container" oncontextmenu="return allowContextMenu">
+    <div id="app-container">
         <div id="viewport" ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewportPixi v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"

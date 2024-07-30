@@ -1,3 +1,5 @@
+import { ifDev } from "./functions/isDev";
+
 export enum KeyActions {
     None,
     Cut, Copy, Paste,
@@ -22,6 +24,7 @@ export enum KeyActions {
     OnlyAllowHorizontalMovement,
     OnlyAllowVerticalMovement,
     Reboot,
+    ActivateEraserMode,
 }
 
 type KeyActionTuple = [KeyActions, string, boolean, boolean, boolean];
@@ -52,7 +55,20 @@ const keyBindings: KeyActionTuple[] = [
     [KeyActions.OnlyAllowHorizontalMovement, 'h', false, false, false],
     [KeyActions.OnlyAllowVerticalMovement, 'v', false, false, false],
     [KeyActions.Reboot, 'r', true, false, false],
+    [KeyActions.ActivateEraserMode, 'e', true, false, false],
 ];
+
+ifDev(() => {
+    // prevent key binding collisions
+    const keySet = new Set<string>();
+    keyBindings.forEach((bind) => {
+        if(keySet.has(bind.join(','))) {
+            throw new Error(`Key binding collision: ${bind.join(',')}`);
+        }
+        keySet.add(bind.join(','));
+        
+    });
+});
 
 export const logKeys = (e: KeyboardEvent) => {
     const ctrlKey = e.ctrlKey || e.metaKey;

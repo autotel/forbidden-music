@@ -165,6 +165,9 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             // lol
             break;
         }
-
+        case KeyActions.ActivateEraserMode: {
+            tool.current = tool.current === Tool.Eraser ? Tool.Edit : Tool.Eraser;
+            break;
+        }
     }
 }
