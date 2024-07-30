@@ -405,21 +405,3 @@ const requestedAnimationFrame = ref<number>(0);
     }" :class="tool.cursor">
     </div>
 </template>
-
-<style scoped>
-.cursor-draw {
-    cursor: url("../../assets/icons-iconarchive-pen.png") 3 3, crosshair;
-}
-
-.cursor-move {
-    cursor: move;
-}
-
-.cursor-grab {
-    cursor: grab;
-}
-
-.cursor-grabbing {
-    cursor: grabbing;
-}
-</style>

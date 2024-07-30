@@ -5,4 +5,5 @@ export enum Tool {
     Automation,
     Select,
     Loop,
+    Eraser,
 }

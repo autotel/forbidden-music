@@ -17,6 +17,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+/** @global sampleRate */
+
 /* global sampleRate */
 
 /**
@@ -34,15 +36,13 @@ const TWO_PI = 2 * Math.PI;
 
 const A3_KEY = 69;
 
-class FMOperator
-{
+class FMOperator {
     /**
      *
      * @param {number} index an index for arrays
      * @param {Object} voice voice parameters shared among operators
      */
-    constructor(index, voice)
-    {
+    constructor(index, voice) {
         this._index = index;
         this._voice = voice;
         this._totalLevel = 0.0;
@@ -62,21 +62,18 @@ class FMOperator
     /**
      * Index of this operator given to the constructor.
      */
-    get index()
-    {
+    get index() {
         return this._index;
     }
 
     /**
      * Amplitude of this operator.
      */
-    get totalLevel()
-    {
+    get totalLevel() {
         return this._totalLevel;
     }
 
-    set totalLevel(totalLevel)
-    {
+    set totalLevel(totalLevel) {
         if (totalLevel < 0 || totalLevel > 1.0) {
             throw new Error("totalLevel out of range");
         }
@@ -86,49 +83,41 @@ class FMOperator
     /**
      * Frequency multiple of this operator.
      */
-    get multiple()
-    {
+    get multiple() {
         return this._multiple;
     }
 
-    set multiple(multiple)
-    {
+    set multiple(multiple) {
         this._multiple = multiple;
     }
 
-    get decay1Rate()
-    {
+    get decay1Rate() {
         return this._decay1Rate;
     }
 
-    set decay1Rate(decay1Rate)
-    {
+    set decay1Rate(decay1Rate) {
         if (decay1Rate < 0 || decay1Rate > 1.0) {
             throw new Error("decay1Rate out of range");
         }
         this._decay1Rate = decay1Rate;
     }
 
-    get decay1Level()
-    {
+    get decay1Level() {
         return this._decay1Lvel;
     }
 
-    set decay1Level(decay1Level)
-    {
+    set decay1Level(decay1Level) {
         if (decay1Level < 0 || decay1Level > 1.0) {
             throw new Error("decay1Level out of range");
         }
         this._decay1Level = decay1Level;
     }
 
-    get decay2Rate()
-    {
+    get decay2Rate() {
         return this._decay2Rate;
     }
 
-    set decay2Rate(decay2Rate)
-    {
+    set decay2Rate(decay2Rate) {
         if (decay2Rate < 0 || decay2Rate > 1.0) {
             throw new Error("decay2Rate out of range");
         }
@@ -138,16 +127,14 @@ class FMOperator
     /**
      * Output of this operator.
      */
-    get output()
-    {
+    get output() {
         return this._output;
     }
 
-    advance(modulation = 0)
-    {
+    advance(modulation = 0) {
         let output = 0;
         if (this._envelope != null) {
-            let {value, done} = this._envelope.next();
+            let { value, done } = this._envelope.next();
             if (!done) {
                 output = this._totalLevel * value
                     * Math.sin(TWO_PI * (this._phase + 4 * modulation));
@@ -159,8 +146,7 @@ class FMOperator
         this._phase -= Math.floor(this._phase);
     }
 
-    start()
-    {
+    start() {
         this._started = true;
 
         // TODO: make a real envelope generator.
@@ -178,16 +164,104 @@ class FMOperator
         this._envelope = envelope.call(this);
     }
 
-    stop()
-    {
+    stop() {
         this._started = false;
     }
 }
 
-class FMSynthesizer extends AudioWorkletProcessor
-{
-    constructor(options)
-    {
+const defaultConnection = [
+    [0, 0, 0, 0],
+    [1, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 1, 0],
+    [0, 1, 0, 1],
+]
+
+const defaultOperators = [{
+    totalLevel: 1.0,
+    multiple: 14.0,
+    decay1Rate: Math.pow(2, -8.0 / sampleRate),
+    decay1Level: Math.pow(2, -1.0),
+    decay2Rate: Math.pow(2, -4.0 / sampleRate),
+}, {
+    totalLevel: Math.pow(2, -3.0),
+    multiple: 1.0,
+    decay1Rate: Math.pow(2, -3.0 / sampleRate),
+    decay1Level: Math.pow(2, -1.0),
+    decay2Rate: Math.pow(2, -4.0 / sampleRate),
+}, {
+    totalLevel: Math.pow(2, -0.5),
+    multiple: 1.0,
+    decay1Rate: Math.pow(2, -1.0 / sampleRate),
+    decay1Level: 0,
+    decay2Rate: 0,
+}, {
+    totalLevel: Math.pow(2, -3.0),
+    multiple: 1.0,
+    decay1Rate: Math.pow(2, -1.0 / sampleRate),
+    decay1Level: 0,
+    decay2Rate: 0,
+}];
+
+
+class FMSynthesizer extends AudioWorkletProcessor {
+
+    static get parameterDescriptors() {
+        return [
+            ...defaultConnection.map((connLine, i) => (
+                connLine.map((_, j) => (
+                    {
+                        name: `connection[${i},${j}]`,
+                        defaultValue: defaultConnection[i][j],
+                        minValue: 0,
+                        maxValue: 1,
+                        automationRate: "k-rate", // k = per block; a = per sample
+                    }
+                )
+                )
+            )).flat(),
+            ...defaultOperators.map((op, i) => (
+                [
+                    {
+                        name: `operators[${i}].totalLevel`,
+                        defaultValue: op.totalLevel,
+                        minValue: 0,
+                        maxValue: 1,
+                        automationRate: "k-rate", // k = per block; a = per sample
+                    },
+                    {
+                        name: `operators[${i}].multiple`,
+                        defaultValue: op.multiple,
+                        minValue: 0,
+                        maxValue: 100,
+                        automationRate: "k-rate", // k = per block; a = per sample
+                    },
+                    {
+                        name: `operators[${i}].decay1Rate`,
+                        defaultValue: op.decay1Rate,
+                        minValue: 0,
+                        maxValue: 8,
+                        automationRate: "k-rate", // k = per block; a = per sample
+                    },
+                    {
+                        name: `operators[${i}].decay1Level`,
+                        defaultValue: op.decay1Level,
+                        minValue: 0,
+                        maxValue: 1,
+                        automationRate: "k-rate", // k = per block; a = per sample
+                    },
+                    {
+                        name: `operators[${i}].decay2Rate`,
+                        defaultValue: op.decay2Rate,
+                        minValue: 0,
+                        maxValue: 8,
+                        automationRate: "k-rate", // k = per block; a = per sample
+                    },
+                ]
+            )).flat(),
+        ];
+    }
+    constructor(options) {
         super(options);
         this._voice = {
             key: A3_KEY,
@@ -196,13 +270,7 @@ class FMSynthesizer extends AudioWorkletProcessor
         this._operators = [0, 1, 2, 3]
             .map((index) => new FMOperator(index, this._voice));
 
-        this._connection = [
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 1, 0],
-            [0, 1, 0, 1],
-        ];
+        this._connection = [...defaultConnection];
 
         this._operators[0].totalLevel = 1.0;
         this._operators[1].totalLevel = Math.pow(2, -3.0);
@@ -234,8 +302,7 @@ class FMSynthesizer extends AudioWorkletProcessor
         this.port.start();
     }
 
-    handleMessage(message)
-    {
+    handleMessage(message) {
         if ("noteOn" in message) {
             if ("key" in message.noteOn) {
                 this._voice.key = message.noteOn.key;
@@ -262,10 +329,25 @@ class FMSynthesizer extends AudioWorkletProcessor
      *
      * @param {Float32Array[][]} _inputs input buffers to be ignored
      * @param {Float32Array[][]} outputs output buffers
+     * @param {Object} parameters parameters 
      * @return {boolean} true
      */
-    process(_inputs, outputs)
-    {
+    process(_inputs, outputs, parameters) {
+        // assume that all params are k-rate for now
+        this._connection = defaultConnection.map((connLine, i) => (
+            connLine.map((_, j) => (
+                parameters[`connection[${i},${j}]`][0]
+            ))
+        ));
+
+        defaultOperators.map((_, i) => {
+            this._operators[i].totalLevel = parameters[`operators[${i}].totalLevel`][0];
+            this._operators[i].multiple = parameters[`operators[${i}].multiple`][0];
+            this._operators[i].decay1Level = parameters[`operators[${i}].decay1Level`][0];
+
+            this._operators[i].decay1Rate = Math.pow(2, -parameters[`operators[${i}].decay1Rate`][0] / sampleRate);
+            this._operators[i].decay2Rate = Math.pow(2, -parameters[`operators[${i}].decay2Rate`][0] / sampleRate);
+        });
         if (outputs.length >= 1) {
             for (let k = 0; k < outputs[0][0].length; ++k) {
                 for (let i = 0; i < 4; i++) {
@@ -275,7 +357,6 @@ class FMSynthesizer extends AudioWorkletProcessor
                             0);
                     this._operators[i].advance(modulation);
                 }
-
                 let sample = this._operators
                     .reduce((sum, o) =>
                         sum + this._connection[4][o.index] * o.output,

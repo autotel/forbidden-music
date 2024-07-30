@@ -6,6 +6,7 @@ import { KickSynth } from '@/synth/generators/KickSynth';
 import { ClassicSynth } from '@/synth/generators/ClassicSynth';
 import { PerxThingy } from '@/synth/generators/PerxThingy';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
+import { FmSynth } from '@/synth/generators/FmSynth';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
 import { PatcheableSynthVoice, Synth } from '@/synth/types/Synth';
 import { onMounted, ref, watch } from 'vue';
@@ -28,6 +29,7 @@ import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
 import { SineCluster } from '@/synth/generators/SineCluster';
 import { OscilloScope } from '@/synth/scope/OscilloScope';
+import FmSynthEdit from './editModules/FmSynthEdit.vue';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -83,6 +85,7 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                 <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
                 <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                 <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
+                <FmSynthEdit v-else-if="(audioModule instanceof FmSynth)" :audioModule="audioModule" />
                 <AutoMaximizerEdit v-else-if="audioModule instanceof AutoMaximizerEffect"
                     :audioModule="audioModule" />
                 <OscilloScopeEdit v-else-if="audioModule instanceof OscilloScope"

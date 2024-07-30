@@ -157,6 +157,7 @@ export function numberSynthParam(
     min?: number,
     max?: number,
     exportable = true,
+    automatable = true,
 ): NumberSynthParam {
     displayName = displayName || Object.prototype.toString.call(targetParam);
 
@@ -175,14 +176,16 @@ export function numberSynthParam(
         min,
         max,
         displayName,
-        animate(startTime: number, destTime: number, destValue: number) {
-            targetParam.linearRampToValueAtTime(destValue, destTime);
-        },
-        stopAnimations(startTime: number = 0) {
-            targetParam.cancelScheduledValues(startTime || 0);
-        },
         exportable,
     } as NumberSynthParam;
+    if(automatable){
+        synthParam.animate = (startTime: number, destTime: number, destValue: number) => {
+            targetParam.linearRampToValueAtTime(destValue, destTime);
+        };
+        synthParam.stopAnimations = (startTime: number = 0) => {
+            targetParam.cancelScheduledValues(startTime || 0);
+        };
+    }
     return synthParam;
 }
 
@@ -191,21 +194,37 @@ export const castToOptionDefList = (optionsList: (OptionDef | string)[]): Option
 }
 
 export function optionSynthParam(
-    targetParam: AudioParam,
+    targetNode: AudioNode,
+    targetParamName: string,
     optionsList: (OptionDef | string)[],
     displayName?: string,
     exportable = true,
 ): OptionSynthParam {
-    displayName = displayName || Object.prototype.toString.call(targetParam);
-    const currentParamValue = targetParam.value;
+    displayName = displayName || targetParamName;
+    if (!(targetParamName in targetNode)) {
+        throw new Error(`targetNode does not have a property named ${targetParamName}`);
+    }
+    // @ts-ignore
+    const currentParamValue: string = targetNode[targetParamName];
     const options = castToOptionDefList(optionsList);
     let currentValueIndex = options.findIndex(opt => opt.value === currentParamValue);
-    if(currentValueIndex === -1) {
+    if (currentValueIndex === -1) {
         currentValueIndex = 0;
+    }
+    const setter = (v: number) => {
+        // @ts-ignore
+        targetNode[targetParamName] = options[v].value as string;
     }
     const synthParam = {
         type: ParamType.option,
-        value: currentValueIndex,
+        _v: currentValueIndex,
+        get value() {
+            return currentValueIndex;
+        },
+        set value(v: number) {
+            setter(v);
+            currentValueIndex = v;
+        },
         options,
         displayName,
         exportable,

@@ -9,13 +9,13 @@ import NoteElementRectangle from './NoteElementRectangle.vue';
 import NoteVeloLine from './NoteVeloLine.vue';
 
 
-const view = useViewStore();
 const tool = useToolStore();
 const props = defineProps<{
     eventRect: Drawable<Note>
     text?: string
     interactionDisabled?: boolean,
     greyed?: boolean,
+    fill?: string,
 }>();
 
 // TODO: there are two possible destinations for noteBody, this causes the problem that 
@@ -26,6 +26,7 @@ const props = defineProps<{
 const noteBody = ref<SVGRectElement>();
 
 const myColor = computed(() => {
+    if(props.fill) return props.fill;
     if(props.greyed) return 'gray';
     const color = layerNoteColorStrings[props.eventRect.event.layer];
     return color;

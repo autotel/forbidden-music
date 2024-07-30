@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import WorkletWorkbench from '@/WorkletWorkbench.vue';
 import Fraction from 'fraction.js';
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
-import BottomPane from './components/bottom-pane/BottomPane.vue';
 import Button from './components/Button.vue';
+import FtView from './components/FtView.vue';
+import MousePopupDisplayer from './components/MousePopupDisplayer.vue';
 import Pianito from './components/Pianito.vue';
 import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportSvg from './components/ScoreViewport-Svg/ScoreViewport.vue';
@@ -10,8 +12,8 @@ import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
-import MousePopupDisplayer from './components/MousePopupDisplayer.vue';
 import Transport from './components/Transport.vue';
+import BottomPane from './components/bottom-pane/BottomPane.vue';
 import AnglesDown from './components/icons/AnglesDown.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
@@ -35,7 +37,7 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-import WorkletWorkbench from '@/WorkletWorkbench.vue';
+import isDev, { ifDev } from './functions/isDev';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -57,6 +59,7 @@ const viewport = ref<HTMLElement>();
 const userSettings = useCustomSettingsStore();
 const exclusiveContentsStore = useExclusiveContentsStore();
 let transportHeight = 50;
+
 
 provide('modalText', modalText);
 
@@ -81,7 +84,7 @@ const zoomAround = (
     zoomCenterX: number,
     zoomCenterY: number
 ) => {
-    
+
     const OTDatumBefore = {
         time: view.pxToTimeWithOffset(zoomCenterX),
         octave: -view.pxToOctaveWithOffset(zoomCenterY),
@@ -165,31 +168,27 @@ const mouseDownListener = (e: MouseEvent) => {
 }
 
 const touchDownListener = (e: TouchEvent) => {
-    if (e.touches.length === 2) {
-        const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        const averageY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        e.stopPropagation();
-        e.preventDefault();
-        draggingView = true;
-        viewDragStartX = averageX;
-        viewDragStartTime = view.timeOffset;
-        viewDragStartY = averageY;
-        viewDragStartOctave = view.octaveOffset;
-        viewDragStartOctaveHeight = view.viewHeightOctaves;
-        viewTouchDistanceStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    switch (e.touches.length) {
+        case 1: {
+            tool.touchDown(e.touches[0]);
+            break;
+        }
+        case 2: {
+            const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+            const averageY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+            e.stopPropagation();
+            e.preventDefault();
+            draggingView = true;
+            viewDragStartX = averageX;
+            viewDragStartTime = view.timeOffset;
+            viewDragStartY = averageY;
+            viewDragStartOctave = view.octaveOffset;
+            viewDragStartOctaveHeight = view.viewHeightOctaves;
+            viewTouchDistanceStart = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            break;
+        }
     }
 }
-
-// let testTouchEl = document.createElement('div');
-// testTouchEl.style.position = 'fixed';
-// testTouchEl.style.borderTop = '1px solid red';
-// testTouchEl.style.borderLeft = '1px solid red';
-// testTouchEl.style.width = '10px';
-// testTouchEl.style.height = '10px';
-// testTouchEl.style.pointerEvents = 'none';
-// setTimeout(() => {
-//     document.querySelector('body').appendChild(testTouchEl);
-// }, 1000);
 
 const touchMoveListener = (e: TouchEvent) => {
     const averageX = Array.from(e.touches).reduce((acc: number, t: { clientX: number }) => acc + t.clientX, 0) / e.touches.length;
@@ -223,14 +222,16 @@ const touchMoveListener = (e: TouchEvent) => {
             view.timeOffset = view.scrollBound - view.viewWidthTime;
         }
     } else {
-
-        // tool.mouseMove(e);
+        tool.touchMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
     }
 
 }
 
 const touchUpListener = (e: TouchEvent) => {
     draggingView = false;
+    if (e.touches.length === 0) {
+        tool.touchUp(e.changedTouches[0]);
+    }
 }
 
 const keyUpListener = (e: KeyboardEvent) => {
@@ -296,7 +297,6 @@ onMounted(() => {
     mainInteraction.addEventListener($viewPort, 'mouseleave' as any, () => {
         snap.resetSnapExplanation();
     });
-
     mainInteraction.addEventListener($viewPort, 'touchstart', touchDownListener);
     mainInteraction.addEventListener($viewPort, 'touchmove', touchMoveListener);
     mainInteraction.addEventListener($viewPort, 'touchend', (e: TouchEvent) => {
@@ -305,6 +305,12 @@ onMounted(() => {
     });
 
 
+
+    window.addEventListener('contextmenu', (e: MouseEvent) => {
+        if (isDev()) return;
+        e.preventDefault();
+        e.stopPropagation();
+    });
 
     window.addEventListener('resize', resize);
     resize();
@@ -332,11 +338,10 @@ watch([sidePaneWidth, bottomPaneHeight], () => {
     resize();
 })
 
-const allowContextMenu = true;
 
 </script>
 <template>
-    <div id="app-container" oncontextmenu="return allowContextMenu">
+    <div id="app-container">
         <div id="viewport" ref="viewport"
             :style="{ position: 'absolute', width: viewportSize.width + 'px', height: viewportSize.height + 'px' }">
             <ScoreViewportPixi v-if="userSettings.viewportTech === ViewportTech.Pixi" :width="viewportSize.width"
@@ -344,6 +349,9 @@ const allowContextMenu = true;
             <ScoreViewportSvg v-else-if="userSettings.viewportTech === ViewportTech.Svg" :width="viewportSize.width"
                 :height="viewportSize.height" />
             <TimeScrollBar style="position:absolute; left:0; bottom:0;" />
+            <Suspense>
+                <FtView v-if="tool.ftRec" />
+            </Suspense>
         </div>
         <div style="position: absolute; top: 0; left: 0;pointer-events: none;" ref="mouseWidget">
             {{ tool.currentMouseStringHelper }}

@@ -20,55 +20,69 @@ const localStorageOrMock = () => {
 
 const _storage = localStorageOrMock();
 
-class NsLocalStorage implements Storage {
-  [name: string]: any;
+class NsLocalStorage {
+  storage: Map<string, string | undefined> = new Map();
+  readonly _storage: Storage = _storage;
+  readonly _namespace: string = namespace;
   syncToLocalStorage() {
-    const keys = Object.keys(this);
+    const keys = this.storage.keys();
     for (const key of keys) {
-      const result = this.getItem(key);
-      if (result === null) {
-        _storage.removeItem(`${namespace}/${key}`);
+      const cachedResult = this.getItem(key);
+      let nsKey = this.nameSpaceKey(key);
+      console.log("sync nsLocalstorage to localstorage", key, cachedResult !== undefined);
+      if (cachedResult === undefined) {
+        console.log("removing", key);
+        _storage.removeItem(nsKey);
       } else {
-        _storage.setItem(`${namespace}/${key}`, result);
+        _storage.setItem(nsKey, cachedResult);
       }
     }
   }
+  nameSpaceKey(key: string) {
+    return `${namespace}/${key}`;
+  }
+  deNameSpaceKey(key: string) {
+    return key.replace(`${namespace}/`, '');
+  }
+  isNameSpaced(key: string) {
+    return key.startsWith(namespace);
+  }
   syncFromLocalStorage() {
     console.log("sync nsLocalstorage from localstorage");
-    // get items from actual localstorage, 
-    // use it only at the beginning
-    // perhaps at window re-focus too.
     const keys = Object.keys(_storage);
     for (const key of keys) {
-      const deNamespacedKey = key.replace(`${namespace}/`, '');
-      if (key.startsWith(`${namespace}/`)) {
-        // result is kinda guaranteed not to be null in this context
+      if (this.isNameSpaced(key)) {
+        const deNamespacedKey = this.deNameSpaceKey(key);
+        const cachedResult = this.storage.get(deNamespacedKey);
         const result = _storage.getItem(key);
-        if (result !== this[deNamespacedKey] && result !== null) {
+        if (result !== null && result !== cachedResult) {
           this.setItem(deNamespacedKey, result);
         }
       }
     }
   }
   setItem(key: string, value: string) {
-    this[key] = value;
+    this.storage.set(key, value);
     this.syncToLocalStorage();
   }
-  getItem(key: string): string | null {
-    return this[key] || null;
+  getItem(key: string): string | undefined {
+    const result = this.storage.get(key);
+    return result;
   }
   removeItem(key: string) {
-    delete this[key];
+    this.storage.set(key, undefined);
     this.syncToLocalStorage();
+    this.storage.delete(key);
   }
   clear() {
+    this.storage.clear();
     this.syncToLocalStorage();
   }
-  key(index: number): string | null {
-    return Object.keys(this)[index];
+  getKeys(): string[] {
+    return [...this.storage.keys()];
   }
   get length(): number {
-    return Object.keys(this).length;
+    return this.storage.size;
   }
 }
 const nsLocalStorage = new NsLocalStorage();

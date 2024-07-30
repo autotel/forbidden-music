@@ -54,7 +54,7 @@ onBeforeUnmount(() => {
         <!-- traces that would be created upon click -->
         <g id="note-would-be-created" v-if="tool.current === Tool.Edit">
             <NoteElement v-if="tool.noteThatWouldBeCreated" :eventRect="view.rectOfNote(tool.noteThatWouldBeCreated)"
-                interactionDisabled />
+                interactionDisabled fill="#11aacc55"/>
         </g>
         <g id="loop-would-be-created" v-if="tool.current === Tool.Loop">
             <LoopRangeElement v-if="tool.loopThatWouldBeCreated"
@@ -71,7 +71,7 @@ onBeforeUnmount(() => {
                 :greyed="loopsAreGreyed" />
         </g>
         <g id="notes-container" class="traces-container notes">
-            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect" :greyed="notesAreGreyed" />
+            <NoteElement v-for="rect in view.visibleNoteDrawables" :eventRect="rect" :greyed="notesAreGreyed"/>
         </g>
         <g id="automation-container" class="traces-container automation">
             <AutomationCircle v-for="(circle, index) in view.visibleAutomationPointDrawables" :circle="circle"
@@ -125,6 +125,10 @@ svg#viewport.cursor-draw {
     cursor: url("../../assets/icons-iconarchive-pen.png") 3 3, crosshair;
 }
 
+svg#viewport.cursor-eraser {
+    cursor: url("../../assets/eraser.png") 7 7, crosshair;
+}
+
 svg#viewport.cursor-move {
     cursor: move;
 }
@@ -151,6 +155,7 @@ svg#viewport {
     }
 
 }
+
 
 g#notes-being-created rect.body {
     fill: transparent;

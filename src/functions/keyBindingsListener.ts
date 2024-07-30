@@ -61,14 +61,7 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             break;
         }
         case KeyActions.Delete: {
-            project.notes = project.notes.filter(note => !note.selected)
-            project.loops = project.loops.filter(note => !note.selected)
-            project.lanes.lanes.forEach((lane) => lane.content = lane.content.filter(p => !p.selected))
-            // minimalistic option:
-            // tool.noteBeingHovered = false;
-            // programmatic option:
-            tool.resetState();
-            selection.clear();
+            selection.deleteSelected();
             break;
         }
         case KeyActions.ActivateCopyOnDrag: {
@@ -172,6 +165,9 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             // lol
             break;
         }
-
+        case KeyActions.ActivateEraserMode: {
+            tool.current = tool.current === Tool.Eraser ? Tool.Edit : Tool.Eraser;
+            break;
+        }
     }
 }

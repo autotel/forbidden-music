@@ -1,18 +1,18 @@
 import { throttledWatch } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Note } from '../dataTypes/Note';
 import { setSelection } from '../dataTypes/Selectable';
 import { OctaveRange, TimeRange, VelocityRange, } from '../dataTypes/TimelineItem';
+import { Tool } from '../dataTypes/Tool';
 import { Trace, TraceType } from '../dataTypes/Trace';
-import { getNotesInRange, getTracesInRange } from '../functions/getEventsInRange';
+import { filterMap } from "../functions/filterMap";
+import { getTracesInRange } from '../functions/getEventsInRange';
+import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
-import { Tool } from '../dataTypes/Tool';
-import { Drawable, TimelineRect, useViewStore } from './viewStore';
-import { filterMap } from "../functions/filterMap";
-import { useAutomationLaneStore } from './automationLanesStore';
+import { useViewStore } from './viewStore';
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
@@ -32,6 +32,7 @@ export const useSelectStore = defineStore("select", () => {
         project.loops.forEach(n => setSelection(n, isSelected(n)));
         lanes.forEachAutomationPoint(n => setSelection(n, isSelected(n)));
     }
+    const length = computed(() => selected.value.size);
     /**
      * get selected notes
      */
@@ -180,6 +181,16 @@ export const useSelectStore = defineStore("select", () => {
         clear: clear, remove,
         isSelected,
         selected,
+        length,
+        deleteSelected() {
+
+            project.notes = project.notes.filter(note => !note.selected)
+            project.loops = project.loops.filter(note => !note.selected)
+            project.lanes.lanes.forEach((lane) => lane.content = lane.content.filter(p => !p.selected))
+            
+            tool.resetState();
+            clear();
+        }
     };
 
 });

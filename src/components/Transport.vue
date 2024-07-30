@@ -3,11 +3,15 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
 import Button from './Button.vue';
+import { useToolStore } from '@/store/toolStore';
+import { useFtCaptureStore } from '@/store/ftCaptureStore';
 
 const view = useViewStore();
 const playback = usePlaybackStore();
 const bpmSetter = ref<HTMLInputElement>();
 const jumpVal = ref(4);
+const tool = useToolStore();
+const ftCaptureStore = useFtCaptureStore();
 const jump = (steps: number) => {
     playback.currentScoreTime += steps;
     playback.timeReturnPoint = playback.currentScoreTime;

@@ -1,13 +1,17 @@
 <script setup lang="ts">
+import { useSelectStore } from '@/store/selectStore';
 import { Tool } from '../dataTypes/Tool';
 import { KeyActions, getKeyCombinationString } from '../keyBindings';
 import { useHistoryStore } from '../store/historyStore';
 import { useToolStore } from '../store/toolStore';
 import Button from './Button.vue';
+import { useProjectStore } from '@/store/projectStore';
+import { computed } from 'vue';
 const tool = useToolStore();
 const {
-  history, undo, redo, canUndo, canRedo, undoStack, redoStack
+  undo, redo, undoStack, redoStack
 } = useHistoryStore();
+const selection = useSelectStore();
 const k = (key: KeyActions) => getKeyCombinationString(key)[0] || '';
 const toggleOctaveConstrain = () => {
   tool.mouse.disallowTimeChange = !tool.mouse.disallowTimeChange;
@@ -24,21 +28,42 @@ const toggleTimeConstrain = () => {
 }
 
 const toggleSelectTool = () => {
-  if (tool.current == Tool.Select) {
-    tool.current = Tool.Edit;
-  } else {
-    tool.current = Tool.Select;
-  }
+  tool.currentLeftHand === Tool.Select ? (tool.currentLeftHand = Tool.Edit) : (tool.currentLeftHand = Tool.Select)
 }
+
+const toggleEraserTool = () => {
+  tool.current === Tool.Eraser ? (tool.current = Tool.Edit) : (tool.current = Tool.Eraser)
+}
+
+const deleteSelected = () => {
+  selection.deleteSelected();
+}
+
+const showDeleteButton = computed(() => {
+  return selection.length > 0;
+})
+
 </script>
 
 <template>
   <div id="tools-container">
-    <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag" :onClick="() => tool.copyOnDrag = !tool.copyOnDrag"
-      tooltip="copy when dragging. [ALT]">
+    <Button v-if="tool.current == Tool.Edit" :active="tool.copyOnDrag"
+      :onClick="() => tool.copyOnDrag = !tool.copyOnDrag" tooltip="copy when dragging. [ALT]">
       Copy
     </Button>
 
+    <Button :active="tool.currentLeftHand === Tool.Select"
+      :onClick="toggleSelectTool"
+      tooltip="Select mode [Ctl]">
+      Select
+    </Button>
+
+
+    <Button v-if="showDeleteButton"
+      :onClick="() => deleteSelected()"
+      tooltip="Delete selected">
+      Del
+    </Button>
 
     <Button :tooltip="`undo [${k(KeyActions.Undo)}]`" :class="undoStack.length ? '' : 'disabled'" :onClick="undo">
       ↶ <small>{{ undoStack.length > 0 ? undoStack.length : '' }}</small>
@@ -46,13 +71,6 @@ const toggleSelectTool = () => {
     <Button :tooltip="`redo`" :class="redoStack.length ? '' : 'disabled'" :onClick="redo">
       ↷
     </Button>
-<!-- 
-    <Button :onClick="(e) => {
-      tool.current = tool.current === Tool.Automation ? Tool.Edit : Tool.Automation;
-    }" :active="tool.current == Tool.Automation"
-      :tooltip="`Automation mode [${k(KeyActions.ActivateAutomationMode)}]`">
-      Automation
-    </Button> -->
     <Button :onClick="(e) => {
       tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
     }" :active="tool.current == Tool.Modulation"
@@ -61,17 +79,23 @@ const toggleSelectTool = () => {
     </Button>
     <Button :onClick="(e) => {
       tool.current = tool.current === Tool.Loop ? Tool.Edit : Tool.Loop;
-    }" :active="tool.current == Tool.Loop"
-      :tooltip="`Loop mode [${k(KeyActions.ActivateLoopMode)}]`">
+    }" :active="tool.current == Tool.Loop" :tooltip="`Loop mode [${k(KeyActions.ActivateLoopMode)}]`">
       Loop
+    </Button>
+    <Button :active="tool.current === Tool.Eraser"
+      :onClick="toggleEraserTool"
+      :tooltip="`Eraser mode ${k(KeyActions.ActivateEraserMode)}`">
+      Eraser
     </Button>
     <div class="group">
       <label>Constrain</label>
-      <Button id="prevent-horizontal-movement" :tooltip="`prevent horizontal movement [${k(KeyActions.OnlyAllowVerticalMovement)}]`"
+      <Button id="prevent-horizontal-movement"
+        :tooltip="`prevent horizontal movement [${k(KeyActions.OnlyAllowVerticalMovement)}]`"
         :active="tool.mouse.disallowTimeChange" :onClick="toggleOctaveConstrain">
         ↕
       </Button>
-      <Button id="prevent-vertical-movement" :tooltip="`prevent vertical movement [${k(KeyActions.OnlyAllowHorizontalMovement)}]`"
+      <Button id="prevent-vertical-movement"
+        :tooltip="`prevent vertical movement [${k(KeyActions.OnlyAllowHorizontalMovement)}]`"
         :active="tool.mouse.disallowOctaveChange" :onClick="toggleTimeConstrain">
         ↔
       </Button>
