@@ -17,7 +17,7 @@ const toggleFtRec = () => {
 }
 </script>
 <template>
-    <Collapsible :start-expanded="true"
+    <Collapsible
         tooltip="Tool to measure or capture external tones by means of Fourier Transform">
         <template #icon>
             <Layers clas="icon" />
