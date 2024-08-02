@@ -151,6 +151,7 @@ const mouseUpListener = (e: MouseEvent) => {
 }
 
 const mouseDownListener = (e: MouseEvent) => {
+    console.log("mouse dn", e);
     // middle wheel
     if (e.button === 1) {
         e.stopPropagation();
@@ -166,14 +167,25 @@ const mouseDownListener = (e: MouseEvent) => {
         tool.mouseDown(e);
     }
 }
-
+let singleTouchTimer = false as false | ReturnType<typeof setTimeout>
 const touchDownListener = (e: TouchEvent) => {
+    console.log(e.touches.length)
     switch (e.touches.length) {
         case 1: {
-            tool.touchDown(e.touches[0]);
+            if(singleTouchTimer) {
+                clearTimeout(singleTouchTimer);
+            }
+
+            singleTouchTimer = setTimeout(() => {
+                tool.touchDown(e.touches[0]);
+                singleTouchTimer = false;
+            }, 300);
             break;
         }
         case 2: {
+            if(singleTouchTimer) {
+                clearTimeout(singleTouchTimer);
+            }
             const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
             const averageY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             e.stopPropagation();
