@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue';
-import Eye from '../../icons/Eye.vue';
-import EyeNot from '../../icons/EyeNot.vue';
+import Eye from '@/components/icons/Eye.vue';
+import EyeNot from '@/components/icons/EyeNot.vue';
 
 const props = defineProps<{
     title: string,

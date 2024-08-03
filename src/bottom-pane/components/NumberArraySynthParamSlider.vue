@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import Tooltip from '../../../components/Tooltip.vue';
-import { abbreviate } from '../../../functions/abbreviate';
-import { NumberSynthParam } from '../../../synth/types/SynthParam';
+import Tooltip from '@/components/Tooltip.vue';
+import { abbreviate } from '@/functions/abbreviate';
+import { NumberSynthParam } from '@/synth/types/SynthParam';
 const props = defineProps<{
     value: number,
     max: number,

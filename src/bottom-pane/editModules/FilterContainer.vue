@@ -1,17 +1,17 @@
 <script setup lang="ts">
 
+import { FilterEffect } from '@/synth/effects/FilterEffect';
 import { Ref, computed, inject } from 'vue';
-import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { AudioModule } from '../../../synth/types/AudioModule';
-import { ParamType } from '../../../synth/types/SynthParam';
+import { useMonoModeInteraction } from '@/store/monoModeInteraction';
+import { ParamType } from '@/synth/types/SynthParam';
+import Button from '@/components/Button.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
-import Button from '../../Button.vue';
 
 const props = defineProps<{
-    audioModule: AudioModule
+    audioModule: FilterEffect
 }>();
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
@@ -34,7 +34,10 @@ const width = computed(() => {
         <template v-for="param in audioModule.params">
             <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
             <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
-            <OptionSynthParam v-else-if="param.type === ParamType.option && param.options.length > 1" :param="param" />
+            <OptionSynthParam 
+                v-else-if="param.type === ParamType.option && param.options.length > 1" 
+                :param="param"
+            />
             <NumberArraySynthParam v-else-if="param.type === ParamType.nArray" :param="param" />
         </template>
         <Button style="background-color: #ccc1;" v-if="audioModule.credits" @click="showInfo(audioModule.credits)"

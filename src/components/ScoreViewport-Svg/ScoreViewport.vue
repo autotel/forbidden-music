@@ -199,6 +199,11 @@ g#notes-being-created rect.body {
     cursor: ew-resize;
 }
 
+.traces-container .edge-handle:hover {
+    fill: currentColor;
+    opacity: 0.9;
+}
+
 .traces-container .body:hover {
     opacity: 1;
 }

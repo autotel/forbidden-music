@@ -6,6 +6,7 @@ import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
 import { TimelineDot, TimelineRect, useViewStore } from '../../store/viewStore';
 import SvgLittleButton from './SvgLittleButton.vue';
+import { usePlaybackStore } from '@/store/playbackStore';
 
 
 const view = useViewStore();
@@ -16,7 +17,7 @@ const props = defineProps<{
     greyed?: boolean,
 }>();
 const project = useProjectStore();
-
+const playback = usePlaybackStore();
 const noteBody = ref<SVGRectElement>();
 const rightDragHandle = ref<SVGRectElement>();
 const leftDragHandle = ref<SVGRectElement>();
@@ -39,6 +40,13 @@ const leftDragHandleMouseEnterListener = (e: MouseEvent) => {
 }
 const leftDragHandleMouseLeaveListener = (e: MouseEvent) => {
     tool.timelineItemLeftEdgeMouseLeave();
+}
+
+const playme = () => {
+    console.log("jump here");
+    playback.stop();
+    playback.currentScoreTime = props.eventRect.event.time;
+    playback.play();
 }
 
 watch(rightDragHandle, (newVal, oldVal) => {
@@ -80,6 +88,17 @@ onUnmounted(() => {
 const showButtons = computed(() => {
     return tool.current === Tool.Loop || props.eventRect.event.selected;
 })
+
+const grid = 22;
+const margin = 12;
+const marginy = 23;
+const grdx = (pos: number) => {
+    if (pos >= 0) return props.eventRect.x + pos * grid + margin
+    return props.eventRect.x + props.eventRect.width + pos * grid - margin
+}
+const grdy = (pos: number) => {
+    return 0 + pos * grid + marginy
+}
 </script>
 <template>
     <g ref="noteBody">
@@ -98,28 +117,32 @@ const showButtons = computed(() => {
         <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx"
             stroke="currentColor" stroke-width="1" />
 
+        <SvgLittleButton :x="grdx(0)" :y="grdy(0)" :onClick="() => playme()" tooltip="jump to this loop">
+            ▶
+        </SvgLittleButton>
         <template v-if="!props.interactionDisabled && showButtons">
-            <SvgLittleButton :x="eventRect.x + 10" :y="30" :onClick="() => eventRect.event.count--"
+            <SvgLittleButton :x="grdx(1)" :y="grdy(0)" :onClick="() => eventRect.event.count--"
                 tooltip="less repetitions"> -
             </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + 30" :y="30" :onClick="() => eventRect.event.count++"
+            <SvgLittleButton :x="grdx(2)" :y="grdy(0)" :onClick="() => eventRect.event.count++"
                 tooltip="more repetitions"> +
             </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + 10" :y="50" :onClick="() => eventRect.event.count = 0"
+            <SvgLittleButton :x="grdx(1)" :y="grdy(1)" :onClick="() => eventRect.event.count = 0"
                 tooltip="disable loop">
                 ∅
             </SvgLittleButton>
-            <SvgLittleButton :x="eventRect.x + 30" :y="50" :onClick="() => eventRect.event.count = Infinity"
+            <SvgLittleButton :x="grdx(2)" :y="grdy(1)" :onClick="() => eventRect.event.count = Infinity"
                 tooltip="infinite repetitions"> ∞ </SvgLittleButton>
+
         </template>
+
         <template v-if="!props.interactionDisabled">
-            <SvgLittleButton :x="eventRect.x + eventRect.width - 25" :y="30"
-                :onClick="() => project.magicLoopDuplicator(eventRect.event)" tooltip="copy to the right"> ©
+            <SvgLittleButton :x="grdx(-1)" :y="30" :onClick="() => project.magicLoopDuplicator(eventRect.event)"
+                tooltip="copy to the right"> ©
             </SvgLittleButton>
         </template>
 
-        <text class="texts" :x="eventRect.x + 10" :y="18" font-size="20"
-            v-if="!interactionDisabled && eventRect.rightEdge">
+        <text class="texts" :x="grdx(1)" :y="18" font-size="20" v-if="!interactionDisabled && eventRect.rightEdge">
             {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
             {{ eventRect.event.count }}
         </text>

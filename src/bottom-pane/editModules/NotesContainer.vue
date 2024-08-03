@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Button from '../../../components/Button.vue';
-import { useCustomSettingsStore } from '../../../store/customSettingsStore';
-import { useLayerStore } from '../../../store/layerStore';
+import Button from '@/components/Button.vue';
+import { useCustomSettingsStore } from '@/store/customSettingsStore';
+import { useLayerStore } from '@/store/layerStore';
 import ModuleContainer from '../components/ModuleContainer.vue';
 import NoteLayerAssociator from './NotesContainer/NoteLayerAssociator.vue';
 

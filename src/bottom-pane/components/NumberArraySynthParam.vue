@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import Tooltip from '../../../components/Tooltip.vue';
-import { abbreviate } from '../../../functions/abbreviate';
-import { ArraySynthParam } from '../../../synth/types/SynthParam';
+import Tooltip from '@/components/Tooltip.vue';
+import { abbreviate } from '@/functions/abbreviate';
+import { ArraySynthParam } from '@/synth/types/SynthParam';
 import NumberArraySynthParamSlider from './NumberArraySynthParamSlider.vue';
 const props = defineProps<{
     param: ArraySynthParam

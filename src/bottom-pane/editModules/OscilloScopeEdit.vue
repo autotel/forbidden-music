@@ -1,11 +1,11 @@
 <script setup lang="ts">
 
 import { Ref, computed, inject, onMounted, ref } from 'vue';
-import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { OscilloScope } from '../../../synth/scope/OscilloScope';
-import { ParamType } from '../../../synth/types/SynthParam';
-import Button from '../../Button.vue';
-import ButtonSub from '../../ButtonSub.vue';
+import { useMonoModeInteraction } from '@/store/monoModeInteraction';
+import { OscilloScope } from '@/synth/scope/OscilloScope';
+import { ParamType } from '@/synth/types/SynthParam';
+import Button from '@/components/Button.vue';
+import ButtonSub from '@/components/ButtonSub.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';

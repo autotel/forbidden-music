@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { SynthChain } from '../../dataStructures/SynthChain';
-import { useAudioContextStore } from '../../store/audioContextStore';
-import { useBottomPaneStateStore } from '../../store/bottomPaneStateStore';
-import { useSynthStore } from '../../store/synthStore';
+import { SynthChain } from '@/dataStructures/SynthChain';
+import { useAudioContextStore } from '@/store/audioContextStore';
+import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
+import { useSynthStore } from '@/store/synthStore';
 import ChainContainer from './ChainContainer.vue';
 import ChannelSelector from './ChannelSelector.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import TransparentContainer from './components/TransparentContainer.vue';
 import NotesContainer from './editModules/NotesContainer.vue';
-import { useMasterEffectsStore } from '../../store/masterEffectsStore';
+import { useMasterEffectsStore } from '@/store/masterEffectsStore';
 defineProps<{
     paneHeight: number
 }>();
@@ -48,7 +48,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-    <div id="wrapper" v-if="paneHeight" class="bg-colored">
+    <div id="wrapper" class="bg-colored">
         <div id="hrow-items">
             <template v-if="thereIsAudio">
                 <TransparentContainer>
