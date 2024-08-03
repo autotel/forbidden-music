@@ -13,7 +13,7 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
-import BottomPane from './bottom-pane/BottomPane.vue';
+import SynthPane from './bottom-pane/SynthPane.vue';
 import AnglesDown from './components/icons/AnglesDown.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
@@ -383,7 +383,7 @@ watch([sidePaneWidth, bottomPaneHeight], () => {
             left: '0px',
             height: `${bottomPaneHeight}px`
         }">
-            <BottomPane :paneHeight="bottomPaneHeight" />
+            <SynthPane :paneHeight="bottomPaneHeight" />
         </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
         <div class="toolbars-container bg-colored">
