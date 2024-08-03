@@ -38,6 +38,8 @@ import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
 import isDev, { ifDev } from './functions/isDev';
+import BottomPane from './bottom-pane/BottomPane.vue';
+import { useBottomPaneStateStore } from './store/bottomPaneStateStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -54,11 +56,11 @@ const history = useHistoryStore();
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
 const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const sidePaneWidth = ref(300);
-const bottomPaneHeight = ref(0);
 const viewport = ref<HTMLElement>();
 const userSettings = useCustomSettingsStore();
 const exclusiveContentsStore = useExclusiveContentsStore();
-let transportHeight = 50;
+const bottomPaneStateStore = useBottomPaneStateStore();
+
 
 
 provide('modalText', modalText);
@@ -336,17 +338,17 @@ onBeforeUnmount(() => {
 });
 
 const resize = () => {
-    transportHeight = document.querySelector('.toolbars-container')?.clientHeight || 50;
+    bottomPaneStateStore.totalHeight;
     viewportSize.value = {
         width: window.innerWidth - sidePaneWidth.value,
-        height: window.innerHeight - transportHeight - bottomPaneHeight.value,
+        height: window.innerHeight - bottomPaneStateStore.totalHeight,
     };
     view.updateSize(viewportSize.value.width, viewportSize.value.height);
 };
 
 const viewportSize = ref({ width: 0, height: 0 });
 
-watch([sidePaneWidth, bottomPaneHeight], () => {
+watch([sidePaneWidth, bottomPaneStateStore], () => {
     resize();
 })
 
@@ -377,26 +379,8 @@ watch([sidePaneWidth, bottomPaneHeight], () => {
                 <AnglesLeft v-else />
             </Button>
         </div>
-        <div :style="{
-            position: 'absolute',
-            bottom: `${transportHeight}px`,
-            left: '0px',
-            height: `${bottomPaneHeight}px`
-        }">
-            <SynthPane :paneHeight="bottomPaneHeight" />
-        </div>
         <Pianito v-if="tool.showReferenceKeyboard" />
-        <div class="toolbars-container bg-colored">
-            <Transport />
-            <div style="display:flex; align-items: center; height: 100%;">
-                <Button :onClick="() => bottomPaneHeight = bottomPaneHeight ? 0 : 300">
-                    <AnglesDown v-if="bottomPaneHeight" />
-                    <AnglesUp v-else />
-                    Synth
-                </Button>
-            </div>
-            <ToolSelector />
-        </div>
+        <BottomPane />
         <SkipBar />
 
         <div style="position:absolute; left:0px; top:0">
@@ -459,14 +443,4 @@ watch([sidePaneWidth, bottomPaneHeight], () => {
     pointer-events: none;
 }
 
-.toolbars-container {
-    position: fixed;
-    bottom: 0px;
-    left: 0px;
-    width: 100vw;
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    height: 2.8em;
-}
 </style>

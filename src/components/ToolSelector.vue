@@ -100,6 +100,7 @@ const showDeleteButton = computed(() => {
         ↔
       </Button>
     </div>
+      <slot></slot>
   </div>
   <!-- <p>{{whatWouldMouseMoveDoText}}</p> -->
 </template>

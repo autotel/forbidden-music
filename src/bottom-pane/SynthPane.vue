@@ -48,7 +48,7 @@ onMounted(async () => {
 });
 </script>
 <template>
-    <div id="wrapper" v-if="paneHeight" class="bg-colored">
+    <div id="wrapper" class="bg-colored">
         <div id="hrow-items">
             <template v-if="thereIsAudio">
                 <TransparentContainer>

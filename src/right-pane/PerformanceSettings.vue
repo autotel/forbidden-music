@@ -12,11 +12,13 @@ import { useViewStore } from '../store/viewStore';
 import Collapsible from './Collapsible.vue';
 import WorkletWorkbench from '../WorkletWorkbench.vue';
 import { useMonoModeInteraction } from '@/store/monoModeInteraction';
+import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
 
 const monoModeInteraction = useMonoModeInteraction();
 
 const userSettings = useCustomSettingsStore();
 const exclusives = useExclusiveContentsStore();
+const bottomPane = useBottomPaneStateStore();
 const tool = useToolStore();
 const viewportTechs = [
     { name: 'Pixi', value: ViewportTech.Pixi },
@@ -70,6 +72,13 @@ const workletWorkbench = () => {
                 <Toggle v-model="userSettings.midiInputEnabled" />
                 <label>MIDI Input</label>
             </div>
+
+
+            <div class="form-row">
+                <Toggle v-model="bottomPane.rightyMode" />
+                <label>Swap transport / tool buttons position</label>
+            </div>
+
 
             <div class="form-section">Experimental</div>
 

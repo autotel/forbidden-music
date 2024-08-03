@@ -107,6 +107,7 @@ svg text{
   justify-content: space-between;
   align-items: center;
   margin: 1em;
+  grid-gap: 0.9em;
 }
 
 .form-section {
