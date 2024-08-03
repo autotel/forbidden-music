@@ -5,8 +5,8 @@ import Layers from "../components/icons/Layers.vue";
 import { useToolStore } from "../store/toolStore";
 import Collapsible from "./Collapsible.vue";
 
-import NumberSynthParam from '@/components/bottom-pane/components/NumberSynthParam.vue';
-import OptionSynthParam from '@/components/bottom-pane/components/OptionSynthParam.vue';
+import NumberSynthParam from '@//bottom-pane/components/NumberSynthParam.vue';
+import OptionSynthParam from '@//bottom-pane/components/OptionSynthParam.vue';
 import { ParamType } from '@/synth/types/SynthParam';
 
 const tool = useToolStore();

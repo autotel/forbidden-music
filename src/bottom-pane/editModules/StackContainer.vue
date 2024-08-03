@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import Button from '../../../components/Button.vue';
-import ButtonSub from '../../../components/ButtonSub.vue';
-import { SynthChain } from '../../../dataStructures/SynthChain';
-import { SynthStack } from '../../../dataStructures/SynthStack';
+import Button from '@/components/Button.vue';
+import ButtonSub from '@/components/ButtonSub.vue';
+import { SynthChain } from '@/dataStructures/SynthChain';
+import { SynthStack } from '@/dataStructures/SynthStack';
 import ChainContainer from '../ChainContainer.vue';
-import ModuleContainer from '../components/ModuleContainer.vue';
 const props = defineProps<{
     audioModule: SynthStack,
     root?: boolean,

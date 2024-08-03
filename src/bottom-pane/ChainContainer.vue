@@ -1,35 +1,34 @@
 <script setup lang="ts">
+import Button from '@/components/Button.vue';
+import { SynthChain } from '@/dataStructures/SynthChain';
+import { SynthStack } from '@/dataStructures/SynthStack';
+import { PatcheableTrait, PatcheableType } from '@/dataTypes/PatcheableTrait';
 import { AutoMaximizerEffect } from '@/synth/effects/AutoMaximizerEffect';
 import { FilterEffect } from '@/synth/effects/FilterEffect';
+import { ClassicSynth } from '@/synth/generators/ClassicSynth';
+import { FmSynth } from '@/synth/generators/FmSynth';
 import { FourierSynth } from '@/synth/generators/FourierSynth';
 import { KickSynth } from '@/synth/generators/KickSynth';
-import { ClassicSynth } from '@/synth/generators/ClassicSynth';
-import { PerxThingy } from '@/synth/generators/PerxThingy';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
-import { FmSynth } from '@/synth/generators/FmSynth';
+import { PerxThingy } from '@/synth/generators/PerxThingy';
+import { OscilloScope } from '@/synth/scope/OscilloScope';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
-import { PatcheableSynthVoice, Synth } from '@/synth/types/Synth';
+import { Synth } from '@/synth/types/Synth';
 import { onMounted, ref, watch } from 'vue';
-import Button from '../../components/Button.vue';
-import { SynthChain } from '../../dataStructures/SynthChain';
-import { SynthStack } from '../../dataStructures/SynthStack';
-import { PatcheableTrait, PatcheableType } from '../../dataTypes/PatcheableTrait';
 import AddSynth from './components/AddSynth.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import AutoMaximizerEdit from './editModules/AutoMaximizerEdit.vue';
-import OscilloScopeEdit from './editModules/OscilloScopeEdit.vue';
 import ClassicSynthEdit from './editModules/ClassicSynthEdit.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
+import FmSynthEdit from './editModules/FmSynthEdit.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
 import KickSynthEdit from './editModules/KickSynthEdit.vue';
-import PerxThingyEdit from './editModules/PerxThingyEdit.vue';
+import OscilloScopeEdit from './editModules/OscilloScopeEdit.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
+import PerxThingyEdit from './editModules/PerxThingyEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
-import { SineCluster } from '@/synth/generators/SineCluster';
-import { OscilloScope } from '@/synth/scope/OscilloScope';
-import FmSynthEdit from './editModules/FmSynthEdit.vue';
 
 const props = defineProps<{
     synthChain: SynthChain

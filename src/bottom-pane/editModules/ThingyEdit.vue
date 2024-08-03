@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { ThingyScoreFx } from '../../../synth/scoreEffects/Thingy';
+import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
 
 const props = defineProps<{
     audioModule: ThingyScoreFx

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
 import { Ref, computed, inject } from 'vue';
-import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import { AudioModule } from '../../../synth/types/AudioModule';
-import { ParamType } from '../../../synth/types/SynthParam';
+import { useMonoModeInteraction } from '@/store/monoModeInteraction';
+import { AudioModule } from '@/synth/types/AudioModule';
+import { ParamType } from '@/synth/types/SynthParam';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
-import Button from '../../Button.vue';
+import Button from '@/components/Button.vue';
 import { ClassicSynth } from '@/synth/generators/ClassicSynth';
 
 const props = defineProps<{

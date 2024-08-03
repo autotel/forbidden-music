@@ -2,8 +2,8 @@
 
 import { FmSynth } from '@/synth/generators/FmSynth';
 import { Ref, computed, inject, ref } from 'vue';
-import { useMonoModeInteraction } from '../../../store/monoModeInteraction';
-import Button from '../../Button.vue';
+import { useMonoModeInteraction } from '@/store/monoModeInteraction';
+import Button from '@/components/Button.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import isDev from '@/functions/isDev';
 import { filterMap } from '@/functions/filterMap';

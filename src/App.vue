@@ -13,7 +13,7 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import Transport from './components/Transport.vue';
-import BottomPane from './components/bottom-pane/BottomPane.vue';
+import BottomPane from './bottom-pane/BottomPane.vue';
 import AnglesDown from './components/icons/AnglesDown.vue';
 import AnglesLeft from './components/icons/AnglesLeft.vue';
 import AnglesRight from './components/icons/AnglesRight.vue';
@@ -395,10 +395,9 @@ watch([sidePaneWidth, bottomPaneHeight], () => {
                     Synth
                 </Button>
             </div>
-            <!-- <Autotel /> -->
             <ToolSelector />
-            <SkipBar />
         </div>
+        <SkipBar />
 
         <div style="position:absolute; left:0px; top:0">
             <template v-if="userSettings.showHarp">

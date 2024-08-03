@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
-import { computed, onBeforeUnmount, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { SineCluster } from '../../../synth/generators/SineCluster';
-import { ParamType } from '../../../synth/types/SynthParam';
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue';
+import { KickSynth } from '@/synth/generators/KickSynth';
+import { ParamType } from '@/synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
-import { PerxThingy } from '@/synth/generators/PerxThingy';
+import { useThrottleFn } from '@vueuse/core';
 
 const props = defineProps<{
-    audioModule: PerxThingy;
+    audioModule: KickSynth
 }>();
 
 
@@ -18,7 +18,7 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 
 let context = computed(() => canvas.value?.getContext('2d'));
 
-const getWaveValueAt = (wave: Float32Array | number[], iMin: number, iMax: number) => {
+const getWaveValueAt = (wave:number[],iMin: number, iMax: number) => {
     if (iMax >= wave.length) iMax = wave.length - 1;
     if (iMax > iMin + 1) {
         let max = -1;
@@ -36,36 +36,33 @@ const getWaveValueAt = (wave: Float32Array | number[], iMin: number, iMax: numbe
         return [vs, vs];
     }
 }
-const draw = (wave: Float32Array) => {
-    const envGen = props.audioModule.envelopeGen;
-    if (!envGen) return;
+const draw = (wave: number[]) => {
     if (!context.value) return;
     const ctx = context.value;
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, ...canvasSize);
-    const offsetY = canvasSize[1] * 0.9;
-    const range = -canvasSize[1] * 0.81;
+    const offsetY = canvasSize[1] / 2;
+    const range = 1;
     ctx.beginPath();
     ctx.strokeStyle = '#FAD3FA';
     if (wave.length < canvasSize[0]) {
         const scalex = canvasSize[0] / wave.length;
         for (let i = 0; i < wave.length; i++) {
             const x = i * scalex;
-            const waveI = wave[i];
-            const y = waveI * range + offsetY;
+            const y = wave[i] * range * offsetY + offsetY;
             ctx[i ? 'lineTo' : 'moveTo'](x, y);
         }
     } else {
         const scalei = wave.length / canvasSize[0];
         for (let i = 0; i < canvasSize[0]; i++) {
             const [min, max] = getWaveValueAt(wave, i * scalei, (i + 1) * scalei);
-            ctx[i ? 'lineTo' : 'moveTo'](i, min * range + offsetY);
-            ctx.lineTo(i, max * range + offsetY);
+            ctx[i ? 'lineTo' : 'moveTo'](i, min * range * offsetY + offsetY);
+            ctx.lineTo(i, max * range * offsetY + offsetY);
         }
     }
     ctx.stroke();
-    let canvasTimeSpan = wave.length / envGen.currentBuffer.value.sampleRate;
-    const linesAt = [0.0125, 0.25, 0.5, 1, 2, 4, envGen.decayParam.value].filter(v => v < canvasTimeSpan);
+    let canvasTimeSpan = wave.length / props.audioModule.currentBuffer.sampleRate;
+    const linesAt = [0.0125, 0.25, 0.5, 1, 2, 4, props.audioModule.fDecayTime.value].filter(v => v < canvasTimeSpan);
     let timeScale = canvasSize[0] / canvasTimeSpan;
 
     ctx.strokeStyle = '#777777';
@@ -86,20 +83,30 @@ const draw = (wave: Float32Array) => {
 
 }
 
-const waveChangedListener = (wave: Float32Array) => {
-    draw(wave);
+const waveChangedListener = (wave: number[]) => { draw(wave) }
+
+const removeNewWaveListeners = (of: KickSynth) => {
+    if (of.newWaveListener === waveChangedListener) {
+        of.newWaveListener = false;
+    }
+}
+const addNewWaveListeners = (of: KickSynth) => {
+    of.newWaveListener = waveChangedListener;
 }
 
-watch(() => props.audioModule.envelopeGen, (newVal, oldVal) => {
-    if (newVal) newVal.sendMeYourWave(waveChangedListener);
-});
+// watch(props.audioModule, (oldVal:KickSynth, newVal: KickSynth) => {
+//     removeNewWaveListeners(oldVal);
+//     addNewWaveListeners(newVal);
+// });
 
 onMounted(() => {
-    if (props.audioModule.envelopeGen) {
-        props.audioModule.envelopeGen.sendMeYourWave(waveChangedListener)
-    }
+    addNewWaveListeners(props.audioModule);
+    setTimeout(() => draw(props.audioModule.currentWave), 0);
 });
 
+onBeforeUnmount(() => {
+    removeNewWaveListeners(props.audioModule);
+});
 
 </script>
 <template>

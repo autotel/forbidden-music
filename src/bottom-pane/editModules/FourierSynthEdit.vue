@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
 import { computed, ref } from 'vue';
-import { AudioModule } from '../../../synth/types/AudioModule';
-import { ParamType } from '../../../synth/types/SynthParam';
+import { AudioModule } from '@/synth/types/AudioModule';
+import { ParamType } from '@/synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import ModuleContainer from '../components/ModuleContainer.vue';
-import { FourierSynth } from '../../../synth/generators/FourierSynth';
+import { FourierSynth } from '@/synth/generators/FourierSynth';
 
 const props = defineProps<{
     audioModule: FourierSynth
