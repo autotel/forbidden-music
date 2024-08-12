@@ -5,12 +5,15 @@ import { SineCluster } from '@/synth/generators/SineCluster';
 import { ParamType } from '@/synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
+import OptionSynthParam from '../components/OptionSynthParam.vue';
 import { PerxThingy } from '@/synth/generators/PerxThingy';
+import isDev from '@/functions/isDev';
 
 const props = defineProps<{
     audioModule: PerxThingy;
 }>();
 
+await props.audioModule.waitReady;
 
 type microVec = [number, number];
 const canvasSize: microVec = [300, 100];
@@ -65,7 +68,7 @@ const draw = (wave: Float32Array) => {
     }
     ctx.stroke();
     let canvasTimeSpan = wave.length / envGen.currentBuffer.value.sampleRate;
-    const linesAt = [0.0125, 0.25, 0.5, 1, 2, 4, envGen.decayParam.value].filter(v => v < canvasTimeSpan);
+    const linesAt = [0.0125, 0.25, 0.5, 1, 2, 4].filter(v => v < canvasTimeSpan);
     let timeScale = canvasSize[0] / canvasTimeSpan;
 
     ctx.strokeStyle = '#777777';
@@ -111,6 +114,7 @@ onMounted(() => {
             <template v-for="param in audioModule.params">
                 <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
                 <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
+                <OptionSynthParam v-else-if="param.type === ParamType.option" :param="param" style="width:5em" />
             </template>
         </div>
     </div>

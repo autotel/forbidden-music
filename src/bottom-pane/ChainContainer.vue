@@ -77,23 +77,28 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                     style="background-color:transparent">×</Button>
             </template>
             <template #default>
-                <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
-                <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
-                <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
-                <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
-                <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
-                <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
-                <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
-                <FmSynthEdit v-else-if="(audioModule instanceof FmSynth)" :audioModule="audioModule" />
-                <AutoMaximizerEdit v-else-if="audioModule instanceof AutoMaximizerEffect"
-                    :audioModule="audioModule" />
-                <OscilloScopeEdit v-else-if="audioModule instanceof OscilloScope"
-                    :audioModule="audioModule" />
-                <FilterContainer v-else-if="audioModule instanceof FilterEffect" :audioModule="audioModule" />
-                <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
-                <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
-                <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->
-                <p v-else style="color: red;">Unknown module type</p>
+                <Suspense>
+                    <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
+                    <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
+                    <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
+                    <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
+                    <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
+                    <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
+                    <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
+                    <FmSynthEdit v-else-if="(audioModule instanceof FmSynth)" :audioModule="audioModule" />
+                    <AutoMaximizerEdit v-else-if="audioModule instanceof AutoMaximizerEffect"
+                        :audioModule="audioModule" />
+                    <OscilloScopeEdit v-else-if="audioModule instanceof OscilloScope"
+                        :audioModule="audioModule" />
+                    <FilterContainer v-else-if="audioModule instanceof FilterEffect" :audioModule="audioModule" />
+                    <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
+                    <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
+                    <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->
+                    <p v-else style="color: red;">Unknown module type</p>
+                    <template #fallback>
+                        Loading...
+                    </template>
+                </Suspense>
             </template>
         </ModuleContainer>
 

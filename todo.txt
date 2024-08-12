@@ -1,12 +1,14 @@
 # Piano roll to-do
-
-## bugs
-	it doesnt' take a lot to get the timing to break 
+## Bugs
+	Often playback doesn't break out of a loop whose reps. have been decreased - Maybe I should tink of loops more like reaper regions than loops
 ## GUI
 	touch (two fingers pan/zoom, hold to add note)
 	method for sending from layer to channel is confusing
+## Features
+	A way to octave up or down notes without editing score - or octave the synths
+	generative boxes - boxes in time/octave ranges that implement generative composition algos. good for live perf.
 ## Basics & architecture
-	tool to make sure sounds are on tune
+	it doesnt' take a lot to get the timing to break - I wish to send the queuing frame & note listing to a thread
 	make it possible to set the base frequency upon which octaves are calculated
 	dont fetch typographies from google
 	mute layers
@@ -14,6 +16,7 @@
 		and if note begins before & ends after loop, to keep it playing as if it were midi
 	ToolLeftHand is mis-named - it was initially thought as complementary tool, but in practice it's a second layer that allows tool to return to its prev state
 ## Need refactor
+	OptionSynthParam is unnecessarily complicated: why the neeed to specify displayvalue and value, if value field does not represent options' specified value??
 	I'd like to convert workletfactories into workletmanager (see e.g. adsrWorkletManager opposed to other workletFactory files)
 	'credits' modal & 'monomode interaction' 
 	automation - current methods for listing points while playing is suboptimal

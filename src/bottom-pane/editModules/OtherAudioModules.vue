@@ -13,6 +13,9 @@ import Button from '@/components/Button.vue';
 const props = defineProps<{
     audioModule: AudioModule
 }>();
+
+await props.audioModule.waitReady;
+
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
 
@@ -22,7 +25,12 @@ const showInfo = (info: string) => {
     monoModeInteraction.activate("credits modal");
 }
 const rows = () => {
-    return Math.ceil(props.audioModule.params.length / 4);
+    const optionParamsCount = props.audioModule.params.filter(
+        ({ type }) => type === ParamType.option
+    ).length * 2;
+    const infoButton = props.audioModule.credits ? 1 : 0;
+    console.log('optionParamsCount', optionParamsCount);
+    return Math.ceil((props.audioModule.params.length + optionParamsCount + infoButton) / 4);
 }
 const width = computed(() => {
     return (rows() * 4) + 'em';
@@ -34,7 +42,8 @@ const width = computed(() => {
         <template v-for="param in audioModule.params">
             <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
             <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
-            <OptionSynthParam v-else-if="param.type === ParamType.option && param.options.length > 1" :param="param" />
+            <OptionSynthParam v-else-if="param.type === ParamType.option && param.options.length > 1" :param="param"
+                style="width: 8em" />
             <NumberArraySynthParam v-else-if="param.type === ParamType.nArray" :param="param" />
         </template>
         <Button style="background-color: #ccc1;" v-if="audioModule.credits" @click="showInfo(audioModule.credits)"

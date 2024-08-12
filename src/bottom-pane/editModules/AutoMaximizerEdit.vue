@@ -24,8 +24,7 @@ const showInfo = (info: string) => {
     monoModeInteraction.activate("credits modal");
 }
 
-const moduleReady = ref(false);
-props.audioModule.waitReady.then(() => moduleReady.value = true);
+await props.audioModule.waitReady;
 type microVec = [number, number];
 const canvasSize: microVec = [300, 100];
 const canvas = ref<HTMLCanvasElement | null>(null);

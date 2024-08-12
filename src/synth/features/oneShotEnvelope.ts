@@ -42,7 +42,6 @@ export const oneShotEnvelope = (audioContext: AudioContext) => {
     const curveExtremes = 10;
     const currentWave = { value: new Float32Array(0) } as SimpleRef<Float32Array>;
     const currentBuffer: SimpleRef<AudioBuffer> = { value: audioContext.createBuffer(1, 1, audioContext.sampleRate) };
-    let getNewWaveAfterThis = false;
 
     const attackParam = changeTrigNumParam({
         displayName: 'Attack',
@@ -57,6 +56,7 @@ export const oneShotEnvelope = (audioContext: AudioContext) => {
         max: 2,
         value: 0.26,
     }, paramChanged);
+
     const attackCurveParam = changeTrigNumParam({
         displayName: 'Attack Curve',
         min: 1/curveExtremes,
@@ -91,6 +91,7 @@ export const oneShotEnvelope = (audioContext: AudioContext) => {
         waveReceiver(newWave);
     }
 
+    let afterWaveRequesTimeout: undefined | ReturnType<typeof setTimeout>;
     const requestNewWave = () => {
         if (waitingResponseSince) {
             const length = Date.now() - waitingResponseSince;
@@ -98,8 +99,11 @@ export const oneShotEnvelope = (audioContext: AudioContext) => {
                 console.error(name, "worker timed out");
                 waitingResponseSince = false;
             } else {
-                console.log("waiting for worker to finish");
-                getNewWaveAfterThis = true;
+                console.log("waiting for worker to finish, will request wave again after finished");
+                if(afterWaveRequesTimeout) clearTimeout(afterWaveRequesTimeout);
+                afterWaveRequesTimeout = setTimeout(() => {
+                    requestNewWave();
+                }, 300);
                 return;
             }
         }
@@ -115,13 +119,7 @@ export const oneShotEnvelope = (audioContext: AudioContext) => {
             decayCurve: decayCurveParam.value,
         });
         waitingResponseSince = Date.now();
-
-        if (getNewWaveAfterThis) {
-            requestNewWave();
-        }
-        getNewWaveAfterThis = false;
     }
-
 
     worker = new Worker(
         new URL('./OneShotEnvelopeSampleGenerator.js', import.meta.url),

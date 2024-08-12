@@ -10,6 +10,7 @@ const replaceableWords:{[key:string]:string} = {
     sustain:'sus',
     release:'rel',
     curve:'crv',
+    modulator:'mod',
 }
 
 

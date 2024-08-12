@@ -239,7 +239,7 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
     needsFetching = true;
-    credits = "Web audio one shop sampler implementation by Autotel";
+    credits = "Web audio one shot sampler implementation by Autotel";
     name = "One Shot Sampler";
     constructor(
         audioContext: AudioContext,

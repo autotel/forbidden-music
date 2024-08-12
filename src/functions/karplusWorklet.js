@@ -28,8 +28,9 @@ class Voice {
     /**
      * @param {number} size
      * @param {Object} params
+     * @param {Float32Array} input
      */
-    getBlock(size, params) { }
+    getBlock(size, params, input) { }
     /**
      * @param {Object} trigSettings
      */
@@ -500,7 +501,7 @@ class NoiseExciter extends Exciter {
     operation = () => {
         let aLevel = this.envelope.step();
         let n = this.noise.operation();
-        if(this.decay === 0) this.decay = Infinity;
+        if (this.decay === 0) this.decay = Infinity;
         if (this.envelope.life < 1) {
             this.currentStage++;
             if (this.currentStage == 1) {
@@ -511,7 +512,7 @@ class NoiseExciter extends Exciter {
     }
 }
 
-class MultiPluxExciter extends Exciter {
+class PluckerExciter extends Exciter {
     attack = 0.1;
     decay = 0.3;
     duration = 0;
@@ -553,7 +554,7 @@ class MultiPluxExciter extends Exciter {
 }
 
 /**
- * @typedef {'noise' | 'multiplux'} ExciterTypeName
+ * @typedef {'noise' | 'input' | 'plucker'} ExciterTypeName
  * */
 
 class KarplusVoice extends Voice {
@@ -567,15 +568,18 @@ class KarplusVoice extends Voice {
     exciterToTime = 0;
     levelToTime = 0;
     currentNormalSamplingPeriod = 1;
-
+    useInputExciter = false;
     delayLine1 = new DelayLine();
 
     /**  @type {Exciter} */
     exciter = new (KarplusVoice.getExciterConstructor())();
     syncExciterType = () => {
-        if (KarplusVoice.getExciterConstructor() !== this.exciter.constructor) {
-            this.exciter = new (KarplusVoice.getExciterConstructor())();
+        const targetExciter = KarplusVoice.getExciterConstructor();
+        if(targetExciter === this.exciter.constructor) return;
+        if(targetExciter === Exciter) {
+            this.useInputExciter = true;
         }
+        this.exciter = new (KarplusVoice.getExciterConstructor())();
     }
 
     filter1 = new LpBoxcar(0.1);
@@ -626,9 +630,10 @@ class KarplusVoice extends Voice {
     /** 
      * @param {number} blockSize 
      * @param {KarplusParameters} parameters 
+     * @param {Float32Array} input
      * @returns {Float32Array} 
      */
-    getBlock(blockSize, parameters) {
+    getBlock(blockSize, parameters, input) {
         const output = new Float32Array(blockSize);
         const aWet = 1 - this.filterWet;
         const { delayFeedback, filterK } = parameters;
@@ -641,7 +646,7 @@ class KarplusVoice extends Voice {
             /**
              * noise exciter
              */
-            const exciter = this.exciter.operation(0);
+            const exciter = this.useInputExciter ? input[splN] : this.exciter.operation(0);
             /**
              * uncomment to listen to exciter only
              *
@@ -650,12 +655,12 @@ class KarplusVoice extends Voice {
 
             /**/
             let paramDelayFeedback = delayFeedback0;
-            if(delayFeedback.length > 1) {
+            if (delayFeedback.length > 1) {
                 paramDelayFeedback = delayFeedback[splN];
             }
             /* set filter K for this sample to the maybe modulated filterK parameter */
             let paramFilterK = filterK0;
-            if(filterK.length > 1) {
+            if (filterK.length > 1) {
                 paramFilterK = filterK[splN];
             }
             this.filter1.k = paramFilterK;
@@ -712,8 +717,11 @@ KarplusVoice.getExciterConstructor = () => {
     switch (KarplusVoice.exciterType) {
         case 'noise':
             return NoiseExciter;
-        case 'multiplux':
-            return MultiPluxExciter;
+        case 'plucker':
+            return PluckerExciter;
+        case 'input':
+            // will not be used
+            return Exciter;
         default:
             throw new Error('unknown exciter type ' + KarplusVoice.exciterType);
     }
@@ -852,7 +860,7 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
                 const dur = data.s || 0;
                 const amp = data.a || 1;
                 const tVoice = this.polimanager.getVoice();
-                
+
                 if (data.i) {
                     this.activeVoices[data.i] = tVoice;
                 }
@@ -909,10 +917,12 @@ registerProcessor('karplus', class extends AudioWorkletProcessor {
      */
     process(inputs, outputs, parameters) {
         const output = outputs[0];
+        const input = inputs[0];
+        const inputChannel = input[0];
         const blockSize = outputs[0][0].length;
         const mix = new Float32Array(blockSize);
         this.polimanager.list.forEach((voice) => {
-            const voiceResults = voice.getBlock(blockSize, parameters);
+            const voiceResults = voice.getBlock(blockSize, parameters, inputChannel);
             for (let sampleN = 0; sampleN < blockSize; sampleN++) {
                 mix[sampleN] += voiceResults[sampleN] / 10;
             }
