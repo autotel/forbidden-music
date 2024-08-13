@@ -240,8 +240,8 @@ const tooltip = computed(() => {
                     <canvas ref="mouseCaptureCanvas" width="8" height="2.5"></canvas>
                 </div>
             </div>
-            <small v-if="!noLabel">{{ computedLabel }}</small>
-            <small>{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
+            <small v-if="dragging">{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
+            <small v-else-if="!noLabel">{{ computedLabel }}</small>
             <Tooltip :tooltip="automated ? 'Edit automation. [Ctl+A] & [Del] To erase' : 'automate parameter'"
                 :force-hide="dragging">
                 <button class="animate-button" v-if="canBeAutomated" :class="{ on: automationLaneIsOpen }"
@@ -262,7 +262,7 @@ const tooltip = computed(() => {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.2em;
+    gap: 0;
     position: relative;
 }
 

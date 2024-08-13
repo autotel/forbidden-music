@@ -30,10 +30,10 @@ export class WaveFolderEffect extends AudioModule {
 
 
             this.params.push(automatableNumberSynthParam(
-                preGainParam, 'fold pre-gain', 0, 5
+                preGainParam, 'pre-gain', 0, 5
             ));
             this.params.push(automatableNumberSynthParam(
-                postGainParam, 'gain', 0, 1
+                postGainParam, 'post gain', 0, 1
             ));
 
             this.input.connect(foldedSaturator);

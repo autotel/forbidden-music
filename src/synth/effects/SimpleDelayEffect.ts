@@ -15,7 +15,7 @@ export class SimpleDelayEffect extends AudioModule {
         const input = this.input = audioContext.createGain();
         const feedback = audioContext.createGain();
         const filter = audioContext.createBiquadFilter();
-        const delay = audioContext.createDelay();
+        const delay = audioContext.createDelay(3);
         const direct = audioContext.createGain();
         const send = audioContext.createGain();
 

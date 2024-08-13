@@ -11,6 +11,7 @@ import { FourierSynth } from '@/synth/generators/FourierSynth';
 import { KickSynth } from '@/synth/generators/KickSynth';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
 import { PerxThingy } from '@/synth/generators/PerxThingy';
+import { FilterBankSynth } from '@/synth/generators/FilterBankSynth';
 import { OscilloScope } from '@/synth/scope/OscilloScope';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
 import { Synth } from '@/synth/types/Synth';
@@ -29,6 +30,7 @@ import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import PerxThingyEdit from './editModules/PerxThingyEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
+import FilterBankSynthEdit from './editModules/FilterBankSynthEdit.vue';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -84,13 +86,15 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                     <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
                     <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
                     <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
-                    <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)" :audioModule="audioModule" />
+                    <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)"
+                        :audioModule="audioModule" />
                     <FmSynthEdit v-else-if="(audioModule instanceof FmSynth)" :audioModule="audioModule" />
                     <AutoMaximizerEdit v-else-if="audioModule instanceof AutoMaximizerEffect"
                         :audioModule="audioModule" />
-                    <OscilloScopeEdit v-else-if="audioModule instanceof OscilloScope"
-                        :audioModule="audioModule" />
+                    <OscilloScopeEdit v-else-if="audioModule instanceof OscilloScope" :audioModule="audioModule" />
                     <FilterContainer v-else-if="audioModule instanceof FilterEffect" :audioModule="audioModule" />
+                    <FilterBankSynthEdit v-else-if="audioModule instanceof FilterBankSynth"
+                        :audioModule="audioModule" />
                     <OtherAudioModules v-else-if="isAudioModule(audioModule)" :audioModule="audioModule" />
                     <!-- <PatcheableSynth v-else-if="isAudioVoiceModule(audioModule)" :audioModule="audioModule" /> -->
                     <!-- <OtherAudioModules v-else-if="audioModule instanceof Synth" :audioModule="audioModule" /> -->

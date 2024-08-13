@@ -157,25 +157,21 @@ onMounted(() => {
 </script>
 <template>
     <div :style="{ width }" class="layout">
-        <template v-if="moduleReady">
-            <div :style="{ width }" class="scope-container">
-                <canvas ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]"
-                    style="flex-grow: 0; flex-shrink: 0;"></canvas>
-                <ButtonSub @click="toggleScope" class="scope-button" :class="{ on: scope }" tooltip="Toggle oscilloscope" />
-            </div>
+        <div :style="{ width }" class="scope-container">
+            <canvas ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]"
+                style="flex-grow: 0; flex-shrink: 0;"></canvas>
+            <ButtonSub @click="toggleScope" class="scope-button" :class="{ on: scope }" tooltip="Toggle oscilloscope" />
+        </div>
 
-            <template v-for="param in audioModule.params">
-                <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
-                <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
-                <OptionSynthParam v-else-if="param.type === ParamType.option && param.options.length > 1" :param="param" />
-                <NumberArraySynthParam v-else-if="param.type === ParamType.nArray" :param="param" />
-            </template>
-            <Button style="background-color: #ccc1;" v-if="audioModule.credits" @click="showInfo(audioModule.credits)"
-                class="credits-button">Info</Button>
+        <template v-for="param in audioModule.params">
+            <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
+            <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
+            <OptionSynthParam v-else-if="param.type === ParamType.option && param.options.length > 1" :param="param" />
+            <NumberArraySynthParam v-else-if="param.type === ParamType.nArray" :param="param" />
         </template>
-        <template v-else>
-            <div style="width: 100%; text-align: center;">Loading...</div>
-        </template>
+        <Button style="background-color: #ccc1;" v-if="audioModule.credits" @click="showInfo(audioModule.credits)"
+            class="credits-button">Info</Button>
+
     </div>
 </template>
 <style scoped>

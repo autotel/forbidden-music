@@ -25,6 +25,7 @@ import { SynthParamStored } from "./types/SynthParam";
 import { WaveFolderEffect } from "./effects/WaveFoldEffect";
 import { ClassicSynth } from "./generators/ClassicSynth";
 import { OscilloScope } from "./scope/OscilloScope";
+import { FilterBankSynth } from "./generators/FilterBankSynth";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
@@ -171,15 +172,16 @@ export default function getSynthConstructors(
     addAvailableSynth(FilterEffect, 'FilterEffect');
     addAvailableSynth(GainEffect, 'GainEffect');
     addAvailableSynth(WaveFolderEffect, 'WaveFolderEffect');
-
+    
     if (isDev()) {
         // bc. unfinished
         addAvailableSynth(FmSynth, "(xp) Fm Synth", [], false, true);
         addAvailableSynth(ThingyScoreFx, "(xp) Thingy Score Effect");
         addAvailableSynth(ExternalMidiSynth, "(xp) External  [],Midi Synth");
-
+        
         addAvailableSynth(PerxThingy, 'PerxThingy');
         addAvailableSynth(PatcheableSynth, "(xp) Dyna synth", [], false, true);
+        addAvailableSynth(FilterBankSynth, "(xp) Filter Bank Synth", [], false, true);
     }
     console.log("available channels", returnArray.map(s => s.name));
 
