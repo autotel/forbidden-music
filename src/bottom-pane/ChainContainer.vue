@@ -6,12 +6,13 @@ import { PatcheableTrait, PatcheableType } from '@/dataTypes/PatcheableTrait';
 import { AutoMaximizerEffect } from '@/synth/effects/AutoMaximizerEffect';
 import { FilterEffect } from '@/synth/effects/FilterEffect';
 import { ClassicSynth } from '@/synth/generators/ClassicSynth';
+import { FilterBankSynth } from '@/synth/generators/FilterBankSynth';
 import { FmSynth } from '@/synth/generators/FmSynth';
 import { FourierSynth } from '@/synth/generators/FourierSynth';
 import { KickSynth } from '@/synth/generators/KickSynth';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
 import { PerxThingy } from '@/synth/generators/PerxThingy';
-import { FilterBankSynth } from '@/synth/generators/FilterBankSynth';
+import { Sampler } from '@/synth/generators/Sampler';
 import { OscilloScope } from '@/synth/scope/OscilloScope';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
 import { Synth } from '@/synth/types/Synth';
@@ -20,6 +21,7 @@ import AddSynth from './components/AddSynth.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import AutoMaximizerEdit from './editModules/AutoMaximizerEdit.vue';
 import ClassicSynthEdit from './editModules/ClassicSynthEdit.vue';
+import FilterBankSynthEdit from './editModules/FilterBankSynthEdit.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
 import FmSynthEdit from './editModules/FmSynthEdit.vue';
 import FourierSynthEdit from './editModules/FourierSynthEdit.vue';
@@ -28,9 +30,9 @@ import OscilloScopeEdit from './editModules/OscilloScopeEdit.vue';
 import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import PerxThingyEdit from './editModules/PerxThingyEdit.vue';
+import SamplerEdit from './editModules/SamplerEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
-import FilterBankSynthEdit from './editModules/FilterBankSynthEdit.vue';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -83,6 +85,7 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                     <StackContainer v-if="(audioModule instanceof SynthStack)" :audioModule="audioModule" />
                     <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
                     <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
+                    <SamplerEdit v-else-if="(audioModule instanceof Sampler)" :audioModule="audioModule" />
                     <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
                     <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
                     <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />

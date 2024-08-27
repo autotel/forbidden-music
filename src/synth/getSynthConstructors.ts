@@ -48,7 +48,7 @@ export class SynthConstructorWrapper {
                 for (let paramDef of withParams) {
                     const synthParam = paramDef.displayName ? instance.findParamByName(paramDef.displayName) : undefined;
                     if (!synthParam) {
-                        console.error("param not found", paramDef.displayName);
+                        console.error("param not found", paramDef.displayName, instance);
                         continue;
                     }
                     synthParam.value = paramDef.value;
@@ -142,7 +142,7 @@ export default function getSynthConstructors(
         ];
         const sampleUname = sampleNameToUName(sampleDefinition.name);
         if (sampleDefinition.type === 'one shot') {
-            addAvailableSynth(Sampler, sampleUname + " Sampler", ps, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
+            addAvailableSynth(Sampler, sampleUname + " Sampler", [sampleDefinition]);
         } else if (sampleDefinition.type === 'granular') {
             addAvailableSynth(GranularSampler, "Granular " + sampleUname, ps, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
         } else {
@@ -183,6 +183,7 @@ export default function getSynthConstructors(
         addAvailableSynth(PatcheableSynth, "(xp) Dyna synth", [], false, true);
         addAvailableSynth(FilterBankSynth, "(xp) Filter Bank Synth", [], false, true);
     }
+
     console.log("available channels", returnArray.map(s => s.name));
 
     return returnArray;

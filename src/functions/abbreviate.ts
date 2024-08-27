@@ -11,6 +11,8 @@ const replaceableWords:{[key:string]:string} = {
     release:'rel',
     curve:'crv',
     modulator:'mod',
+    percussion: 'perc',
+    phaze: 'phz',
 }
 
 

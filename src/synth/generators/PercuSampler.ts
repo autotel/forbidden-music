@@ -1,11 +1,7 @@
-import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
+import { ParamType, SynthParam, ProgressSynthParam, NumberSynthParam, BooleanSynthParam } from "../types/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { NumberSynthParam, OtherSynthParam, ParamType, ProgressSynthParam, SynthParam, SynthParamMinimum } from "../types/SynthParam";
 
-/**
- * Definition of a single loadable sample
- */
-export interface SampleFileDefinition {
+interface SampleFileDefinition {
     name: string;
     frequency: number;
     velocity?: number;
@@ -18,50 +14,6 @@ interface SamplerSourceBase {
     isLoaded: boolean;
 }
 
-export const findSampleSourceClosestToFrequency = <SSc extends SamplerSourceBase>(
-    sampleSources: SSc[],
-    frequency: number,
-    velocity?: number,
-): SSc => {
-    let closestSampleSource = sampleSources[0];
-    if (sampleSources.length == 1) return closestSampleSource;
-
-    if (velocity == undefined) {
-        let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
-        for (let i = 1; i < sampleSources.length; i++) {
-            const sampleSource = sampleSources[i];
-            if (!sampleSource.isLoaded) continue;
-            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-            if (difference < closestSampleSourceDifference) {
-                closestSampleSource = sampleSource;
-                closestSampleSourceDifference = difference;
-            }
-        }
-    } else {
-        const sampleSourcesWithVelocityAboveOrEqual = sampleSources.filter((sampleSource) => {
-            if (!sampleSource.sampleInherentVelocity) return true;
-            return sampleSource.sampleInherentVelocity >= velocity;
-        });
-
-        if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
-            findSampleSourceClosestToFrequency(sampleSources, frequency);
-        }
-
-        let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
-        let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
-        for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
-            const sampleSource = sampleSourcesWithVelocityAboveOrEqual[i];
-            if (!sampleSource.isLoaded) continue;
-            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-            if (difference < closestSampleWithLeastVelocityDifferenceDifference) {
-                closestSampleWithLeastVelocityDifference = sampleSource;
-                closestSampleWithLeastVelocityDifferenceDifference = difference;
-            }
-        }
-        closestSampleSource = closestSampleWithLeastVelocityDifference;
-    }
-    return closestSampleSource;
-}
 
 const samplerVoice = (
     audioContext: AudioContext,
@@ -74,7 +26,6 @@ const samplerVoice = (
     let countPerVelocityStep: { [key: number]: number } = {};
     let timeAccumulator = 0;
     let currentAdsr = [0.01, 10, 0, 0.2];
-
     const voiceState = {
         inUse: false,
     }
@@ -88,7 +39,6 @@ const samplerVoice = (
             countPerVelocityStep[velocity] += 1;
         }
     });
-
     sampleSources.sort((a, b) => {
         if (!a.sampleInherentVelocity) return -1;
         if (!b.sampleInherentVelocity) return 1;
@@ -180,7 +130,7 @@ const samplerVoice = (
         scheduleEnd(
             absoluteEndTime?: number,
         ) {
-            const end = absoluteEndTime ? (absoluteEndTime + currentAdsr[3]) : 0;
+            const end = absoluteEndTime?(absoluteEndTime + currentAdsr[3]):0;
             output.gain.linearRampToValueAtTime(0, end);
             return this;
         },
@@ -240,30 +190,30 @@ class SampleSource {
 
 type SamplerVoice = ReturnType<typeof samplerVoice>;
 
-export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
+export class PercuSampler extends Synth<EventParamsBase, SamplerVoice> {
+    private loadingProgress = 0;
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
     needsFetching = true;
 
+    ignoreInputTone = {
+        type: ParamType.boolean,
+        displayName: "Atonal",
+        value: true,
+        exportable: true,
+    } as BooleanSynthParam
+
     credits = "Web audio one shot sampler implementation by Autotel";
-
-    loadingProgressParam = {
-        displayName: "Loading progress",
-        type: ParamType.progress,
-        min: 0, max: 100,
-        value: 0,
-        exportable: false,
-    } as ProgressSynthParam;
-
-    sampleKitParam: OtherSynthParam;
-
+    
     constructor(
         audioContext: AudioContext,
-        initialSamplesDefinition: SampleKitDefinition,
+        sampleDefinitions: SampleFileDefinition[],
         name?: string,
         credits?: string
     ) {
-        let sampleSources: SampleSource[] = [];
+        const sampleSources = sampleDefinitions.map((sampleDefinition) => {
+            return new SampleSource(audioContext, sampleDefinition);
+        });
 
         super(audioContext, (a) => samplerVoice(a, sampleSources));
 
@@ -272,35 +222,20 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
 
         if (credits) this.credits = credits;
         if (name) this.name = name + " Sampler";
-
         let enableCalled = false;
-
-        this.sampleKitParam = {
-            _v: {},
-            get value() {
-                return this._v;
-            },
-            set value(value: SampleKitDefinition) {
-                this._v = {
-                    name: value.name,
-                    samples: value.samples.map(({ path, frequency }) => ({ path, frequency }))
-                } as SampleKitDefinition;
-                if(value.readme) this._v.readme = value.readme;
-                changeSampleDefinition(this._v);
-            },
-            displayName: "Sample kit",
-            type: ParamType.other,
-            exportable: true,
-        }
-
-        setTimeout(() => {
-            this.sampleKitParam.value = initialSamplesDefinition;
-        });
-
         this.enable = async () => {
             if (enableCalled) return;
             enableCalled = true;
-            changeSampleDefinition(initialSamplesDefinition);
+            
+            sampleSources.forEach(async (sampleSource) => {
+                if (sampleSource.isLoading || sampleSource.isLoaded) return;
+                await sampleSource.load();
+                this.loadingProgress += 1;
+                if (
+                    this.loadingProgress > 2 ||
+                    this.loadingProgress == sampleDefinitions.length
+                ) this.markReady();
+            });
         }
 
         const parent = this;
@@ -321,8 +256,16 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
             },
             exportable: true,
         } as SynthParam);
-        this.params.push(this.sampleKitParam);
-        this.params.push(this.loadingProgressParam);
+
+        this.params.push({
+            displayName: "Loading progress",
+            type: ParamType.progress,
+            min: 0, max: sampleDefinitions.length,
+            get value() {
+                return parent.loadingProgress;
+            },
+            exportable: false,
+        } as ProgressSynthParam);
 
         this.adsr.forEach((v, i) => {
             this.params.push({
@@ -355,33 +298,7 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
         } as SynthParam);
 
 
-
-        const changeSampleDefinition = async (sampleKitDef: SampleKitDefinition) => {
-            const sampleDefinitions = sampleKitDef.samples;
-            this.name = sampleKitDef.name;
-            this.credits = sampleKitDef.readme || '';
-
-            sampleSources = sampleDefinitions.map((sampleDefinition) => {
-                return new SampleSource(audioContext, sampleDefinition);
-            });
-            this.loadingProgressParam.value = 0;
-            const loadingProgressStep = 100 / sampleDefinitions.length;
-            const everyPromise: Promise<any>[] = [];
-            sampleSources.forEach(async (sampleSource) => {
-                if (sampleSource.isLoading || sampleSource.isLoaded) return;
-                const promise = sampleSource.load();
-                everyPromise.push(promise);
-                await promise;
-                this.loadingProgressParam.value += loadingProgressStep;
-            });
-
-            await Promise.all(everyPromise);
-            this.instances.forEach((instance) => instance.scheduleEnd(audioContext.currentTime));
-            this.instances.length = 0;
-            this.markReady();
-        }
     }
-
     scheduleStart = (
         frequency: number,
         absoluteStartTime: number,
@@ -390,7 +307,6 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> {
         adsr: this.adsr,
         ...eventParams
     });
-
     schedulePerc(
         frequency: number,
         absoluteStartTime: number,

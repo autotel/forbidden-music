@@ -2,7 +2,7 @@
 import { ComputedRef, Ref, computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '@/components/Tooltip.vue';
 import { abbreviate } from '@/functions/abbreviate';
-import { NumberSynthParam } from '@/synth/types/SynthParam';
+import { NumberSynthParam, ProgressSynthParam } from '@/synth/types/SynthParam';
 import { AutomatableSynthParam, isAutomatable } from '@/synth/types/Automatable';
 import { useAutomationLaneStore } from '@/store/automationLanesStore';
 import { useToolStore } from '@/store/toolStore';
@@ -13,7 +13,7 @@ import { automationPoint } from '@/dataTypes/AutomationPoint';
 import { useProjectStore } from '@/store/projectStore';
 import { useThrottleFn } from '@vueuse/core';
 const props = defineProps<{
-    param: NumberSynthParam
+    param: NumberSynthParam | ProgressSynthParam,
     noLabel?: boolean
 }>();
 

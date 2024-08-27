@@ -2,7 +2,7 @@ import { createFoldedSaturatorWorklet } from "@/functions/foldedSaturatorWorklet
 import { oneShotEnvelope } from "../features/oneShotEnvelope";
 import { AutomatableSynthParam, automatableNumberSynthParam, getTweenSlice } from "../types/Automatable";
 import { EventParamsBase, Synth } from "../types/Synth";
-import { numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { BooleanSynthParam, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 
 
 type PerxThingyNoteParams = {
@@ -44,9 +44,16 @@ const perxVoice = (audioContext: AudioContext, parentSynth: PerxThingy) => {
             }
             const buffer = params.envelopeBuffer;
             this.inUse = true;
+
+            if (parentSynth.ignoreInputTone.value) {
+                frequency = 110;
+            }
+            
             oscillator.frequency.value = frequency;
             modulator.frequency.value = parentSynth.modulatorOctave.hertz;
+
             oscillator.type = parentSynth.oscillatorType.getWave();
+
             modulatorGain.gain.value = parentSynth.modulatorAmount.value;
             audioBufferSource = audioContext.createBufferSource();
             audioBufferSource.buffer = buffer;
@@ -99,7 +106,7 @@ export class PerxThingy extends Synth<EventParamsBase> {
     modulatorAmount = {
         type: ParamType.number,
         displayName: "Modulation",
-        value:0,
+        value: 0,
         min: 0,
         max: 1200,
         exportable: true,
@@ -121,7 +128,12 @@ export class PerxThingy extends Synth<EventParamsBase> {
         ],
     } as OptionSynthParam;
 
-
+    ignoreInputTone = {
+        type: ParamType.boolean,
+        displayName: "Atonal",
+        value: true,
+        exportable: true,
+    } as BooleanSynthParam
 
     constructor(
         audioContext: AudioContext,
@@ -169,6 +181,7 @@ export class PerxThingy extends Synth<EventParamsBase> {
             ));
             this.params.push(this.modulatorOctave);
             this.params.push(this.modulatorAmount);
+            this.params.push(this.ignoreInputTone);
 
             foldedSaturator.connect(this.output);
 

@@ -3018,20 +3018,6 @@ export default [
   },
   {
     "type": "granular",
-    "name": "test-tone",
-    "exclusive": false,
-    "onlyLocal": false,
-    "samples": [
-      {
-        "name": "440.wav",
-        "frequency": 440,
-        "path": "audio/test-tone/440.wav"
-      }
-    ],
-    "readme": ""
-  },
-  {
-    "type": "granular",
     "name": "violin_section",
     "exclusive": true,
     "onlyLocal": false,

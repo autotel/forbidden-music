@@ -8,7 +8,7 @@
     "dev-host": "vite --host",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri",
+    "tauri": "tauri dev",
     "test": "vitest",
     "serve-built": "serve ./dist --port 1420",
     "docs:dev": "vuepress dev docs",
