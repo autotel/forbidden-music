@@ -58,6 +58,7 @@ export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
 }
 
 export interface OtherSynthParam extends SynthParamMinimum<any> {
+    displayName: string,
     type: ParamType.other,
 }
 

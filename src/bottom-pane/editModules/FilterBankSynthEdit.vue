@@ -6,28 +6,30 @@ import { ParamType, SynthParam } from '@/synth/types/SynthParam';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import { useThrottleFn } from '@vueuse/core';
-import { FilterBankSynth } from '@/synth/generators/FilterBankSynth';
+import { FilterBankSynth, FilterDefinition } from '@/synth/generators/FilterBankSynth';
 import { S } from 'vitest/dist/reporters-5f784f42';
 
-const props = defineProps<{
-    audioModule: FilterBankSynth
-}>();
-
-
 type microVec = [number, number];
-
 const canvasSize: microVec = [300, 100];
-const canvas = ref<SVGAElement | null>(null);
-
 const {
     filterOctaveMax,
     filterOctaveMin,
     Qmin,
     Qmax,
+    filterGainMin,
+    filterGainMax,
 } = FilterBankSynth;
-
 const octaveDisplayRange = filterOctaveMax - filterOctaveMin;
 const qDisplayRange = Qmax - Qmin;
+const filterGainRange = filterGainMax - filterGainMin;
+
+const props = defineProps<{
+    audioModule: FilterBankSynth
+}>();
+
+const canvas = ref<SVGAElement | null>(null);
+
+const currentlyFocusedFilter = ref<FilterDefinition | false>(false);
 
 const octaveToX = (octave: number) => {
     return (octave - filterOctaveMin) / octaveDisplayRange * canvasSize[0];
@@ -41,13 +43,17 @@ const yToQ = (y: number) => {
 const qToY = (q: number) => {
     return (Qmax - q) / qDisplayRange * canvasSize[1];
 }
-
+const yToGain = (y: number) => {
+    return filterGainMax - y / canvasSize[1] * filterGainRange;
+    
+}
 const filterPoints = computed<microVec[]>(() => {
     return props.audioModule.filters.map(f => [octaveToX(f.octave), qToY(f.Q)]);
 });
 
 const dragStart = (e: MouseEvent, index: number) => {
     const target = e.target as SVGElement;
+    currentlyFocusedFilter.value = props.audioModule.filters[index];
     // @ts-ignore
     e.target?.classList.add('dragged');
     const filter = props.audioModule.filters[index];
@@ -57,10 +63,16 @@ const dragStart = (e: MouseEvent, index: number) => {
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
         filter.Q = yToQ(y);
+        // q to gain relationship thus depends on q range in display
+        filter.gain = yToGain(y);
         if (filter.Q < Qmin) filter.Q = Qmin;
         if (filter.Q > Qmax) filter.Q = Qmax;
 
+        if (filter.gain < filterGainMin) filter.gain = filterGainMin;
+        if (filter.gain > filterGainMax) filter.gain = filterGainMax;
+
         if(onlyVertical) return;
+        
         filter.octave = xToOctave(x);
         if (filter.octave < filterOctaveMin) filter.octave = filterOctaveMin;
         if (filter.octave > filterOctaveMax) filter.octave = filterOctaveMax;
@@ -97,11 +109,22 @@ const paramsGroups = computed<ParamGroupTitleTuple[]>(() => {
 </script>
 <template>
     <div style="text-align: center;  ">
-        <svg ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]" style="flex-grow: 0; flex-shrink: 0;">
-            <line :x1="zeroXPos" y1="0" :x2="zeroXPos" :y2="canvasSize[1]" />
-            <circle v-for="(point, index) in filterPoints" :cx="point[0]" :cy="point[1]" r="5" class="filterEllipse"
-                @mousedown="(e) => dragStart(e, index)" />
-        </svg>
+        <div class="layout">
+            <svg ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]" style="flex-grow: 0; flex-shrink: 0;">
+                <line :x1="zeroXPos" y1="0" :x2="zeroXPos" :y2="canvasSize[1]" />
+                <circle v-for="(point, index) in filterPoints" :cx="point[0]" :cy="point[1]" r="5" class="filterEllipse"
+                    @mousedown="(e) => dragStart(e, index)" />
+            </svg>
+            <div v-if="currentlyFocusedFilter">
+                <p>Octave: {{ currentlyFocusedFilter.octave.toFixed(2) }}</p>
+                <p>Q: {{ currentlyFocusedFilter.Q }}</p>
+                <p>Gain: {{ currentlyFocusedFilter.gain }}</p>
+                <!-- <p>Type: {{ currentlyFocusedFilter.type }}</p> -->
+                <!-- <p>Qenv: {{ currentlyFocusedFilter.envelopeQ }}</p>
+                <p>Denv: {{ currentlyFocusedFilter.envelopeDetune }}</p> -->
+            </div>
+        </div>
+        
         <div class="layout">
             <div v-for="([paramGroup, title]) in paramsGroups" class="group">
                 <div class="title">
@@ -173,7 +196,7 @@ const paramsGroups = computed<ParamGroupTitleTuple[]>(() => {
     justify-content: space-between;
     gap: 0.5em;
     height: 100%;
-    width: 50em;
+    width: 41.8em;
     
 }
 svg {

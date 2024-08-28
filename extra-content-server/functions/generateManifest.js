@@ -13,17 +13,19 @@ const audioExtensionPattern = /.(wav|aiff)$/;
 /**
  * @param {DirItem[]} dirsList
  * @param {string} remoteBaseUrl
+ * @param {string} libraryName
  */
-const generateSamplesList = (dirsList, remoteBaseUrl) => {
-    const libraries = [];
-    const getLibrary = (libraryName) => {
-        let library = libraries.find(lib => lib.name === libraryName);
+const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
+    const kits = [];
+    const getKit = (kitName) => {
+        let library = kits.find(lib => lib.name === kitName);
         if (!library) {
             library = {
-                name: libraryName,
+                name: kitName,
+                fromLibrary: libraryName,
                 samples: [],
             };
-            libraries.push(library);
+            kits.push(library);
         }
         return library;
     }
@@ -41,7 +43,7 @@ const generateSamplesList = (dirsList, remoteBaseUrl) => {
 
             if (!fileName.match(audioExtensionPattern)) {
                 if (fileName === "readme.txt") {
-                    const library = getLibrary(dirItem.path);
+                    const library = getKit(dirItem.path);
                     const readmePath = path.join(dirItem.path, fileName);
                     const readme = fs.readFileSync(path.join(publichPath, readmePath), 'utf8');
                     library.readme = readme;
@@ -53,8 +55,8 @@ const generateSamplesList = (dirsList, remoteBaseUrl) => {
             try {
                 let parsed = parser(nameWithoutExtension);
 
-                if (!parsed.libraryName) {
-                    parsed.libraryName = dirItem.path;
+                if (!parsed.kitName) {
+                    parsed.kitName = dirItem.path;
                 }
 
                 if (!parsed.frequency) {
@@ -68,14 +70,14 @@ const generateSamplesList = (dirsList, remoteBaseUrl) => {
 
                 parsed.path = remoteBaseUrl + '/' + path.join(dirItem.path, fileName);
 
-                const library = getLibrary(parsed.libraryName);
+                const library = getKit(parsed.kitName);
                 library.samples.push(parsed);
             } catch (e) {
                 console.error(`Error parsing ${fileName} as ${nameWithoutExtension}: ${e.message}`);
             }
         }
     }
-    return libraries;
+    return kits;
 }
 
 module.exports = generateSamplesList;

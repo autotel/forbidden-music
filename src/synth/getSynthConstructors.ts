@@ -26,6 +26,7 @@ import { WaveFolderEffect } from "./effects/WaveFoldEffect";
 import { ClassicSynth } from "./generators/ClassicSynth";
 import { OscilloScope } from "./scope/OscilloScope";
 import { FilterBankSynth } from "./generators/FilterBankSynth";
+import { camelCaseToUName } from "@/functions/caseConverters";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
@@ -78,28 +79,6 @@ export class SynthConstructorWrapper {
     }
 }
 
-const titleCase = <T extends (string | undefined)>(str: T) => {
-    if (!str) return str;
-    return str.replace(
-        /\w\S*/g,
-        function (txt) {
-            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-        }
-    );
-}
-
-const sampleNameToUName = <T extends (string | undefined)>(name?: T) => {
-    if (!name) return name;
-    return titleCase(
-        camelCaseToUName(name)
-            .replace(/[^a-zA-Z0-9]/g, " ").replace(/ +/g, " ")
-    ).trim();
-}
-
-const camelCaseToUName = <T extends (string | undefined)>(name: T) => {
-    if (!name) return name;
-    return titleCase(name.replace(/([A-Z])/g, " $1")).trim();
-}
 
 export default function getSynthConstructors(
     audioContext: AudioContext,
@@ -133,23 +112,9 @@ export default function getSynthConstructors(
     }
 
     addAvailableSynth(PlaceholderSynth, 'PlaceholderSynth');
-
-    sampleDefinitions.forEach((sampleDefinition) => {
-        const ps = [
-            sampleDefinition.samples,
-            sampleDefinition.name,
-            sampleDefinition.readme
-        ];
-        const sampleUname = sampleNameToUName(sampleDefinition.name);
-        if (sampleDefinition.type === 'one shot') {
-            addAvailableSynth(Sampler, sampleUname + " Sampler", [sampleDefinition]);
-        } else if (sampleDefinition.type === 'granular') {
-            addAvailableSynth(GranularSampler, "Granular " + sampleUname, ps, sampleDefinition.exclusive, sampleDefinition.onlyLocal);
-        } else {
-            throw new Error("type not supported " + sampleDefinition.type)
-        }
-
-    });
+    const defaultKit = sampleDefinitions.find(s => s.name === 'test-tone') || sampleDefinitions[0];
+    addAvailableSynth(Sampler, "Chromatic Sampler", [defaultKit]);
+    addAvailableSynth(GranularSampler, "Granular Sampler", [defaultKit], false, false);
 
     console.log("impulseResponseSampleDefinitions", impulseResponseSampleDefinitions);
     addAvailableSynth(

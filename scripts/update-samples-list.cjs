@@ -38,7 +38,7 @@ const samplePacks = readdir(samplesDir);
  */
 
 /**
- * @typedef {NoteSamplePackDefinition & {type:'granular'}} GranularSamplerPackDefinition
+ * @typedef {NoteSamplePackDefinition & {type:'chromatic'}} GranularSamplerPackDefinition
  */
 /**
  * @typedef {NoteSamplePackDefinition & {type:'one shot'}} OneShotSamplePackDefinition
@@ -54,8 +54,8 @@ if (!samplePacks) {
 const fileListIncludes = (files, filename) => files.includes(filename);
 /**  @param {string[]} samplesDir */
 const samplePackIsImpulseResponse = samplesDir => fileListIncludes(samplesDir, "_type-impulse-response");
-const samplePackIsOneShot = samplesDir => fileListIncludes(samplesDir, "_type-one-shot");
-const samplePackIsGranular = samplesDir => fileListIncludes(samplesDir, "_type-granular");
+const samplePackIsAtonal = samplesDir => fileListIncludes(samplesDir, "_type-atonal");
+const samplePackIsChromatic = samplesDir => fileListIncludes(samplesDir, "_type-chromatic");
 const filenameIsReadme = filename => filename.match(/_?readme\.txt$/);
 const filenameIsAudioSample = filename => filename.match(/.*\.(wav|aiff)$/);
 /**
@@ -189,15 +189,15 @@ samplePacks.forEach(samplePack => {
     if (samplePackIsImpulseResponse(files)) {
         impulseResponsesList = processImpulseResponsePack(samplePack, files);
     }
-    if (samplePackIsOneShot(files)) {
+    if (samplePackIsAtonal(files)) {
         oneShotsList.push({
             type: 'one shot',
             ...processNoteSamplePack(samplePack, files),
         });
     }
-    if (samplePackIsGranular(files)) {
+    if (samplePackIsChromatic(files)) {
         granularList.push({
-            type: 'granular',
+            type: 'chromatic',
             ...processNoteSamplePack(samplePack, files),
         });
     }

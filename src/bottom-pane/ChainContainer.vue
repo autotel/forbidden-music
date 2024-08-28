@@ -13,6 +13,7 @@ import { KickSynth } from '@/synth/generators/KickSynth';
 import { PatcheableSynth } from '@/synth/generators/PatcheableSynth';
 import { PerxThingy } from '@/synth/generators/PerxThingy';
 import { Sampler } from '@/synth/generators/Sampler';
+import { GranularSampler } from '@/synth/generators/GranularSampler';
 import { OscilloScope } from '@/synth/scope/OscilloScope';
 import { ThingyScoreFx } from '@/synth/scoreEffects/Thingy';
 import { Synth } from '@/synth/types/Synth';
@@ -31,6 +32,7 @@ import OtherAudioModules from './editModules/OtherAudioModules.vue';
 import PatcheableSynthEdit from './editModules/PatcheableSynthEdit.vue';
 import PerxThingyEdit from './editModules/PerxThingyEdit.vue';
 import SamplerEdit from './editModules/SamplerEdit.vue';
+import GranularSamplerEdit from './editModules/GranularSamplerEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
 
@@ -86,6 +88,8 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
                     <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
                     <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
                     <SamplerEdit v-else-if="(audioModule instanceof Sampler)" :audioModule="audioModule" />
+                    <GranularSamplerEdit v-else-if="(audioModule instanceof GranularSampler)"
+                        :audioModule="audioModule" />
                     <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
                     <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
                     <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />

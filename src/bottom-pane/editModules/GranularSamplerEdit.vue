@@ -2,7 +2,7 @@
 
 import Button from '@/components/Button.vue';
 import { useMonoModeInteraction } from '@/store/monoModeInteraction';
-import { Sampler } from '@/synth/generators/Sampler';
+import { GranularSampler } from '@/synth/generators/GranularSampler';
 import { ParamType } from '@/synth/types/SynthParam';
 import { Ref, inject } from 'vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
@@ -12,7 +12,7 @@ import OptionSynthParam from '../components/OptionSynthParam.vue';
 import SampleKitSelector from '../components/SampleKitSelector.vue';
 
 const props = defineProps<{
-    audioModule: Sampler
+    audioModule: GranularSampler
 }>();
 
 await props.audioModule.waitReady;

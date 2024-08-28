@@ -16,8 +16,10 @@ app.get('/samples', (req, res) => {
 
 app.get('/generate-samples', cors({ origin: '*' }), (req, res) => {
     try {
+        // Fetch a list of sample librariy descriptors. These contain the paths to samples, and how
+        // to parse the filenames to extract frequency, velocity and other data.
         const namings = require('./public/namings.json')
-        res.json(generateSamplesList(namings, myUrl));
+        res.json(generateSamplesList(namings, myUrl, 'autotel extra samples'));
     } catch (e) {
         res.json({ error: e.message });
     }

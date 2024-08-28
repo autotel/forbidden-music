@@ -1,7 +1,7 @@
 import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
 import { automatableNumberSynthParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, OtherSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { env } from "process";
 import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
 import { octaveToFrequency } from "@/functions/toneConverters";
@@ -13,7 +13,7 @@ type SineNoteParams = EventParamsBase & {
     perc: boolean,
 }
 
-type FilterDefinition = {
+export type FilterDefinition = {
     type: BiquadFilterType,
     Q: number,
     envelopeDetune: boolean,
@@ -37,6 +37,7 @@ const filterVoice = (audioContext: AudioContext, parentSynth: FilterBankSynth): 
     const envVca = parentSynth.adsrWorkletManager.create();
     const envFq = parentSynth.adsrWorkletManager.create();
     const filters = [] as BiquadFilterNode[];
+    const gains = [] as GainNode[];
 
     const envFqMapper = audioContext.createGain();
 
@@ -50,16 +51,25 @@ const filterVoice = (audioContext: AudioContext, parentSynth: FilterBankSynth): 
         }
         return filters[i];
     }
+    const getOrCreateGainNode = (i: number) => {
+        if (!gains[i]) {
+            gains[i] = audioContext.createGain();
+        }
+        return gains[i];
+    }
 
     const applySynthParams = (noteFrequency: number) => {
 
         parentSynth.filters.forEach((filterDef: FilterDefinition, i: number) => {
             const frequency = octaveToFrequency(filterDef.octave, noteFrequency);
             const filter = getOrCreateFilterNode(i);
+            const gain = getOrCreateGainNode(i);
             input.connect(filter);
             filter.type = filterDef.type;
             filter.Q.value = filterDef.Q;
-            filter.gain.value = filterDef.gain;
+            // so... it seems not to work, at least for bandpass
+            // filter.gain.value = filterDef.gain;
+            gain.gain.value = filterDef.gain;
             filter.frequency.value = frequency;
             if (filterDef.envelopeDetune) {
                 envFqMapper.connect(filter.detune);
@@ -67,7 +77,8 @@ const filterVoice = (audioContext: AudioContext, parentSynth: FilterBankSynth): 
             if (filterDef.envelopeQ) {
                 envFqMapper.connect(filter.Q);
             }
-            filter.connect(output);
+            filter.connect(gain);
+            gain.connect(output);
         });
 
         envVca.params.attack.value = parentSynth.envelopes[0].attackParam.mappedValue;
@@ -187,16 +198,14 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
     static filterOctaveMin = -5;
     static Qmin = 0;
     static Qmax = 60;
+    static filterGainMin = 0;
+    static filterGainMax = 1;
 
     envelopes = [
         new EnvelopeParamsList(),
         new EnvelopeParamsList(),
     ];
 
-    params = [
-        // ADSRs
-        ...this.envelopes.map(e => e.list).flat(),
-    ] as SynthParam[];
 
     gainParam: NumberSynthParam;
     input: GainNode;
@@ -214,7 +223,7 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
         frequency: 0,
         octave: 0,
         gain: 1,
-    },{
+    }, {
         type: 'bandpass',
         Q: 1,
         envelopeDetune: false,
@@ -222,7 +231,7 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
         frequency: 0,
         octave: 1,
         gain: 0.7,
-    },{
+    }, {
         type: 'bandpass',
         Q: 1,
         envelopeDetune: false,
@@ -230,7 +239,30 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
         frequency: 0,
         octave: -1,
         gain: 0.7,
+    }, {
+        type: 'bandpass',
+        Q: 0,
+        envelopeDetune: false,
+        envelopeQ: false,
+        frequency: 0,
+        octave: 2,
+        gain: 0,
+    }, {
+        type: 'bandpass',
+        Q: 0,
+        envelopeDetune: false,
+        envelopeQ: false,
+        frequency: 0,
+        octave: -2,
+        gain: 0,
     }];
+
+
+    params = [
+        // ADSRs
+        ...this.envelopes.map(e => e.list).flat(),
+    ] as SynthParam[];
+
     constructor(
         audioContext: AudioContext,
     ) {
@@ -244,7 +276,18 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
         const outputGain = this.output;
         this.output.gain.value = 0.1;
         this.feedbackSend.connect(this.delayNode);
-        
+
+        const synth = this;
+        this.params.push({
+            displayName: 'bands',
+            get value() {
+                return synth.filters;
+            },
+            set value(v: FilterDefinition[]) {
+                synth.filters = v;
+            },
+            exportable: true,
+        } as OtherSynthParam);
 
         const gain = automatableNumberSynthParam(
             outputGain.gain, 'out gain', 0, 1
@@ -262,12 +305,12 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
         this.params.push(feedbackSendParam);
         this.params.push(numberSynthParam(this.input.gain, 'input', 0, 1));
         this.params.push(automatableNumberSynthParam(this.delayNode.delayTime, 'delayTime'))
-        
+
         const feedbackWaveFolder = new WaveFolderEffect(audioContext);
 
         this.enable = async () => {
             this.noiseWorkletManager = await noiseWorkletManager(audioContext);
-            this.adsrWorkletManager = await adsrWorkletManager(audioContext);            
+            this.adsrWorkletManager = await adsrWorkletManager(audioContext);
             this.noiseGenerator = this.noiseWorkletManager.create().worklet;
             this.noiseGenerator.connect(noiseGain);
 
@@ -275,7 +318,7 @@ export class FilterBankSynth extends Synth<EventParamsBase, FilterVoice> {
 
             this.delayNode.connect(feedbackWaveFolder.input);
             feedbackWaveFolder.output.connect(this.output);
-            
+
             this.params.push(...feedbackWaveFolder.params);
 
             this.markReady();
