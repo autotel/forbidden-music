@@ -25,7 +25,6 @@ const sampleChangedListener = () => {
 }
 
 const sampleWasChosenListener = (sample: SampleSource, index: number) => {
-    console.log("ch", index, sample);
     lastTriggeredSample.value = [sample, index];
 }
 onMounted(() => {

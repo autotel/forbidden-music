@@ -51,7 +51,6 @@ export const selectSampleSourceFromKit = (
                 velo127 === undefined ||
                 (iSampleSource.velocityStart <= velo127 && iSampleSource.velocityEnd >= velo127)
             ) {
-                console.log("perfect match",i);
                 break;
             }
 
