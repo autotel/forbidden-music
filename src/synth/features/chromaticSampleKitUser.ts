@@ -1,21 +1,20 @@
 import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
-import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { NumberSynthParam, OtherSynthParam, ParamType, ProgressSynthParam, SynthParam, SynthParamMinimum } from "../types/SynthParam";
+import { OtherSynthParam, ParamType, ProgressSynthParam, SynthParam, SynthParamMinimum } from "../types/SynthParam";
 
 /**
  * Definition of a single loadable sample
  */
 export interface SampleFileDefinition {
     name: string;
+    path: string;
+    // inherent
     frequency: number;
     velocity?: number;
-    path: string;
-}
-
-export interface SamplerSourceBase {
-    sampleInherentFrequency: number;
-    sampleInherentVelocity?: number;
-    isLoaded: boolean;
+    // mapped
+    frequencyStart: number;
+    frequencyEnd: number;
+    velocityStart: number;
+    velocityEnd: number;
 }
 
 export interface SampleKitUser {
@@ -24,59 +23,47 @@ export interface SampleKitUser {
     sampleKitManager: ReturnType<typeof chromaticSampleKitManager>;
 }
 
-export const findSampleSourceClosestToFrequency = <SSc extends SamplerSourceBase>(
-    sampleSources: SSc[],
+export const selectSampleSourceFromKit = (
+    sampleSources: SampleSource[],
     frequency: number,
     velocity?: number,
-): SSc | undefined => {
+    listener?: SampleItemChosenListenerType
+): SampleSource | undefined => {
     if (sampleSources.length == 0) return undefined;
-    let closestSampleSource: SSc = sampleSources[0];
+    let closestSampleSource: SampleSource = sampleSources[0];
     if (sampleSources.length == 1) return closestSampleSource;
-
-    if (velocity == undefined) {
-        let closestSampleSourceDifference = Math.abs(frequency - closestSampleSource.sampleInherentFrequency);
-        for (let i = 1; i < sampleSources.length; i++) {
-            const sampleSource = sampleSources[i];
-            if (!sampleSource.isLoaded) continue;
-            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-            if (difference < closestSampleSourceDifference) {
-                closestSampleSource = sampleSource;
-                closestSampleSourceDifference = difference;
-            }
+    for (let i = 0; i < sampleSources.length; i++) {
+        const sampleSource = sampleSources[i];
+        if (
+            (velocity === undefined ||
+                (sampleSource.velocityStart > velocity && sampleSource.velocityEnd < velocity)
+            ) && (
+                sampleSource.frequencyStart > frequency && sampleSource.frequencyEnd < frequency
+            )
+        ) {
+            if (listener) listener(sampleSource, i);
+            return sampleSource;
         }
-    } else {
-        const sampleSourcesWithVelocityAboveOrEqual = sampleSources.filter((sampleSource) => {
-            if (!sampleSource.sampleInherentVelocity) return true;
-            return sampleSource.sampleInherentVelocity >= velocity;
-        });
-
-        if (sampleSourcesWithVelocityAboveOrEqual.length == 0) {
-            findSampleSourceClosestToFrequency(sampleSources, frequency);
-        }
-
-        let closestSampleWithLeastVelocityDifference = sampleSourcesWithVelocityAboveOrEqual[0];
-        let closestSampleWithLeastVelocityDifferenceDifference = Math.abs(frequency - closestSampleWithLeastVelocityDifference.sampleInherentFrequency);
-        for (let i = 1; i < sampleSourcesWithVelocityAboveOrEqual.length; i++) {
-            const sampleSource = sampleSourcesWithVelocityAboveOrEqual[i];
-            if (!sampleSource.isLoaded) continue;
-            const difference = Math.abs(frequency - sampleSource.sampleInherentFrequency);
-            if (difference < closestSampleWithLeastVelocityDifferenceDifference) {
-                closestSampleWithLeastVelocityDifference = sampleSource;
-                closestSampleWithLeastVelocityDifferenceDifference = difference;
-            }
-        }
-        closestSampleSource = closestSampleWithLeastVelocityDifference;
     }
+    if (listener) listener(closestSampleSource, -1);
     return closestSampleSource;
 }
 
 export class SampleSource {
     private audioContext: AudioContext;
     sampleBuffer?: AudioBuffer;
-    sampleInherentFrequency: number;
-    sampleInherentVelocity?: number;
+    frequency: number;
+    velocity?: number;
+
+    velocityStart: number;
+    velocityEnd: number;
+    frequencyStart: number;
+    frequencyEnd: number;
+
     isLoaded: boolean = false;
     isLoading: boolean = false;
+
+    sampleIdentifier: string;
 
     load = async () => {
         console.error("samplesource constructed wrong");
@@ -84,9 +71,17 @@ export class SampleSource {
 
     constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition) {
         this.audioContext = audioContext;
-        this.sampleInherentFrequency = sampleDefinition.frequency;
+        this.frequency = sampleDefinition.frequency;
+
+        this.frequencyStart = sampleDefinition.frequencyStart;
+        this.frequencyEnd = sampleDefinition.frequencyEnd;
+        this.velocityStart = sampleDefinition.velocityStart;
+        this.velocityEnd = sampleDefinition.velocityEnd;
+
+        this.sampleIdentifier = sampleDefinition.path;
+
         if ('velocity' in sampleDefinition) {
-            this.sampleInherentVelocity = sampleDefinition.velocity;
+            this.velocity = sampleDefinition.velocity;
         }
 
         this.load = async () => {
@@ -114,10 +109,13 @@ export class SampleSource {
     }
 }
 
+export type SampleKitChangedListenerType = (sampleKitDef: SampleKitDefinition) => void;
+export type SampleItemChosenListenerType = (sampleSource: SampleSource, index: number) => void;
+
 export const chromaticSampleKitManager = (audioContext: AudioContext, initialSamplesDefinition: SampleKitDefinition) => {
-
-    const sampleKitChangedListeners: ((sampleKitDef: SampleKitDefinition) => void)[] = [];
-
+    const sampleKitChangedListeners: SampleKitChangedListenerType[] = [];
+    const sampleItemChosenListeners: SampleItemChosenListenerType[] = [];
+    let lastSampleDefinition = initialSamplesDefinition;
     const loadingProgressParam = {
         displayName: "Loading progress",
         type: ParamType.progress,
@@ -134,10 +132,19 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
         set value(value: SampleKitDefinition) {
             this._v = {
                 name: value.name,
-                samples: value.samples.map(({ path, frequency }) => ({ path, frequency }))
+                samples: value.samples.map(({
+                    path, frequency,
+                    frequencyStart, frequencyEnd,
+                    velocityStart, velocityEnd
+                }) => ({
+                    path, frequency,
+                    frequencyStart, frequencyEnd,
+                    velocityStart, velocityEnd
+                }))
             } as SampleKitDefinition;
             if (value.readme) this._v.readme = value.readme;
             changeSampleDefinition(this._v);
+            lastSampleDefinition = value;
         },
         displayName: "Sample kit",
         type: ParamType.other,
@@ -147,16 +154,17 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
     const sampleSources: SampleSource[] = [];
 
     const changeSampleDefinition = async (sampleKitDef: SampleKitDefinition) => {
-        const sampleDefinitions = sampleKitDef.samples;
+        const samples = lastSampleDefinition.samples;
+        lastSampleDefinition = sampleKitDef;
 
         sampleSources.splice(
             0, sampleSources.length,
-            ...sampleDefinitions.map((sampleDefinition) => {
+            ...samples.map((sampleDefinition) => {
                 return new SampleSource(audioContext, sampleDefinition);
             })
         )
         loadingProgressParam.value = 0;
-        const loadingProgressStep = 100 / sampleDefinitions.length;
+        const loadingProgressStep = 100 / samples.length;
         const everyPromise: Promise<any>[] = [];
         sampleSources.forEach(async (sampleSource) => {
             if (sampleSource.isLoading || sampleSource.isLoaded) return;
@@ -171,16 +179,32 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
 
     sampleKitParam.value = initialSamplesDefinition;
 
-    return {
+    let chosenSampleListener = undefined as SampleItemChosenListenerType | undefined;
+
+    const retValue = {
+        get lastSampleDefinition() { return lastSampleDefinition },
         sampleKitParam,
         loadingProgressParam,
         sampleSources,
         changeSampleDefinition,
-        findSampleSourceClosestToFrequency: (frequency: number, velocity?: number) => {
-            return findSampleSourceClosestToFrequency(sampleSources, frequency, velocity);
+        selectSampleSourceFromKit: (frequency: number, velocity?: number) => {
+            return selectSampleSourceFromKit(sampleSources, frequency, velocity, chosenSampleListener);
         },
-        addSampleKitChangedListener: (listener: (sampleKitDef: SampleKitDefinition) => void) => {
+        addSampleKitChangedListener: (listener: SampleKitChangedListenerType) => {
             sampleKitChangedListeners.push(listener);
         },
-    }
+        removeSampleKitChangedListener: (listener: SampleKitChangedListenerType) => {
+            sampleKitChangedListeners.filter(l => l !== listener);
+        },
+        addSampleItemChosenListener: (listener: SampleItemChosenListenerType) => {
+            sampleItemChosenListeners.push(listener);
+            chosenSampleListener = (...p)=>sampleItemChosenListeners.forEach((l) => l(...p));
+        },
+        removeSampleItemChosenListener: (listener: SampleItemChosenListenerType) => {
+            sampleItemChosenListeners.filter(l => l !== listener);
+            if(sampleItemChosenListeners.length == 0) chosenSampleListener = undefined;
+        },
+    };
+
+    return retValue;
 }

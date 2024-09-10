@@ -65,7 +65,10 @@ export default defineStore('externalSampleLibrariesStore', () => {
                 throw new Error('Sample definition must be an object');
             }
             // @ts-ignore
-            requireAttributes(s, ['frequency', 'path'], def.name);
+            requireAttributes(s, ['frequency', 'path', 'name', 'frequencyStart', 'frequencyEnd', 'velocityStart', 'velocityEnd'], def.name);
+
+            if ('frequencyEnd' in s && s.frequencyEnd === null) s.frequencyEnd = Infinity;
+            if ('velocityEnd' in s && s.velocityEnd === null) s.velocityEnd = Infinity;
         })
         return def as SampleKitDefinition;
     }
@@ -81,6 +84,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
         for (const def of newDef) {
             checkedList.push(checkLibraryDef(def));
         }
+
         listOfExternalLibs.value.push(definitionUrl);
         listOfAvailableSampleKits.value = [...listOfAvailableSampleKits.value, ...checkedList];
     }
@@ -91,6 +95,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
     }
 
     addLibraryUrl('http://127.0.0.1:3010/generate-samples');
+
     return {
         listOfExternalLibs,
         listOfAvailableSampleKits,

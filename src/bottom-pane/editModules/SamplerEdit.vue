@@ -10,6 +10,7 @@ import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
 import SampleKitSelector from '../components/SampleKitSelector.vue';
+import SampleMapDisplay from '../components/SampleMapDisplay.vue';
 
 const props = defineProps<{
     audioModule: Sampler
@@ -31,6 +32,7 @@ const width = 'auto';
 <template>
     <div :style="{ width }" class="layout">
         <SampleKitSelector :audioModule="audioModule" />
+        <SampleMapDisplay :audioModule="audioModule" />
         <div class="group" style="width: 10em">
             <template v-for="param in audioModule.params">
                 <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />

@@ -1,6 +1,6 @@
 import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam, OtherSynthParam } from "../types/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { chromaticSampleKitManager, findSampleSourceClosestToFrequency, SampleKitUser, SampleSource } from "../features/chromaticSampleKitUser";
+import { chromaticSampleKitManager, SampleKitUser, SampleSource, selectSampleSourceFromKit } from "../features/chromaticSampleKitUser";
 import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
 
 interface SampleFileDefinition {
@@ -63,7 +63,7 @@ const granularSamplerVoice = (
             const grain = getSoundGrain(
                 audioContext,
                 currentSampleSource.sampleBuffer,
-                currentSampleSource.sampleInherentFrequency
+                currentSampleSource.frequency
             );
             if (time <= latestGrainStartTime) continue;
             latestGrainStartTime = time;
@@ -101,7 +101,7 @@ const granularSamplerVoice = (
             
             this.inUse = true;
             
-            currentSampleSource = findSampleSourceClosestToFrequency(sampleSources, frequency, velocity);
+            currentSampleSource = selectSampleSourceFromKit(sampleSources, frequency, velocity);
 
             if(!currentSampleSource?.sampleBuffer) throw new Error("No sample source loaded");
             // transform proportional start time to real start time

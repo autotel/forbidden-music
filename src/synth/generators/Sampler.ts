@@ -1,40 +1,22 @@
 import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
-import { chromaticSampleKitManager, findSampleSourceClosestToFrequency, SampleKitUser, SampleSource } from "../features/chromaticSampleKitUser";
+import { chromaticSampleKitManager, SampleKitUser, SampleSource } from "../features/chromaticSampleKitUser";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { NumberSynthParam, OtherSynthParam, ParamType, ProgressSynthParam, SynthParam } from "../types/SynthParam";
 
 const samplerVoice = (
     audioContext: AudioContext,
-    sampleSources: SampleSource[] = []
+    parentSynth: Sampler,
 ): SynthVoice => {
     let velocityToStartPoint: number = 0;
     let bufferSource: AudioBufferSourceNode | undefined;
     const output = audioContext.createGain();
     output.gain.value = 0;
-    let countPerVelocityStep: { [key: number]: number } = {};
     let timeAccumulator = 0;
     let currentAdsr = [0.01, 10, 0, 0.2];
 
     const voiceState = {
         inUse: false,
     }
-
-    sampleSources.forEach((sampleSource) => {
-        if ('sampleInherentVelocity' in sampleSource) {
-            const velocity = sampleSource.sampleInherentVelocity as number;
-            if (!countPerVelocityStep[velocity]) {
-                countPerVelocityStep[velocity] = 0;
-            }
-            countPerVelocityStep[velocity] += 1;
-        }
-    });
-
-    sampleSources.sort((a, b) => {
-        if (!a.sampleInherentVelocity) return -1;
-        if (!b.sampleInherentVelocity) return 1;
-        return a.sampleInherentVelocity - b.sampleInherentVelocity;
-    });
-
 
     const cancelScheduledValues = () => {
         output.gain.cancelScheduledValues(0);
@@ -91,16 +73,18 @@ const samplerVoice = (
                 skipSample = noteStartedTimeAgo;
             }
             
-            const sampleSource = findSampleSourceClosestToFrequency(sampleSources, frequency, velocity);
+            const sampleSource = parentSynth.sampleKitManager.selectSampleSourceFromKit(frequency, velocity);
+            
             if(!sampleSource) {
                 console.error("no sample source available");
                 return;
             }
+
             voiceState.inUse = true;
             resetBufferSource(sampleSource);
 
             if (!bufferSource) throw new Error("bufferSource not created");
-            bufferSource.playbackRate.value = frequency / sampleSource.sampleInherentFrequency;
+            bufferSource.playbackRate.value = frequency / sampleSource.frequency;
 
             output.gain.value = 0;
             timeAccumulator = absoluteStartTime;
@@ -138,9 +122,8 @@ const samplerVoice = (
         }
     } as SynthVoice;
 }
-type SamplerVoice = ReturnType<typeof samplerVoice>;
 
-export class Sampler extends Synth<EventParamsBase, SamplerVoice> implements SampleKitUser {
+export class Sampler extends Synth implements SampleKitUser {
     private velocityToStartPoint = 0;
     private adsr = [0.01, 10, 0, 0.2];
     needsFetching = true;
@@ -156,7 +139,7 @@ export class Sampler extends Synth<EventParamsBase, SamplerVoice> implements Sam
     ) {
         const sampleKitManager = chromaticSampleKitManager(audioContext, initialSamplesDefinition);
 
-        super(audioContext, (a) => samplerVoice(a, sampleKitManager.sampleSources));
+        super(audioContext, (a) => samplerVoice(a, this));
 
         this.sampleKitManager = sampleKitManager;
 

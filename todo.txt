@@ -1,5 +1,6 @@
 # Piano roll to-do
 ## Bugs
+	Recover ability to compile tauri?
 	Often playback doesn't break out of a loop whose reps. have been decreased - Maybe I should tink of loops more like reaper regions than loops
 ## GUI
 	touch (two fingers pan/zoom, hold to add note)
