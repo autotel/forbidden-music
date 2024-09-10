@@ -115,11 +115,11 @@ export default function getSynthConstructors(
     addAvailableSynth(Sampler, "Chromatic Sampler", [defaultKit]);
     addAvailableSynth(GranularSampler, "Granular Sampler", [defaultKit], false, false);
     // TODO: homologate choice of impulse response w methods on chromatic sampler
-    const impulseResponseSampleDefinitions = sampleDefinitions.filter(s => s.type === 'impulse-response').map(s => s.samples);
+    const impulseResponseSampleDefinitions = sampleDefinitions.filter(s => s.type === 'impulse-response');
     console.log("impulseResponseSampleDefinitions", impulseResponseSampleDefinitions);
     addAvailableSynth(
         ConvolutionReverbEffect,
-        "Convolver", [impulseResponseSampleDefinitions], true, false
+        "Convolver", impulseResponseSampleDefinitions, true, false
     );
 
     addAvailableSynth(KickSynth, 'KickSynth');
