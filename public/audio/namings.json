@@ -1,0 +1,79 @@
+[{
+    "path":"chromatic/bassoon",
+    "type":"chromatic",
+    "libraryName":"Bassoon",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/celtic_harp",
+    "type":"chromatic",
+    "libraryName":"Celtic Harp",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/glockenspiel",
+    "type":"chromatic",
+    "libraryName":"Glockenspiel",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/harpsichord",
+    "type":"chromatic",
+    "libraryName":"Harpsichord",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/hohner_pianet",
+    "type":"chromatic",
+    "libraryName":"Hohner Pianet",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/kankles",
+    "type":"chromatic",
+    "libraryName":"Kankles",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/nylon_strings",
+    "type":"chromatic",
+    "libraryName":"Nylon Strings",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/old_trombone",
+    "type":"chromatic",
+    "libraryName":"Old Trombone",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/test-tone",
+    "type":"chromatic",
+    "libraryName":"Test Tone",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/vibraphone",
+    "type":"chromatic",
+    "libraryName":"Vibraphone",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/violin_section",
+    "type":"chromatic",
+    "libraryName":"Violin Section",
+    "pattern":"([^_]+)_(\\d+(?:\\.*\\d+))",
+    "maps":"velocity frequency"
+},{
+    "path":"ir/airwindows",
+    "type":"impulse-response",
+    "libraryName":"AirWindows IR",
+    "pattern":"\\w+",
+    "maps":"name"
+},{
+    "path":"ir/snb",
+    "type":"impulse-response",
+    "libraryName":"SNB IR",
+    "pattern":"\\w+",
+    "maps":"name"
+}]

@@ -1,8 +1,8 @@
+// @ts-check
 const fs = require("fs");
 const path = require("path");
-const parserFactory = require("./parserFactory");
-const cdeNoteToFrequency = require("./cdeNoteToFrequency");
-const publichPath = 'public';
+const parserFactory = require("./parserFactory.cjs");
+const cdeNoteToFrequency = require("./cdeNoteToFrequency.cjs");
 
 const preventUndefined = (...values) => {
     for (let value of values) {
@@ -15,6 +15,8 @@ const preventUndefined = (...values) => {
  * @property {string} path
  * @property {string} pattern
  * @property {string} maps
+ * @property {string} [libraryName]
+ * @property {'impulse-response' | 'chromatic'} type
  */
 const audioExtensionPattern = /.(wav|aiff)$/;
 /**
@@ -22,38 +24,48 @@ const audioExtensionPattern = /.(wav|aiff)$/;
  * @param {string} remoteBaseUrl
  * @param {string} libraryName
  */
-const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
-    const kits = [];
-
-    const getKit = (kitName) => {
-        let library = kits.find(lib => lib.name === kitName);
+const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, libraryName) => {
+    const chromaticKits = [];
+    const impulseResponseKits = [];
+    /**
+     * @param {string} kitName
+     * @param {'chromatic' | 'impulse-response'} kitType
+     * @returns {Object}
+     */
+    const getKit = (kitName, kitType) => {
+        const kitList = kitType === 'chromatic' ? chromaticKits : impulseResponseKits;
+        let library = kitList.find(lib => lib.name === kitName);
         if (!library) {
             library = {
                 name: kitName,
                 fromLibrary: libraryName,
+                type: kitType,
                 samples: [],
             };
-            kits.push(library);
+            kitList.push(library);
         }
         return library;
     }
 
     for (let i = 0; i < dirsList.length; i++) {
         const dirItem = dirsList[i];
-        const files = fs.readdirSync(path.join(publichPath, dirItem.path));
+        const files = fs.readdirSync(path.join(localPublicPath, dirItem.path));
         const parser = parserFactory({
             pattern: dirItem.pattern,
             maps: dirItem.maps
         });
+        const sampleKitType = dirItem.type;
+        const kitList = sampleKitType === 'chromatic' ? chromaticKits : impulseResponseKits;
+
         for (let j = 0; j < files.length; j++) {
             const fileName = files[j];
             const nameWithoutExtension = fileName.replace(audioExtensionPattern, '');
 
             if (!fileName.match(audioExtensionPattern)) {
                 if (fileName === "readme.txt") {
-                    const library = getKit(dirItem.path);
+                    const library = getKit(dirItem.path, sampleKitType);
                     const readmePath = path.join(dirItem.path, fileName);
-                    const readme = fs.readFileSync(path.join(publichPath, readmePath), 'utf8');
+                    const readme = fs.readFileSync(path.join(localPublicPath, readmePath), 'utf8');
                     library.readme = readme;
                 } else {
                     console.log("ignoring", fileName);
@@ -62,9 +74,12 @@ const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
             }
             try {
                 let parsed = parser(nameWithoutExtension);
-
-                if (!parsed.kitName) {
-                    parsed.kitName = dirItem.path;
+                if (parsed === null) {
+                    console.error(`Could not parse ${nameWithoutExtension}`);
+                    continue;
+                }
+                if (!parsed.libraryName) {
+                    parsed.libraryName = dirItem.libraryName || dirItem.path;
                 }
 
                 if (parsed.frequency && typeof parsed.frequency === 'string') {
@@ -78,8 +93,10 @@ const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
                     if ('cdeNote' in parsed) {
                         parsed.frequency = cdeNoteToFrequency(parsed.cdeNote);
                     } else {
-                        console.error(`No frequency or cdeNote for ${fileName}`);
-                        continue;
+                        if (sampleKitType === 'chromatic') {
+                            console.error(`No frequency or cdeNote for ${fileName}`);
+                            continue;
+                        }
                     }
                 }
 
@@ -87,7 +104,7 @@ const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
 
                 if (!parsed.name) parsed.name = fileName;
 
-                const library = getKit(parsed.kitName);
+                const library = getKit(parsed.libraryName, sampleKitType);
                 library.samples.push(parsed);
             } catch (e) {
                 console.error(`Error parsing ${fileName} as ${nameWithoutExtension}: ${e.message}`);
@@ -95,7 +112,7 @@ const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
         }
     }
 
-    kits.forEach((kit) => {
+    chromaticKits.forEach((kit) => {
         const velocities_set = new Set();
         const frequencies_set = new Set();
 
@@ -106,44 +123,44 @@ const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
 
         const velocities = Array.from(velocities_set).sort((a, b) => a - b);
         const frequencies = Array.from(frequencies_set).sort((a, b) => a - b);
-        
+
         // Determine de velocity division values, they go in between each available velocity level
         let iVelocity = 0;
         let velocityRanges = [0];
         for (let velocity of velocities) {
-            if(!velocity) continue;
+            if (!velocity) continue;
             velocityRanges.push(Math.floor((iVelocity + velocity) / 2));
             iVelocity = velocity;
         }
         velocityRanges.push(127);
-        console.log({velocities});
-        console.log({velocityRanges});
-        
+        console.log({ velocities });
+        console.log({ velocityRanges });
+
         // Determine the frequency division values, they go in between each available frequency level
         let iFrequency = 0;
         let frequencyRanges = [0];
         for (let frequency of frequencies) {
-            frequencyRanges.push(Math.floor((iFrequency + frequency) / 2));
+            frequencyRanges.push((iFrequency + frequency) / 2);
             iFrequency = frequency;
         }
         frequencyRanges.push(Infinity);
 
         // Now we can build the sample list
         let samples = [];
-        for(let iSample in kit.samples) {
+        for (let iSample in kit.samples) {
             let sample = kit.samples[iSample];
             let velocity = sample.velocity;
             let frequency = sample.frequency;
             let velocityIndex = velocityRanges.findIndex((value) => value >= velocity);
             let frequencyIndex = frequencyRanges.findIndex((value) => value >= frequency);
-            let velocityStart = velocityRanges[velocityIndex - 1] || -1;
+            let velocityStart = velocityRanges[velocityIndex - 1] || 0;
             let velocityEnd = velocityRanges[velocityIndex] || 127;
             let frequencyStart = frequencyRanges[frequencyIndex - 1];
             let frequencyEnd = frequencyRanges[frequencyIndex];
 
-            
+
             try {
-                if(frequencyEnd <= frequencyStart) {
+                if (frequencyEnd <= frequencyStart) {
                     throw new Error("frequencyEnd <= frequencyStart");
                 }
                 preventUndefined(velocityStart, velocityEnd, frequencyStart, frequencyEnd);
@@ -159,11 +176,18 @@ const generateSamplesList = (dirsList, remoteBaseUrl, libraryName) => {
                 console.error(`Error parsing ${sample.name}: ${e.message}`);
             }
         }
-        
+
+        const sampleIdes = samples.map(({ path }) => path).sort();
+        const sampleIdsSet = new Set(sampleIdes);
+
+        if (sampleIdes.length !== sampleIdsSet.size) {
+            throw new Error("Duplicate sample declarations");
+        }
+
         kit.samples = samples;
 
     });
-    return kits;
+    return [...chromaticKits,...impulseResponseKits];
 }
 
 module.exports = generateSamplesList;

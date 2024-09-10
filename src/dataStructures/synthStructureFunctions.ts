@@ -1,5 +1,4 @@
 import { PatcheableType } from "../dataTypes/PatcheableTrait";
-import { abbreviate } from "../functions/abbreviate";
 import { useAutomationLaneStore } from "../store/automationLanesStore";
 import { AudioModule } from "../synth/types/AudioModule";
 import { SynthParam, SynthParamStored, isValidParam } from "../synth/types/SynthParam";

@@ -10,6 +10,10 @@
 const parserFactory = (config) => {
     const regExp = new RegExp(config.pattern);
     const keyNames = config.maps.split(/\s+/);
+    /**
+     * @param {string} input
+     * @returns {Object | null}
+     */
     return (input) => {
         const matches = input.match(regExp);
         if(matches === null) {

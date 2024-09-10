@@ -30,26 +30,39 @@ export const selectSampleSourceFromKit = (
     listener?: SampleItemChosenListenerType
 ): SampleSource | undefined => {
     if (sampleSources.length == 0) return undefined;
+    const velo127 = velocity ? Math.floor(velocity * 127) : undefined;
+
     let closestSampleSource: SampleSource = sampleSources[0];
-    if (sampleSources.length == 1) return closestSampleSource;
+    let closestSampleSourceIndex = 0;
+
+    if (sampleSources.length == 1) {
+        if (listener) listener(closestSampleSource, closestSampleSourceIndex);
+        return closestSampleSource;
+    }
+
     for (let i = 0; i < sampleSources.length; i++) {
-        const sampleSource = sampleSources[i];
+        const iSampleSource = sampleSources[i];
         if (
-            (velocity === undefined ||
-                (sampleSource.velocityStart > velocity && sampleSource.velocityEnd < velocity)
-            ) && (
-                sampleSource.frequencyStart > frequency && sampleSource.frequencyEnd < frequency
-            )
+            iSampleSource.frequencyStart <= frequency && iSampleSource.frequencyEnd > frequency
         ) {
-            if (listener) listener(sampleSource, i);
-            return sampleSource;
+            closestSampleSourceIndex = i;
+            closestSampleSource = iSampleSource;
+            if (
+                velo127 === undefined ||
+                (iSampleSource.velocityStart <= velo127 && iSampleSource.velocityEnd >= velo127)
+            ) {
+                console.log("perfect match",i);
+                break;
+            }
+
         }
     }
-    if (listener) listener(closestSampleSource, -1);
+
+    if (listener) listener(closestSampleSource, closestSampleSourceIndex);
     return closestSampleSource;
 }
 
-export class SampleSource {
+export class SampleSource implements SampleFileDefinition {
     private audioContext: AudioContext;
     sampleBuffer?: AudioBuffer;
     frequency: number;
@@ -63,7 +76,8 @@ export class SampleSource {
     isLoaded: boolean = false;
     isLoading: boolean = false;
 
-    sampleIdentifier: string;
+    path: string;
+    name: string;
 
     load = async () => {
         console.error("samplesource constructed wrong");
@@ -78,7 +92,8 @@ export class SampleSource {
         this.velocityStart = sampleDefinition.velocityStart;
         this.velocityEnd = sampleDefinition.velocityEnd;
 
-        this.sampleIdentifier = sampleDefinition.path;
+        this.path = sampleDefinition.path;
+        this.name = sampleDefinition.name;
 
         if ('velocity' in sampleDefinition) {
             this.velocity = sampleDefinition.velocity;
@@ -198,11 +213,11 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
         },
         addSampleItemChosenListener: (listener: SampleItemChosenListenerType) => {
             sampleItemChosenListeners.push(listener);
-            chosenSampleListener = (...p)=>sampleItemChosenListeners.forEach((l) => l(...p));
+            chosenSampleListener = (...p) => sampleItemChosenListeners.forEach((l) => l(...p));
         },
         removeSampleItemChosenListener: (listener: SampleItemChosenListenerType) => {
             sampleItemChosenListeners.filter(l => l !== listener);
-            if(sampleItemChosenListeners.length == 0) chosenSampleListener = undefined;
+            if (sampleItemChosenListeners.length == 0) chosenSampleListener = undefined;
         },
     };
 
