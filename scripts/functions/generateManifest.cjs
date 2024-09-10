@@ -63,7 +63,11 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) 
 
             if (!fileName.match(audioExtensionPattern)) {
                 if (fileName === "readme.txt") {
-                    const library = getKit(dirItem.path, sampleKitType);
+                    // This solution to associate readme files to a kit is suboptimal
+                    // because the success depends on the order of the files in the directory
+                    // (as long as kitName is not defined as part of the kit naming)
+                    // consider - making kitName mandatory or appending readmes afterwards
+                    const library = getKit(dirItem.kitName || dirItem.path, sampleKitType);
                     const readmePath = path.join(dirItem.path, fileName);
                     const readme = fs.readFileSync(path.join(localPublicPath, readmePath), 'utf8');
                     library.readme = readme;
