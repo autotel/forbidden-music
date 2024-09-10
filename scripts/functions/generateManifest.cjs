@@ -15,16 +15,16 @@ const preventUndefined = (...values) => {
  * @property {string} path
  * @property {string} pattern
  * @property {string} maps
- * @property {string} [libraryName]
+ * @property {string} [kitName]
  * @property {'impulse-response' | 'chromatic'} type
  */
 const audioExtensionPattern = /.(wav|aiff)$/;
 /**
  * @param {DirItem[]} dirsList
  * @param {string} remoteBaseUrl
- * @param {string} libraryName
+ * @param {string} kitName
  */
-const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, libraryName) => {
+const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) => {
     const chromaticKits = [];
     const impulseResponseKits = [];
     /**
@@ -38,7 +38,7 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, libraryNa
         if (!library) {
             library = {
                 name: kitName,
-                fromLibrary: libraryName,
+                fromLibrary: kitName,
                 type: kitType,
                 samples: [],
             };
@@ -78,8 +78,8 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, libraryNa
                     console.error(`Could not parse ${nameWithoutExtension}`);
                     continue;
                 }
-                if (!parsed.libraryName) {
-                    parsed.libraryName = dirItem.libraryName || dirItem.path;
+                if (!parsed.kitName) {
+                    parsed.kitName = dirItem.kitName || dirItem.path;
                 }
 
                 if (parsed.frequency && typeof parsed.frequency === 'string') {
@@ -104,7 +104,7 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, libraryNa
 
                 if (!parsed.name) parsed.name = fileName;
 
-                const library = getKit(parsed.libraryName, sampleKitType);
+                const library = getKit(parsed.kitName, sampleKitType);
                 library.samples.push(parsed);
             } catch (e) {
                 console.error(`Error parsing ${fileName} as ${nameWithoutExtension}: ${e.message}`);

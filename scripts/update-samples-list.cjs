@@ -15,7 +15,7 @@ const getKits = async (samplesDir) => {
     const namings = JSON.parse(
         readFileSync(resNamingPath, 'utf8')
     );
-    return generateSamplesList(namings, samplesDir , '', 'factory samples');
+    return generateSamplesList(namings, samplesDir , '/public/audio', 'factory samples');
 }
 
 function censor(key, value) {

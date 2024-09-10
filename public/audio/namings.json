@@ -1,79 +1,79 @@
 [{
     "path":"chromatic/bassoon",
     "type":"chromatic",
-    "libraryName":"Bassoon",
+    "kitName":"Bassoon",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/celtic_harp",
     "type":"chromatic",
-    "libraryName":"Celtic Harp",
+    "kitName":"Celtic Harp",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/glockenspiel",
     "type":"chromatic",
-    "libraryName":"Glockenspiel",
+    "kitName":"Glockenspiel",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/harpsichord",
     "type":"chromatic",
-    "libraryName":"Harpsichord",
+    "kitName":"Harpsichord",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/hohner_pianet",
     "type":"chromatic",
-    "libraryName":"Hohner Pianet",
+    "kitName":"Hohner Pianet",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/kankles",
     "type":"chromatic",
-    "libraryName":"Kankles",
+    "kitName":"Kankles",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/nylon_strings",
     "type":"chromatic",
-    "libraryName":"Nylon Strings",
+    "kitName":"Nylon Strings",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/old_trombone",
     "type":"chromatic",
-    "libraryName":"Old Trombone",
-    "pattern":"(\\d+(?:\\.*\\d+))",
-    "maps":"frequency"
+    "kitName":"Old Trombone",
+    "pattern":"([^_]+)_(\\d+(?:\\.*\\d+))",
+    "maps":"velocity frequency"
 },{
     "path":"chromatic/test-tone",
     "type":"chromatic",
-    "libraryName":"Test Tone",
+    "kitName":"Test Tone",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/vibraphone",
     "type":"chromatic",
-    "libraryName":"Vibraphone",
+    "kitName":"Vibraphone",
     "pattern":"(\\d+(?:\\.*\\d+))",
     "maps":"frequency"
 },{
     "path":"chromatic/violin_section",
     "type":"chromatic",
-    "libraryName":"Violin Section",
+    "kitName":"Violin Section",
     "pattern":"([^_]+)_(\\d+(?:\\.*\\d+))",
     "maps":"velocity frequency"
 },{
     "path":"ir/airwindows",
     "type":"impulse-response",
-    "libraryName":"AirWindows IR",
+    "kitName":"AirWindows IR",
     "pattern":"\\w+",
     "maps":"name"
 },{
     "path":"ir/snb",
     "type":"impulse-response",
-    "libraryName":"SNB IR",
+    "kitName":"SNB IR",
     "pattern":"\\w+",
     "maps":"name"
 }]
