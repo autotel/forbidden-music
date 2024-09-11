@@ -84,7 +84,10 @@ const samplerVoice = (
             resetBufferSource(sampleSource);
 
             if (!bufferSource) throw new Error("bufferSource not created");
-            bufferSource.playbackRate.value = frequency / sampleSource.frequency;
+            
+            if(!parentSynth.atonalParam.value) {
+                bufferSource.playbackRate.value = frequency / sampleSource.frequency;
+            }
 
             output.gain.value = 0;
             timeAccumulator = absoluteStartTime;
@@ -132,6 +135,13 @@ export class Sampler extends Synth implements SampleKitUser {
     sampleKitManager: ReturnType<typeof chromaticSampleKitManager>;
     sampleKitParam: OtherSynthParam;
     loadingProgressParam: ProgressSynthParam;
+    atonalParam = {
+        displayName: "Atonal",
+        tooltip: "When enabled, the source samples are no longer pitch-shifted; useful if the sample kit is atonal",
+        type: ParamType.boolean,
+        value: false,
+        exportable: true,
+    } as SynthParam
 
     constructor(
         audioContext: AudioContext,
@@ -150,6 +160,9 @@ export class Sampler extends Synth implements SampleKitUser {
         this.loadingProgressParam = sampleKitManager.loadingProgressParam;
 
         const parent = this;
+
+        this.params.push(this.atonalParam);
+
         this.params.push({
             displayName: "Level",
             type: ParamType.number,
@@ -167,6 +180,8 @@ export class Sampler extends Synth implements SampleKitUser {
             },
             exportable: true,
         } as SynthParam);
+
+
         this.params.push(this.sampleKitParam);
         this.params.push(this.loadingProgressParam);
 
