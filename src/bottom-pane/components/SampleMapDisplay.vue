@@ -2,10 +2,9 @@
 
 import Button from '@/components/Button.vue';
 import { frequencyToOctave } from '@/functions/toneConverters';
-import externalSampleLibrariesStore, { SampleKitDefinition } from '@/store/externalSampleLibrariesStore';
 import { SampleFileDefinition, SampleKitUser, SampleSource } from '@/synth/features/chromaticSampleKitUser';
 import { Synth } from '@/synth/types/Synth';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 const props = defineProps<{
     audioModule: Synth & SampleKitUser

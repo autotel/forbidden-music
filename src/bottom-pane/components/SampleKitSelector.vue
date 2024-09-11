@@ -20,7 +20,7 @@ const filterWord = ref('');
 const filteredOptions = computed(() => {
     console.log('for types', props.types);
     let result = externalSamplesStore.listOfAvailableSampleKits;
-
+    
     if (props.types && props.types.length > 0) {
         result = result.filter(option => {
             return props.types?.includes(option.type);
