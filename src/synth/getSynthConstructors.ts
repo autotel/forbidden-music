@@ -111,7 +111,7 @@ export default function getSynthConstructors(
     }
 
     addAvailableSynth(PlaceholderSynth, 'PlaceholderSynth');
-    const defaultKit = sampleDefinitions.find(s => s.name === 'test-tone') || sampleDefinitions[0];
+    const defaultKit = sampleDefinitions.find(s => s.name === 'Test Tone') || sampleDefinitions[0];
     addAvailableSynth(Sampler, "Chromatic Sampler", [defaultKit]);
     addAvailableSynth(GranularSampler, "Granular Sampler", [defaultKit], false, false);
     // TODO: homologate choice of impulse response w methods on chromatic sampler

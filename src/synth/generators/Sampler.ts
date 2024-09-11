@@ -149,10 +149,6 @@ export class Sampler extends Synth implements SampleKitUser {
         this.sampleKitParam = sampleKitManager.sampleKitParam;
         this.loadingProgressParam = sampleKitManager.loadingProgressParam;
 
-        setTimeout(() => {
-            this.sampleKitParam.value = initialSamplesDefinition;
-        });
-
         const parent = this;
         this.params.push({
             displayName: "Level",

@@ -17,7 +17,7 @@ await props.audioModule.waitReady;
 
 const currentData = ref<SampleSource[]>(props.audioModule.sampleKitManager.sampleSources);
 
-const currentlyHoveredSample = ref<SampleSource | null>(null);
+const currentlyHoveredSample = ref<SampleSource | null>(null); 
 const lastTriggeredSampleIndexes = ref<number[]>([]);
 const lastTriggeredSample = ref<SampleSource | null>(null);
 

@@ -38,7 +38,6 @@ await props.audioModule.waitReady;
 
 const sampleSelectOption = (option: SampleKitDefinition) => {
     props.audioModule.sampleKitParam.value = option;
-
 }
 
 </script>
@@ -71,13 +70,5 @@ const sampleSelectOption = (option: SampleKitDefinition) => {
     flex-direction: column;
     padding-right: 12px;
     width: 9em;
-}
-.sample-type-filter .taggy {
-    /* background-color: rgba(255, 255, 255, 0.288);
-    padding: 0em 0.4em;
-    margin: 0.2em;
-    margin-left: 0;
-    border-radius: 0.2em;
-    display: inline-block; */
 }
 </style>

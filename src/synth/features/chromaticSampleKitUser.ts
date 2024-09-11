@@ -40,7 +40,7 @@ export const selectSampleSourceFromKit = (
 ): SampleSource | undefined => {
     if (sampleSources.length == 0) return undefined;
     const velo127 = velocity ? Math.floor(velocity * 127) : 127;
-    
+
     let closestSampleSource = sampleSources[0];
     let closestIndex = 0;
     let closestDistance: number = Infinity;
@@ -55,7 +55,7 @@ export const selectSampleSourceFromKit = (
     for (let i = 0; i < sampleSources.length; i++) {
         const iSampleSource = sampleSources[i];
         // thus allowing usage of partially loaded instrments
-        if(iSampleSource.isLoaded === false) continue;
+        if (iSampleSource.isLoaded === false) continue;
 
         const isFrequencyMatch = iSampleSource.frequencyStart < frequency && frequency < iSampleSource.frequencyEnd;
 
@@ -94,7 +94,9 @@ export const selectSampleSourceFromKit = (
             }
         }
     }
-
+    if (!closestSampleSource.isLoaded) {
+        return undefined;
+    }
     if (listener) listener(closestSampleSource, closestIndex);
     return closestSampleSource;
 }
@@ -144,15 +146,15 @@ export class SampleSource implements SampleFileDefinition {
             const response = await fetch(sampleDefinition.path, {
                 cache: "default",
             })
-            console.groupCollapsed("header: " + sampleDefinition.path);
-            response.headers.forEach((value, key) => {
-                if (key.match('date')) {
-                    console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
-                } else if (key.match('cache-control')) {
-                    console.log(key + ":", value);
-                }
-            });
-            console.groupEnd();
+            // console.groupCollapsed("header: " + sampleDefinition.path);
+            // response.headers.forEach((value, key) => {
+            //     if (key.match('date')) {
+            //         console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
+            //     } else if (key.match('cache-control')) {
+            //         console.log(key + ":", value);
+            //     }
+            // });
+            // console.groupEnd();
             const arrayBuffer = await response.arrayBuffer();
             this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             this.isLoaded = true;
@@ -164,10 +166,26 @@ export class SampleSource implements SampleFileDefinition {
 export type SampleKitChangedListenerType = (sampleKitDef: SampleKitDefinition) => void;
 export type SampleItemChosenListenerType = (sampleSource: SampleSource, index: number) => void;
 
+const serializeSampleKit = (sampleKitDef: SampleKitDefinition) => {
+    return {
+        name: sampleKitDef.name,
+        readme: sampleKitDef.readme,
+        samples: sampleKitDef.samples.map(({
+            path, frequency,
+            frequencyStart, frequencyEnd,
+            velocityStart, velocityEnd
+        }) => ({
+            path, frequency,
+            frequencyStart, frequencyEnd,
+            velocityStart, velocityEnd
+        }))
+    } as SampleKitDefinition;
+}
+
 export const chromaticSampleKitManager = (audioContext: AudioContext, initialSamplesDefinition: SampleKitDefinition) => {
     const sampleKitChangedListeners: SampleKitChangedListenerType[] = [];
     const sampleItemChosenListeners: SampleItemChosenListenerType[] = [];
-    let lastSampleDefinition = initialSamplesDefinition;
+
     const loadingProgressParam = {
         displayName: "Loading progress",
         type: ParamType.progress,
@@ -182,20 +200,9 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
             return this._v;
         },
         set value(value: SampleKitDefinition) {
-            this._v = {
-                name: value.name,
-                samples: value.samples.map(({
-                    path, frequency,
-                    frequencyStart, frequencyEnd,
-                    velocityStart, velocityEnd
-                }) => ({
-                    path, frequency,
-                    frequencyStart, frequencyEnd,
-                    velocityStart, velocityEnd
-                }))
-            } as SampleKitDefinition;
-            if (value.readme) this._v.readme = value.readme;
-            changeSampleDefinition(this._v);
+            changeSampleDefinition(value);
+            // register what would be saved as part of the project
+            this._v = serializeSampleKit(value);
             lastSampleDefinition = value;
         },
         displayName: "Sample kit",
@@ -203,21 +210,30 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
         exportable: true,
     } as OtherSynthParam;
 
-    const sampleSources: SampleSource[] = [];
+    let sampleSources: SampleSource[] = [];
+    let lastSampleDefinition = initialSamplesDefinition;
+    
+    const everyPromise: Promise<any>[] = [];
+    const waitClearUpPromises = async () => {
+        await Promise.all(everyPromise);
+        everyPromise.length = 0;
+    }
 
     const changeSampleDefinition = async (sampleKitDef: SampleKitDefinition) => {
-        const samples = lastSampleDefinition.samples;
+        await waitClearUpPromises();
+        console.log("changing sample definition to ", sampleKitDef.name);
+        const samples = sampleKitDef.samples;
         lastSampleDefinition = sampleKitDef;
 
-        sampleSources.splice(
-            0, sampleSources.length,
-            ...samples.map((sampleDefinition) => {
-                return new SampleSource(audioContext, sampleDefinition);
-            })
-        )
         loadingProgressParam.value = 0;
         const loadingProgressStep = 100 / samples.length;
-        const everyPromise: Promise<any>[] = [];
+
+        sampleSources = samples.map((sampleDefinition) => {
+            return new SampleSource(audioContext, sampleDefinition);
+        })
+
+        sampleKitChangedListeners.forEach((listener) => listener(sampleKitDef));
+
         sampleSources.forEach(async (sampleSource) => {
             if (sampleSource.isLoading || sampleSource.isLoaded) return;
             const promise = sampleSource.load();
@@ -225,8 +241,8 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
             await promise;
             loadingProgressParam.value += loadingProgressStep;
         });
+
         await Promise.all(everyPromise);
-        sampleKitChangedListeners.forEach((listener) => listener(sampleKitDef));
     }
 
     sampleKitParam.value = initialSamplesDefinition;
@@ -237,7 +253,7 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
         get lastSampleDefinition() { return lastSampleDefinition },
         sampleKitParam,
         loadingProgressParam,
-        sampleSources,
+        get sampleSources() { return sampleSources; },
         changeSampleDefinition,
         selectSampleSourceFromKit: (frequency: number, velocity?: number) => {
             return selectSampleSourceFromKit(sampleSources, frequency, velocity, chosenSampleListener);
