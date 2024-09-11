@@ -5,13 +5,13 @@ import { ref } from "vue";
 
 // { library [ kits [ samples ] ]  }
 
-
+export type SampleType = 'chromatic' | 'atonal' | 'impulse-response';
 /**
  * A list of samples to distribute accross
  * frequencies, with some metadata
  */
 export interface SampleKitDefinition {
-    type?: 'chromatic' | 'atonal';
+    type: SampleType;
     name: string,
     exclusive?: boolean;
     onlyLocal?: boolean;
@@ -35,13 +35,13 @@ export default defineStore('externalSampleLibrariesStore', () => {
         ...factorySampleKits,
     ] as SampleKitDefinition[]);
 
-    const checkLibraryDef = (def: unknown): SampleKitDefinition => {
+    const checkLibraryDef = (def: Object): SampleKitDefinition => {
         if (def === null) {
             throw new Error('Library definition is null');
         }
 
         // @ts-ignore
-        requireAttributes(def, ['name', 'samples', 'fromLibrary'], 'Library definition');
+        requireAttributes(def, ['name', 'samples', 'fromLibrary', 'type'], 'Library definition');
 
         if (typeof def !== 'object') {
             throw new Error('Library definition must be an object');
@@ -65,7 +65,13 @@ export default defineStore('externalSampleLibrariesStore', () => {
                 throw new Error('Sample definition must be an object');
             }
             // @ts-ignore
-            requireAttributes(s, ['frequency', 'path', 'name', 'frequencyStart', 'frequencyEnd', 'velocityStart', 'velocityEnd'], def.name);
+            requireAttributes(s, ['path', 'name'], def.name);
+
+            // @ts-ignore
+            if (def.type === 'chromatic') {
+                // @ts-ignore
+                requireAttributes(s, ['frequency', 'frequencyStart', 'frequencyEnd', 'velocityStart', 'velocityEnd'], def.name);
+            }
 
             if ('frequencyEnd' in s && s.frequencyEnd === null) s.frequencyEnd = Infinity;
             if ('velocityEnd' in s && s.velocityEnd === null) s.velocityEnd = Infinity;
@@ -94,7 +100,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
         listOfAvailableSampleKits.value = listOfAvailableSampleKits.value.filter(kit => !kit.onlyLocal);
     }
 
-    addLibraryUrl('http://127.0.0.1:3010/generate-samples');
+    addLibraryUrl('http://127.0.0.1:3010/samples');
 
     return {
         listOfExternalLibs,

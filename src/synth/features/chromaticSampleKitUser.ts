@@ -23,6 +23,15 @@ export interface SampleKitUser {
     sampleKitManager: ReturnType<typeof chromaticSampleKitManager>;
 }
 
+const isCloserManhattan = (source: [number, number], target: [number, number], currentClosestDistance: number) => {
+    const sourceDistance = Math.abs(source[0] - target[0]) + Math.abs(source[1] - target[1]);
+    if (sourceDistance < currentClosestDistance) {
+        return sourceDistance;
+    } else {
+        return false;
+    }
+}
+
 export const selectSampleSourceFromKit = (
     sampleSources: SampleSource[],
     frequency: number,
@@ -30,34 +39,63 @@ export const selectSampleSourceFromKit = (
     listener?: SampleItemChosenListenerType
 ): SampleSource | undefined => {
     if (sampleSources.length == 0) return undefined;
-    const velo127 = velocity ? Math.floor(velocity * 127) : undefined;
+    const velo127 = velocity ? Math.floor(velocity * 127) : 127;
+    
+    let closestSampleSource = sampleSources[0];
+    let closestIndex = 0;
+    let closestDistance: number = Infinity;
 
-    let closestSampleSource: SampleSource = sampleSources[0];
-    let closestSampleSourceIndex = 0;
+    let frequencyAlreadyMatched = false;
 
     if (sampleSources.length == 1) {
-        if (listener) listener(closestSampleSource, closestSampleSourceIndex);
+        if (listener) listener(closestSampleSource, closestIndex);
         return closestSampleSource;
     }
 
     for (let i = 0; i < sampleSources.length; i++) {
         const iSampleSource = sampleSources[i];
-        if (
-            iSampleSource.frequencyStart <= frequency && iSampleSource.frequencyEnd > frequency
-        ) {
-            closestSampleSourceIndex = i;
-            closestSampleSource = iSampleSource;
-            if (
-                velo127 === undefined ||
-                (iSampleSource.velocityStart <= velo127 && iSampleSource.velocityEnd >= velo127)
-            ) {
-                break;
-            }
+        // thus allowing usage of partially loaded instrments
+        if(iSampleSource.isLoaded === false) continue;
 
+        const isFrequencyMatch = iSampleSource.frequencyStart < frequency && frequency < iSampleSource.frequencyEnd;
+
+        // when we find matching frequency, we are happy
+        // we simply find better matching velocity
+        if (isFrequencyMatch) {
+            frequencyAlreadyMatched = true;
+            closestSampleSource = iSampleSource;
+            closestIndex = i;
+        }
+
+        const isPerfectMatch = (
+            isFrequencyMatch &&
+            (iSampleSource.velocityStart < velo127 && velo127 <= iSampleSource.velocityEnd)
+        );
+
+        if (isPerfectMatch) {
+            if (listener) listener(iSampleSource, i);
+            return iSampleSource;
+        }
+        // worst case scenario match
+        if (!frequencyAlreadyMatched) {
+            const iFrequency = iSampleSource.frequency;
+            const iVelo127 = iSampleSource.velocity || 127;
+
+            const isTheClosest = isCloserManhattan(
+                [iFrequency, iVelo127],
+                [frequency, velo127],
+                closestDistance
+            );
+
+            if (isTheClosest !== false) {
+                closestDistance = isTheClosest;
+                closestSampleSource = iSampleSource;
+                closestIndex = i;
+            }
         }
     }
 
-    if (listener) listener(closestSampleSource, closestSampleSourceIndex);
+    if (listener) listener(closestSampleSource, closestIndex);
     return closestSampleSource;
 }
 

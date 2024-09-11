@@ -30,7 +30,7 @@ const width = 'auto';
 </script>
 <template>
     <div :style="{ width }" class="layout">
-        <SampleKitSelector :audioModule="audioModule" />
+        <SampleKitSelector :audioModule="audioModule" :types="['chromatic']" />
         <div class="group" style="width: 10em">
             <template v-for="param in audioModule.params">
                 <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />

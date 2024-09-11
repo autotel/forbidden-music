@@ -31,7 +31,7 @@ const width = 'auto';
 </script>
 <template>
     <div :style="{ width }" class="layout">
-        <SampleKitSelector :audioModule="audioModule" />
+        <SampleKitSelector :audioModule="audioModule" :types="['chromatic']" />
         <SampleMapDisplay :audioModule="audioModule" />
         <div class="group" style="width: 10em">
             <template v-for="param in audioModule.params">

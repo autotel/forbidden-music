@@ -7,7 +7,7 @@ export default [
       {
         "frequency": 109.974,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/109.974.wav",
+        "path": "audio/chromatic/bassoon/109.974.wav",
         "name": "109.974.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -17,7 +17,7 @@ export default [
       {
         "frequency": 109.994,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/109.994.wav",
+        "path": "audio/chromatic/bassoon/109.994.wav",
         "name": "109.994.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -27,7 +27,7 @@ export default [
       {
         "frequency": 116.531,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/116.531.wav",
+        "path": "audio/chromatic/bassoon/116.531.wav",
         "name": "116.531.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -37,7 +37,7 @@ export default [
       {
         "frequency": 116.566,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/116.566.wav",
+        "path": "audio/chromatic/bassoon/116.566.wav",
         "name": "116.566.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -47,7 +47,7 @@ export default [
       {
         "frequency": 130.788,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/130.788.wav",
+        "path": "audio/chromatic/bassoon/130.788.wav",
         "name": "130.788.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -57,7 +57,7 @@ export default [
       {
         "frequency": 130.811,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/130.811.wav",
+        "path": "audio/chromatic/bassoon/130.811.wav",
         "name": "130.811.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -67,7 +67,7 @@ export default [
       {
         "frequency": 196.049,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/196.049.wav",
+        "path": "audio/chromatic/bassoon/196.049.wav",
         "name": "196.049.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -77,7 +77,7 @@ export default [
       {
         "frequency": 196.061,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/196.061.wav",
+        "path": "audio/chromatic/bassoon/196.061.wav",
         "name": "196.061.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -87,7 +87,7 @@ export default [
       {
         "frequency": 261.636,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/261.636.wav",
+        "path": "audio/chromatic/bassoon/261.636.wav",
         "name": "261.636.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -97,7 +97,7 @@ export default [
       {
         "frequency": 261.675,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/261.675.wav",
+        "path": "audio/chromatic/bassoon/261.675.wav",
         "name": "261.675.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -107,7 +107,7 @@ export default [
       {
         "frequency": 311.232,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/311.232.wav",
+        "path": "audio/chromatic/bassoon/311.232.wav",
         "name": "311.232.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -117,7 +117,7 @@ export default [
       {
         "frequency": 415.313,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/415.313.wav",
+        "path": "audio/chromatic/bassoon/415.313.wav",
         "name": "415.313.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -127,7 +127,7 @@ export default [
       {
         "frequency": 415.412,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/415.412.wav",
+        "path": "audio/chromatic/bassoon/415.412.wav",
         "name": "415.412.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -137,7 +137,7 @@ export default [
       {
         "frequency": 439.937,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/439.937.wav",
+        "path": "audio/chromatic/bassoon/439.937.wav",
         "name": "439.937.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -147,7 +147,7 @@ export default [
       {
         "frequency": 440.037,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/440.037.wav",
+        "path": "audio/chromatic/bassoon/440.037.wav",
         "name": "440.037.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -157,7 +157,7 @@ export default [
       {
         "frequency": 523.401,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/523.401.wav",
+        "path": "audio/chromatic/bassoon/523.401.wav",
         "name": "523.401.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -167,7 +167,7 @@ export default [
       {
         "frequency": 523.406,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/523.406.wav",
+        "path": "audio/chromatic/bassoon/523.406.wav",
         "name": "523.406.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -177,7 +177,7 @@ export default [
       {
         "frequency": 58.265,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/58.265.wav",
+        "path": "audio/chromatic/bassoon/58.265.wav",
         "name": "58.265.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -187,7 +187,7 @@ export default [
       {
         "frequency": 58.267,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/58.267.wav",
+        "path": "audio/chromatic/bassoon/58.267.wav",
         "name": "58.267.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -197,7 +197,7 @@ export default [
       {
         "frequency": 622.432,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/622.432.wav",
+        "path": "audio/chromatic/bassoon/622.432.wav",
         "name": "622.432.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -207,7 +207,7 @@ export default [
       {
         "frequency": 623.396,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/623.396.wav",
+        "path": "audio/chromatic/bassoon/623.396.wav",
         "name": "623.396.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -217,7 +217,7 @@ export default [
       {
         "frequency": 69.28,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/69.280.wav",
+        "path": "audio/chromatic/bassoon/69.280.wav",
         "name": "69.280.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -227,7 +227,7 @@ export default [
       {
         "frequency": 69.29,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/69.290.wav",
+        "path": "audio/chromatic/bassoon/69.290.wav",
         "name": "69.290.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -237,7 +237,7 @@ export default [
       {
         "frequency": 87.296,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/87.296.wav",
+        "path": "audio/chromatic/bassoon/87.296.wav",
         "name": "87.296.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -247,7 +247,7 @@ export default [
       {
         "frequency": 87.31,
         "kitName": "Bassoon",
-        "path": "/public/audio/chromatic/bassoon/87.310.wav",
+        "path": "audio/chromatic/bassoon/87.310.wav",
         "name": "87.310.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -265,7 +265,7 @@ export default [
       {
         "frequency": 103.703,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/103.703.wav",
+        "path": "audio/chromatic/celtic_harp/103.703.wav",
         "name": "103.703.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -275,7 +275,7 @@ export default [
       {
         "frequency": 1052.71,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/1052.710.wav",
+        "path": "audio/chromatic/celtic_harp/1052.710.wav",
         "name": "1052.710.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -285,7 +285,7 @@ export default [
       {
         "frequency": 116.091,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/116.091.wav",
+        "path": "audio/chromatic/celtic_harp/116.091.wav",
         "name": "116.091.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -295,7 +295,7 @@ export default [
       {
         "frequency": 1187.651,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/1187.651.wav",
+        "path": "audio/chromatic/celtic_harp/1187.651.wav",
         "name": "1187.651.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -305,7 +305,7 @@ export default [
       {
         "frequency": 1249.631,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/1249.631.wav",
+        "path": "audio/chromatic/celtic_harp/1249.631.wav",
         "name": "1249.631.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -315,7 +315,7 @@ export default [
       {
         "frequency": 130.278,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/130.278.wav",
+        "path": "audio/chromatic/celtic_harp/130.278.wav",
         "name": "130.278.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -325,7 +325,7 @@ export default [
       {
         "frequency": 146.869,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/146.869.wav",
+        "path": "audio/chromatic/celtic_harp/146.869.wav",
         "name": "146.869.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -335,7 +335,7 @@ export default [
       {
         "frequency": 155.713,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/155.713.wav",
+        "path": "audio/chromatic/celtic_harp/155.713.wav",
         "name": "155.713.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -345,7 +345,7 @@ export default [
       {
         "frequency": 1572.673,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/1572.673.wav",
+        "path": "audio/chromatic/celtic_harp/1572.673.wav",
         "name": "1572.673.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -355,7 +355,7 @@ export default [
       {
         "frequency": 175.645,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/175.645.wav",
+        "path": "audio/chromatic/celtic_harp/175.645.wav",
         "name": "175.645.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -365,7 +365,7 @@ export default [
       {
         "frequency": 1773.146,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/1773.146.wav",
+        "path": "audio/chromatic/celtic_harp/1773.146.wav",
         "name": "1773.146.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -375,7 +375,7 @@ export default [
       {
         "frequency": 196.602,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/196.602.wav",
+        "path": "audio/chromatic/celtic_harp/196.602.wav",
         "name": "196.602.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -385,7 +385,7 @@ export default [
       {
         "frequency": 208.509,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/208.509.wav",
+        "path": "audio/chromatic/celtic_harp/208.509.wav",
         "name": "208.509.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -395,7 +395,7 @@ export default [
       {
         "frequency": 233.9,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/233.900.wav",
+        "path": "audio/chromatic/celtic_harp/233.900.wav",
         "name": "233.900.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -405,7 +405,7 @@ export default [
       {
         "frequency": 262.529,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/262.529.wav",
+        "path": "audio/chromatic/celtic_harp/262.529.wav",
         "name": "262.529.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -415,7 +415,7 @@ export default [
       {
         "frequency": 294.405,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/294.405.wav",
+        "path": "audio/chromatic/celtic_harp/294.405.wav",
         "name": "294.405.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -425,7 +425,7 @@ export default [
       {
         "frequency": 313.642,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/313.642.wav",
+        "path": "audio/chromatic/celtic_harp/313.642.wav",
         "name": "313.642.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -435,7 +435,7 @@ export default [
       {
         "frequency": 347.901,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/347.901.wav",
+        "path": "audio/chromatic/celtic_harp/347.901.wav",
         "name": "347.901.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -445,7 +445,7 @@ export default [
       {
         "frequency": 391.864,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/391.864.wav",
+        "path": "audio/chromatic/celtic_harp/391.864.wav",
         "name": "391.864.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -455,7 +455,7 @@ export default [
       {
         "frequency": 417.106,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/417.106.wav",
+        "path": "audio/chromatic/celtic_harp/417.106.wav",
         "name": "417.106.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -465,7 +465,7 @@ export default [
       {
         "frequency": 468.759,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/468.759.wav",
+        "path": "audio/chromatic/celtic_harp/468.759.wav",
         "name": "468.759.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -475,7 +475,7 @@ export default [
       {
         "frequency": 524.435,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/524.435.wav",
+        "path": "audio/chromatic/celtic_harp/524.435.wav",
         "name": "524.435.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -485,7 +485,7 @@ export default [
       {
         "frequency": 588.693,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/588.693.wav",
+        "path": "audio/chromatic/celtic_harp/588.693.wav",
         "name": "588.693.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -495,7 +495,7 @@ export default [
       {
         "frequency": 626.848,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/626.848.wav",
+        "path": "audio/chromatic/celtic_harp/626.848.wav",
         "name": "626.848.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -505,7 +505,7 @@ export default [
       {
         "frequency": 65.093,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/65.093.wav",
+        "path": "audio/chromatic/celtic_harp/65.093.wav",
         "name": "65.093.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -515,7 +515,7 @@ export default [
       {
         "frequency": 699.581,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/699.581.wav",
+        "path": "audio/chromatic/celtic_harp/699.581.wav",
         "name": "699.581.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -525,7 +525,7 @@ export default [
       {
         "frequency": 73.295,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/73.295.wav",
+        "path": "audio/chromatic/celtic_harp/73.295.wav",
         "name": "73.295.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -535,7 +535,7 @@ export default [
       {
         "frequency": 77.6,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/77.600.wav",
+        "path": "audio/chromatic/celtic_harp/77.600.wav",
         "name": "77.600.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -545,7 +545,7 @@ export default [
       {
         "frequency": 787.319,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/787.319.wav",
+        "path": "audio/chromatic/celtic_harp/787.319.wav",
         "name": "787.319.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -555,7 +555,7 @@ export default [
       {
         "frequency": 833.92,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/833.920.wav",
+        "path": "audio/chromatic/celtic_harp/833.920.wav",
         "name": "833.920.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -565,7 +565,7 @@ export default [
       {
         "frequency": 87.27,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/87.270.wav",
+        "path": "audio/chromatic/celtic_harp/87.270.wav",
         "name": "87.270.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -575,7 +575,7 @@ export default [
       {
         "frequency": 936.842,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/936.842.wav",
+        "path": "audio/chromatic/celtic_harp/936.842.wav",
         "name": "936.842.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -585,7 +585,7 @@ export default [
       {
         "frequency": 97.635,
         "kitName": "Celtic Harp",
-        "path": "/public/audio/chromatic/celtic_harp/97.635.wav",
+        "path": "audio/chromatic/celtic_harp/97.635.wav",
         "name": "97.635.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -603,7 +603,7 @@ export default [
       {
         "frequency": 1174.42,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1174.42.wav",
+        "path": "audio/chromatic/glockenspiel/1174.42.wav",
         "name": "1174.42.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -613,7 +613,7 @@ export default [
       {
         "frequency": 1318.6,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1318.60-001.wav",
+        "path": "audio/chromatic/glockenspiel/1318.60-001.wav",
         "name": "1318.60-001.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -623,7 +623,7 @@ export default [
       {
         "frequency": 1318.6,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1318.60-002.wav",
+        "path": "audio/chromatic/glockenspiel/1318.60-002.wav",
         "name": "1318.60-002.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -633,7 +633,7 @@ export default [
       {
         "frequency": 1318.88,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1318.88.wav",
+        "path": "audio/chromatic/glockenspiel/1318.88.wav",
         "name": "1318.88.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -643,7 +643,7 @@ export default [
       {
         "frequency": 1393.99,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1393.99.wav",
+        "path": "audio/chromatic/glockenspiel/1393.99.wav",
         "name": "1393.99.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -653,7 +653,7 @@ export default [
       {
         "frequency": 1477.46,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1477.46.wav",
+        "path": "audio/chromatic/glockenspiel/1477.46.wav",
         "name": "1477.46.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -663,7 +663,7 @@ export default [
       {
         "frequency": 1574.38,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1574.38.wav",
+        "path": "audio/chromatic/glockenspiel/1574.38.wav",
         "name": "1574.38.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -673,7 +673,7 @@ export default [
       {
         "frequency": 1760.71,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1760.71.wav",
+        "path": "audio/chromatic/glockenspiel/1760.71.wav",
         "name": "1760.71.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -683,7 +683,7 @@ export default [
       {
         "frequency": 1767.76,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1767.76.wav",
+        "path": "audio/chromatic/glockenspiel/1767.76.wav",
         "name": "1767.76.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -693,7 +693,7 @@ export default [
       {
         "frequency": 1977.79,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/1977.79.wav",
+        "path": "audio/chromatic/glockenspiel/1977.79.wav",
         "name": "1977.79.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -703,7 +703,7 @@ export default [
       {
         "frequency": 2096.57,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/2096.57.wav",
+        "path": "audio/chromatic/glockenspiel/2096.57.wav",
         "name": "2096.57.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -713,7 +713,7 @@ export default [
       {
         "frequency": 2349.07,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/2349.07.wav",
+        "path": "audio/chromatic/glockenspiel/2349.07.wav",
         "name": "2349.07.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -723,7 +723,7 @@ export default [
       {
         "frequency": 2639.74,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/2639.74.wav",
+        "path": "audio/chromatic/glockenspiel/2639.74.wav",
         "name": "2639.74.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -733,7 +733,7 @@ export default [
       {
         "frequency": 2798.45,
         "kitName": "Glockenspiel",
-        "path": "/public/audio/chromatic/glockenspiel/2798.45.wav",
+        "path": "audio/chromatic/glockenspiel/2798.45.wav",
         "name": "2798.45.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -751,7 +751,7 @@ export default [
       {
         "frequency": 103.881,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/103.881.wav",
+        "path": "audio/chromatic/harpsichord/103.881.wav",
         "name": "103.881.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -761,7 +761,7 @@ export default [
       {
         "frequency": 1051.782,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/1051.782.wav",
+        "path": "audio/chromatic/harpsichord/1051.782.wav",
         "name": "1051.782.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -771,7 +771,7 @@ export default [
       {
         "frequency": 1116.059,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/1116.059.wav",
+        "path": "audio/chromatic/harpsichord/1116.059.wav",
         "name": "1116.059.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -781,7 +781,7 @@ export default [
       {
         "frequency": 116.627,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/116.627.wav",
+        "path": "audio/chromatic/harpsichord/116.627.wav",
         "name": "116.627.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -791,7 +791,7 @@ export default [
       {
         "frequency": 123.996,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/123.996.wav",
+        "path": "audio/chromatic/harpsichord/123.996.wav",
         "name": "123.996.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -801,7 +801,7 @@ export default [
       {
         "frequency": 1251.025,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/1251.025.wav",
+        "path": "audio/chromatic/harpsichord/1251.025.wav",
         "name": "1251.025.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -811,7 +811,7 @@ export default [
       {
         "frequency": 130.973,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/130.973.wav",
+        "path": "audio/chromatic/harpsichord/130.973.wav",
         "name": "130.973.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -821,7 +821,7 @@ export default [
       {
         "frequency": 1325.688,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/1325.688.wav",
+        "path": "audio/chromatic/harpsichord/1325.688.wav",
         "name": "1325.688.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -831,7 +831,7 @@ export default [
       {
         "frequency": 139.255,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/139.255.wav",
+        "path": "audio/chromatic/harpsichord/139.255.wav",
         "name": "139.255.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -841,7 +841,7 @@ export default [
       {
         "frequency": 147.188,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/147.188.wav",
+        "path": "audio/chromatic/harpsichord/147.188.wav",
         "name": "147.188.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -851,7 +851,7 @@ export default [
       {
         "frequency": 155.736,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/155.736.wav",
+        "path": "audio/chromatic/harpsichord/155.736.wav",
         "name": "155.736.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -861,7 +861,7 @@ export default [
       {
         "frequency": 165.402,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/165.402.wav",
+        "path": "audio/chromatic/harpsichord/165.402.wav",
         "name": "165.402.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -871,7 +871,7 @@ export default [
       {
         "frequency": 175.673,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/175.673.wav",
+        "path": "audio/chromatic/harpsichord/175.673.wav",
         "name": "175.673.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -881,7 +881,7 @@ export default [
       {
         "frequency": 185.79,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/185.790.wav",
+        "path": "audio/chromatic/harpsichord/185.790.wav",
         "name": "185.790.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -891,7 +891,7 @@ export default [
       {
         "frequency": 196.909,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/196.909.wav",
+        "path": "audio/chromatic/harpsichord/196.909.wav",
         "name": "196.909.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -901,7 +901,7 @@ export default [
       {
         "frequency": 208.701,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/208.701.wav",
+        "path": "audio/chromatic/harpsichord/208.701.wav",
         "name": "208.701.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -911,7 +911,7 @@ export default [
       {
         "frequency": 221.173,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/221.173.wav",
+        "path": "audio/chromatic/harpsichord/221.173.wav",
         "name": "221.173.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -921,7 +921,7 @@ export default [
       {
         "frequency": 234.178,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/234.178.wav",
+        "path": "audio/chromatic/harpsichord/234.178.wav",
         "name": "234.178.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -931,7 +931,7 @@ export default [
       {
         "frequency": 263.128,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/263.128.wav",
+        "path": "audio/chromatic/harpsichord/263.128.wav",
         "name": "263.128.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -941,7 +941,7 @@ export default [
       {
         "frequency": 278.85,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/278.850.wav",
+        "path": "audio/chromatic/harpsichord/278.850.wav",
         "name": "278.850.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -951,7 +951,7 @@ export default [
       {
         "frequency": 295.138,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/295.138.wav",
+        "path": "audio/chromatic/harpsichord/295.138.wav",
         "name": "295.138.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -961,7 +961,7 @@ export default [
       {
         "frequency": 312.585,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/312.585.wav",
+        "path": "audio/chromatic/harpsichord/312.585.wav",
         "name": "312.585.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -971,7 +971,7 @@ export default [
       {
         "frequency": 331.773,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/331.773.wav",
+        "path": "audio/chromatic/harpsichord/331.773.wav",
         "name": "331.773.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -981,7 +981,7 @@ export default [
       {
         "frequency": 351.375,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/351.375.wav",
+        "path": "audio/chromatic/harpsichord/351.375.wav",
         "name": "351.375.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -991,7 +991,7 @@ export default [
       {
         "frequency": 372.253,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/372.253.wav",
+        "path": "audio/chromatic/harpsichord/372.253.wav",
         "name": "372.253.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1001,7 +1001,7 @@ export default [
       {
         "frequency": 394.609,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/394.609.wav",
+        "path": "audio/chromatic/harpsichord/394.609.wav",
         "name": "394.609.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1011,7 +1011,7 @@ export default [
       {
         "frequency": 418.5,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/418.500.wav",
+        "path": "audio/chromatic/harpsichord/418.500.wav",
         "name": "418.500.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1021,7 +1021,7 @@ export default [
       {
         "frequency": 443.635,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/443.635.wav",
+        "path": "audio/chromatic/harpsichord/443.635.wav",
         "name": "443.635.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1031,7 +1031,7 @@ export default [
       {
         "frequency": 470.256,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/470.256.wav",
+        "path": "audio/chromatic/harpsichord/470.256.wav",
         "name": "470.256.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1041,7 +1041,7 @@ export default [
       {
         "frequency": 497.473,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/497.473.wav",
+        "path": "audio/chromatic/harpsichord/497.473.wav",
         "name": "497.473.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1051,7 +1051,7 @@ export default [
       {
         "frequency": 527.569,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/527.569.wav",
+        "path": "audio/chromatic/harpsichord/527.569.wav",
         "name": "527.569.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1061,7 +1061,7 @@ export default [
       {
         "frequency": 55.083,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/55.083.wav",
+        "path": "audio/chromatic/harpsichord/55.083.wav",
         "name": "55.083.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1071,7 +1071,7 @@ export default [
       {
         "frequency": 557.49,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/557.490.wav",
+        "path": "audio/chromatic/harpsichord/557.490.wav",
         "name": "557.490.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1081,7 +1081,7 @@ export default [
       {
         "frequency": 591.678,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/591.678.wav",
+        "path": "audio/chromatic/harpsichord/591.678.wav",
         "name": "591.678.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1091,7 +1091,7 @@ export default [
       {
         "frequency": 627.252,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/627.252.wav",
+        "path": "audio/chromatic/harpsichord/627.252.wav",
         "name": "627.252.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1101,7 +1101,7 @@ export default [
       {
         "frequency": 663.58,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/663.580.wav",
+        "path": "audio/chromatic/harpsichord/663.580.wav",
         "name": "663.580.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1111,7 +1111,7 @@ export default [
       {
         "frequency": 703.724,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/703.724.wav",
+        "path": "audio/chromatic/harpsichord/703.724.wav",
         "name": "703.724.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1121,7 +1121,7 @@ export default [
       {
         "frequency": 742.681,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/742.681.wav",
+        "path": "audio/chromatic/harpsichord/742.681.wav",
         "name": "742.681.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1131,7 +1131,7 @@ export default [
       {
         "frequency": 788.794,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/788.794.wav",
+        "path": "audio/chromatic/harpsichord/788.794.wav",
         "name": "788.794.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1141,7 +1141,7 @@ export default [
       {
         "frequency": 82.682,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/82.682.wav",
+        "path": "audio/chromatic/harpsichord/82.682.wav",
         "name": "82.682.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1151,7 +1151,7 @@ export default [
       {
         "frequency": 834.382,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/834.382.wav",
+        "path": "audio/chromatic/harpsichord/834.382.wav",
         "name": "834.382.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1161,7 +1161,7 @@ export default [
       {
         "frequency": 87.576,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/87.576.wav",
+        "path": "audio/chromatic/harpsichord/87.576.wav",
         "name": "87.576.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1171,7 +1171,7 @@ export default [
       {
         "frequency": 886.423,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/886.423.wav",
+        "path": "audio/chromatic/harpsichord/886.423.wav",
         "name": "886.423.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1181,7 +1181,7 @@ export default [
       {
         "frequency": 936.126,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/936.126.wav",
+        "path": "audio/chromatic/harpsichord/936.126.wav",
         "name": "936.126.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1191,7 +1191,7 @@ export default [
       {
         "frequency": 98.303,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/98.303.wav",
+        "path": "audio/chromatic/harpsichord/98.303.wav",
         "name": "98.303.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1201,7 +1201,7 @@ export default [
       {
         "frequency": 994.722,
         "kitName": "Harpsichord",
-        "path": "/public/audio/chromatic/harpsichord/994.722.wav",
+        "path": "audio/chromatic/harpsichord/994.722.wav",
         "name": "994.722.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1219,7 +1219,7 @@ export default [
       {
         "frequency": 109.882,
         "kitName": "Hohner Pianet",
-        "path": "/public/audio/chromatic/hohner_pianet/109.882.wav",
+        "path": "audio/chromatic/hohner_pianet/109.882.wav",
         "name": "109.882.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1229,7 +1229,7 @@ export default [
       {
         "frequency": 219.897,
         "kitName": "Hohner Pianet",
-        "path": "/public/audio/chromatic/hohner_pianet/219.897.wav",
+        "path": "audio/chromatic/hohner_pianet/219.897.wav",
         "name": "219.897.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1239,7 +1239,7 @@ export default [
       {
         "frequency": 440.267,
         "kitName": "Hohner Pianet",
-        "path": "/public/audio/chromatic/hohner_pianet/440.267.wav",
+        "path": "audio/chromatic/hohner_pianet/440.267.wav",
         "name": "440.267.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1249,7 +1249,7 @@ export default [
       {
         "frequency": 880.862,
         "kitName": "Hohner Pianet",
-        "path": "/public/audio/chromatic/hohner_pianet/880.862.wav",
+        "path": "audio/chromatic/hohner_pianet/880.862.wav",
         "name": "880.862.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1267,7 +1267,7 @@ export default [
       {
         "frequency": 220.224,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/220.224.wav",
+        "path": "audio/chromatic/kankles/220.224.wav",
         "name": "220.224.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1277,7 +1277,7 @@ export default [
       {
         "frequency": 294.563,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/294.563.wav",
+        "path": "audio/chromatic/kankles/294.563.wav",
         "name": "294.563.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1287,7 +1287,7 @@ export default [
       {
         "frequency": 370.878,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/370.878.wav",
+        "path": "audio/chromatic/kankles/370.878.wav",
         "name": "370.878.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1297,7 +1297,7 @@ export default [
       {
         "frequency": 441.191,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/441.191.wav",
+        "path": "audio/chromatic/kankles/441.191.wav",
         "name": "441.191.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1307,7 +1307,7 @@ export default [
       {
         "frequency": 587.619,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/587.619.wav",
+        "path": "audio/chromatic/kankles/587.619.wav",
         "name": "587.619.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1317,7 +1317,7 @@ export default [
       {
         "frequency": 740.251,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/740.251.wav",
+        "path": "audio/chromatic/kankles/740.251.wav",
         "name": "740.251.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1327,7 +1327,7 @@ export default [
       {
         "frequency": 880.11,
         "kitName": "Kankles",
-        "path": "/public/audio/chromatic/kankles/880.110.wav",
+        "path": "audio/chromatic/kankles/880.110.wav",
         "name": "880.110.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1345,7 +1345,7 @@ export default [
       {
         "frequency": 110.074,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/110.074.wav",
+        "path": "audio/chromatic/nylon_strings/110.074.wav",
         "name": "110.074.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1355,7 +1355,7 @@ export default [
       {
         "frequency": 146.968,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/146.968.wav",
+        "path": "audio/chromatic/nylon_strings/146.968.wav",
         "name": "146.968.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1365,7 +1365,7 @@ export default [
       {
         "frequency": 196.011,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/196.011.wav",
+        "path": "audio/chromatic/nylon_strings/196.011.wav",
         "name": "196.011.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1375,7 +1375,7 @@ export default [
       {
         "frequency": 247.611,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/247.611.wav",
+        "path": "audio/chromatic/nylon_strings/247.611.wav",
         "name": "247.611.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1385,7 +1385,7 @@ export default [
       {
         "frequency": 330.83,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/330.830.wav",
+        "path": "audio/chromatic/nylon_strings/330.830.wav",
         "name": "330.830.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1395,7 +1395,7 @@ export default [
       {
         "frequency": 73.722,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/73.722.wav",
+        "path": "audio/chromatic/nylon_strings/73.722.wav",
         "name": "73.722.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1405,7 +1405,7 @@ export default [
       {
         "frequency": 83.012,
         "kitName": "Nylon Strings",
-        "path": "/public/audio/chromatic/nylon_strings/83.012.wav",
+        "path": "audio/chromatic/nylon_strings/83.012.wav",
         "name": "83.012.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -1424,7 +1424,7 @@ export default [
         "velocity": 102,
         "frequency": 110,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_110.00000.wav",
+        "path": "audio/chromatic/old_trombone/102_110.00000.wav",
         "name": "102_110.00000.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1435,7 +1435,7 @@ export default [
         "velocity": 102,
         "frequency": 130.81278,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_130.81278.wav",
+        "path": "audio/chromatic/old_trombone/102_130.81278.wav",
         "name": "102_130.81278.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1446,7 +1446,7 @@ export default [
         "velocity": 102,
         "frequency": 146.83238,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_146.83238.wav",
+        "path": "audio/chromatic/old_trombone/102_146.83238.wav",
         "name": "102_146.83238.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1457,7 +1457,7 @@ export default [
         "velocity": 102,
         "frequency": 174.61412,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_174.61412.wav",
+        "path": "audio/chromatic/old_trombone/102_174.61412.wav",
         "name": "102_174.61412.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1468,7 +1468,7 @@ export default [
         "velocity": 102,
         "frequency": 195.99772,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_195.99772.wav",
+        "path": "audio/chromatic/old_trombone/102_195.99772.wav",
         "name": "102_195.99772.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1479,7 +1479,7 @@ export default [
         "velocity": 102,
         "frequency": 220,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_220.00000.wav",
+        "path": "audio/chromatic/old_trombone/102_220.00000.wav",
         "name": "102_220.00000.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1490,7 +1490,7 @@ export default [
         "velocity": 102,
         "frequency": 261.62557,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_261.62557.wav",
+        "path": "audio/chromatic/old_trombone/102_261.62557.wav",
         "name": "102_261.62557.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1501,7 +1501,7 @@ export default [
         "velocity": 102,
         "frequency": 293.66477,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_293.66477.wav",
+        "path": "audio/chromatic/old_trombone/102_293.66477.wav",
         "name": "102_293.66477.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1512,7 +1512,7 @@ export default [
         "velocity": 102,
         "frequency": 349.22823,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_349.22823.wav",
+        "path": "audio/chromatic/old_trombone/102_349.22823.wav",
         "name": "102_349.22823.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1523,7 +1523,7 @@ export default [
         "velocity": 102,
         "frequency": 87.30706,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_87.30706.wav",
+        "path": "audio/chromatic/old_trombone/102_87.30706.wav",
         "name": "102_87.30706.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1534,7 +1534,7 @@ export default [
         "velocity": 102,
         "frequency": 97.99886,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/102_97.99886.wav",
+        "path": "audio/chromatic/old_trombone/102_97.99886.wav",
         "name": "102_97.99886.wav",
         "velocityStart": 89,
         "velocityEnd": 114,
@@ -1545,7 +1545,7 @@ export default [
         "velocity": 127,
         "frequency": 110,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_110.00000.wav",
+        "path": "audio/chromatic/old_trombone/127_110.00000.wav",
         "name": "127_110.00000.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1556,7 +1556,7 @@ export default [
         "velocity": 127,
         "frequency": 130.81278,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_130.81278.wav",
+        "path": "audio/chromatic/old_trombone/127_130.81278.wav",
         "name": "127_130.81278.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1567,7 +1567,7 @@ export default [
         "velocity": 127,
         "frequency": 146.83238,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_146.83238.wav",
+        "path": "audio/chromatic/old_trombone/127_146.83238.wav",
         "name": "127_146.83238.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1578,7 +1578,7 @@ export default [
         "velocity": 127,
         "frequency": 174.61412,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_174.61412.wav",
+        "path": "audio/chromatic/old_trombone/127_174.61412.wav",
         "name": "127_174.61412.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1589,7 +1589,7 @@ export default [
         "velocity": 127,
         "frequency": 195.99772,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_195.99772.wav",
+        "path": "audio/chromatic/old_trombone/127_195.99772.wav",
         "name": "127_195.99772.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1600,7 +1600,7 @@ export default [
         "velocity": 127,
         "frequency": 220,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_220.00000.wav",
+        "path": "audio/chromatic/old_trombone/127_220.00000.wav",
         "name": "127_220.00000.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1611,7 +1611,7 @@ export default [
         "velocity": 127,
         "frequency": 261.62557,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_261.62557.wav",
+        "path": "audio/chromatic/old_trombone/127_261.62557.wav",
         "name": "127_261.62557.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1622,7 +1622,7 @@ export default [
         "velocity": 127,
         "frequency": 293.66477,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_293.66477.wav",
+        "path": "audio/chromatic/old_trombone/127_293.66477.wav",
         "name": "127_293.66477.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1633,7 +1633,7 @@ export default [
         "velocity": 127,
         "frequency": 349.22823,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_349.22823.wav",
+        "path": "audio/chromatic/old_trombone/127_349.22823.wav",
         "name": "127_349.22823.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1644,7 +1644,7 @@ export default [
         "velocity": 127,
         "frequency": 391.99544,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_391.99544.wav",
+        "path": "audio/chromatic/old_trombone/127_391.99544.wav",
         "name": "127_391.99544.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1655,7 +1655,7 @@ export default [
         "velocity": 127,
         "frequency": 87.30706,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_87.30706.wav",
+        "path": "audio/chromatic/old_trombone/127_87.30706.wav",
         "name": "127_87.30706.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1666,7 +1666,7 @@ export default [
         "velocity": 127,
         "frequency": 97.99886,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/127_97.99886.wav",
+        "path": "audio/chromatic/old_trombone/127_97.99886.wav",
         "name": "127_97.99886.wav",
         "velocityStart": 114,
         "velocityEnd": 127,
@@ -1677,7 +1677,7 @@ export default [
         "velocity": 25,
         "frequency": 110,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_110.00000.wav",
+        "path": "audio/chromatic/old_trombone/25_110.00000.wav",
         "name": "25_110.00000.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1688,7 +1688,7 @@ export default [
         "velocity": 25,
         "frequency": 130.81278,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_130.81278.wav",
+        "path": "audio/chromatic/old_trombone/25_130.81278.wav",
         "name": "25_130.81278.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1699,7 +1699,7 @@ export default [
         "velocity": 25,
         "frequency": 146.83238,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_146.83238.wav",
+        "path": "audio/chromatic/old_trombone/25_146.83238.wav",
         "name": "25_146.83238.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1710,7 +1710,7 @@ export default [
         "velocity": 25,
         "frequency": 174.61412,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_174.61412.wav",
+        "path": "audio/chromatic/old_trombone/25_174.61412.wav",
         "name": "25_174.61412.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1721,7 +1721,7 @@ export default [
         "velocity": 25,
         "frequency": 195.99772,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_195.99772.wav",
+        "path": "audio/chromatic/old_trombone/25_195.99772.wav",
         "name": "25_195.99772.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1732,7 +1732,7 @@ export default [
         "velocity": 25,
         "frequency": 220,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_220.00000.wav",
+        "path": "audio/chromatic/old_trombone/25_220.00000.wav",
         "name": "25_220.00000.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1743,7 +1743,7 @@ export default [
         "velocity": 25,
         "frequency": 261.62557,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_261.62557.wav",
+        "path": "audio/chromatic/old_trombone/25_261.62557.wav",
         "name": "25_261.62557.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1754,7 +1754,7 @@ export default [
         "velocity": 25,
         "frequency": 293.66477,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_293.66477.wav",
+        "path": "audio/chromatic/old_trombone/25_293.66477.wav",
         "name": "25_293.66477.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1765,7 +1765,7 @@ export default [
         "velocity": 25,
         "frequency": 349.22823,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_349.22823.wav",
+        "path": "audio/chromatic/old_trombone/25_349.22823.wav",
         "name": "25_349.22823.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1776,7 +1776,7 @@ export default [
         "velocity": 25,
         "frequency": 87.30706,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_87.30706.wav",
+        "path": "audio/chromatic/old_trombone/25_87.30706.wav",
         "name": "25_87.30706.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1787,7 +1787,7 @@ export default [
         "velocity": 25,
         "frequency": 97.99886,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/25_97.99886.wav",
+        "path": "audio/chromatic/old_trombone/25_97.99886.wav",
         "name": "25_97.99886.wav",
         "velocityStart": 12,
         "velocityEnd": 38,
@@ -1798,7 +1798,7 @@ export default [
         "velocity": 51,
         "frequency": 110,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_110.00000.wav",
+        "path": "audio/chromatic/old_trombone/51_110.00000.wav",
         "name": "51_110.00000.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1809,7 +1809,7 @@ export default [
         "velocity": 51,
         "frequency": 130.81278,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_130.81278.wav",
+        "path": "audio/chromatic/old_trombone/51_130.81278.wav",
         "name": "51_130.81278.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1820,7 +1820,7 @@ export default [
         "velocity": 51,
         "frequency": 146.83238,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_146.83238.wav",
+        "path": "audio/chromatic/old_trombone/51_146.83238.wav",
         "name": "51_146.83238.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1831,7 +1831,7 @@ export default [
         "velocity": 51,
         "frequency": 174.61412,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_174.61412.wav",
+        "path": "audio/chromatic/old_trombone/51_174.61412.wav",
         "name": "51_174.61412.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1842,7 +1842,7 @@ export default [
         "velocity": 51,
         "frequency": 195.99772,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_195.99772.wav",
+        "path": "audio/chromatic/old_trombone/51_195.99772.wav",
         "name": "51_195.99772.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1853,7 +1853,7 @@ export default [
         "velocity": 51,
         "frequency": 220,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_220.00000.wav",
+        "path": "audio/chromatic/old_trombone/51_220.00000.wav",
         "name": "51_220.00000.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1864,7 +1864,7 @@ export default [
         "velocity": 51,
         "frequency": 261.62557,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_261.62557.wav",
+        "path": "audio/chromatic/old_trombone/51_261.62557.wav",
         "name": "51_261.62557.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1875,7 +1875,7 @@ export default [
         "velocity": 51,
         "frequency": 293.66477,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_293.66477.wav",
+        "path": "audio/chromatic/old_trombone/51_293.66477.wav",
         "name": "51_293.66477.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1886,7 +1886,7 @@ export default [
         "velocity": 51,
         "frequency": 349.22823,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_349.22823.wav",
+        "path": "audio/chromatic/old_trombone/51_349.22823.wav",
         "name": "51_349.22823.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1897,7 +1897,7 @@ export default [
         "velocity": 51,
         "frequency": 391.99544,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_391.99544.wav",
+        "path": "audio/chromatic/old_trombone/51_391.99544.wav",
         "name": "51_391.99544.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1908,7 +1908,7 @@ export default [
         "velocity": 51,
         "frequency": 87.30706,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_87.30706.wav",
+        "path": "audio/chromatic/old_trombone/51_87.30706.wav",
         "name": "51_87.30706.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1919,7 +1919,7 @@ export default [
         "velocity": 51,
         "frequency": 97.99886,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/51_97.99886.wav",
+        "path": "audio/chromatic/old_trombone/51_97.99886.wav",
         "name": "51_97.99886.wav",
         "velocityStart": 38,
         "velocityEnd": 63,
@@ -1930,7 +1930,7 @@ export default [
         "velocity": 76,
         "frequency": 110,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_110.00000.wav",
+        "path": "audio/chromatic/old_trombone/76_110.00000.wav",
         "name": "76_110.00000.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -1941,7 +1941,7 @@ export default [
         "velocity": 76,
         "frequency": 130.81278,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_130.81278.wav",
+        "path": "audio/chromatic/old_trombone/76_130.81278.wav",
         "name": "76_130.81278.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -1952,7 +1952,7 @@ export default [
         "velocity": 76,
         "frequency": 146.83238,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_146.83238.wav",
+        "path": "audio/chromatic/old_trombone/76_146.83238.wav",
         "name": "76_146.83238.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -1963,7 +1963,7 @@ export default [
         "velocity": 76,
         "frequency": 174.61412,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_174.61412.wav",
+        "path": "audio/chromatic/old_trombone/76_174.61412.wav",
         "name": "76_174.61412.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -1974,7 +1974,7 @@ export default [
         "velocity": 76,
         "frequency": 195.99772,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_195.99772.wav",
+        "path": "audio/chromatic/old_trombone/76_195.99772.wav",
         "name": "76_195.99772.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -1985,7 +1985,7 @@ export default [
         "velocity": 76,
         "frequency": 220,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_220.00000.wav",
+        "path": "audio/chromatic/old_trombone/76_220.00000.wav",
         "name": "76_220.00000.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -1996,7 +1996,7 @@ export default [
         "velocity": 76,
         "frequency": 261.62557,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_261.62557.wav",
+        "path": "audio/chromatic/old_trombone/76_261.62557.wav",
         "name": "76_261.62557.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -2007,7 +2007,7 @@ export default [
         "velocity": 76,
         "frequency": 293.66477,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_293.66477.wav",
+        "path": "audio/chromatic/old_trombone/76_293.66477.wav",
         "name": "76_293.66477.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -2018,7 +2018,7 @@ export default [
         "velocity": 76,
         "frequency": 349.22823,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_349.22823.wav",
+        "path": "audio/chromatic/old_trombone/76_349.22823.wav",
         "name": "76_349.22823.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -2029,7 +2029,7 @@ export default [
         "velocity": 76,
         "frequency": 87.30706,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_87.30706.wav",
+        "path": "audio/chromatic/old_trombone/76_87.30706.wav",
         "name": "76_87.30706.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -2040,7 +2040,7 @@ export default [
         "velocity": 76,
         "frequency": 97.99886,
         "kitName": "Old Trombone",
-        "path": "/public/audio/chromatic/old_trombone/76_97.99886.wav",
+        "path": "audio/chromatic/old_trombone/76_97.99886.wav",
         "name": "76_97.99886.wav",
         "velocityStart": 63,
         "velocityEnd": 89,
@@ -2057,7 +2057,7 @@ export default [
       {
         "frequency": 440,
         "kitName": "Test Tone",
-        "path": "/public/audio/chromatic/test-tone/440.wav",
+        "path": "audio/chromatic/test-tone/440.wav",
         "name": "440.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2074,7 +2074,7 @@ export default [
       {
         "frequency": 1054.587,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/1054.587.wav",
+        "path": "audio/chromatic/vibraphone/1054.587.wav",
         "name": "1054.587.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2084,7 +2084,7 @@ export default [
       {
         "frequency": 1117.63,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/1117.630.wav",
+        "path": "audio/chromatic/vibraphone/1117.630.wav",
         "name": "1117.630.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2094,7 +2094,7 @@ export default [
       {
         "frequency": 1184.329,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/1184.329.wav",
+        "path": "audio/chromatic/vibraphone/1184.329.wav",
         "name": "1184.329.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2104,7 +2104,7 @@ export default [
       {
         "frequency": 1255.513,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/1255.513.wav",
+        "path": "audio/chromatic/vibraphone/1255.513.wav",
         "name": "1255.513.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2114,7 +2114,7 @@ export default [
       {
         "frequency": 1331.265,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/1331.265.wav",
+        "path": "audio/chromatic/vibraphone/1331.265.wav",
         "name": "1331.265.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2124,7 +2124,7 @@ export default [
       {
         "frequency": 1411.685,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/1411.685.wav",
+        "path": "audio/chromatic/vibraphone/1411.685.wav",
         "name": "1411.685.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2134,7 +2134,7 @@ export default [
       {
         "frequency": 178.559,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/178.559.wav",
+        "path": "audio/chromatic/vibraphone/178.559.wav",
         "name": "178.559.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2144,7 +2144,7 @@ export default [
       {
         "frequency": 190.243,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/190.243.wav",
+        "path": "audio/chromatic/vibraphone/190.243.wav",
         "name": "190.243.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2154,7 +2154,7 @@ export default [
       {
         "frequency": 197.995,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/197.995.wav",
+        "path": "audio/chromatic/vibraphone/197.995.wav",
         "name": "197.995.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2164,7 +2164,7 @@ export default [
       {
         "frequency": 207.293,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/207.293.wav",
+        "path": "audio/chromatic/vibraphone/207.293.wav",
         "name": "207.293.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2174,7 +2174,7 @@ export default [
       {
         "frequency": 219.589,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/219.589.wav",
+        "path": "audio/chromatic/vibraphone/219.589.wav",
         "name": "219.589.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2184,7 +2184,7 @@ export default [
       {
         "frequency": 232.51,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/232.510.wav",
+        "path": "audio/chromatic/vibraphone/232.510.wav",
         "name": "232.510.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2194,7 +2194,7 @@ export default [
       {
         "frequency": 245.287,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/245.287.wav",
+        "path": "audio/chromatic/vibraphone/245.287.wav",
         "name": "245.287.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2204,7 +2204,7 @@ export default [
       {
         "frequency": 262.987,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/262.987.wav",
+        "path": "audio/chromatic/vibraphone/262.987.wav",
         "name": "262.987.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2214,7 +2214,7 @@ export default [
       {
         "frequency": 278.919,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/278.919.wav",
+        "path": "audio/chromatic/vibraphone/278.919.wav",
         "name": "278.919.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2224,7 +2224,7 @@ export default [
       {
         "frequency": 300.009,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/300.009.wav",
+        "path": "audio/chromatic/vibraphone/300.009.wav",
         "name": "300.009.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2234,7 +2234,7 @@ export default [
       {
         "frequency": 316.383,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/316.383.wav",
+        "path": "audio/chromatic/vibraphone/316.383.wav",
         "name": "316.383.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2244,7 +2244,7 @@ export default [
       {
         "frequency": 335.829,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/335.829.wav",
+        "path": "audio/chromatic/vibraphone/335.829.wav",
         "name": "335.829.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2254,7 +2254,7 @@ export default [
       {
         "frequency": 354.225,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/354.225.wav",
+        "path": "audio/chromatic/vibraphone/354.225.wav",
         "name": "354.225.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2264,7 +2264,7 @@ export default [
       {
         "frequency": 373.74,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/373.740.wav",
+        "path": "audio/chromatic/vibraphone/373.740.wav",
         "name": "373.740.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2274,7 +2274,7 @@ export default [
       {
         "frequency": 394.871,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/394.871.wav",
+        "path": "audio/chromatic/vibraphone/394.871.wav",
         "name": "394.871.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2284,7 +2284,7 @@ export default [
       {
         "frequency": 417.936,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/417.936.wav",
+        "path": "audio/chromatic/vibraphone/417.936.wav",
         "name": "417.936.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2294,7 +2294,7 @@ export default [
       {
         "frequency": 442.415,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/442.415.wav",
+        "path": "audio/chromatic/vibraphone/442.415.wav",
         "name": "442.415.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2304,7 +2304,7 @@ export default [
       {
         "frequency": 470.131,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/470.131.wav",
+        "path": "audio/chromatic/vibraphone/470.131.wav",
         "name": "470.131.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2314,7 +2314,7 @@ export default [
       {
         "frequency": 498.017,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/498.017.wav",
+        "path": "audio/chromatic/vibraphone/498.017.wav",
         "name": "498.017.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2324,7 +2324,7 @@ export default [
       {
         "frequency": 527.237,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/527.237.wav",
+        "path": "audio/chromatic/vibraphone/527.237.wav",
         "name": "527.237.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2334,7 +2334,7 @@ export default [
       {
         "frequency": 558.159,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/558.159.wav",
+        "path": "audio/chromatic/vibraphone/558.159.wav",
         "name": "558.159.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2344,7 +2344,7 @@ export default [
       {
         "frequency": 591.524,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/591.524.wav",
+        "path": "audio/chromatic/vibraphone/591.524.wav",
         "name": "591.524.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2354,7 +2354,7 @@ export default [
       {
         "frequency": 626.783,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/626.783.wav",
+        "path": "audio/chromatic/vibraphone/626.783.wav",
         "name": "626.783.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2364,7 +2364,7 @@ export default [
       {
         "frequency": 663.845,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/663.845.wav",
+        "path": "audio/chromatic/vibraphone/663.845.wav",
         "name": "663.845.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2374,7 +2374,7 @@ export default [
       {
         "frequency": 703.914,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/703.914.wav",
+        "path": "audio/chromatic/vibraphone/703.914.wav",
         "name": "703.914.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2384,7 +2384,7 @@ export default [
       {
         "frequency": 745.504,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/745.504.wav",
+        "path": "audio/chromatic/vibraphone/745.504.wav",
         "name": "745.504.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2394,7 +2394,7 @@ export default [
       {
         "frequency": 789.59,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/789.590.wav",
+        "path": "audio/chromatic/vibraphone/789.590.wav",
         "name": "789.590.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2404,7 +2404,7 @@ export default [
       {
         "frequency": 836.223,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/836.223.wav",
+        "path": "audio/chromatic/vibraphone/836.223.wav",
         "name": "836.223.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2414,7 +2414,7 @@ export default [
       {
         "frequency": 885.93,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/885.930.wav",
+        "path": "audio/chromatic/vibraphone/885.930.wav",
         "name": "885.930.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2424,7 +2424,7 @@ export default [
       {
         "frequency": 938.961,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/938.961.wav",
+        "path": "audio/chromatic/vibraphone/938.961.wav",
         "name": "938.961.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2434,7 +2434,7 @@ export default [
       {
         "frequency": 994.345,
         "kitName": "Vibraphone",
-        "path": "/public/audio/chromatic/vibraphone/994.345.wav",
+        "path": "audio/chromatic/vibraphone/994.345.wav",
         "name": "994.345.wav",
         "velocityStart": 0,
         "velocityEnd": 127,
@@ -2453,7 +2453,7 @@ export default [
         "velocity": 127,
         "frequency": 1174.65907,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_1174.65907.wav",
+        "path": "audio/chromatic/violin_section/127_1174.65907.wav",
         "name": "127_1174.65907.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2464,7 +2464,7 @@ export default [
         "velocity": 127,
         "frequency": 195.99772,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_195.99772.wav",
+        "path": "audio/chromatic/violin_section/127_195.99772.wav",
         "name": "127_195.99772.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2475,7 +2475,7 @@ export default [
         "velocity": 127,
         "frequency": 220,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_220.00000.wav",
+        "path": "audio/chromatic/violin_section/127_220.00000.wav",
         "name": "127_220.00000.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2486,7 +2486,7 @@ export default [
         "velocity": 127,
         "frequency": 246.94165,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_246.94165.wav",
+        "path": "audio/chromatic/violin_section/127_246.94165.wav",
         "name": "127_246.94165.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2497,7 +2497,7 @@ export default [
         "velocity": 127,
         "frequency": 293.66477,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_293.66477.wav",
+        "path": "audio/chromatic/violin_section/127_293.66477.wav",
         "name": "127_293.66477.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2508,7 +2508,7 @@ export default [
         "velocity": 127,
         "frequency": 349.22823,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_349.22823.wav",
+        "path": "audio/chromatic/violin_section/127_349.22823.wav",
         "name": "127_349.22823.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2519,7 +2519,7 @@ export default [
         "velocity": 127,
         "frequency": 440,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_440.00000.wav",
+        "path": "audio/chromatic/violin_section/127_440.00000.wav",
         "name": "127_440.00000.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2530,7 +2530,7 @@ export default [
         "velocity": 127,
         "frequency": 523.25113,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_523.25113.wav",
+        "path": "audio/chromatic/violin_section/127_523.25113.wav",
         "name": "127_523.25113.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2541,7 +2541,7 @@ export default [
         "velocity": 127,
         "frequency": 659.25511,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_659.25511.wav",
+        "path": "audio/chromatic/violin_section/127_659.25511.wav",
         "name": "127_659.25511.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2552,7 +2552,7 @@ export default [
         "velocity": 127,
         "frequency": 783.99087,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_783.99087.wav",
+        "path": "audio/chromatic/violin_section/127_783.99087.wav",
         "name": "127_783.99087.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2563,7 +2563,7 @@ export default [
         "velocity": 127,
         "frequency": 987.7666,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/127_987.76660.wav",
+        "path": "audio/chromatic/violin_section/127_987.76660.wav",
         "name": "127_987.76660.wav",
         "velocityStart": 95,
         "velocityEnd": 127,
@@ -2574,7 +2574,7 @@ export default [
         "velocity": 64,
         "frequency": 1174.65907,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_1174.65907.wav",
+        "path": "audio/chromatic/violin_section/64_1174.65907.wav",
         "name": "64_1174.65907.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2585,7 +2585,7 @@ export default [
         "velocity": 64,
         "frequency": 195.99772,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_195.99772.wav",
+        "path": "audio/chromatic/violin_section/64_195.99772.wav",
         "name": "64_195.99772.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2596,7 +2596,7 @@ export default [
         "velocity": 64,
         "frequency": 220,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_220.00000.wav",
+        "path": "audio/chromatic/violin_section/64_220.00000.wav",
         "name": "64_220.00000.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2607,7 +2607,7 @@ export default [
         "velocity": 64,
         "frequency": 246.94165,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_246.94165.wav",
+        "path": "audio/chromatic/violin_section/64_246.94165.wav",
         "name": "64_246.94165.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2618,7 +2618,7 @@ export default [
         "velocity": 64,
         "frequency": 293.66477,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_293.66477.wav",
+        "path": "audio/chromatic/violin_section/64_293.66477.wav",
         "name": "64_293.66477.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2629,7 +2629,7 @@ export default [
         "velocity": 64,
         "frequency": 349.22823,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_349.22823.wav",
+        "path": "audio/chromatic/violin_section/64_349.22823.wav",
         "name": "64_349.22823.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2640,7 +2640,7 @@ export default [
         "velocity": 64,
         "frequency": 440,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_440.00000.wav",
+        "path": "audio/chromatic/violin_section/64_440.00000.wav",
         "name": "64_440.00000.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2651,7 +2651,7 @@ export default [
         "velocity": 64,
         "frequency": 523.25113,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_523.25113.wav",
+        "path": "audio/chromatic/violin_section/64_523.25113.wav",
         "name": "64_523.25113.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2662,7 +2662,7 @@ export default [
         "velocity": 64,
         "frequency": 659.25511,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_659.25511.wav",
+        "path": "audio/chromatic/violin_section/64_659.25511.wav",
         "name": "64_659.25511.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2673,7 +2673,7 @@ export default [
         "velocity": 64,
         "frequency": 783.99087,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_783.99087.wav",
+        "path": "audio/chromatic/violin_section/64_783.99087.wav",
         "name": "64_783.99087.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2684,7 +2684,7 @@ export default [
         "velocity": 64,
         "frequency": 987.7666,
         "kitName": "Violin Section",
-        "path": "/public/audio/chromatic/violin_section/64_987.76660.wav",
+        "path": "audio/chromatic/violin_section/64_987.76660.wav",
         "name": "64_987.76660.wav",
         "velocityStart": 32,
         "velocityEnd": 95,
@@ -2701,97 +2701,97 @@ export default [
       {
         "name": "AirportTerminal.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/AirportTerminal.wav"
+        "path": "audio/ir/airwindows/AirportTerminal.wav"
       },
       {
         "name": "CastleThunder.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/CastleThunder.wav"
+        "path": "audio/ir/airwindows/CastleThunder.wav"
       },
       {
         "name": "GiantCave.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/GiantCave.wav"
+        "path": "audio/ir/airwindows/GiantCave.wav"
       },
       {
         "name": "Hangar.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/Hangar.wav"
+        "path": "audio/ir/airwindows/Hangar.wav"
       },
       {
         "name": "OutdoorBlastoff.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/OutdoorBlastoff.wav"
+        "path": "audio/ir/airwindows/OutdoorBlastoff.wav"
       },
       {
         "name": "OutdoorStadium.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/OutdoorStadium.wav"
+        "path": "audio/ir/airwindows/OutdoorStadium.wav"
       },
       {
         "name": "PlateLarge.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PlateLarge.wav"
+        "path": "audio/ir/airwindows/PlateLarge.wav"
       },
       {
         "name": "PlateMedium.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PlateMedium.wav"
+        "path": "audio/ir/airwindows/PlateMedium.wav"
       },
       {
         "name": "PlateSmall.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PlateSmall.wav"
+        "path": "audio/ir/airwindows/PlateSmall.wav"
       },
       {
         "name": "PlateSuperDry.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PlateSuperDry.wav"
+        "path": "audio/ir/airwindows/PlateSuperDry.wav"
       },
       {
         "name": "PrimeLong.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PrimeLong.wav"
+        "path": "audio/ir/airwindows/PrimeLong.wav"
       },
       {
         "name": "PrimeMed.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PrimeMed.wav"
+        "path": "audio/ir/airwindows/PrimeMed.wav"
       },
       {
         "name": "PrimeShort.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PrimeShort.wav"
+        "path": "audio/ir/airwindows/PrimeShort.wav"
       },
       {
         "name": "PrimeXtraLong.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/PrimeXtraLong.wav"
+        "path": "audio/ir/airwindows/PrimeXtraLong.wav"
       },
       {
         "name": "RoomConcertHall.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/RoomConcertHall.wav"
+        "path": "audio/ir/airwindows/RoomConcertHall.wav"
       },
       {
         "name": "RoomHuge.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/RoomHuge.wav"
+        "path": "audio/ir/airwindows/RoomHuge.wav"
       },
       {
         "name": "RoomLarge.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/RoomLarge.wav"
+        "path": "audio/ir/airwindows/RoomLarge.wav"
       },
       {
         "name": "RoomMedium.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/RoomMedium.wav"
+        "path": "audio/ir/airwindows/RoomMedium.wav"
       },
       {
         "name": "RoomPool.wav",
         "kitName": "AirWindows IR",
-        "path": "/public/audio/ir/airwindows/RoomPool.wav"
+        "path": "audio/ir/airwindows/RoomPool.wav"
       }
     ],
     "readme": "Impulse responses courtesy of Air Windows\n\nhttps://www.airwindows.com"
@@ -2804,7 +2804,7 @@ export default [
       {
         "name": "LC100 BX44 stalevel_dc.wav",
         "kitName": "SNB IR",
-        "path": "/public/audio/ir/snb/LC100 BX44 stalevel_dc.wav"
+        "path": "audio/ir/snb/LC100 BX44 stalevel_dc.wav"
       }
     ],
     "readme": "Amp IIR courtesy of STUDIO NORD BREMEN\n\nVox AC30\n\nbrilliant channel (10 files)\nnormal channel (12 files)\nThe AC30 (early 70s, bulldogs) was recorded with either a 1073 or a Gates STA Level as a preamp and converted with an Antelope Orion.\n\nLondon City\n\n50W (4 files)\n100W (20 files)\nThe London City 100W has been modified for a larger and more transparent sound, the London City 50W is in original state. Both were combined with an Acoustic 4x12 Cabinet, preamped with a Gates STA Level and converted via Antelope Orion.\n\nThe impulse response files above were recorded in the big recording room at\nSTUDIO NORD BREMEN.\n\nThe microphones were placed on axis with a distance of approx 10inch (except »far« and »far amb«) and an abbreviation of the microphones name is part of the the file name.\nRCA BX44, Neumann CMV3(big bottle) with M7 or M9 Capsule, Neumann U47-tube, Neumann U47-FET, Neumann U67, Neumann KM53, Neumann M49, Neumann KM184, Microtech Gefell M930, Audio Technica AT4033a, Sennheiser MD421, Sennheiser MD211(dynamic omni), Shure SM-57, Shure UnidyneII, MBO KA1000, Electrovoice RE-20.\nDeconvolution was done with Voxengo Deconvolver. \n\nhttp://www.grgr.de/IR/\n"

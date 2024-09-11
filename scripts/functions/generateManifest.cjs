@@ -32,13 +32,13 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) 
      * @param {'chromatic' | 'impulse-response'} kitType
      * @returns {Object}
      */
-    const getKit = (kitName, kitType) => {
+    const getKit = (kitName, libraryName, kitType) => {
         const kitList = kitType === 'chromatic' ? chromaticKits : impulseResponseKits;
         let library = kitList.find(lib => lib.name === kitName);
         if (!library) {
             library = {
                 name: kitName,
-                fromLibrary: kitName,
+                fromLibrary: libraryName,
                 type: kitType,
                 samples: [],
             };
@@ -67,7 +67,7 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) 
                     // because the success depends on the order of the files in the directory
                     // (as long as kitName is not defined as part of the kit naming)
                     // consider - making kitName mandatory or appending readmes afterwards
-                    const library = getKit(dirItem.kitName || dirItem.path, sampleKitType);
+                    const library = getKit(dirItem.kitName || dirItem.path, dirItem.path, sampleKitType);
                     const readmePath = path.join(dirItem.path, fileName);
                     const readme = fs.readFileSync(path.join(localPublicPath, readmePath), 'utf8');
                     library.readme = readme;
@@ -108,7 +108,7 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) 
 
                 if (!parsed.name) parsed.name = fileName;
 
-                const library = getKit(parsed.kitName, sampleKitType);
+                const library = getKit(parsed.kitName, dirItem.path, sampleKitType);
                 library.samples.push(parsed);
             } catch (e) {
                 console.error(`Error parsing ${fileName} as ${nameWithoutExtension}: ${e.message}`);

@@ -1,5 +1,6 @@
 const express = require('express')
 const path = require('path')
+const generateSamplesList = require('../scripts/functions/generateManifest.cjs')
 const app = express()
 const port = 3010
 const cors = require('cors')
@@ -7,23 +8,13 @@ const cors = require('cors')
 const publicPath = path.join(__dirname, 'public')
 const myUrl = 'http://localhost:' + port
 
-const namings = require('./public/namings.json');
+// Create a list of sample librariy descriptors. These contain the paths to samples, and how
+// to parse the filenames to extract frequency, velocity and other data.
+const namings = require('./public/namings.json')
 
-app.get('/samples', (req, res) => {
-    const jsonContents = require(path.join(publicPath, 'samples.json'))
-    res.send(jsonContents)
-});
-
-app.get('/generate-samples', cors({ origin: '*' }), (req, res) => {
-    const generateSamplesList = require('../scripts/functions/generateManifest.cjs')
-    try {
-        // Fetch a list of sample librariy descriptors. These contain the paths to samples, and how
-        // to parse the filenames to extract frequency, velocity and other data.
-        const namings = require('./public/namings.json')
-        res.json(generateSamplesList(namings, 'public', myUrl, 'autotel extra samples'));
-    } catch (e) {
-        res.json({ error: e.message });
-    }
+app.get('/samples', cors({ origin: '*' }), (req, res) => {
+    const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples')
+    res.json(generatedSamplesList);
 });
 
 app.use(cors({ origin: '*' }))

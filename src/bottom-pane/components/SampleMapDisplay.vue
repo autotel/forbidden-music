@@ -18,15 +18,21 @@ await props.audioModule.waitReady;
 const currentData = ref<SampleSource[]>(props.audioModule.sampleKitManager.sampleSources);
 
 const currentlyHoveredSample = ref<SampleSource | null>(null);
-const lastTriggeredSample = ref<[SampleSource, number] | null>(null);
+const lastTriggeredSampleIndexes = ref<number[]>([]);
+const lastTriggeredSample = ref<SampleSource | null>(null);
 
 const sampleChangedListener = () => {
     currentData.value = props.audioModule.sampleKitManager.sampleSources;
 }
 
 const sampleWasChosenListener = (sample: SampleSource, index: number) => {
-    lastTriggeredSample.value = [sample, index];
+    lastTriggeredSampleIndexes.value.push(index);
+    lastTriggeredSample.value = sample;
+    setTimeout(() => {
+        lastTriggeredSampleIndexes.value = lastTriggeredSampleIndexes.value.filter(i => i !== index);
+    }, 500);
 }
+
 onMounted(() => {
     props.audioModule.sampleKitManager.addSampleKitChangedListener(sampleChangedListener);
     props.audioModule.sampleKitManager.addSampleItemChosenListener(sampleWasChosenListener);
@@ -74,7 +80,10 @@ const sampleDivStyle = (sample: SampleFileDefinition) => {
                 <div class="scaler">
                     <template v-for="(sample, index) in currentData" :key="sample.path">
                         <div class="sample-rect" :style="sampleDivStyle(sample)"
-                            :class="{ triggered: lastTriggeredSample && lastTriggeredSample[1] === index }"
+                            :class="{ 
+                                triggered: lastTriggeredSampleIndexes.includes(index),
+                                loading: sample.isLoading,
+                            }"
                             @mouseenter="() => currentlyHoveredSample = sample"
                             @mouseleave="() => currentlyHoveredSample = null">
                         </div>
@@ -87,21 +96,22 @@ const sampleDivStyle = (sample: SampleFileDefinition) => {
         <template v-else>
             <Button :onClick="() => expanded = true">{{ audioModule.sampleKitParam.value.name }}</Button>
         </template>
-        <div>
-            {{ lastTriggeredSample ? lastTriggeredSample[1] : '' }}
-            <p v-if="currentlyHoveredSample" class="hovered-item-data">
-                {{ currentlyHoveredSample.name }}<br>
-                Vel: {{ currentlyHoveredSample.velocityStart }}-{{ currentlyHoveredSample.velocityEnd }}<br>
-                Fq: {{ currentlyHoveredSample.frequencyStart }}-{{ currentlyHoveredSample.frequencyEnd }}<br>
-            </p>
-        </div>
+        <ul class="data padded">
+            <li>{{ lastTriggeredSample ? lastTriggeredSample.name : '' }}</li>
+            <li>{{ currentData.length }}</li>
+            <li><ul v-if="currentlyHoveredSample" class="hovered-item-data">
+                <li>{{ currentlyHoveredSample.name }}</li>
+                <li>Vel: {{ currentlyHoveredSample.velocityStart }}-{{ currentlyHoveredSample.velocityEnd }}</li>
+                <li>Fq: {{ currentlyHoveredSample.frequencyStart }}-{{ currentlyHoveredSample.frequencyEnd }}</li>
+            </ul></li>
+        </ul>
     </div>
 
 </template>
 <style scoped>
 .sample-map-display {
     height: 100%;
-    width: 400px;
+    width: auto;
     display: flex;
 }
 
@@ -129,13 +139,8 @@ const sampleDivStyle = (sample: SampleFileDefinition) => {
     border: none;
 }
 
-
-.map {
-    overflow: auto;
-    height: 100%;
-    width: 200px;
-    color: rgba(255, 255, 255, 0.452);
-    background-color: #374559;
+.map .sample-rect.loading {
+    opacity: 0.1;
 }
 
 .map .scaler {
@@ -144,7 +149,22 @@ const sampleDivStyle = (sample: SampleFileDefinition) => {
     /* transform: scale(1.5); */
 }
 
-.hovered-item-data {
+.sample-map-display ul.data {
     width: 200px;
+    display: inline-block;
+    height: 100%;
+    list-style-type: none;
+    padding: 0;
+}
+.sample-map-display .data li {
+    word-break: break-all;
+}
+.sample-map-display .map {
+    display: inline-block;
+    overflow: auto;
+    height: 100%;
+    width: 170px;
+    color: rgba(255, 255, 255, 0.452);
+    background-color: #374559;
 }
 </style>
