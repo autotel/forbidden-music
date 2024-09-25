@@ -7,6 +7,7 @@ import { useToolStore } from '../../store/toolStore';
 import { TimelineDot, TimelineRect, useViewStore } from '../../store/viewStore';
 import SvgLittleButton from './SvgLittleButton.vue';
 import { usePlaybackStore } from '@/store/playbackStore';
+import { useSelectStore } from '@/store/selectStore';
 
 
 const view = useViewStore();
@@ -18,6 +19,7 @@ const props = defineProps<{
 }>();
 const project = useProjectStore();
 const playback = usePlaybackStore();
+const selection = useSelectStore();
 const noteBody = ref<SVGRectElement>();
 const rightDragHandle = ref<SVGRectElement>();
 const leftDragHandle = ref<SVGRectElement>();
@@ -139,6 +141,9 @@ const grdy = (pos: number) => {
         <template v-if="!props.interactionDisabled">
             <SvgLittleButton :x="grdx(-1)" :y="30" :onClick="() => project.magicLoopDuplicator(eventRect.event)"
                 tooltip="copy to the right"> ©
+            </SvgLittleButton>
+            <SvgLittleButton :x="grdx(-2)" :y="30" :onClick="() => selection.selectLoopAndNotes(eventRect.event)"
+                tooltip="select loop and contained notes"> [s]
             </SvgLittleButton>
         </template>
 

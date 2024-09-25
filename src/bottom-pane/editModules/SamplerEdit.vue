@@ -4,13 +4,15 @@ import Button from '@/components/Button.vue';
 import { useMonoModeInteraction } from '@/store/monoModeInteraction';
 import { Sampler } from '@/synth/generators/Sampler';
 import { ParamType } from '@/synth/types/SynthParam';
-import { Ref, inject } from 'vue';
+import { Ref, inject, ref } from 'vue';
 import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
 import SampleKitSelector from '../components/SampleKitSelector.vue';
 import SampleMapDisplay from '../components/SampleMapDisplay.vue';
+import AnglesRight from '@/components/icons/AnglesRight.vue';
+import AnglesLeft from '@/components/icons/AnglesLeft.vue';
 
 const props = defineProps<{
     audioModule: Sampler
@@ -18,6 +20,7 @@ const props = defineProps<{
 
 await props.audioModule.waitReady;
 
+const showKitSelector = ref(false);
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
 
@@ -31,8 +34,23 @@ const width = 'auto';
 </script>
 <template>
     <div :style="{ width }" class="layout">
-        <SampleKitSelector :audioModule="audioModule" :types="['chromatic','atonal']" />
-        <SampleMapDisplay :audioModule="audioModule" />
+        <div 
+            :class="{
+                kitbutton: true,
+                expanded: showKitSelector
+            }"
+        >
+            <Button
+                tooltip="Change instrument's sound (i.e. sample kit)"
+                @click="showKitSelector = !showKitSelector" >
+                <AnglesLeft v-if="showKitSelector"/>
+                <AnglesRight v-else /> Kit
+            </Button>
+        </div>
+        <template v-if="showKitSelector">
+            <SampleKitSelector :audioModule="audioModule" :types="['chromatic', 'atonal']" />
+            <SampleMapDisplay :audioModule="audioModule" />
+        </template>
         <div class="group" style="width: 10em">
             <template v-for="param in audioModule.params">
                 <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
@@ -56,7 +74,24 @@ const width = 'auto';
     justify-content: center;
     height: 100%;
 }
-
+.kitbutton {
+    position: relative;
+    height: 100%;
+    width: 0;
+}
+.kitbutton.expanded {
+    width: 1.5em;
+}
+.kitbutton>*{
+    background-color: #e4e4e4;
+    bottom:0px;
+    position: absolute;
+    left: 0px;
+    bottom:0px;
+}
+.kitbutton.expanded>* {
+    box-shadow: 3px 0px 3px #00000033
+}
 .group {
     display: flex;
     flex-direction: row;

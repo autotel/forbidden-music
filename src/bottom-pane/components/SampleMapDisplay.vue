@@ -5,7 +5,9 @@ import { frequencyToOctave } from '@/functions/toneConverters';
 import { SampleFileDefinition, SampleKitUser, SampleSource } from '@/synth/features/chromaticSampleKitUser';
 import { Synth } from '@/synth/types/Synth';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import isDev from '@/functions/isDev';
 
+const showDetails = isDev();
 const props = defineProps<{
     audioModule: Synth & SampleKitUser
 }>();
@@ -32,14 +34,21 @@ const sampleWasChosenListener = (sample: SampleSource, index: number) => {
     }, 500);
 }
 
+const sampleLoadedListener = (_sample: SampleSource, index:number) => {
+    // just to trigger a redraw
+    currentData.value = [...currentData.value];
+}
+
 onMounted(() => {
     props.audioModule.sampleKitManager.addSampleKitChangedListener(sampleChangedListener);
     props.audioModule.sampleKitManager.addSampleItemChosenListener(sampleWasChosenListener);
+    props.audioModule.sampleKitManager.addSampleItemLoadedListener(sampleLoadedListener);
 });
 
 onBeforeUnmount(() => {
     props.audioModule.sampleKitManager.removeSampleKitChangedListener(sampleChangedListener);
     props.audioModule.sampleKitManager.removeSampleItemChosenListener(sampleWasChosenListener);
+    props.audioModule.sampleKitManager.removeSampleItemLoadedListener(sampleLoadedListener);
 })
 
 const fToY = (freq: number) => {
@@ -95,7 +104,7 @@ const sampleDivStyle = (sample: SampleFileDefinition) => {
         <template v-else>
             <Button :onClick="() => expanded = true">{{ audioModule.sampleKitParam.value.name }}</Button>
         </template>
-        <ul class="data padded">
+        <!-- <ul class="data padded" v-if="showDetails">
             <li>{{ lastTriggeredSample ? lastTriggeredSample.name : '' }}</li>
             <li>{{ currentData.length }}</li>
             <li><ul v-if="currentlyHoveredSample" class="hovered-item-data">
@@ -103,7 +112,7 @@ const sampleDivStyle = (sample: SampleFileDefinition) => {
                 <li>Vel: {{ currentlyHoveredSample.velocityStart }}-{{ currentlyHoveredSample.velocityEnd }}</li>
                 <li>Fq: {{ currentlyHoveredSample.frequencyStart }}-{{ currentlyHoveredSample.frequencyEnd }}</li>
             </ul></li>
-        </ul>
+        </ul> -->
     </div>
 
 </template>

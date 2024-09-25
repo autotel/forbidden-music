@@ -7,12 +7,13 @@ import { OctaveRange, TimeRange, VelocityRange, } from '../dataTypes/TimelineIte
 import { Tool } from '../dataTypes/Tool';
 import { Trace, TraceType } from '../dataTypes/Trace';
 import { filterMap } from "../functions/filterMap";
-import { getTracesInRange } from '../functions/getEventsInRange';
+import { getTracesInRange, getTracesStartingInRange } from '../functions/getEventsInRange';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
 import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
+import { Loop } from '@/dataTypes/Loop';
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
@@ -169,11 +170,23 @@ export const useSelectStore = defineStore("select", () => {
         select(...whatToSelect);
     };
 
+    const selectLoopAndNotes = (loop: Loop) => {
+        const startingInRange = getTracesStartingInRange([
+            ...project.notes,
+            ...project.loops,
+        ], {
+            time: loop.time,
+            timeEnd: loop.timeEnd
+        });
+        add(...startingInRange)
+    }
+
     throttledWatch(() => selected.value.size, refreshTraceSelectionState);
 
     return {
         selectRange,
         selectAll,
+        selectLoopAndNotes,
         addRange,
         add, select, toggle,
         getTraces,

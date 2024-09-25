@@ -66,7 +66,7 @@ const toggleCollapse = () => {
 
 .padding {
     padding: 0.2em;
-    margin: 0.3em;
+    /* margin: 0.3em; */
 }
 
 .module-container {

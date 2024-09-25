@@ -165,6 +165,7 @@ export class SampleSource implements SampleFileDefinition {
 
 export type SampleKitChangedListenerType = (sampleKitDef: SampleKitDefinition) => void;
 export type SampleItemChosenListenerType = (sampleSource: SampleSource, index: number) => void;
+export type SampleItemLoadedListenerType = (sampleSource: SampleSource, index: number) => void;
 
 const serializeSampleKit = (sampleKitDef: SampleKitDefinition) => {
     return {
@@ -185,6 +186,7 @@ const serializeSampleKit = (sampleKitDef: SampleKitDefinition) => {
 export const chromaticSampleKitManager = (audioContext: AudioContext, initialSamplesDefinition: SampleKitDefinition) => {
     const sampleKitChangedListeners: SampleKitChangedListenerType[] = [];
     const sampleItemChosenListeners: SampleItemChosenListenerType[] = [];
+    const sampleLoadedListeners: SampleItemLoadedListenerType[] = [];
 
     const loadingProgressParam = {
         displayName: "Loading progress",
@@ -239,6 +241,7 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
             const promise = sampleSource.load();
             everyPromise.push(promise);
             await promise;
+            sampleLoadedListeners.forEach((listener) => listener(sampleSource, sampleSources.indexOf(sampleSource)));
             loadingProgressParam.value += loadingProgressStep;
         });
 
@@ -271,6 +274,12 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
         removeSampleItemChosenListener: (listener: SampleItemChosenListenerType) => {
             sampleItemChosenListeners.filter(l => l !== listener);
             if (sampleItemChosenListeners.length == 0) chosenSampleListener = undefined;
+        },
+        addSampleItemLoadedListener: (listener: SampleItemLoadedListenerType) => {
+            sampleLoadedListeners.push(listener);
+        },
+        removeSampleItemLoadedListener: (listener: SampleItemLoadedListenerType) => {
+            sampleLoadedListeners.filter(l => l !== listener);
         },
     };
 

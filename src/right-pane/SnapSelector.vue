@@ -82,16 +82,14 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
       :class="{ active: snap.onlyWithNotesInView }" tooltip="only with notes in the screen's range">
       In view
     </Button>
-    <template>
-      <Button :onClick="onlyWithNotesInTheSameLayerToggle" :class="{ active: snap.onlyWithNotesInTheSameLayer }"
-        tooltip="only with notes in the same layer">
-        == layer
-      </Button>
-      <Button :onClick="onlyWithyNotesInDifferentLayerToggle" :class="{ active: snap.onlyWithNotesInDifferentLayer }"
-        tooltip="only with notes in a different layer">
-        != layer
-      </Button>
-    </template>
+    <Button :onClick="onlyWithNotesInTheSameLayerToggle" :class="{ active: snap.onlyWithNotesInTheSameLayer }"
+      tooltip="only with notes in the same layer">
+      == layer
+    </Button>
+    <Button :onClick="onlyWithyNotesInDifferentLayerToggle" :class="{ active: snap.onlyWithNotesInDifferentLayer }"
+      tooltip="only with notes in a different layer">
+      != layer
+    </Button>
   </Collapsible>
 </template>
 
