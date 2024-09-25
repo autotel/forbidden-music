@@ -31,6 +31,7 @@ const requireAttributes = (obj: Object, attributes: string[], guideStr: string) 
 type ExternalSampleKit = {
     url: string;
     name: string;
+    error: string;
     content: SampleKitDefinition[];
 }
 
@@ -38,10 +39,11 @@ export default defineStore('externalSampleLibrariesStore', () => {
     const listOfExternalLibs = ref([{
         url: 'localhost',
         name: 'factory',
+        error: '',
         content: factorySampleKits
     }] as ExternalSampleKit[]);
 
-    const listOfAvailableSampleKits = computed(()=>{
+    const listOfAvailableSampleKits = computed(() => {
         return [...listOfExternalLibs.value.flatMap(lib => lib.content)];
     });
 
@@ -91,25 +93,30 @@ export default defineStore('externalSampleLibrariesStore', () => {
 
     const addLibraryUrl = async (definitionUrl: string) => {
         console.log("add library", definitionUrl);
-        const newDef = await fetch(definitionUrl).then(res => res.json());
-        console.log("newDef", newDef);
-        if (!Array.isArray(newDef)) {
-            throw new Error('Library definition must be an array, instead got ' + typeof newDef);
-        }
-        const checkedList = [];
-        for (const def of newDef) {
-            checkedList.push(checkLibraryDef(def));
+        let error = '';
+        let checkedList: SampleKitDefinition[] = [];
+        try {
+            const newDef = await fetch(definitionUrl).then(res => res.json());
+            if (!Array.isArray(newDef)) {
+                error = 'Library definition must be an array, instead got ' + typeof newDef;
+            }
+            for (const def of newDef) {
+                checkedList.push(checkLibraryDef(def));
+            }
+        } catch (e) {
+            error = e + '';
         }
         const libName = definitionUrl.replace(/((http)|(:\d+)|:|\/)+/gi, ' ');
         listOfExternalLibs.value.push({
             url: definitionUrl,
             name: libName,
-            content: checkedList
+            content: checkedList,
+            error,
         });
     }
 
     const removeLibraryUrl = (definitionUrl: string) => {
-        listOfExternalLibs.value = listOfExternalLibs.value.filter(({url}) => url !== definitionUrl);
+        listOfExternalLibs.value = listOfExternalLibs.value.filter(({ url }) => url !== definitionUrl);
     }
 
     addLibraryUrl('http://127.0.0.1:3010/samples');

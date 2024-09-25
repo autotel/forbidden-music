@@ -27,7 +27,9 @@ const externalSampleLibraries = externalSampleLibrariesStore();
                 <div class="header">
                     {{ library.name }}
                     <div class="url">{{ library.url }}</div>
+
                 </div>
+                <div class="error" v-if="library.error">{{ library.error }}</div>
                 <div v-for="kit in library.content" class="kit">
                     {{ kit.name }} {{ kit.fromLibrary }}
                 </div>
@@ -49,6 +51,10 @@ const externalSampleLibraries = externalSampleLibrariesStore();
 }
 .contents-list .library .url {
     text-align: right;
+}
+.contents-list .error {
+    font-style: italic;
+    padding-left: 1rem;
 }
 .contents-list .kit {
     padding-left: 1rem;
