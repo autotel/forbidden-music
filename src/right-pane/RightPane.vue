@@ -20,7 +20,7 @@ defineProps<{
         :style="{ width: paneWidth + 'px', height: paneHeight + 'px', display: paneWidth ? 'unset' : 'none' }">
         <FileManager startExpanded/>
         <WorkingMemory startExpanded />
-        <ExtraContentSources startExpanded/>
+        <ExtraContentSources/>
         <LayersManager />
         <SnapSelector startExpanded />
         <FtCaptureManager />
