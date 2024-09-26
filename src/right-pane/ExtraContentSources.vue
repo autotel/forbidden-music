@@ -11,9 +11,21 @@ import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { useProjectStore } from "../store/projectStore";
 import Collapsible from "./Collapsible.vue";
-import externalSampleLibrariesStore from "@/store/externalSampleLibrariesStore";
+import externalSampleLibrariesStore, { ExternalSampleKit } from "@/store/externalSampleLibrariesStore";
+import ButtonSub from "@/components/ButtonSub.vue";
 
 const externalSampleLibraries = externalSampleLibrariesStore();
+
+const deleteSampleLibrary = (url: string) => {
+    externalSampleLibraries.removeLibraryUrl(url);
+};
+
+const addSampleLibrary = async () => {
+    const url = prompt("Enter the URL of the sample library");
+    if (url) {
+        externalSampleLibraries.addLibraryUrl(url);
+    }
+};
 
 </script>
 <template>
@@ -24,22 +36,39 @@ const externalSampleLibraries = externalSampleLibrariesStore();
         </template>
         <div class="contents-list">
             <div v-for="library in externalSampleLibraries.listOfExternalLibs" class="library">
-                <div class="header">
-                    {{ library.name }}
-                    <div class="url">{{ library.url }}</div>
-
+                <div class="header side-by-side">
+                    <div class="">
+                        {{ library.name }}
+                        <div class="url">
+                            {{ library.url }}
+                        </div>
+                    </div>
+                    <div>
+                    <ButtonSub @click="()=>deleteSampleLibrary(library.url)" tooltip="Delete a sample library">
+                        ×
+                    </ButtonSub>
+                    </div>
                 </div>
                 <div class="error" v-if="library.error">{{ library.error }}</div>
                 <div v-for="kit in library.content" class="kit">
-                    {{ kit.name }} {{ kit.fromLibrary }}
+                    {{ kit.name }}
                 </div>
             </div>
+        </div>
+        <div class="actions">
+            <Button @click="addSampleLibrary" tooltip="Add a sample library">
+                add +
+            </Button>
         </div>
     </Collapsible>
 </template>
 
     
 <style scoped>
+.side-by-side {
+    display: flex;
+    justify-content: space-between;
+}
 .contents-list {
 }
 .contents-list .library {

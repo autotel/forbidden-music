@@ -28,7 +28,7 @@ const requireAttributes = (obj: Object, attributes: string[], guideStr: string) 
     }
 }
 
-type ExternalSampleKit = {
+export type ExternalSampleKit = {
     url: string;
     name: string;
     error: string;
