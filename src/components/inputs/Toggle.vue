@@ -64,7 +64,7 @@ const toggle = () => {
   height: 14px;
   width: 14px;
   left: 2px;
-  bottom: 2px;
+  top: 3px;
   background-color: #ffffff;
   border-radius: 9999px;
   box-shadow:  0 2px 4px rgba(0, 0, 0, 0.1);

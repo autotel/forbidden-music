@@ -156,7 +156,7 @@ onMounted(() => {
 });
 </script>
 <template>
-    <div :style="{ width }" class="layout">
+    <div :style="{ width }" class="layout wrap">
         <div :style="{ width }" class="scope-container">
             <canvas ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]"
                 style="flex-grow: 0; flex-shrink: 0;"></canvas>
@@ -182,7 +182,9 @@ onMounted(() => {
     justify-content: center;
     height: 100%;
 }
-
+.wrap {
+    flex-wrap: wrap;
+}
 .scope-container {
     position: relative;
 }

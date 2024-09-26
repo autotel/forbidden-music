@@ -12,6 +12,7 @@ import { AutomationLane } from '@/dataTypes/AutomationLane';
 import { automationPoint } from '@/dataTypes/AutomationPoint';
 import { useProjectStore } from '@/store/projectStore';
 import { useThrottleFn } from '@vueuse/core';
+import { useCustomSettingsStore } from '@/store/customSettingsStore';
 const props = defineProps<{
     param: NumberSynthParam | ProgressSynthParam,
     noLabel?: boolean
@@ -21,6 +22,7 @@ const emit = defineEmits(['update']);
 const automation = useAutomationLaneStore();
 const tool = useToolStore();
 const project = useProjectStore();
+const userSettingsStore = useCustomSettingsStore();
 let mouseDownPos = {
     x: 0, y: 0,
 };
@@ -183,17 +185,20 @@ const windowMouseMove = (e: MouseEvent) => {
 const mouseDown = async (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    try {
-        await mouseCaptureCanvas.value?.requestPointerLock();
-        // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
-        if (document.pointerLockElement === mouseCaptureCanvas.value) {
-            console.log("The pointer lock status is now locked");
-            // window.addEventListener("mousemove", lockedPointerMoved, false);
+    if(userSettingsStore.useKnobCapture){
+        try {
+            await mouseCaptureCanvas.value?.requestPointerLock();
+            // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
+            if (document.pointerLockElement === mouseCaptureCanvas.value) {
+                console.log("The pointer lock status is now locked");
+                // window.addEventListener("mousemove", lockedPointerMoved, false);
+            }
+        }
+        catch (e) {
+            console.warn('pointer lock did not work');
         }
     }
-    catch (e) {
-        console.warn('pointer lock did not work');
-    }
+
     if (automated.value) {
         enterAutomation();
     }

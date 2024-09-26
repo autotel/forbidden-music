@@ -13,6 +13,7 @@ import Collapsible from './Collapsible.vue';
 import WorkletWorkbench from '../WorkletWorkbench.vue';
 import { useMonoModeInteraction } from '@/store/monoModeInteraction';
 import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
+import Tooltip from '@/components/Tooltip.vue';
 
 const monoModeInteraction = useMonoModeInteraction();
 
@@ -99,6 +100,14 @@ const workletWorkbench = () => {
                 </select>
                 <label>Viewport Tech</label>
             </div>
+
+            <Tooltip
+                tooltip="Makes the cursor disappear when dragging on a parameter knob. It's a great usability feature, but can cause trouble in some cases">
+                <div class="form-row">
+                    <Toggle v-model="userSettings.useKnobCapture" />
+                    <label>Use pointer capture</label>
+                </div>
+            </Tooltip>
             <!-- 
             <div class="form-row">
                 <Toggle v-model="userSettings.performanceSettingsEnabled" />
