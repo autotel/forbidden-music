@@ -10,7 +10,7 @@ import { FilterBankSynth, FilterDefinition } from '@/synth/generators/FilterBank
 import { S } from 'vitest/dist/reporters-5f784f42';
 
 type microVec = [number, number];
-const canvasSize: microVec = [300, 100];
+const canvasSize: microVec = [300, 92];
 const {
     filterOctaveMax,
     filterOctaveMin,
@@ -110,7 +110,12 @@ const paramsGroups = computed<ParamGroupTitleTuple[]>(() => {
 <template>
     <div style="text-align: center;  ">
         <div class="layout">
-            <svg ref="canvas" :width="canvasSize[0]" :height="canvasSize[1]" style="flex-grow: 0; flex-shrink: 0;">
+            <svg 
+                ref="canvas" 
+                :width="canvasSize[0]" 
+                :height="canvasSize[1]" 
+                class="canvas"
+            >
                 <line :x1="zeroXPos" y1="0" :x2="zeroXPos" :y2="canvasSize[1]" />
                 <circle v-for="(point, index) in filterPoints" :cx="point[0]" :cy="point[1]" r="5" class="filterEllipse"
                     @mousedown="(e) => dragStart(e, index)" />
@@ -125,7 +130,7 @@ const paramsGroups = computed<ParamGroupTitleTuple[]>(() => {
             </div>
         </div>
         
-        <div class="layout">
+        <div class="layout wrap">
             <div v-for="([paramGroup, title]) in paramsGroups" class="group">
                 <div class="title">
                     <p>{{ title }}</p>
@@ -196,11 +201,17 @@ const paramsGroups = computed<ParamGroupTitleTuple[]>(() => {
     gap: 0.5em;
     height: 100%;
     width: 41.8em;
-    
 }
-svg {
+.wrap {
+    flex-wrap: wrap;
+}
+.canvas {
     
+    flex-grow: 0; 
+    flex-shrink: 0;
     border:solid 1px #00000041;
-
+    stroke: white;
+    background-color: rgba(0, 0, 0, 0.37);
+    margin: 0.5em;
 }
 </style>
