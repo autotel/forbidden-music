@@ -18,7 +18,7 @@ const dragHandleEl = ref<HTMLElement | null>(null);
 const collapsed = ref(false);
 const mainContainer = ref<HTMLDivElement | null>(null);
 const collapsible = ref(true);
-
+const originalModuleWidth = ref<string>('16em');
 const isDraggable = computed<[DragCallbackType, DragCallbackType] | false>(() => {
     if (props.dragStartCallback && props.dragEndCallback) {
         return [props.dragStartCallback, props.dragEndCallback];
@@ -43,6 +43,7 @@ const dragStartHandler = (e: MouseEvent) => {
     dragStarted.value = true;
     addEventListener('mousemove', dragMoveHandler);
     dragMoveHandler(e);
+    originalModuleWidth.value = mainContainer.value?.clientWidth + 'px';
 }
 
 const dragEndHandler = () => {
@@ -86,6 +87,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+    <div v-if="dragStarted" class="flying-module-spacer" :style="{width: originalModuleWidth}">
+
+    </div>
     <div ref="mainContainer" :class="`module-container ${dragStarted ? 'flying' : ''}`">
         <div id="title-rotator">
             <div id="title">
@@ -218,5 +222,15 @@ onBeforeUnmount(() => {
     .module-container {
         background-color: #e4e4e4;
     }
+}
+
+.flying-module-spacer {
+    box-shadow: inset 4px 4px 8px #0000001e;
+    height: 18em;
+    padding-left: 2em;
+    border-radius: 1em;
+    box-sizing: border-box;
+    position: relative;
+    background-color: #0001;
 }
 </style>
