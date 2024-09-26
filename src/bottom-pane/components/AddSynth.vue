@@ -133,6 +133,7 @@ watchEffect(()=>{
     flex-grow: 0;
     flex-shrink:0;
     height:18em;
+    width: 100%;
 }
 .main-container.draggingPatcheableOver{
     background-color: #00a2ffc0;

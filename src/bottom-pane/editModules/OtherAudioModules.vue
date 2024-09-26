@@ -54,9 +54,9 @@ const width = computed(() => {
 .layout {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     height: 100%;
+    flex-wrap: wrap;
 }
 </style>

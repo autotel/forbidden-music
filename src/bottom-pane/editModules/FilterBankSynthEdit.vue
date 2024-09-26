@@ -191,7 +191,6 @@ const paramsGroups = computed<ParamGroupTitleTuple[]>(() => {
 .layout {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.5em;

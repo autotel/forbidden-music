@@ -49,7 +49,6 @@ const width = 'auto';
 .layout {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: center;
     height: 100%;
