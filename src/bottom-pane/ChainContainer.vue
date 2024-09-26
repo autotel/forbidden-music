@@ -76,14 +76,15 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
 
 const patchItemDragStart = (
     patcheable: PatcheableTrait, 
-    synthChain: SynthChain,
     index: number,
 ) => {
+    const synthChain = props.synthChain;
     bottomPaneStore.patcheableBeingDragged = {
         patcheable,
         removeCallback: () => {
-            synthChain.setAudioModules(synthChain.children.filter((p)=>p !== patcheable));
+            // synthChain.setAudioModules(synthChain.children.filter((p)=>p !== patcheable));
             // synthChain.removeAudioModule(patcheable);
+            synthChain.removeAudioModuleAt(index);
         },
     };
 }
@@ -95,13 +96,13 @@ const patchItemDragEnd = (e: MouseEvent) => {
 </script>
 
 <template>
-    <template v-for="(audioModule, i) in stepsArray">
+    <template v-for="(audioModule, i) in stepsArray" :key="audioModule.name + ' ' + i">
         <AddSynth :position="i" :targetChain="synthChain" />
         <ModuleContainer
             v-if="audioModule" 
             :title="audioModule.name + ''" 
             padding
-            :dragStartCallback="(e)=>patchItemDragStart(audioModule, synthChain, i)"
+            :dragStartCallback="(e)=>patchItemDragStart(audioModule, i)"
             :dragEndCallback="patchItemDragEnd"
         >
             <template #icons>

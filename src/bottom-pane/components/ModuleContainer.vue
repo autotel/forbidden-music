@@ -93,10 +93,13 @@ onBeforeUnmount(() => {
                     {{ title }}
                 </span>
                 <div id="icons-slot-container">
-                    <span class="click-icon" ref="dragHandleEl" :class="{
-                        draggable: isDraggable,
-                        active: dragStarted
-                    }">
+                    <span 
+                        v-if="isDraggable"
+                        class="click-icon" ref="dragHandleEl" :class="{
+                            draggable: isDraggable,
+                            active: dragStarted
+                        }"
+                    >
                         ⁙
                     </span>
                     <span class="click-icon" v-if="collapsible" :onClick="toggleCollapse">
