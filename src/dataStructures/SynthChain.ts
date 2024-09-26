@@ -122,11 +122,10 @@ export class SynthChain implements PatcheableTrait {
         this.rewire();
         this.handleChanged();
     }
-    removeAudioModule = (step: ChainStep) => {
-        const index = this.children.indexOf(step);
+    removeAudioModule = (module: ChainStep) => {
+        const index = this.children.findIndex((child) => child === module);
         if (index === -1) {
-            console.warn("module not found in children", this.children, step);
-            return;
+            throw new Error("module not found in children");
         }
         this.removeAudioModuleAt(index);
     }

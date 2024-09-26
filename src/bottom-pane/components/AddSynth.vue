@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { ref } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import Button from '@/components/Button.vue';
 import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
 import {  useSynthStore } from '@/store/synthStore';
@@ -18,6 +18,7 @@ const synth = useSynthStore();
 const audioContextStore = useAudioContextStore();
 const expanded = ref(false);
 const bottomPaneState = useBottomPaneStateStore();
+const mainContainer = ref<HTMLDivElement | null>(null);
 const addSynth = (synthCon: SynthConstructorWrapper) => {
     const newSynth = synth.instanceAudioModule(synthCon);
     props.targetChain.addAudioModule(
@@ -35,9 +36,55 @@ const addRack = () => {
     newStack.addChain();
     expanded.value = false;
 }
+const dropPatcheable = () => {
+    if(!bottomPaneState.patcheableBeingDragged) throw new Error('No patcheableBeingDragged');
+    const {patcheable, removeCallback} = bottomPaneState.patcheableBeingDragged;
+    if(draggingPatcheableOver.value){
+        removeCallback();
+        props.targetChain.addAudioModule(
+            props.position,
+            patcheable,
+        );
+    }
+    bottomPaneState.patcheableBeingDragged = false;
+}
+
+const draggingPatcheableOver = ref(false);
+
+const patcheableDragoverHandler = () => {
+    draggingPatcheableOver.value = true;
+}
+const patcheableDragOutHandler = () => {
+    draggingPatcheableOver.value = false;
+}
+
+
+const activatePatchDragEvents = () => {
+    if(!mainContainer.value) return;
+    mainContainer.value.addEventListener('mouseenter', patcheableDragoverHandler);
+    mainContainer.value.addEventListener('mouseleave', patcheableDragOutHandler);
+    mainContainer.value.addEventListener('mouseup', dropPatcheable);
+}
+const deactivatePatchDragEvents = () => {
+    if(!mainContainer.value) return;
+    mainContainer.value.removeEventListener('mouseenter', patcheableDragoverHandler);
+    mainContainer.value.removeEventListener('mouseleave', patcheableDragOutHandler);
+    mainContainer.value.removeEventListener('mouseup', dropPatcheable);
+    draggingPatcheableOver.value = false;
+}
+
+watchEffect(()=>{
+    if(bottomPaneState.patcheableBeingDragged){
+        console.log('activatePatchDragEvents');
+        activatePatchDragEvents();
+    }else{
+        deactivatePatchDragEvents();
+    }
+})
+
 </script>
 <template>
-    <div class="main-container">
+    <div class="main-container" :class="{draggingPatcheableOver}" ref="mainContainer">
         <div class="icons-container" v-if="!forceExpanded">
             <Button 
                 style="background-color: transparent;"    
@@ -65,6 +112,10 @@ const addRack = () => {
     flex-wrap: nowrap;
     justify-content: flex-start;
     align-content: flex-start;
+    opacity: 0.4;
+}
+.main-container:hover{
+    opacity: 1;
 }
 .icons-container {
     display: inline-flex;
@@ -82,5 +133,12 @@ const addRack = () => {
     flex-grow: 0;
     flex-shrink:0;
     height:18em;
+}
+.main-container.draggingPatcheableOver{
+    background-color: #00a2ffc0;
+    border-radius: 5px;
+}
+.main-container.draggingPatcheableOver *{
+    color: white;
 }
 </style>

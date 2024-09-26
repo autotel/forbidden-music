@@ -35,11 +35,13 @@ import SamplerEdit from './editModules/SamplerEdit.vue';
 import GranularSamplerEdit from './editModules/GranularSamplerEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
+import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
 
 const props = defineProps<{
     synthChain: SynthChain
 }>();
 
+const bottomPaneStore = useBottomPaneStateStore();
 const stepsArray = ref(props.synthChain.children);
 
 const chainChangedHandler = () => {
@@ -72,12 +74,36 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
     return audioModule.patcheableType === PatcheableType.AudioModule
 }
 
+const patchItemDragStart = (
+    patcheable: PatcheableTrait, 
+    synthChain: SynthChain,
+    index: number,
+) => {
+    bottomPaneStore.patcheableBeingDragged = {
+        patcheable,
+        removeCallback: () => {
+            synthChain.setAudioModules(synthChain.children.filter((p)=>p !== patcheable));
+            // synthChain.removeAudioModule(patcheable);
+        },
+    };
+}
+
+const patchItemDragEnd = (e: MouseEvent) => {
+    bottomPaneStore.patcheableBeingDragged = false;
+}
+
 </script>
 
 <template>
     <template v-for="(audioModule, i) in stepsArray">
         <AddSynth :position="i" :targetChain="synthChain" />
-        <ModuleContainer v-if="audioModule" :title="audioModule.name + ''" padding>
+        <ModuleContainer
+            v-if="audioModule" 
+            :title="audioModule.name + ''" 
+            padding
+            :dragStartCallback="(e)=>patchItemDragStart(audioModule, synthChain, i)"
+            :dragEndCallback="patchItemDragEnd"
+        >
             <template #icons>
                 <Button danger :onClick="() => xClickHandler(synthChain, i)" tooltip="delete"
                     style="background-color:transparent">×</Button>
@@ -128,7 +154,6 @@ const isAudioModule = (audioModule: PatcheableTrait): audioModule is Synth => {
 }
 
 #hrow-items>* {
-    display: inline-block;
     margin: 0.25em;
     vertical-align: top;
     flex-shrink: 0;

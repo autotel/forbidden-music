@@ -1,39 +1,104 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 import Eye from '@/components/icons/Eye.vue';
 import EyeNot from '@/components/icons/EyeNot.vue';
+
+type DragCallbackType = (e: MouseEvent) => void;
 
 const props = defineProps<{
     title: string,
     padding?: boolean
     noCollapse?: boolean
     defaultCollapsed?: boolean
+    dragStartCallback?: DragCallbackType
+    dragEndCallback?: DragCallbackType
 }>();
 
+const dragHandleEl = ref<HTMLElement | null>(null);
 const collapsed = ref(false);
 const mainContainer = ref<HTMLDivElement | null>(null);
 const collapsible = ref(true);
 
+const isDraggable = computed<[DragCallbackType, DragCallbackType] | false>(() => {
+    if (props.dragStartCallback && props.dragEndCallback) {
+        return [props.dragStartCallback, props.dragEndCallback];
+    }
+    return false;
+});
+
+const dragStarted = ref<boolean>(false);
+
 watchEffect(() => {
     collapsible.value = !props.noCollapse;
-    
     collapsed.value = props.defaultCollapsed ?? false;
 });
 
-const toggleCollapse = () => {
+const toggleCollapse = (e: MouseEvent) => {
+    e.stopPropagation();
     if (props.noCollapse) return;
     collapsed.value = !collapsed.value;
 }
+
+const dragStartHandler = (e: MouseEvent) => {
+    dragStarted.value = true;
+    addEventListener('mousemove', dragMoveHandler);
+    dragMoveHandler(e);
+}
+
+const dragEndHandler = () => {
+    dragStarted.value = false;
+    removeEventListener('mousemove', dragMoveHandler);
+    mainContainer.value?.removeAttribute('style');
+}
+
+const dragMoveHandler = (e: MouseEvent) => {
+    if (dragStarted.value) {
+        const x = e.clientX - 20;
+        const y = e.clientY - 80;
+        mainContainer.value?.setAttribute('style', `left: ${x}px; top: ${y}px;`);
+    }
+}
+
+onMounted(() => {
+    const dCallbacks = isDraggable.value;
+    if (dCallbacks) {
+        const [dragStartCallback, dragEndCallback] = dCallbacks;
+
+        dragHandleEl.value?.addEventListener('mousedown', dragStartCallback);
+        addEventListener('mouseup', dragEndCallback);
+        dragHandleEl.value?.addEventListener('mousedown', dragStartHandler);
+        addEventListener('mouseup', dragEndHandler);
+    }
+});
+
+onBeforeUnmount(() => {
+    const dCallbacks = isDraggable.value;
+    if (dCallbacks) {
+        const [dragStartCallback, dragEndCallback] = dCallbacks;
+
+        dragHandleEl.value?.removeEventListener('mousedown', dragStartCallback);
+        removeEventListener('mouseup', dragEndCallback);
+        dragHandleEl.value?.removeEventListener('mousedown', dragStartHandler);
+        removeEventListener('mouseup', dragEndHandler);
+    }
+});
+
 </script>
 
 <template>
-    <div class="module-container" ref="mainContainer">
-        <div id="title-rotator" >
+    <div ref="mainContainer" :class="`module-container ${dragStarted ? 'flying' : ''}`">
+        <div id="title-rotator">
             <div id="title">
                 <span>
                     {{ title }}
                 </span>
                 <div id="icons-slot-container">
+                    <span class="click-icon" ref="dragHandleEl" :class="{
+                        draggable: isDraggable,
+                        active: dragStarted
+                    }">
+                        ⁙
+                    </span>
                     <span class="click-icon" v-if="collapsible" :onClick="toggleCollapse">
                         <span v-if="collapsed">
                             <Eye />
@@ -80,7 +145,24 @@ const toggleCollapse = () => {
     box-sizing: border-box;
     /* overflow: hidden; */
     position: relative;
+    user-select: none;
+}
 
+.module-container.flying {
+    position: fixed;
+    z-index: 5;
+    box-shadow: 2px 2px 8px #0000002f;
+    /* transform: rotate3d(10,80, 0, 45deg); */
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.draggable {
+    cursor: grab;
+}
+
+.draggable.active {
+    cursor: grabbing;
 }
 
 #title {

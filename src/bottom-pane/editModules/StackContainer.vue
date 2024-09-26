@@ -45,7 +45,13 @@ const handleRemoveClick = () => {
         <template v-for="(am, no) in layersArray">
             <Button :onClick="() => visibleChain = am" :class="{ active: visibleChain === am }"
                 style="width:calc(100% - 2em); display:flex; justify-content: space-between;" class="padded">
-                chain {{ no }}
+                <!-- {{ no }}.  -->
+                <template v-if="am.children.length > 0">
+                    <span>{{ am.children[0].name }}</span>
+                </template>
+                <template v-else>
+                    <span>Empty</span>
+                </template>
                 <ButtonSub danger :onClick="() => removeLayer(no)" tooltip="delete">×</ButtonSub>
             </Button>
 
@@ -72,7 +78,7 @@ const handleRemoveClick = () => {
 .chain-container {
     position: relative;
     display: flex;
-    top: -0.55em;
+    top: -0.275em;
     gap: 0.4em;
 }
 

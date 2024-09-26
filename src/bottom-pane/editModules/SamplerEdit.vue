@@ -83,11 +83,11 @@ const width = 'auto';
     width: 1.5em;
 }
 .kitbutton>*{
-    background-color: #e4e4e4;
     bottom:0px;
     position: absolute;
     left: 0px;
     bottom:0px;
+    backdrop-filter: blur(2px);
 }
 .kitbutton.expanded>* {
     box-shadow: 3px 0px 3px #00000033

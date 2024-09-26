@@ -111,6 +111,7 @@ export class RingModEffect extends AudioModule {
             wet.connect(this.output);
 
             oscillator.start();
+            this.markReady();
         }
 
         this.disable = () => {
