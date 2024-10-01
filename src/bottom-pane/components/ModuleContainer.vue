@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 import Eye from '@/components/icons/Eye.vue';
 import EyeNot from '@/components/icons/EyeNot.vue';
+import DragIndicator from '@/components/icons/DragIndicator.vue';
 
 type DragCallbackType = (e: MouseEvent) => void;
 
@@ -99,12 +100,12 @@ onBeforeUnmount(() => {
                 <div id="icons-slot-container">
                     <span 
                         v-if="isDraggable"
-                        class="click-icon" ref="dragHandleEl" :class="{
+                        class="drag-icon" ref="dragHandleEl" :class="{
                             draggable: isDraggable,
                             active: dragStarted
                         }"
                     >
-                        ⁙
+                        <DragIndicator />
                     </span>
                     <span class="click-icon" v-if="collapsible" :onClick="toggleCollapse">
                         <span v-if="collapsed">
@@ -163,9 +164,6 @@ onBeforeUnmount(() => {
     pointer-events: none;
 }
 
-.draggable {
-    cursor: grab;
-}
 
 .draggable.active {
     cursor: grabbing;
@@ -197,8 +195,14 @@ onBeforeUnmount(() => {
     margin-left: 0.5em;
     opacity: 0.5;
 }
+.drag-icon {
+    cursor: grab;
+    margin-left: 0.5em;
+    opacity: 0.5;
+}
 
-.click-icon svg {
+
+.click-icon svg, .drag-icon svg {
     position: relative;
     top: 2px
 }

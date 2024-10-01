@@ -119,7 +119,8 @@ export default defineStore('externalSampleLibrariesStore', () => {
         listOfExternalLibs.value = listOfExternalLibs.value.filter(({ url }) => url !== definitionUrl);
     }
 
-    addLibraryUrl('http://127.0.0.1:3010/samples');
+    addLibraryUrl('http://127.0.0.1:3010/samples.json');
+    // addLibraryUrl('http://autotel-forbidden-music.atwebpages.com/samples.json');
 
     return {
         listOfExternalLibs,

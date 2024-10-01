@@ -1,57 +1,59 @@
-const forever = () => new Promise(() => {});
+const forever = () => new Promise(() => { });
+import {
+    readTextFile,
+    BaseDirectory,
+    writeFile,
+    writeTextFile,
+    readDir,
+} from '@tauri-apps/api/fs';
+
+import {
+    appCacheDir,
+    appConfigDir,
+    appDataDir,
+    appLocalDataDir,
+    appLogDir,
+    audioDir,
+    basename,
+    cacheDir,
+    configDir,
+    dataDir,
+    delimiter,
+    desktopDir,
+    dirname,
+    documentDir,
+    downloadDir,
+    executableDir,
+    extname,
+    fontDir,
+    homeDir,
+    isAbsolute,
+    join,
+    localDataDir,
+    normalize,
+    pictureDir,
+    publicDir,
+    resolve,
+    resolveResource,
+    resourceDir,
+    runtimeDir,
+    sep,
+    templateDir,
+    videoDir
+} from '@tauri-apps/api/path';
+import { open, save } from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api';
+import { listen } from '@tauri-apps/api/event';
 
 const tauriObjectPromise = (async () => {
-    if(!isTauri()) await forever();
-    const {
-        readTextFile,
-        BaseDirectory,
-        writeFile,
-        writeTextFile
-    } = await require('@tauri-apps/api/fs');
-
-    const {
-        appCacheDir,
-        appConfigDir,
-        appDataDir,
-        appLocalDataDir,
-        appLogDir,
-        audioDir,
-        basename,
-        cacheDir,
-        configDir,
-        dataDir,
-        delimiter,
-        desktopDir,
-        dirname,
-        documentDir,
-        downloadDir,
-        executableDir,
-        extname,
-        fontDir,
-        homeDir,
-        isAbsolute,
-        join,
-        localDataDir,
-        normalize,
-        pictureDir,
-        publicDir,
-        resolve,
-        resolveResource,
-        resourceDir,
-        runtimeDir,
-        sep,
-        templateDir,
-        videoDir
-    } = await require('@tauri-apps/api/path');
-    const { open, save } = await require('@tauri-apps/api/dialog');
-    const { invoke } = require("@tauri-apps/api");
-    const { listen } = require("@tauri-apps/api/event");
-
+    if (!isTauri()) await forever();
+    
     return {
         invoke, listen,
         fs: {
             readTextFile, BaseDirectory,
             writeFile, writeTextFile,
+            readDir,
         },
         dialog: {
             open,

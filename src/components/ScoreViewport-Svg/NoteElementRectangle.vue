@@ -10,7 +10,6 @@ const tool = useToolStore();
 const props = defineProps<{
     eventRect: TimelineRect<Note>
     isEditable?: boolean,
-    greyed?:boolean,
 }>();
 
 const rightEdge = ref<SVGElement>();

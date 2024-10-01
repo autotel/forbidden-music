@@ -122,6 +122,7 @@ onMounted(() => {
     align-items: flex-start;
     justify-content: center;
     height: 100%;
+    flex-wrap: wrap;
 }
 
 .scope-container {
@@ -154,5 +155,10 @@ onMounted(() => {
     box-shadow: 0px 0px 5px rgba(255, 193, 78, 0.479);
     background-color: orange;
     mix-blend-mode: screen;
+}
+
+canvas {
+    border-top-left-radius: 0.8em;
+    border-top-right-radius: 0.8em;
 }
 </style>

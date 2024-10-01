@@ -27,7 +27,7 @@ const noteBody = ref<SVGRectElement>();
 
 const myColor = computed(() => {
     if(props.fill) return props.fill;
-    if(props.greyed) return 'gray';
+    if(props.greyed) return `rgba(0,0,0,${props.eventRect.event.velocity})`;
     const color = layerNoteColorStrings[props.eventRect.event.layer];
     return color;
 });
@@ -63,8 +63,7 @@ const isEditable = computed(() => {
         {{ text }}
     </text>
     <g ref="noteBody" :class="{ mouseblock: (!isEditable) || interactionDisabled }">
-        <NoteElementRectangle v-if="'width' in eventRect" :eventRect="eventRect" :isEditable="isEditable" :fill="myColor"
-            :greyed="greyed" />
+        <NoteElementRectangle v-if="'width' in eventRect" :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" />
         <NoteElementCircle v-else :eventRect="eventRect" :isEditable="isEditable" :fill="myColor" :greyed="greyed" />
         <NoteVeloLine :event="eventRect.event" :interactionDisabled="interactionDisabled" :x="eventRect.x"
             :selected="eventRect.event.selected || false" :fill="myColor" />

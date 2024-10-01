@@ -12,7 +12,7 @@ const myUrl = 'http://localhost:' + port
 // to parse the filenames to extract frequency, velocity and other data.
 const namings = require('./public/namings.json')
 
-app.get('/samples', cors({ origin: '*' }), (req, res) => {
+app.get('/samples.json', cors({ origin: '*' }), (req, res) => {
     const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples')
     res.json(generatedSamplesList);
 });

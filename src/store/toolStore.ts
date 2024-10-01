@@ -287,13 +287,18 @@ const mouseErase = ({ pos }: ToolMouse, { project, view }: Stores) => {
     const octave = view.pxToOctaveWithOffset(pos.y + pxRange);
     const octaveEnd = view.pxToOctaveWithOffset(pos.y - pxRange);
     const visibleTraces = view.visibleNotes;
-    const note = findTraceInRange(visibleTraces, {
+    const note = findTraceInRange<Note>(visibleTraces, {
         time, timeEnd, octave, octaveEnd
     });
-    const projectNoteIndex = note?project.notes.indexOf(note):-1;
-    if(projectNoteIndex !== -1) {
-        console.log("erase note", note);
-        project.notes.splice(projectNoteIndex, 1);
+    if (note) {
+        note.velocity -= 0.05;
+        if (note.velocity <= 0) {
+            const projectNoteIndex = note ? project.notes.indexOf(note) : -1;
+            if (projectNoteIndex !== -1) {
+                console.log("erase note", note);
+                project.notes.splice(projectNoteIndex, 1);
+            }
+        }
     }
 }
 export enum MouseDownActions {
@@ -589,7 +594,7 @@ export const useToolStore = defineStore("tool", () => {
             } else {
                 ret = MouseDownActions.CreateNote;
             }
-        } 
+        }
         return ret;
     }
 
@@ -607,9 +612,9 @@ export const useToolStore = defineStore("tool", () => {
     const touchDown = (touch: { clientX: number, clientY: number }) => {
         const now = Date.now();
         const interval = now - lastTapTime;
-        if (whatWouldMouseDownDo() === MouseDownActions.Erase){
+        if (whatWouldMouseDownDo() === MouseDownActions.Erase) {
             mouseDown(touch);
-        }else if (interval < dblTapMaxInterval) {
+        } else if (interval < dblTapMaxInterval) {
             mouseDown(touch);
         }
         lastTapTime = Date.now();

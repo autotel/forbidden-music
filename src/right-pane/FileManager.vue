@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import Button from "../components/Button.vue";
 import FileOpen from "../components/icons/FileOpen.vue";
 import Folder from "../components/icons/Folder.vue";
@@ -11,12 +11,15 @@ import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { useProjectStore } from "../store/projectStore";
 import Collapsible from "./Collapsible.vue";
+import { FileEntry } from "@tauri-apps/api/fs";
 
 const monoModeInteraction = useMonoModeInteraction();
 const project = useProjectStore();
 const libraryStore = useLibraryStore();
-const workingDirectory = ref<string>("Downloads");
-
+const workingDirectory = ref<string>('~');
+const filesOnWorkingDirectory = ref<FileEntry[]>([]);
+const skipDotFiles = true;
+const skipNotJSONFiles = true;
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
 
 const keyDownListener = (e: KeyboardEvent) => {
@@ -61,11 +64,6 @@ const downloadString = (text: string, fileType: string, fileName: string) => {
     a.href = url;
     a.download = project.name + ".json";
     a.click();
-}
-
-
-const clear = () => {
-    libraryStore.clear();
 }
 
 const showJSONOpenDialog = () => {
@@ -146,11 +144,92 @@ const download = () => {
     downloadString(json, "application/json", project.name + ".json");
 }
 
+const refreshDirList = () => {
+    ifTauri(async (tauriPromise) => {
+        const tauriResolved = await tauriPromise;
+        const { fs, path } = tauriResolved;
+        const dir = await fs.readDir(workingDirectory.value);
+        filesOnWorkingDirectory.value = dir.filter((file) => {
+            if (
+                (skipDotFiles && file.name?.startsWith("."))
+                || (skipNotJSONFiles && !file.children && !file.name?.endsWith(".json"))
+            ) {
+                return false;
+            }
+            return true;
+        }).sort((a, b) => {
+            if (a.children && !b.children) {
+                return -1;
+            }
+            if (!a.children && b.children) {
+                return 1;
+            }
+            return 0;
+        });
+    })
+}
+
+const goUpDir = () => {
+    ifTauri(async (tauriPromise) => {
+        const tauriResolved = await tauriPromise;
+        const { path } = tauriResolved;
+        workingDirectory.value = await path.dirname(workingDirectory.value);
+        console.log("changed to ", workingDirectory.value);
+        refreshDirList();
+    })
+}
+
+const goInDir = (dir: FileEntry) => {
+    ifTauri(async (tauriPromise) => {
+        const tauriResolved = await tauriPromise;
+        const { path } = tauriResolved;
+        workingDirectory.value = dir.path;
+        console.log("changed to ", workingDirectory.value);
+        refreshDirList();
+    })
+}
+
+const tryOpenProject = (path: FileEntry) => {
+    ifTauri(async (tauriPromise) => {
+        const tauriResolved = await tauriPromise;
+        const { fs } = tauriResolved;
+        try {
+            const content = await fs.readTextFile(path.path);
+            const parsedContent = JSON.parse(content);
+            libraryStore.importObject(parsedContent);
+            console.log("open JSON", path, content);
+            const filenameWithoutJson = path.name?.replace(/\.json\b/, "");
+            project.name = filenameWithoutJson || "unnamed";
+        } catch (e) {
+            alert(`Error opening file ${path}: ${e}`);
+        }
+    })
+}
+
+const fileClickHandler = (file: FileEntry) => {
+    if (file.children) {
+        goInDir(file);
+    } else {
+        tryOpenProject(file);
+    }
+}
+
+onMounted(() => {
+    ifTauri(async (tauriPromise) => {
+        const tauriResolved = await tauriPromise;
+        const { path } = tauriResolved;
+        workingDirectory.value = await path.homeDir();
+        console.log("changed to ", workingDirectory.value);
+        refreshDirList();
+    })
+    refreshDirList();
+})
+
 </script>
 <template>
     <Collapsible tooltip="Save to and load from your files, in text format">
         <template #icon>
-            <Folder clas="icon"/>
+            <Folder clas="icon" />
             Save and load
         </template>
         <small>{{ isTauri() ? workingDirectory : '' }}/{{ project.name }}.json</small>
@@ -168,13 +247,27 @@ const download = () => {
         <Button :onClick="showJSONOpenDialog" tooltip="Open JSON formatted file">
             <FileOpen />
         </Button>
+        <div class="dirlist" v-if="isTauri()">
+            <Button :onClick="goUpDir">
+                ..
+            </Button>
+            <Button v-for="file in filesOnWorkingDirectory" :key="file.path" :onClick="() => fileClickHandler(file)"
+                :class="{ 'dir': file.children }">
+                <Folder v-if="file.children" />
+                {{ file.name }}
+            </Button>
+        </div>
 
     </Collapsible>
 </template>
 
-    
+
 <style>
 input[type="file"] {
     display: none;
+}
+
+Button.dir {
+    background-color: aliceblue;
 }
 </style>

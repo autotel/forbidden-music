@@ -18,10 +18,7 @@
         "writeFile": true,
         "readDir": true,
         "scope": [
-          "$DOWNLOAD/**",
-          "$HOME/**",
-          "$APP_DATA/**",
-          "$APP/**"
+          "**"
         ]
       },
       "path": {
