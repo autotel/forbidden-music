@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import nsLocalStorage from './nsLocalStorage';
+import nsLocalStorage from './browserLocalStorage';
 describe('nslocalstorage', () => {
     const targetStorage = nsLocalStorage._storage;
 

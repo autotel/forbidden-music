@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { useLibraryStore } from './libraryStore';
 import { useProjectStore } from './projectStore';
 import demoProject from './project-default';
-import nsLocalStorage from '../functions/nsLocalStorage';
+import nsLocalStorage from '../functions/browserLocalStorage';
 
 describe('Library store', () => {
     setActivePinia(createPinia());

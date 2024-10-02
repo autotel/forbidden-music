@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Tooltip from '@/components/Tooltip.vue';
+import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
+import { useMonoModeInteraction } from '@/store/monoModeInteraction';
 import Button from '../components/Button.vue';
 import Cog from '../components/icons/Cog.vue';
 import Toggle from '../components/inputs/Toggle.vue';
@@ -8,12 +11,7 @@ import { ViewportTech, useCustomSettingsStore } from '../store/customSettingsSto
 import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useToolStore } from '../store/toolStore';
-import { useViewStore } from '../store/viewStore';
 import Collapsible from './Collapsible.vue';
-import WorkletWorkbench from '../WorkletWorkbench.vue';
-import { useMonoModeInteraction } from '@/store/monoModeInteraction';
-import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
-import Tooltip from '@/components/Tooltip.vue';
 
 const monoModeInteraction = useMonoModeInteraction();
 

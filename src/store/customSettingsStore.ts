@@ -1,13 +1,12 @@
 import { defineStore } from "pinia";
-import { onMounted, reactive, Ref, ref, watch, watchEffect } from "vue";
-import nsLocalStorage from "../functions/nsLocalStorage";
+import { onMounted, watch, watchEffect } from "vue";
 import userCustomPerformanceSettingsKey from "./userCustomPerformanceSettingsKey";
+import userSettingsStorageFactory from "./userSettingsStorageFactory";
 import { useViewStore } from "./viewStore";
 
 export enum ViewportTech {
     Pixi, Svg
 }
-
 
 const storedSettingsDefaults = {
     viewportTech: ViewportTech.Svg,
@@ -23,7 +22,7 @@ const storedSettingsDefaults = {
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
     const view = useViewStore();
-
+    const nsLocalStorage = userSettingsStorageFactory();
     const stringifySettings = (settings: { [key: string]: any }) => {
         const filteredSettings = { ...settings };
         for (const key in filteredSettings) {
@@ -34,8 +33,8 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         return JSON.stringify(filteredSettings);
     }
 
-    const getFromLocalStorage = () => {
-        const savedSettings = nsLocalStorage.getItem(userCustomPerformanceSettingsKey);
+    const getFromLocalStorage = async () => {
+        const savedSettings = await nsLocalStorage.getItem(userCustomPerformanceSettingsKey);
         try{
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
@@ -79,8 +78,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
             view.setOctaveToTimeRatio(thisStore.octaveToTimeRatio);
         })
         view.setOctaveToTimeRatio(thisStore.octaveToTimeRatio);
-
-
     });
 
 

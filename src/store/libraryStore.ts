@@ -7,12 +7,12 @@ import {
     LibraryItem_0_5_0, OldFormatLibraryItem
 } from '@/dataTypes/LibraryItem';
 import { Note, note } from '@/dataTypes/Note';
-import nsLocalStorage from '@/functions/nsLocalStorage';
 import { SynthParamStored } from '@/synth/types/SynthParam';
 import { userShownDisclaimerLocalStorageKey } from '@/texts/userDisclaimer';
 import { useProjectStore } from './projectStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 import { SynthChannelsDefinition } from '@/dataStructures/synthStructureFunctions';
+import userSettingsStorageFactory from './userSettingsStorageFactory';
 
 
 const migrators = {
@@ -77,6 +77,8 @@ const migrators = {
 
 type PossibleImportObjects = OldFormatLibraryItem | LibraryItem | Array<Note>
 
+const userSettingsStorage = userSettingsStorageFactory();
+
 const reservedEntryNames = [
     "forbidden-music",
     userShownDisclaimerLocalStorageKey,
@@ -95,16 +97,16 @@ export const normalizeLibraryItem = (obj: any): LibraryItem => {
     return obj;
 }
 
-const saveToLocalStorage = (filename: string, inValue: LibraryItem) => {
+const saveToLocalStorage = async (filename: string, inValue: LibraryItem) => {
     inValue.version = LIBRARY_VERSION;
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
-    nsLocalStorage.setItem(filename, compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
+    await userSettingsStorage.setItem(filename, compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
     console.log("saved to local storage", filename);
 }
 
 const retrieveFromLocalStorage = (filename: string) => {
-    const storageItem = nsLocalStorage.getItem(filename);
+    const storageItem = userSettingsStorage.getItem(filename);
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
     let retrieved = JSON.parse(decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
@@ -113,16 +115,18 @@ const retrieveFromLocalStorage = (filename: string) => {
     return retrieved as LibraryItem;
 }
 
-const listLocalStorageFiles = () => {
-    return nsLocalStorage.getKeys().filter(n => !reservedEntryNames.includes(n));
+const listLocalStorageFiles = async () => {
+    const keys = await userSettingsStorage.getKeys(); 
+
+    return keys.filter((n: string) => !reservedEntryNames.includes(n));
 }
 
 const exists = (filename: string) => {
-    return nsLocalStorage.getItem(filename) !== null;
+    return userSettingsStorage.getItem(filename) !== null;
 }
 
 const deleteItem = (filename: string) => {
-    nsLocalStorage.removeItem(filename);
+    userSettingsStorage.removeItem(filename);
 }
 
 export const useLibraryStore = defineStore("library store", () => {
@@ -196,8 +200,8 @@ export const useLibraryStore = defineStore("library store", () => {
 
     }
 
-    const udpateItemsList = () => {
-        filenamesList.value = listLocalStorageFiles();
+    const udpateItemsList = async () => {
+        filenamesList.value = await listLocalStorageFiles();
     }
 
     const loadFromLibraryItem = (filename: string) => {
@@ -270,7 +274,7 @@ export const useLibraryStore = defineStore("library store", () => {
     udpateItemsList();
 
     window.onfocus = () => {
-        nsLocalStorage.syncFromLocalStorage();
+        userSettingsStorage.syncFromLocalStorage();
     }
 
     return {

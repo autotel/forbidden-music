@@ -1,3 +1,5 @@
+import { AsyncStorage } from "@/store/userSettingsStorageFactory";
+
 const namespace = 'ndpr-87b834';
 
 const mockLocalStorage = new (class MStorage implements Storage {
@@ -20,17 +22,19 @@ const localStorageOrMock = () => {
 
 const _storage = localStorageOrMock();
 
-class NsLocalStorage {
+// The asynchronicity of this storage is only to have the same footprint as the TauriNsLocalStorage
+
+export default class NsLocalStorage implements AsyncStorage {
   storage: Map<string, string | undefined> = new Map();
   readonly _storage: Storage = _storage;
   readonly _namespace: string = namespace;
-  syncToLocalStorage() {
+  async syncToLocalStorage() {
     const keys = this.storage.keys();
     for (const key of keys) {
-      const cachedResult = this.getItem(key);
+      const cachedResult = await this.getItem(key);
       let nsKey = this.nameSpaceKey(key);
       console.log("sync nsLocalstorage to localstorage", key, cachedResult !== undefined);
-      if (cachedResult === undefined) {
+      if (cachedResult === null || cachedResult === undefined) {
         console.log("removing", key);
         _storage.removeItem(nsKey);
       } else {
@@ -47,7 +51,7 @@ class NsLocalStorage {
   isNameSpaced(key: string) {
     return key.startsWith(namespace);
   }
-  syncFromLocalStorage() {
+  async syncFromLocalStorage() {
     console.log("sync nsLocalstorage from localstorage");
     const keys = Object.keys(_storage);
     for (const key of keys) {
@@ -61,30 +65,42 @@ class NsLocalStorage {
       }
     }
   }
-  setItem(key: string, value: string) {
+  async setItem(key: string, value: string) {
     this.storage.set(key, value);
-    this.syncToLocalStorage();
+    await this.syncToLocalStorage();
   }
-  getItem(key: string): string | undefined {
-    const result = this.storage.get(key);
+  async getItem(key: string) {
+    const result = this.storage.get(key) || null;
     return result;
   }
-  removeItem(key: string) {
+  async key(index: number): Promise<string | null> {
+    return (await this.getKeys())[index] || null;
+  }
+  async removeItem(key: string) {
     this.storage.set(key, undefined);
-    this.syncToLocalStorage();
+    await this.syncToLocalStorage();
     this.storage.delete(key);
   }
-  clear() {
+  async clear() {
     this.storage.clear();
-    this.syncToLocalStorage();
+    await this.syncToLocalStorage();
   }
-  getKeys(): string[] {
+  async getKeys(): Promise<string[]> {
     return [...this.storage.keys()];
   }
   get length(): number {
     return this.storage.size;
   }
+  static instance: NsLocalStorage;
+  constructor(skipSync = false) {
+    if(NsLocalStorage.instance) {
+      console.error("NsLocalStorage should be a singleton");
+      return NsLocalStorage.instance;
+    }
+
+    if (!skipSync) {
+      this.syncFromLocalStorage();
+    }
+    NsLocalStorage.instance = this;
+  }
 }
-const nsLocalStorage = new NsLocalStorage();
-nsLocalStorage.syncFromLocalStorage();
-export default nsLocalStorage;
