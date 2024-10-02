@@ -1,7 +1,18 @@
 import { AsyncStorage } from "@/store/userSettingsStorageFactory";
 import isTauri, { ifTauri, tauriObject } from "./isTauri";
 
-const namespace = 'user-settings.json';
+const userSettingsPath = '../';
+const namespace = 'continuous-piano-roll-settings.json';
+
+const getFullSettingsPath = async () => {
+  console.group("getFullSettingsPath");
+  console.log("get path object from tauriobject");
+  const { path } = await tauriObject();
+  console.log("resolve path");
+  const resolvedPath = await path.join(userSettingsPath, namespace);
+  console.groupEnd();
+  return resolvedPath;
+}
 
 const createStorageFileIfNotExists = async (filePath: string) => {
   if(!isTauri()) {
@@ -21,7 +32,6 @@ const createStorageFileIfNotExists = async (filePath: string) => {
 }
 
 const jsonOpen = async (filePath: string) => {
-  await createStorageFileIfNotExists(filePath);
   if(!isTauri()) {
     console.warn("Do not use jsonOpen outside of tauri");
     return {};
@@ -37,16 +47,21 @@ const jsonOpen = async (filePath: string) => {
 }
 
 const jsonStore = async (filePath: string, data: any) => {
+  console.group("jsonStore", data);
+
   if(!isTauri()) {
     console.warn("Do not use jsonStore outside of tauri");
     return;
   }
+  console.log("acquire fs object");
   const { fs } = await tauriObject();
+  console.log("write to", filePath);
   try {
     await fs.writeTextFile(filePath, JSON.stringify(data, null, 2));
   } catch (e) {
     console.error('error saving storage to', filePath, e);
   }
+  console.groupEnd();
 }
 
 const mapToObject = (map: Map<string, string | undefined>) => {
@@ -66,7 +81,6 @@ const objectToMap = (obj: { [key: string]: string | undefined }) => {
 }
 
 export class TauriNsLocalStorage implements AsyncStorage {
-  userSettingsPath = namespace;
   storage: Map<string, string | undefined> = new Map();
   readonly _namespace: string = namespace;
   static instance: TauriNsLocalStorage;
@@ -105,17 +119,25 @@ export class TauriNsLocalStorage implements AsyncStorage {
   }
 
   async syncToLocalStorage () {
-    console.log("sync tauriNsLocalstorage to", this.userSettingsPath);
+    console.group("syncToLocalStorage");
+    console.log("get full settings path");
+    const saveTo = await getFullSettingsPath();
+    console.log("sync tauriNsLocalstorage to", saveTo);
+    console.log("lock io");
     const releaseLock = await this.lockIo('sync to local storage');
     const obj = mapToObject(this.storage);
-    await jsonStore(this.userSettingsPath, obj);
+    console.log("store json");
+    await jsonStore(saveTo, obj);
+    console.log("release lock");
     releaseLock();
+    console.groupEnd();
   }
   async syncFromLocalStorage() {
-    console.log("sync tauriNsLocalstorage from", this.userSettingsPath);
+    const saveTo = await getFullSettingsPath();
+    console.log("sync tauriNsLocalstorage from", saveTo);
     const releaseLock = await this.lockIo('sync from local storage');
     await this.ioLock;
-    const obj = await jsonOpen(this.userSettingsPath);
+    const obj = await jsonOpen(saveTo);
     this.storage = objectToMap(obj);
     releaseLock();
   }

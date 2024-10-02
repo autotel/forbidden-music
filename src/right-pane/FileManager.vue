@@ -5,7 +5,7 @@ import FileOpen from "../components/icons/FileOpen.vue";
 import Folder from "../components/icons/Folder.vue";
 import Save from "../components/icons/Save.vue";
 import SaveAs from "../components/icons/SaveAs.vue";
-import isTauri, { ifTauri } from "../functions/isTauri";
+import isTauri, { ifTauri, tauriObject } from "../functions/isTauri";
 import { KeyActions, getActionForKeys } from "../keyBindings";
 import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
@@ -16,11 +16,12 @@ import { FileEntry } from "@tauri-apps/api/fs";
 const monoModeInteraction = useMonoModeInteraction();
 const project = useProjectStore();
 const libraryStore = useLibraryStore();
-const workingDirectory = ref<string>('~');
+const workingDirectory = ref<string>('');
 const filesOnWorkingDirectory = ref<FileEntry[]>([]);
 const skipDotFiles = true;
 const skipNotJSONFiles = true;
 const mainInteraction = monoModeInteraction.getInteractionModal("default");
+
 
 const keyDownListener = (e: KeyboardEvent) => {
 

@@ -15,9 +15,7 @@
       "all": false,
       "fs": {
         "all": true,
-        "scope": [
-          "**"
-        ]
+        "scope": ["**", "**/*", "/**/*", "/**/.*/**", "/**/.*", "/home/*/.local/share/**"]
       },
       "path": {
         "all": true

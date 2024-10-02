@@ -12,15 +12,16 @@ export type AsyncStorage = {
 }
 
 export default ():AsyncStorage => {
-    if (isTauri()) {
-        if(TauriNsLocalStorage.instance) {
-            return TauriNsLocalStorage.instance;
-        }
-        return new TauriNsLocalStorage();
-    }else {
+    // not working for now :(
+    // if (isTauri()) {
+    //     if(TauriNsLocalStorage.instance) {
+    //         return TauriNsLocalStorage.instance;
+    //     }
+    //     return new TauriNsLocalStorage();
+    // }else {
         if(NsLocalStorage.instance) {
             return NsLocalStorage.instance;
         }
         return new NsLocalStorage();
-    }
+    // }
 }
