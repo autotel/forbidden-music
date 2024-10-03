@@ -100,7 +100,6 @@ const tauriObjectPromise = (async () => {
     }
 })();
 
-// make sure to also allow whatever new capabilities in tauri config
 export const tauriObject = async () => {
     return await tauriObjectPromise;
 }

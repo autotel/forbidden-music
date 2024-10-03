@@ -1,4 +1,4 @@
-import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
+import { SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
 import { chromaticSampleKitManager, SampleKitUser, SampleSource } from "../features/chromaticSampleKitUser";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { NumberSynthParam, OtherSynthParam, ParamType, ProgressSynthParam, SynthParam } from "../types/SynthParam";

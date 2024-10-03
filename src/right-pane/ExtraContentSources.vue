@@ -11,7 +11,7 @@ import { useLibraryStore } from "../store/libraryStore";
 import { useMonoModeInteraction } from "../store/monoModeInteraction";
 import { useProjectStore } from "../store/projectStore";
 import Collapsible from "./Collapsible.vue";
-import externalSampleLibrariesStore, { ExternalSampleKit } from "@/store/externalSampleLibrariesStore";
+import externalSampleLibrariesStore from "@/store/externalSampleLibrariesStore";
 import ButtonSub from "@/components/ButtonSub.vue";
 
 const externalSampleLibraries = externalSampleLibrariesStore();

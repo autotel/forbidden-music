@@ -1,8 +1,9 @@
 export default [
   {
     "name": "Bassoon",
-    "fromLibrary": "Bassoon",
+    "fromLibrary": "chromatic/bassoon",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 109.974,
@@ -259,8 +260,9 @@ export default [
   },
   {
     "name": "Celtic Harp",
-    "fromLibrary": "Celtic Harp",
+    "fromLibrary": "chromatic/celtic_harp",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 103.703,
@@ -597,8 +599,9 @@ export default [
   },
   {
     "name": "Glockenspiel",
-    "fromLibrary": "Glockenspiel",
+    "fromLibrary": "chromatic/glockenspiel",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 1174.42,
@@ -745,8 +748,9 @@ export default [
   },
   {
     "name": "Harpsichord",
-    "fromLibrary": "Harpsichord",
+    "fromLibrary": "chromatic/harpsichord",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 103.881,
@@ -1213,8 +1217,9 @@ export default [
   },
   {
     "name": "Hohner Pianet",
-    "fromLibrary": "Hohner Pianet",
+    "fromLibrary": "chromatic/hohner_pianet",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 109.882,
@@ -1261,8 +1266,9 @@ export default [
   },
   {
     "name": "Kankles",
-    "fromLibrary": "Kankles",
+    "fromLibrary": "chromatic/kankles",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 220.224,
@@ -1339,8 +1345,9 @@ export default [
   },
   {
     "name": "Nylon Strings",
-    "fromLibrary": "Nylon Strings",
+    "fromLibrary": "chromatic/nylon_strings",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 110.074,
@@ -1417,8 +1424,9 @@ export default [
   },
   {
     "name": "Old Trombone",
-    "fromLibrary": "Old Trombone",
+    "fromLibrary": "chromatic/old_trombone",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "velocity": 102,
@@ -2051,8 +2059,9 @@ export default [
   },
   {
     "name": "Test Tone",
-    "fromLibrary": "Test Tone",
+    "fromLibrary": "chromatic/test-tone",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 440,
@@ -2068,8 +2077,9 @@ export default [
   },
   {
     "name": "Vibraphone",
-    "fromLibrary": "Vibraphone",
+    "fromLibrary": "chromatic/vibraphone",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "frequency": 1054.587,
@@ -2446,8 +2456,9 @@ export default [
   },
   {
     "name": "Violin Section",
-    "fromLibrary": "Violin Section",
+    "fromLibrary": "chromatic/violin_section",
     "type": "chromatic",
+    "loadFrom": "http",
     "samples": [
       {
         "velocity": 127,
@@ -2695,8 +2706,9 @@ export default [
   },
   {
     "name": "AirWindows IR",
-    "fromLibrary": "AirWindows IR",
+    "fromLibrary": "ir/airwindows",
     "type": "impulse-response",
+    "loadFrom": "http",
     "samples": [
       {
         "name": "AirportTerminal.wav",
@@ -2798,8 +2810,9 @@ export default [
   },
   {
     "name": "SNB IR",
-    "fromLibrary": "SNB IR",
+    "fromLibrary": "ir/snb",
     "type": "impulse-response",
+    "loadFrom": "http",
     "samples": [
       {
         "name": "LC100 BX44 stalevel_dc.wav",

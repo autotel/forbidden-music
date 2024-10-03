@@ -21,10 +21,11 @@ const preventUndefined = (...values) => {
 const audioExtensionPattern = /.(wav|aiff)$/;
 /**
  * @param {DirItem[]} dirsList
- * @param {string} remoteBaseUrl
+ * @param {string} baseUrl
  * @param {string} kitName
+ * @param { 'http' | 'file' } loadFrom
  */
-const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) => {
+const generateSamplesList = (dirsList, localPublicPath, baseUrl, kitName, loadFrom) => {
     const chromaticKits = [];
     const impulseResponseKits = [];
     /**
@@ -40,6 +41,7 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) 
                 name: kitName,
                 fromLibrary: libraryName,
                 type: kitType,
+                loadFrom,
                 samples: [],
             };
             kitList.push(library);
@@ -104,7 +106,7 @@ const generateSamplesList = (dirsList, localPublicPath, remoteBaseUrl, kitName) 
                     }
                 }
 
-                parsed.path = remoteBaseUrl + '/' + path.join(dirItem.path, fileName);
+                parsed.path = baseUrl + '/' + path.join(dirItem.path, fileName);
 
                 if (!parsed.name) parsed.name = fileName;
 

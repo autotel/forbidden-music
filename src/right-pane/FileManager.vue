@@ -16,7 +16,7 @@ import { FileEntry } from "@tauri-apps/api/fs";
 const monoModeInteraction = useMonoModeInteraction();
 const project = useProjectStore();
 const libraryStore = useLibraryStore();
-const workingDirectory = ref<string>('');
+const workingDirectory = ref<string>('./');
 const filesOnWorkingDirectory = ref<FileEntry[]>([]);
 const skipDotFiles = true;
 const skipNotJSONFiles = true;
@@ -57,14 +57,21 @@ const keyDownListener = (e: KeyboardEvent) => {
 
 mainInteraction.addEventListener(window, 'keydown', keyDownListener);
 
-const downloadString = (text: string, fileType: string, fileName: string) => {
-    const blob = new Blob([text], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+const downloadString = async (text: string, fileType: string, fileName: string) => {
+    if (isTauri()) {
+        console.log("saving through FS to", workingDirectory.value + "/" + project.name + ".json");
+        const { fs } = await tauriObject();
+        await fs.writeTextFile(workingDirectory.value + "/" + project.name + ".json", text);
+    } else {
+        console.log("saving as download");
+        const blob = new Blob([text], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
 
-    a.href = url;
-    a.download = project.name + ".json";
-    a.click();
+        a.href = url;
+        a.download = project.name + ".json";
+        a.click();
+    }
 }
 
 const showJSONOpenDialog = () => {
@@ -141,8 +148,10 @@ const showJSONSaveDialog = () => {
 
 const download = () => {
     const libraryItem = project.getProjectDefintion();
-    const json = JSON.stringify(libraryItem);
-    downloadString(json, "application/json", project.name + ".json");
+    const json = JSON.stringify(libraryItem, null, 2);
+    downloadString(json, "application/json", project.name + ".json").then(()=>{
+        refreshDirList();
+    })
 }
 
 const refreshDirList = () => {
@@ -233,7 +242,8 @@ onMounted(() => {
             <Folder clas="icon" />
             Save and load
         </template>
-        <small>{{ isTauri() ? workingDirectory : '' }}/{{ project.name }}.json</small>
+        <small v-if="isTauri()">{{ workingDirectory + '/' }}</small>
+        <small>{{ project.name }}.json</small>
         <br>
         <Button :onClick="() => download()" v-if="project.name"
             :tooltip="`save to local drive ${isTauri() ? workingDirectory : ''}/${project.name}.json`">

@@ -12,10 +12,21 @@ const myUrl = 'http://localhost:' + port
 // to parse the filenames to extract frequency, velocity and other data.
 const namings = require('./public/namings.json')
 
-app.get('/samples.json', cors({ origin: '*' }), (req, res) => {
+// todo: dynamic param
+app.get('/samplesKit.json', cors({ origin: '*' }), (req, res) => {
     const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples')
-    res.json(generatedSamplesList);
+    res.json(generatedSamplesList[0]);
 });
+
+app.get('/samplesLibrary.json', cors({ origin: '*' }), (req, res) => {
+    const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples')
+    res.json({
+        url: myUrl + '/samplesLibrary.json',
+        name: 'autotel extra samples 1',
+        content: generatedSamplesList,
+    });
+});
+
 
 app.use(cors({ origin: '*' }))
 app.use(express.static(publicPath))

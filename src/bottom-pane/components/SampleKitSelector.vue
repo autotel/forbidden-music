@@ -1,7 +1,8 @@
 <script setup lang="ts">
 
 import Button from '@/components/Button.vue';
-import externalSampleLibrariesStore, { SampleKitDefinition, SampleType } from '@/store/externalSampleLibrariesStore';
+import { SampleType, SampleKitDefinition } from '@/dataTypes/SampleKitDefinition';
+import externalSampleLibrariesStore from '@/store/externalSampleLibrariesStore';
 import { SampleKitUser } from '@/synth/features/chromaticSampleKitUser';
 import { Synth } from '@/synth/types/Synth';
 import { computed, ref } from 'vue';

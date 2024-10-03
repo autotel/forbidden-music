@@ -41,3 +41,4 @@ forbidden-music
 .temp
 .cache
 .vuepress
+src-tauri/user sound libs/autotel-extra-lib-1

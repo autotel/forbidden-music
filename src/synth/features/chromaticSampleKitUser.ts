@@ -1,5 +1,8 @@
-import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
-import { OtherSynthParam, ParamType, ProgressSynthParam, SynthParam, SynthParamMinimum } from "../types/SynthParam";
+import { SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
+import { tauriObject } from "@/functions/isTauri";
+import { OtherSynthParam, ParamType, ProgressSynthParam } from "../types/SynthParam";
+import { libPathIsRemote } from "@/store/externalSampleLibrariesStore";
+import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 /**
  * Definition of a single loadable sample
@@ -30,6 +33,11 @@ const isCloserManhattan = (source: [number, number], target: [number, number], c
     } else {
         return false;
     }
+}
+
+const tauriFetch = async (path: string) => {
+    const { fs } = await tauriObject();
+    return fs.readBinaryFile(path);
 }
 
 export const selectSampleSourceFromKit = (
@@ -101,6 +109,45 @@ export const selectSampleSourceFromKit = (
     return closestSampleSource;
 }
 
+type SampleSourceFetcher = (sampleDefinition: SampleFileDefinition) => Promise<ArrayBuffer>;
+
+const httpFetchSampleSource: SampleSourceFetcher = async (sampleDefinition: SampleFileDefinition) => {
+    let arrayBuffer: ArrayBuffer;
+    // if (isRemote) {
+    console.log("remote fetch of ", sampleDefinition.path);
+    const response = await fetch(sampleDefinition.path,
+        {
+            cache: "default",
+        });
+    // console.groupCollapsed("header: " + sampleDefinition.path);
+    // response.headers.forEach((value, key) => {
+    //     if (key.match('date')) {
+    //         console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
+    //     } else if (key.match('cache-control')) {
+    //         console.log(key + ":", value);
+    //     }
+    // });
+    // console.groupEnd();
+    arrayBuffer = await response.arrayBuffer();
+    // } else {
+    //     console.log("local fetch of ", sampleDefinition.path);
+    //     arrayBuffer = await tauriFetch(sampleDefinition.path)
+    // }
+    return arrayBuffer;
+}
+
+const fsFetchSampleSource: SampleSourceFetcher = async (sampleDefinition: SampleFileDefinition) => {
+    console.log("local fetch of ", sampleDefinition.path);
+    const { fs } = await tauriObject();
+    const path = sampleDefinition.path;
+    const uint8Array = await fs.readBinaryFile(path);
+    const arrayBuffer = uint8Array.buffer;
+    // const castedPath = convertFileSrc(sampleDefinition.path);
+    // const response = await fetch(castedPath);
+    // const arrayBuffer = await response.arrayBuffer();
+    return arrayBuffer;
+}
+
 export class SampleSource implements SampleFileDefinition {
     private audioContext: AudioContext;
     sampleBuffer?: AudioBuffer;
@@ -122,7 +169,7 @@ export class SampleSource implements SampleFileDefinition {
         console.error("samplesource constructed wrong");
     };
 
-    constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition) {
+    constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition, fetcher: SampleSourceFetcher) {
         this.audioContext = audioContext;
         this.frequency = sampleDefinition.frequency;
 
@@ -134,32 +181,20 @@ export class SampleSource implements SampleFileDefinition {
         this.path = sampleDefinition.path;
         this.name = sampleDefinition.name;
 
-        if ('velocity' in sampleDefinition) {
-            this.velocity = sampleDefinition.velocity;
-        }
-
         this.load = async () => {
-
             if (this.isLoaded || this.isLoading) throw new Error("redundant load call");
             this.isLoading = true;
-            // const fetchHeaders = new Headers();
-            const response = await fetch(sampleDefinition.path, {
-                cache: "default",
-            })
-            // console.groupCollapsed("header: " + sampleDefinition.path);
-            // response.headers.forEach((value, key) => {
-            //     if (key.match('date')) {
-            //         console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
-            //     } else if (key.match('cache-control')) {
-            //         console.log(key + ":", value);
-            //     }
-            // });
-            // console.groupEnd();
-            const arrayBuffer = await response.arrayBuffer();
+            const arrayBuffer = await fetcher(sampleDefinition);
+
             this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             this.isLoaded = true;
             this.isLoading = false;
         }
+
+        if ('velocity' in sampleDefinition) {
+            this.velocity = sampleDefinition.velocity;
+        }
+
     }
 }
 
@@ -171,6 +206,7 @@ const serializeSampleKit = (sampleKitDef: SampleKitDefinition) => {
     return {
         name: sampleKitDef.name,
         readme: sampleKitDef.readme,
+        loadFrom: sampleKitDef.loadFrom,
         samples: sampleKitDef.samples.map(({
             path, frequency,
             frequencyStart, frequencyEnd,
@@ -205,6 +241,7 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
             changeSampleDefinition(value);
             // register what would be saved as part of the project
             this._v = serializeSampleKit(value);
+            console.log("my new value is", this._v);
             lastSampleDefinition = value;
         },
         displayName: "Sample kit",
@@ -214,7 +251,7 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
 
     let sampleSources: SampleSource[] = [];
     let lastSampleDefinition = initialSamplesDefinition;
-    
+
     const everyPromise: Promise<any>[] = [];
     const waitClearUpPromises = async () => {
         await Promise.all(everyPromise);
@@ -229,9 +266,11 @@ export const chromaticSampleKitManager = (audioContext: AudioContext, initialSam
 
         loadingProgressParam.value = 0;
         const loadingProgressStep = 100 / samples.length;
+        
+        const fetcher = sampleKitDef.loadFrom === 'file' ? fsFetchSampleSource : httpFetchSampleSource;
 
         sampleSources = samples.map((sampleDefinition) => {
-            return new SampleSource(audioContext, sampleDefinition);
+            return new SampleSource(audioContext, sampleDefinition, fetcher);
         })
 
         sampleKitChangedListeners.forEach((listener) => listener(sampleKitDef));
