@@ -9,10 +9,11 @@ import { Trace } from "../dataTypes/Trace.js";
 import { getNotesInRange, getTracesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
-import { useLoopsStore } from "./loopsStore.js";
+import { HierarchicalLoop, useLoopsStore } from "./loopsStore.js";
 import { useNotesStore } from "./notesStore.js";
 import { usePlaybackStore } from "./playbackStore.js";
 import { useToolStore } from "./toolStore.js";
+import { traverse, TreeStucture } from "@/dataTypes/TreeStructure.js";
 
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -137,13 +138,10 @@ export const useViewStore = defineStore("view", () => {
         }, true);
     });
 
-    const visibleLoops = computed((): Loop[] => {
+    const visibleLoops = computed((): HierarchicalLoop[] => {
         visibleNotesRefreshKey.value;
-        const items = [...loops.list];
-
-        return items.filter((item) => {
-            return item.timeEnd >= timeOffset.value && item.time <= timeOffset.value + viewWidthTime.value;
-        });
+        const items = [...loops.hierarchical];
+        return items;
 
     });
 
@@ -175,11 +173,16 @@ export const useViewStore = defineStore("view", () => {
         })
     });
 
-    const visibleLoopDrawables = computed((): TimelineRect<Loop>[] => {
-        return visibleLoops.value.map((item) => {
-            let r = rectOfLoop(item) as TimelineRect<Loop>;
-            return r;
-        })
+    const visibleLoopDrawables = computed<TimelineRect<Loop>[]>(() => {
+        let returnValue: TimelineRect<Loop>[] = [];
+        for (const loop of loops.hierarchical) {
+            traverse(loop, (loop, level) => {
+                const loopRect = rectOfLoop(loop.value);
+                loopRect.y = 40 + level * 40;
+                returnValue.push(loopRect);
+            });
+        }
+        return returnValue.reverse();
     });
 
     const visibleAutomationPointDrawables = computed((): TimelineDot<AutomationPoint>[] => {
@@ -269,7 +272,6 @@ export const useViewStore = defineStore("view", () => {
             y: 'octave' in trace ? octaveToPxWithOffset(trace.octave) : 0,
         }
     }
-
 
     const castIfDefined = (castFn = (v: number) => v, v: number | undefined, otherwise: null | number = null) => {
         return v === undefined ? otherwise : castFn(v);

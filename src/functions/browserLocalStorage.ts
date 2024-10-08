@@ -33,7 +33,7 @@ export default class NsLocalStorage implements AsyncStorage {
     for (const key of keys) {
       const cachedResult = await this.getItem(key);
       let nsKey = this.nameSpaceKey(key);
-      console.log("sync nsLocalstorage to localstorage", key, cachedResult !== undefined);
+      // console.log("sync nsLocalstorage to localstorage", key, cachedResult !== undefined);
       if (cachedResult === null || cachedResult === undefined) {
         console.log("removing", key);
         _storage.removeItem(nsKey);
@@ -52,7 +52,7 @@ export default class NsLocalStorage implements AsyncStorage {
     return key.startsWith(namespace);
   }
   async syncFromLocalStorage() {
-    console.log("sync nsLocalstorage from localstorage");
+    // console.log("sync nsLocalstorage from localstorage");
     const keys = Object.keys(_storage);
     for (const key of keys) {
       if (this.isNameSpaced(key)) {

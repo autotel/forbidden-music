@@ -1,5 +1,5 @@
 import { clamp, useThrottleFn } from '@vueuse/core';
-import { defineStore } from 'pinia';
+import { defineStore, Store } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { AutomationLane } from '../dataTypes/AutomationLane';
 import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
@@ -333,7 +333,7 @@ export const useToolStore = defineStore("tool", () => {
     const selection = useSelectStore();
     const view = useViewStore();
     const project = useProjectStore();
-    const notes = useNotesStore();const snap = useSnapStore();
+    const notes = useNotesStore(); const snap = useSnapStore();
     const lanes = useAutomationLaneStore();
     const ftRec = ref(false);
     const loops = useLoopsStore();
@@ -867,13 +867,14 @@ export const useToolStore = defineStore("tool", () => {
     }
 
 
-    const storesPill = {
+    const storesPill: Stores = {
         project,
         snap,
         view,
         selection,
         lanes,
-    } as Stores;
+        notes,
+    };
 
     const mouseMove = (e: { clientX: number, clientY: number }) => {
         registerMouseMove({

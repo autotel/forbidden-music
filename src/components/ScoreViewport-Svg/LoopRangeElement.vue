@@ -23,12 +23,12 @@ const project = useProjectStore();
 const loops = useLoopsStore();
 const playback = usePlaybackStore();
 const selection = useSelectStore();
-const noteBody = ref<SVGRectElement>();
+const loopBody = ref<SVGRectElement>();
 const rightDragHandle = ref<SVGRectElement>();
 const leftDragHandle = ref<SVGRectElement>();
 const timeRangeEdits = useTimeRangeEdits();
-// exported for tests
-export const magicLoopDuplicator = (sourceLoop: Loop) => {
+
+const magicLoopDuplicator = (sourceLoop: Loop) => {
     timeRangeEdits.duplicateTimeRange(sourceLoop);
     const timeDuration = sourceLoop.timeEnd - sourceLoop.time;
     if (sourceLoop.count === Infinity) {
@@ -93,16 +93,16 @@ watch(leftDragHandle, (newVal, oldVal) => {
 })
 onMounted(() => {
     if (props.interactionDisabled) return;
-    if (noteBody.value) {
-        noteBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
-        noteBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
+    if (loopBody.value) {
+        loopBody.value.addEventListener('mouseenter', bodyMouseEnterListener);
+        loopBody.value.addEventListener('mouseleave', bodyMouseLeaveListener);
     }
 });
 onUnmounted(() => {
     if (props.interactionDisabled) return;
-    if (noteBody.value) {
-        noteBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
-        noteBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
+    if (loopBody.value) {
+        loopBody.value.removeEventListener('mouseenter', bodyMouseEnterListener);
+        loopBody.value.removeEventListener('mouseleave', bodyMouseLeaveListener);
     }
 });
 
@@ -118,26 +118,26 @@ const grdx = (pos: number) => {
     return props.eventRect.x + props.eventRect.width + pos * grid - margin
 }
 const grdy = (pos: number) => {
-    return 0 + pos * grid + marginy
+    return props.eventRect.y + pos * grid + marginy
 }
 
 
 </script>
 <template>
-    <g ref="noteBody">
+    <g ref="loopBody" class="loop">
         <rect class="body" v-bind="$attrs" :class="{
             selected: eventRect.event.selected,
             greyed: greyed,
-        }" :x="eventRect.x" :y="0" :width=eventRect.width :height="eventRect.height" />
+        }" :x="eventRect.x" :y="eventRect.y" :width=eventRect.width :height="eventRect.height" />
         <template v-if="!interactionDisabled && eventRect.rightEdge && !greyed">
             <rect ref="rightDragHandle" class="right edge-handle" :class="{
                 greyed: greyed
-            }" :x="eventRect.rightEdge.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
+            }" :x="eventRect.rightEdge.x" :y="eventRect.y" :width="view.rightEdgeWidth" :height="eventRect.height" />
             <rect ref="leftDragHandle" class="left edge-handle" :class="{
                 greyed: greyed
-            }" :x="eventRect.x" :y="0" :width="view.rightEdgeWidth" :height="eventRect.height" />
+            }" :x="eventRect.x" :y="eventRect.y" :width="view.rightEdgeWidth" :height="eventRect.height" />
         </template>
-        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="0" :x2="eventRect.x" :y2="view.viewHeightPx"
+        <line v-if="interactionDisabled" :x1="eventRect.x" :y1="eventRect.y" :x2="eventRect.x" :y2="view.viewHeightPx"
             stroke="currentColor" stroke-width="1" />
 
         <SvgLittleButton :x="grdx(0)" :y="grdy(0)" :onClick="() => playme()" tooltip="jump to this loop">
@@ -168,9 +168,35 @@ const grdy = (pos: number) => {
             </SvgLittleButton>
         </template>
 
-        <text class="texts" :x="grdx(1)" :y="18" font-size="20" v-if="!interactionDisabled && eventRect.rightEdge">
+        <text class="texts" :x="grdx(1)" :y="eventRect.y + 18" font-size="20"
+            v-if="!interactionDisabled && eventRect.rightEdge">
             {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
             {{ eventRect.event.count }}
+            [{{ eventRect.event.dev_id }}]
         </text>
     </g>
 </template>
+<style scoped>
+.loop .body {
+    fill: #11aacc55;
+    stroke: #11aacc;
+    stroke-width: 1;
+}
+
+.loop .selected {
+    fill: #11aacc;
+}
+
+.loop .greyed {
+    fill: #11aacc22;
+}
+
+.loop .edge-handle {
+    fill: #11aacc;
+    cursor: ew-resize;
+}
+
+.loop .texts {
+    fill: #11aacc;
+}
+</style>

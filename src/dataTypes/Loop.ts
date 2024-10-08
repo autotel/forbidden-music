@@ -23,6 +23,7 @@ export type Loop = TimeRange & Selectable & Draggable & {
     type: TraceType.Loop;
     count: number;
     repetitionsLeft?: number;
+    dev_id?: string;
 }
 
 export const loop = (loopDef: LoopDefA | LoopDefB | Loop): Loop => {
