@@ -4,32 +4,39 @@ import { compress } from "lzutf8";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
-import { TreeStucture } from '@/dataTypes/TreeStructure';
+import { traverse, TreeStucture } from '@/dataTypes/TreeStructure';
 import { ifDev } from '@/functions/isDev';
 
-export type HierarchicalLoop = TreeStucture<Loop>; 
+export type HierarchicalLoop = TreeStucture<Loop>;
 
 export const useLoopsStore = defineStore('loops score', () => {
 
     const list = ref<Loop[]>([]);
 
-    const hierarchical = computed<HierarchicalLoop[]>(() => {
-        const returnValue: HierarchicalLoop[] = [];
-        const hLoops = [...list.value].sort((a,b)=>{
-            if(a.time == b.time) {
-                return b.timeEnd-a.timeEnd;
+    const hierarchical = computed<HierarchicalLoop>(() => {
+        const returnValue: HierarchicalLoop = {
+            children: [],
+            value: loop({
+                time: -Infinity,
+                timeEnd: Infinity,
+                count: 0,
+            })
+        };
+        const hLoops = [...list.value].sort((a, b) => {
+            if (a.time == b.time) {
+                return b.timeEnd - a.timeEnd;
             }
-            return a.time-b.time;
+            return a.time - b.time;
         }).map(loop => ({
             value: loop,
             children: [],
         }));
-        
+
         hLoops.forEach(loop => {
-            let parent = returnValue;
+            let parent = returnValue.children;
             let i = 0;
-            while(i < parent.length) {
-                if(loop.value.time >= parent[i].value.time && loop.value.time < parent[i].value.timeEnd) {
+            while (i < parent.length) {
+                if (loop.value.time >= parent[i].value.time && loop.value.time < parent[i].value.timeEnd) {
                     parent = parent[i].children;
                     i = 0;
                 } else {
@@ -40,6 +47,33 @@ export const useLoopsStore = defineStore('loops score', () => {
         });
         return returnValue;
     });
+    const resetLoopRepetitions = () => {
+        list.value.forEach(loop => {
+            loop.repetitionsLeft = loop.count;
+        });
+    }
+    const resetChildrenLoopRepetitions = (loop: HierarchicalLoop) => {
+        loop.children.forEach(child => {
+            child.value.repetitionsLeft = child.value.count;
+            resetChildrenLoopRepetitions(child);
+        });
+    }
+    const getLoopToPlay = (time: number) => {
+        let ret: HierarchicalLoop | undefined;
+        traverse(hierarchical.value, (loop, level) => {
+            if (
+                loop.value.time <= time 
+                && loop.value.timeEnd > time
+                && loop.value.repetitionsLeft 
+                && loop.value.repetitionsLeft > 0
+                && !ret
+            ) {
+                ret = loop;
+            }
+        });
+        console.log(ret?.value.dev_id);
+        return ret
+    }
 
     const sort = (loops: Loop[] = list.value) => {
         loops.sort((a, b) => {
@@ -107,6 +141,10 @@ export const useLoopsStore = defineStore('loops score', () => {
         parse,
         setFromDefs,
         hierarchical,
+
+        getLoopToPlay,
+        resetLoopRepetitions,
+        resetChildrenLoopRepetitions,
     };
     return returnValue;
 });

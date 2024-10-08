@@ -140,7 +140,7 @@ export const useViewStore = defineStore("view", () => {
 
     const visibleLoops = computed((): HierarchicalLoop[] => {
         visibleNotesRefreshKey.value;
-        const items = [...loops.hierarchical];
+        const items = [...loops.hierarchical.children];
         return items;
 
     });
@@ -175,7 +175,7 @@ export const useViewStore = defineStore("view", () => {
 
     const visibleLoopDrawables = computed<TimelineRect<Loop>[]>(() => {
         let returnValue: TimelineRect<Loop>[] = [];
-        for (const loop of loops.hierarchical) {
+        for (const loop of visibleLoops.value) {
             traverse(loop, (loop, level) => {
                 const loopRect = rectOfLoop(loop.value);
                 loopRect.y = 40 + level * 40;
