@@ -21,6 +21,7 @@ import { automationPoint, AutomationPoint } from '@/dataTypes/AutomationPoint';
 import { tryDecompressAndParseArray } from '@/functions/tryDecompressAndParseArray';
 import { useLoopsStore } from './loopsStore';
 import { Loop } from '@/dataTypes/Loop';
+import { useNotesStore } from './notesStore';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,
@@ -48,52 +49,17 @@ export const useProjectStore = defineStore("current project", () => {
     const masterEffects = useMasterEffectsStore();
     const audioContextStore = useAudioContextStore();
     const name = ref(AUTOSAVE_PROJECTNAME);
-    
-
-    const notes = ref<Note[]>([]);
+    const notes = useNotesStore();
     const lanes = useAutomationLaneStore();
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.entries(snaps.values).map(([key, value]) => {
         return [key, value.active];
     });
 
-    const serializeNotes = (notes: Note[]) => notes.map(noteDef);
-
-    const stringifyNotes = (notes: Note[], zip: boolean = false) => {
-        let str = JSON.stringify(serializeNotes(notes));
-        if (zip) str = compress(str, { outputEncoding: "Base64" });
-        return str;
-    }
-
-    const parseNotes = (str: string): Note[] => {
-        let noteDefs = tryDecompressAndParseArray<NoteDef>(str, (maybeNote) => {
-            if (typeof maybeNote !== "object") return false;
-            if (null === maybeNote) return false;
-            if (!('time' in maybeNote)) return false;
-            if (!('timeEnd' in maybeNote || 'duration' in maybeNote)) return false;
-            if (!('octave' in maybeNote)) return false;
-            if (!('velocity' in maybeNote)) return false;
-            if (!('mute' in maybeNote)) return false;
-            if (!('layer' in maybeNote)) return false;
-            return true
-        });
-
-        const editNotes = noteDefs.map(note);
-
-        if (editNotes.length === 0) {
-            console.log("no notes found in parsed text");
-            return [];
-        }
-
-        sanitizeTimeRanges(...editNotes);
-        return editNotes;
-    }
-
-
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
-            notes: serializeNotes(notes.value),
+            notes: notes.serialize(),
             loops: loops.serialize(),
             lanes: lanes.getAutomationLaneDefs(),
             customOctavesTable: snaps.customOctavesTable,
@@ -120,10 +86,9 @@ export const useProjectStore = defineStore("current project", () => {
         created.value = pDef.created;
         edited.value = pDef.edited;
 
-        notes.value = pDef.notes.map(note);
-        notes.value.forEach((note) => {
-            layers.getOrMakeLayerWithIndex(note.layer);
-        });
+        notes.setFromDefs(pDef.notes);
+        
+
 
         loops.setFromDefs(pDef.loops);
 
@@ -164,15 +129,11 @@ export const useProjectStore = defineStore("current project", () => {
     }
 
     const clearScore = () => {
-        notes.value = [];
+        notes.clear();
         loops.clear();
         lanes.clear();
         layers.clear();
         setFromProjectDefinition(emptyProjectDefinition);
-    }
-
-    const appendNote = (...newNotes: Note[]) => {
-        notes.value.push(...newNotes);
     }
 
     const append = (...traces: Trace[]) => {
@@ -188,7 +149,7 @@ export const useProjectStore = defineStore("current project", () => {
                     break;
             }
         })
-        appendNote(...nnotes);
+        notes.append(...nnotes);
         loops.append(...nloops);
     }
 
@@ -209,10 +170,9 @@ export const useProjectStore = defineStore("current project", () => {
         loadEmptyProjectDefinition,
         loadDemoProjectDefinition,
         name, edited, created, snaps,
-        stringifyNotes, parseNotes,
         getProjectDefintion,
         setFromProjectDefinition,
-        clearScore, appendNote,
+        clearScore,
     }
 
 });

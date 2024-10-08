@@ -27,7 +27,8 @@ const noteBody = ref<SVGRectElement>();
 const rightDragHandle = ref<SVGRectElement>();
 const leftDragHandle = ref<SVGRectElement>();
 const timeRangeEdits = useTimeRangeEdits();
-const magicLoopDuplicator = (sourceLoop: Loop) => {
+// exported for tests
+export const magicLoopDuplicator = (sourceLoop: Loop) => {
     timeRangeEdits.duplicateTimeRange(sourceLoop);
     const timeDuration = sourceLoop.timeEnd - sourceLoop.time;
     if (sourceLoop.count === Infinity) {

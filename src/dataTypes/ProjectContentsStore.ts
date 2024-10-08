@@ -14,4 +14,5 @@ export interface ProjectTraceContentsStore<T extends Trace> extends ProjectConte
     list: Array<T>
     append: (...items: T[]) => void
     clear: () => void
+    set: (items: T[]) => void
 }

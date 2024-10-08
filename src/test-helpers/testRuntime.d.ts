@@ -7,6 +7,7 @@ import { useLoopsStore } from "../store/loopsStore";
 import { RoboMouse } from "./utils";
 import { Pinia } from "pinia";
 import { useSelectStore } from "../store/selectStore";
+import { useNotesStore } from "@/store/notesStore";
 
 export interface TestRuntime {
     roboMouse: RoboMouse;
@@ -15,6 +16,7 @@ export interface TestRuntime {
     toolStore: ReturnType<typeof useToolStore>;
     snapStore: ReturnType<typeof useSnapStore>;
     loopsStore: ReturnType<typeof useLoopsStore>;
+    notesStore: ReturnType<typeof useNotesStore>;
     containerDiv: HTMLDivElement;
     selectStore: ReturnType<typeof useSelectStore>;
     interactionTarget: HTMLElement;

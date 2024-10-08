@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref, watchEffect } from "vue";
+import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
 import { Loop } from "../dataTypes/Loop.js";
 import { Note } from "../dataTypes/Note.js";
 import { TimeRange, getDuration } from "../dataTypes/TimelineItem.js";
@@ -8,12 +9,10 @@ import { Trace } from "../dataTypes/Trace.js";
 import { getNotesInRange, getTracesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
-import { usePlaybackStore } from "./playbackStore.js";
-import { useProjectStore } from "./projectStore.js";
-import { useToolStore } from "./toolStore.js";
-import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
-import { useAutomationLaneStore } from "./automationLanesStore.js";
 import { useLoopsStore } from "./loopsStore.js";
+import { useNotesStore } from "./notesStore.js";
+import { usePlaybackStore } from "./playbackStore.js";
+import { useToolStore } from "./toolStore.js";
 
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -107,14 +106,13 @@ export const useViewStore = defineStore("view", () => {
     // TODO integrate this, so that view always zooms to center or mouse pos).
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
-    const project = useProjectStore();
     const followPlayback = ref(false);
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
+    const notes = useNotesStore();
     const memoizedNoteRects: Drawable<Note>[] = [];
     const layers = useLayerStore();
     const tool = useToolStore();
-    const lanes = useAutomationLaneStore();
     const loops = useLoopsStore();
     const memoizedNoteHeight = computed(() => {
         return Math.abs(octaveToPx(1 / 12));
@@ -130,13 +128,13 @@ export const useViewStore = defineStore("view", () => {
     // filter by type and then by screen?
     const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
-        const layerVisibleNotes = project.notes.filter(({ layer }) => layers.isVisible(layer));
+        const layerVisibleNotes = notes.list.filter(({ layer }) => layers.isVisible(layer));
         return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
             octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
-        },true);
+        }, true);
     });
 
     const visibleLoops = computed((): Loop[] => {

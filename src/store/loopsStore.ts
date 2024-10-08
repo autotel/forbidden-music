@@ -51,6 +51,10 @@ export const useLoopsStore = defineStore('loops score', () => {
         list.value = [];
     }
 
+    const set = (loops: Loop[]) => {
+        list.value = loops;
+    }
+
     const append = (...loop: Loop[]) => {
         list.value.push(...loop);
         sort();
@@ -58,6 +62,7 @@ export const useLoopsStore = defineStore('loops score', () => {
     const returnValue = {
         list,
         append,
+        set,
         clear,
         sort,
         serialize,

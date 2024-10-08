@@ -14,6 +14,7 @@ import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey
 import { SynthChannelsDefinition } from '@/dataStructures/synthStructureFunctions';
 import userSettingsStorageFactory from './userSettingsStorageFactory';
 import { useLoopsStore } from './loopsStore';
+import { useNotesStore } from './notesStore';
 
 
 const migrators = {
@@ -132,6 +133,7 @@ const deleteItem = (filename: string) => {
 
 export const useLibraryStore = defineStore("library store", () => {
     const project = useProjectStore();
+    const notes = useNotesStore();
     const filenamesList = ref([] as Array<string>);
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
@@ -267,8 +269,7 @@ export const useLibraryStore = defineStore("library store", () => {
             project.setFromProjectDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             // assuming iobj is an array of notes
-            const newNotes = iobj.map(note);
-            project.appendNote(...newNotes);
+            notes.setFromDefs(iobj);
         }
     }
 

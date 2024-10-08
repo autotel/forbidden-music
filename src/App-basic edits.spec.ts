@@ -14,11 +14,12 @@ describe('app basic editing tools', async () => {
         roboMouse,
         viewStore,
         projectStore,
+        notesStore,
         selectStore,
     } = testRuntime;
 
 
-    projectStore.notes.push(note({
+    notesStore.append(note({
         time: 2,
         timeEnd: 4,
         octave: 4,
@@ -48,14 +49,14 @@ describe('app basic editing tools', async () => {
         await roboMouse.mouseup();
         await roboMouse.moveTo({ x: 0, y: 0 }, generalInterval / timeDiv);
         await wait(generalInterval / timeDiv);
-        expect(projectStore.notes.length).toBe(2);
+        expect(notesStore.list.length).toBe(2);
     }, generalInterval);
   
     it('selects by hovering and clicking', async () => {
-        if(projectStore.notes.length < 1) {
+        if(notesStore.list.length < 1) {
             throw new Error("This test needs a one note to exist");
         }
-        const noteToDrag = projectStore.notes[0];
+        const noteToDrag = notesStore.list[0];
         
         const noteBox = viewStore.rectOfNote(noteToDrag);
 
@@ -135,7 +136,7 @@ describe('app basic editing tools', async () => {
         await roboMouse.mouseup();
         await wait(generalInterval / div);
 
-        expect(projectStore.notes.length).toBe(4);
+        expect(notesStore.list.length).toBe(4);
 
     }, generalInterval);
 
@@ -155,7 +156,7 @@ describe('app basic editing tools', async () => {
             key: "Control",
             bubbles: true,
         }));
-        expect(projectStore.notes.length).toBe(4);
+        expect(notesStore.list.length).toBe(4);
         expect(selectStore.getNotes().length).toBe(0);
     }, generalInterval);
 
@@ -203,7 +204,7 @@ describe('app basic editing tools', async () => {
             bubbles: true,
         }));
         await wait(generalInterval / timeDiv);
-        expect(projectStore.notes.length).toBe(0);
+        expect(notesStore.list.length).toBe(0);
     }, generalInterval);
 
 

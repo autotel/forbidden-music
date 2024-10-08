@@ -1,17 +1,16 @@
 import { AutomationPoint, automationPoint } from "@/dataTypes/AutomationPoint";
-import { loop, Loop } from "@/dataTypes/Loop";
 import { Note, note } from "@/dataTypes/Note";
 import { TimeRange } from "@/dataTypes/TimelineItem";
 import { transposeTime } from "@/dataTypes/Trace";
 import { getNotesInRange } from "@/functions/getEventsInRange";
 import { useAutomationLaneStore } from "@/store/automationLanesStore";
 import { useLoopsStore } from "@/store/loopsStore";
-import { useProjectStore } from "@/store/projectStore";
+import { useNotesStore } from "@/store/notesStore";
 
 export const useTimeRangeEdits = () => {
     const lanes = useAutomationLaneStore();
-    const project = useProjectStore();
     const loops = useLoopsStore();
+    const notes = useNotesStore();
 
     /**
      * duplicate all events in time range, and shift all events after the time range
@@ -23,7 +22,7 @@ export const useTimeRangeEdits = () => {
         );
 
         /** Notes after loop start */
-        const notesAfterLoop = getNotesInRange(project.notes, {
+        const notesAfterLoop = getNotesInRange(notes.list, {
             time: sourceRange.time,
             timeEnd: Infinity,
         });
@@ -75,7 +74,7 @@ export const useTimeRangeEdits = () => {
                 timeDuration
             );
         });
-        project.notes.push(...notesToPush);
+        notes.list.push(...notesToPush);
 
     }
 

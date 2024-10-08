@@ -5,6 +5,7 @@ import { useProjectStore } from './projectStore';
 import demoProject from './project-default';
 import nsLocalStorage from '../functions/browserLocalStorage';
 import { useLoopsStore } from './loopsStore';
+import { useNotesStore } from './notesStore';
 
 describe('Library store', () => {
     setActivePinia(createPinia());
@@ -36,6 +37,7 @@ describe('Library store', () => {
     });
     it('can save, and then load the project', () => {
         const projectStore = useProjectStore();
+        const notesStore = useNotesStore();
         const libraryStore = useLibraryStore();
         const loopsStore = useLoopsStore();
         projectStore.loadDemoProjectDefinition();
@@ -45,11 +47,11 @@ describe('Library store', () => {
         });
         libraryStore.saveCurrent();
         projectStore.loadEmptyProjectDefinition();
-        expect(projectStore.notes.length).toBe(0);
+        expect(notesStore.list.length).toBe(0);
         expect(loopsStore.list.length).toBe(0);
         expect([...projectStore.lanes.lanes].length).toBe(0);
         libraryStore.loadFromLibraryItem("test");
-        expect(projectStore.notes.length).toEqual(demoProject.notes.length);
+        expect(notesStore.list.length).toEqual(demoProject.notes.length);
         expect(loopsStore.list.length).toEqual(demoProject.loops.length);
         expect([...projectStore.lanes.lanes].length).toEqual(demoProject.lanes.length);
     });

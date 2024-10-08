@@ -15,6 +15,7 @@ import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
 import { Loop } from '@/dataTypes/Loop';
 import { useLoopsStore } from './loopsStore';
+import { useNotesStore } from './notesStore';
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
@@ -23,6 +24,7 @@ export const useSelectStore = defineStore("select", () => {
     const layers = useLayerStore();
     const loops = useLoopsStore();
     const tool = useToolStore();
+    const notes = useNotesStore();
     const view = useViewStore();
     const lanes = useAutomationLaneStore();
     // todo: it's a bit weird that we have this fn but also a selected property on a timelineItem
@@ -31,7 +33,7 @@ export const useSelectStore = defineStore("select", () => {
     };
     const refreshTraceSelectionState = () => {
         // TODO: is it really necessary?
-        project.notes.forEach(n => setSelection(n, isSelected(n)));
+        notes.list.forEach(n => setSelection(n, isSelected(n)));
         loops.list.forEach(n => setSelection(n, isSelected(n)));
         lanes.forEachAutomationPoint(n => setSelection(n, isSelected(n)));
     }
@@ -144,7 +146,7 @@ export const useSelectStore = defineStore("select", () => {
     };
     const addRange = (range: SelectableRange) => {
         const newNotes = getTracesInRange(
-            project.notes,
+            notes.list,
             range
         );
         add(...newNotes);
@@ -164,7 +166,7 @@ export const useSelectStore = defineStore("select", () => {
                 break;
             }
             default: {
-                const visibleLayerNotes = project.notes.filter(n => layers.isVisible(n.layer))
+                const visibleLayerNotes = notes.list.filter(n => layers.isVisible(n.layer))
                 whatToSelect.push(...visibleLayerNotes)
             }
         }
@@ -174,7 +176,7 @@ export const useSelectStore = defineStore("select", () => {
 
     const selectLoopAndNotes = (loop: Loop) => {
         const startingInRange = getTracesStartingInRange([
-            ...project.notes,
+            ...notes.list,
             ...loops.list,
         ], {
             time: loop.time,
@@ -199,9 +201,9 @@ export const useSelectStore = defineStore("select", () => {
         length,
         deleteSelected() {
 
-            project.notes = project.notes.filter(note => !note.selected)
+            notes.set(notes.list.filter(note => !note.selected))
             // TODO: Should I create a function within the store, do we loose necessary references elsewhere?
-            loops.list = loops.list.filter(note => !note.selected)
+            loops.set(loops.list.filter(note => !note.selected))
             project.lanes.lanes.forEach((lane) => lane.content = lane.content.filter(p => !p.selected))
             
             tool.resetState();
