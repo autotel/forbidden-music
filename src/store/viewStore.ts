@@ -182,7 +182,7 @@ export const useViewStore = defineStore("view", () => {
                 returnValue.push(loopRect);
             });
         }
-        return returnValue.reverse();
+        return returnValue;
     });
 
     const visibleAutomationPointDrawables = computed((): TimelineDot<AutomationPoint>[] => {
@@ -233,13 +233,12 @@ export const useViewStore = defineStore("view", () => {
 
     const rectOfLoop = (item: TimeRange): TimelineRect<Loop> => {
         let itemDuration = item.timeEnd - item.time;
-        const isFullHeight = tool.current === Tool.Loop;
 
         let rect = {
             x: timeToPxWithOffset(item.time),
             y: 40,
             width: timeToPx(itemDuration),
-            height: isFullHeight ? viewHeightPx.value : 40,
+            height: 40,
             event: item,
 
         } as TimelineRect<Loop>;

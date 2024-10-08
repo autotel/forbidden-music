@@ -112,7 +112,7 @@ const showButtons = computed(() => {
 
 const grid = 22;
 const margin = 12;
-const marginy = 23;
+const marginy = 0;
 const grdx = (pos: number) => {
     if (pos >= 0) return props.eventRect.x + pos * grid + margin
     return props.eventRect.x + props.eventRect.width + pos * grid - margin
@@ -160,15 +160,15 @@ const grdy = (pos: number) => {
         </template>
 
         <template v-if="!props.interactionDisabled">
-            <SvgLittleButton :x="grdx(-1)" :y="30" :onClick="() => magicLoopDuplicator(eventRect.event)"
+            <SvgLittleButton :x="grdx(-1)" :y="grdy(0)" :onClick="() => magicLoopDuplicator(eventRect.event)"
                 tooltip="copy to the right"> ©
             </SvgLittleButton>
-            <SvgLittleButton :x="grdx(-2)" :y="30" :onClick="() => selection.selectLoopAndNotes(eventRect.event)"
+            <SvgLittleButton :x="grdx(-2)" :y="grdy(0)" :onClick="() => selection.selectLoopAndNotes(eventRect.event)"
                 tooltip="select loop and contained notes"> [s]
             </SvgLittleButton>
         </template>
 
-        <text class="texts" :x="grdx(1)" :y="eventRect.y + 18" font-size="20"
+        <text class="texts" :x="grdx(4)" :y="eventRect.y + 18" font-size="20"
             v-if="!interactionDisabled && eventRect.rightEdge">
             {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
             {{ eventRect.event.count }}
