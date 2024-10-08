@@ -14,12 +14,12 @@ const namings = require('./public/namings.json')
 
 // todo: dynamic param
 app.get('/samplesKit.json', cors({ origin: '*' }), (req, res) => {
-    const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples')
+    const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples', 'http')
     res.json(generatedSamplesList[0]);
 });
 
 app.get('/samplesLibrary.json', cors({ origin: '*' }), (req, res) => {
-    const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples')
+    const generatedSamplesList = generateSamplesList(namings, 'public', myUrl, 'autotel extra samples', 'http')
     res.json({
         url: myUrl + '/samplesLibrary.json',
         name: 'autotel extra samples 1',
