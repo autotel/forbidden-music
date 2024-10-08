@@ -2,7 +2,6 @@ import { compress, decompress } from 'lzutf8';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
-import { Loop, LoopDef, loop, loopDef } from '../dataTypes/Loop';
 import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
 import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
 import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
@@ -19,7 +18,9 @@ import { useSynthStore } from './synthStore';
 import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
 import { useMasterEffectsStore } from './masterEffectsStore';
 import { automationPoint, AutomationPoint } from '@/dataTypes/AutomationPoint';
-import { AutomationLane } from '@/dataTypes/AutomationLane';
+import { tryDecompressAndParseArray } from '@/functions/tryDecompressAndParseArray';
+import { useLoopsStore } from './loopsStore';
+import { Loop } from '@/dataTypes/Loop';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,
@@ -39,6 +40,7 @@ const emptyProjectDefinition: LibraryItem = {
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
     const snaps = useSnapStore();
+    const loops = useLoopsStore();
     const edited = ref(Date.now().valueOf() as Number);
     const created = ref(Date.now().valueOf() as Number);
     const playback = usePlaybackStore();
@@ -46,61 +48,21 @@ export const useProjectStore = defineStore("current project", () => {
     const masterEffects = useMasterEffectsStore();
     const audioContextStore = useAudioContextStore();
     const name = ref(AUTOSAVE_PROJECTNAME);
+    
 
     const notes = ref<Note[]>([]);
-    const loops = ref<Loop[]>([]);
     const lanes = useAutomationLaneStore();
 
     const getSnapsList = (): LibraryItem["snaps"] => Object.entries(snaps.values).map(([key, value]) => {
         return [key, value.active];
     });
 
-    const sortLoops = () => {
-        loops.value.sort((a, b) => {
-            return a.time - b.time;
-        });
-    }
-
     const serializeNotes = (notes: Note[]) => notes.map(noteDef);
-
-    const serializeLoops = (loops: Loop[]) => loops.filter(
-        l => ((l.timeEnd - l.time > 0) && (l.count > 0))
-    ).map(loopDef);
 
     const stringifyNotes = (notes: Note[], zip: boolean = false) => {
         let str = JSON.stringify(serializeNotes(notes));
         if (zip) str = compress(str, { outputEncoding: "Base64" });
         return str;
-    }
-
-    const stringifyLoops = (loops: Loop[], zip: boolean = false) => {
-        let str = JSON.stringify(serializeLoops(loops));
-        if (zip) str = compress(str, { outputEncoding: "Base64" });
-        return str;
-    }
-
-    type ItmFilter<T> = (itm: unknown | T) => boolean;
-    const tryDecompressAndParseArray = <T>(str: string, testFn: ItmFilter<T>): T[] => {
-        let json = str;
-        try {
-            json = decompress(str, { inputEncoding: "Base64" });
-        } catch (_e) {
-            ifDev(() => console.log("cannot be decompressed"));
-            return [];
-        }
-
-        try {
-            const parsed = JSON.parse(json);
-            if (!('length' in parsed)) {
-                console.warn("invalid notes string", str);
-                return [];
-            } else {
-                return parsed.filter(testFn) as T[];
-            }
-        } catch (_e) {
-            ifDev(() => console.log("cannot be parsed"));
-            return [];
-        }
     }
 
     const parseNotes = (str: string): Note[] => {
@@ -127,25 +89,12 @@ export const useProjectStore = defineStore("current project", () => {
         return editNotes;
     }
 
-    const parseLoops = (str: string): Loop[] => {
-        let loopDefs = tryDecompressAndParseArray<LoopDef>(str, (maybeLoop) => {
-            if (typeof maybeLoop !== "object") return false;
-            if (null === maybeLoop) return false;
-            if (!('timeEnd' in maybeLoop)) return false;
-            if (!('time' in maybeLoop)) return false;
-            if (!('count' in maybeLoop)) return false;
-            return true;
-        });
-        const loops = loopDefs.map(loop)
-        sanitizeTimeRanges(...loops);
-        return loops;
-    }
 
     const getProjectDefintion = (): LibraryItem => {
         const ret = {
             name: name.value,
             notes: serializeNotes(notes.value),
-            loops: serializeLoops(loops.value),
+            loops: loops.serialize(),
             lanes: lanes.getAutomationLaneDefs(),
             customOctavesTable: snaps.customOctavesTable,
             snap_simplify: snaps.simplify,
@@ -176,8 +125,7 @@ export const useProjectStore = defineStore("current project", () => {
             layers.getOrMakeLayerWithIndex(note.layer);
         });
 
-        const nLoops: Loop[] = pDef.loops.map(loop);
-        loops.value = nLoops;
+        loops.setFromDefs(pDef.loops);
 
         if (pDef.bpm) playback.bpm = pDef.bpm;
 
@@ -217,7 +165,7 @@ export const useProjectStore = defineStore("current project", () => {
 
     const clearScore = () => {
         notes.value = [];
-        loops.value = [];
+        loops.clear();
         lanes.clear();
         layers.clear();
         setFromProjectDefinition(emptyProjectDefinition);
@@ -241,79 +189,9 @@ export const useProjectStore = defineStore("current project", () => {
             }
         })
         appendNote(...nnotes);
-        loops.value.push(...nloops);
+        loops.append(...nloops);
     }
 
-    const magicLoopDuplicator = (originalLoop: Loop) => {
-        /** Automation points after loop start */
-        const automationPointsAfterLoop = lanes.getAutomationsForTime(
-            originalLoop.time, Infinity, true
-        );
-
-        /** Notes after loop start */
-        const notesAfterLoop = getNotesInRange(notes.value, {
-            time: originalLoop.time,
-            timeEnd: Infinity,
-        });
-
-        const loopsAfterLoopEnd = loops.value.filter((otherLoop) => {
-            return otherLoop.time >= originalLoop.timeEnd;
-        });
-
-        const loopLength = originalLoop.timeEnd - originalLoop.time;
-        // shift loops
-        loopsAfterLoopEnd.forEach((originalLoop) => {
-            console.log("shift originalLoop", originalLoop.time);
-            originalLoop.time += loopLength;
-            originalLoop.timeEnd += loopLength;
-            console.log(" >> ", originalLoop.time);
-        })
-
-        const insideCloneArea = (time: number) => {
-            return time >= originalLoop.time && time < originalLoop.timeEnd;
-        }
-
-        // clone autom. 
-        for (let [lane, points] of automationPointsAfterLoop) {
-            // if within loop time, clone, otherwise only shift
-            const toPush: AutomationPoint[] = [];
-            points.forEach((point) => {
-                // counter-intuitiely, the cloned points are the ones who remain in the same time
-                if (insideCloneArea(point.time)) {
-                    toPush.push(automationPoint(point));
-                }
-                transposeTime(
-                    point,
-                    loopLength
-                )
-            });
-            lane.content.push(...toPush);
-        }
-        // clone notes
-        let notesToPush: Note[] = [];
-        notesAfterLoop.forEach((originalNote) => {
-            if (insideCloneArea(originalNote.time)) {
-                notesToPush.push(note(originalNote));
-            }
-            transposeTime(
-                originalNote,
-                loopLength
-            );
-        });
-        notes.value.push(...notesToPush);
-        // add new loop
-        loops.value.push(loop({
-            time: originalLoop.time + loopLength,
-            timeEnd: originalLoop.timeEnd + loopLength,
-            count: originalLoop.count,
-        }));
-
-        if (originalLoop.count === Infinity) {
-            originalLoop.count = 4;
-            originalLoop.repetitionsLeft = 1;
-        }
-
-    }
 
 
     const loadEmptyProjectDefinition = () => {
@@ -328,16 +206,13 @@ export const useProjectStore = defineStore("current project", () => {
     return {
         notes, loops, lanes, synths,
         append,
-        sortLoops,
         loadEmptyProjectDefinition,
         loadDemoProjectDefinition,
         name, edited, created, snaps,
         stringifyNotes, parseNotes,
-        stringifyLoops, parseLoops,
         getProjectDefintion,
         setFromProjectDefinition,
         clearScore, appendNote,
-        magicLoopDuplicator,
     }
 
 });

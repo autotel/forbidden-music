@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import { usePlaybackStore } from '@/store/playbackStore';
+import { useSelectStore } from '@/store/selectStore';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Loop } from '../../dataTypes/Loop';
+import { loop, Loop } from '../../dataTypes/Loop';
 import { Tool } from '../../dataTypes/Tool';
 import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
-import { TimelineDot, TimelineRect, useViewStore } from '../../store/viewStore';
+import { TimelineRect, useViewStore } from '../../store/viewStore';
 import SvgLittleButton from './SvgLittleButton.vue';
-import { usePlaybackStore } from '@/store/playbackStore';
-import { useSelectStore } from '@/store/selectStore';
+import { useTimeRangeEdits } from '@/composables/useTimeRangeEdits';
+import { useLoopsStore } from '@/store/loopsStore';
 
 
 const view = useViewStore();
@@ -18,11 +20,27 @@ const props = defineProps<{
     greyed?: boolean,
 }>();
 const project = useProjectStore();
+const loops = useLoopsStore();
 const playback = usePlaybackStore();
 const selection = useSelectStore();
 const noteBody = ref<SVGRectElement>();
 const rightDragHandle = ref<SVGRectElement>();
 const leftDragHandle = ref<SVGRectElement>();
+const timeRangeEdits = useTimeRangeEdits();
+const magicLoopDuplicator = (sourceLoop: Loop) => {
+    timeRangeEdits.duplicateTimeRange(sourceLoop);
+    const timeDuration = sourceLoop.timeEnd - sourceLoop.time;
+    if (sourceLoop.count === Infinity) {
+        sourceLoop.count = 4;
+        sourceLoop.repetitionsLeft = 1;
+    }
+    // add new loop
+    loops.append(loop({
+        time: sourceLoop.time + timeDuration,
+        timeEnd: sourceLoop.timeEnd + timeDuration,
+        count: sourceLoop.count,
+    }));
+}
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
     tool.timelineItemMouseEnter(props.eventRect.event);
@@ -101,6 +119,8 @@ const grdx = (pos: number) => {
 const grdy = (pos: number) => {
     return 0 + pos * grid + marginy
 }
+
+
 </script>
 <template>
     <g ref="noteBody">
@@ -139,7 +159,7 @@ const grdy = (pos: number) => {
         </template>
 
         <template v-if="!props.interactionDisabled">
-            <SvgLittleButton :x="grdx(-1)" :y="30" :onClick="() => project.magicLoopDuplicator(eventRect.event)"
+            <SvgLittleButton :x="grdx(-1)" :y="30" :onClick="() => magicLoopDuplicator(eventRect.event)"
                 tooltip="copy to the right"> ©
             </SvgLittleButton>
             <SvgLittleButton :x="grdx(-2)" :y="30" :onClick="() => selection.selectLoopAndNotes(eventRect.event)"

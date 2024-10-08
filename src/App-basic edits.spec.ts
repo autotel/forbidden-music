@@ -1,11 +1,8 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
-import { Tool } from './dataTypes/Tool';
-import './style.css';
+import { appCleanup } from './test-helpers/appCleanup';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
-import { appCleanup } from './test-helpers/appCleanup';
-import { MouseDownActions } from './store/toolStore';
 let generalInterval = 500;
 
 
@@ -18,9 +15,6 @@ describe('app basic editing tools', async () => {
         viewStore,
         projectStore,
         selectStore,
-        snapStore,
-        toolStore,
-        app,
     } = testRuntime;
 
 

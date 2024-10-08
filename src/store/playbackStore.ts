@@ -20,6 +20,7 @@ import { SynthParam } from '../synth/types/SynthParam';
 import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
 import { probe } from '../functions/probe';
 import { useLayerStore } from './layerStore';
+import { useLoopsStore } from './loopsStore';
 
 
 interface MidiInputInterface {
@@ -110,6 +111,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const project = useProjectStore();
     const automation = useAutomationLaneStore();
     const audioContextStore = useAudioContextStore();
+    const loops = useLoopsStore();
     const synth = useSynthStore();
     const layers = useLayerStore();
     // TODO: many of these need not to be refs nor be exported.
@@ -134,10 +136,6 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const midiInputs = ref([] as MidiInputInterface[]);
     const currentMidiInput = ref<MidiInputInterface | null>(null);
-
-    const sortedLoops = computed<Loop[]>(() => {
-        return project.loops.sort((a, b) => a.timeEnd - b.timeEnd);
-    });
 
     const clockTicker = () => {
         if (playing.value) {
@@ -191,7 +189,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const setToNextLoop = () => {
         if (loopNow?.repetitionsLeft === 0) lastFinishedLoop = loopNow;
         let expectedLoopEnd = lastFinishedLoop?.timeEnd || currentScoreTime.value;
-        loopNow = sortedLoops.value.find((loop) => {
+        loopNow = loops.list.find((loop) => {
             return (
                 loop.timeEnd > expectedLoopEnd
             );
@@ -202,7 +200,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     const resetLoopRepetitions = () => {
         lastFinishedLoop = undefined;
         setToNextLoop();
-        project.loops.forEach((loop) => {
+        loops.list.forEach((loop) => {
             if (loop === loopNow) return;
             delete loop.repetitionsLeft;
         });

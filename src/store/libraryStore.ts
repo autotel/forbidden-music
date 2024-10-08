@@ -13,6 +13,7 @@ import { useProjectStore } from './projectStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 import { SynthChannelsDefinition } from '@/dataStructures/synthStructureFunctions';
 import userSettingsStorageFactory from './userSettingsStorageFactory';
+import { useLoopsStore } from './loopsStore';
 
 
 const migrators = {
@@ -134,7 +135,7 @@ export const useLibraryStore = defineStore("library store", () => {
     const filenamesList = ref([] as Array<string>);
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
-
+    const loops = useLoopsStore();
     const saveToNewLibraryItem = () => {
         try {
             if (exists(project.name)) {
@@ -227,7 +228,7 @@ export const useLibraryStore = defineStore("library store", () => {
 
     watch([
         project.lanes,
-        project.loops,
+        loops.list,
         // project.snaps, // causes unsync on mouse move over viewport
         () => project.snaps.values,
         () => project.name,

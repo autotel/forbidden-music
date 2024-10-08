@@ -12,6 +12,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
 
     setInterval(() => {
         const json = JSON.stringify(project.getProjectDefintion());
+        if(LZUTF8 === undefined) throw new Error("LZUTF8 is undefined");
         const zipped = LZUTF8.compress(json, { outputEncoding: "Base64" });
         if (zipped !== lazyProjectDefinitionZipped.value) {
             console.log("store to undo history");

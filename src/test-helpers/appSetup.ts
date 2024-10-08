@@ -13,6 +13,7 @@ import '../style.css';
 import { disclaimer } from '../texts/userDisclaimer';
 import { TestRuntime } from './testRuntime';
 import { RoboMouse, wait } from './RoboMouse';
+import { useLoopsStore } from '@/store/loopsStore';
 export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) => {
 
     console.log("appMount");
@@ -55,6 +56,7 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
     const selectStore = useSelectStore();
     const snapStore = useSnapStore();
     const toolStore = useToolStore();
+    const loopsStore = useLoopsStore();
 
     let interactionTarget: HTMLElement | null;
 
@@ -63,6 +65,7 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         projectStore,
         viewStore,
         toolStore,
+        loopsStore,
         snapStore,
         pinia,
         app,

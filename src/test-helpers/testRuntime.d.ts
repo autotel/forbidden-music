@@ -3,6 +3,7 @@ import { useProjectStore } from "../store/projectStore";
 import { useSnapStore } from "../store/snapStore";
 import { useToolStore } from "../store/toolStore";
 import { useViewStore } from "../store/viewStore";
+import { useLoopsStore } from "../store/loopsStore";
 import { RoboMouse } from "./utils";
 import { Pinia } from "pinia";
 import { useSelectStore } from "../store/selectStore";
@@ -13,6 +14,7 @@ export interface TestRuntime {
     viewStore: ReturnType<typeof useViewStore>;
     toolStore: ReturnType<typeof useToolStore>;
     snapStore: ReturnType<typeof useSnapStore>;
+    loopsStore: ReturnType<typeof useLoopsStore>;
     containerDiv: HTMLDivElement;
     selectStore: ReturnType<typeof useSelectStore>;
     interactionTarget: HTMLElement;

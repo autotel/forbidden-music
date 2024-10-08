@@ -1,17 +1,15 @@
-import { afterAll, describe, expect, it } from 'vitest';
-import { note } from './dataTypes/Note';
-import { Tool } from './dataTypes/Tool';
-import './style.css';
-import { appMount } from './test-helpers/appSetup';
-import { wait } from './test-helpers/RoboMouse';
-import { appCleanup } from './test-helpers/appCleanup';
-import { MouseDownActions } from './store/toolStore';
-
+import { describe, expect, it } from 'vitest';
+import { note } from '../dataTypes/Note';
+import { Tool } from '../dataTypes/Tool';
+import { appCleanup } from '../test-helpers/appCleanup';
+import { appMount } from '../test-helpers/appSetup';
+import { wait } from '../test-helpers/RoboMouse';
+import { useTimeRangeEdits } from './useTimeRangeEdits';
 
 let generalInterval = 5000;
 
 
-describe('app loop editing', async () => {
+describe('app time range editing', async () => {
 
     const testRuntime = await appMount();
     const {
@@ -22,8 +20,11 @@ describe('app loop editing', async () => {
         selectStore,
         snapStore,
         toolStore,
+        loopsStore,
         app,
     } = testRuntime;
+
+    const timeRangeEdits = useTimeRangeEdits();
 
     const resetNotes = () => {
         projectStore.notes = [];
@@ -69,9 +70,9 @@ describe('app loop editing', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, interval);
         await wait(interval * 2);
 
-        expect(projectStore.loops.length).toBe(1);
+        expect(loopsStore.list.length).toBe(1);
 
-        projectStore.loops = [];
+        loopsStore.clear();
         toolStore.current = Tool.Select;
         
     }, generalInterval);
@@ -103,10 +104,10 @@ describe('app loop editing', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, interval);
         await wait(interval * 2);
 
-        expect(projectStore.loops[0].time).toBe(targetLoopDef.time);
-        expect(projectStore.loops[0].timeEnd).toBe(targetLoopDef.timeEnd);
+        expect(loopsStore.list[0].time).toBe(targetLoopDef.time);
+        expect(loopsStore.list[0].timeEnd).toBe(targetLoopDef.timeEnd);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
     });
     it('can duplicate loops & their content', async () => {
@@ -137,14 +138,14 @@ describe('app loop editing', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, interval);
         await wait(interval * 2);
 
-        projectStore.magicLoopDuplicator(projectStore.loops[0]);
+        timeRangeEdits.duplicateTimeRange(loopsStore.list[0]);
         
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(projectStore.loops.length).toBe(2);
+        expect(loopsStore.list.length).toBe(1);
         expect(projectStore.notes.length).toBe(4);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
         // note: Not resetting notes for next test
     });
@@ -183,14 +184,14 @@ describe('app loop editing', async () => {
         const originalNotes = notesSorted.slice(0, 2);
 
 
-        projectStore.magicLoopDuplicator(projectStore.loops[0]);
+        timeRangeEdits.duplicateTimeRange(loopsStore.list[0]);
         
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(projectStore.loops.length).toBe(2);
+        expect(loopsStore.list.length).toBe(2);
         expect(projectStore.notes.length).toBe(6);
-        expect(projectStore.loops[0].time).toBe(targetLoopDef.time);
-        expect(projectStore.loops[0].timeEnd).toBe(targetLoopDef.timeEnd);
+        expect(loopsStore.list[0].time).toBe(targetLoopDef.time);
+        expect(loopsStore.list[0].timeEnd).toBe(targetLoopDef.timeEnd);
 
         notesSorted = projectStore.notes.sort((a, b) => a.time - b.time);
 
@@ -201,7 +202,7 @@ describe('app loop editing', async () => {
         expect(notesSorted[4].time).toBe(originalNotes[0].time + expectedTimeIncrease * 2);
         expect(notesSorted[5].time).toBe(originalNotes[1].time + expectedTimeIncrease * 2);
 
-        projectStore.loops = [];
+        loopsStore.clear();
         toolStore.current = Tool.Select;
         resetNotes();
     });
@@ -241,11 +242,11 @@ describe('app loop editing', async () => {
         let notesSorted = projectStore.notes.sort((a, b) => a.time - b.time).map(note);
         const originalNotes = notesSorted.slice(0, 2);
 
-        projectStore.magicLoopDuplicator(projectStore.loops[0]);
+        timeRangeEdits.duplicateTimeRange(loopsStore.list[0]);
         
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(projectStore.loops.length).toBe(2);
+        expect(loopsStore.list.length).toBe(2);
         expect(projectStore.notes.length).toBe(2);
         
         notesSorted = projectStore.notes.sort((a, b) => a.time - b.time);
@@ -253,7 +254,7 @@ describe('app loop editing', async () => {
         expect(notesSorted[0].time).toBe(originalNotes[0].time);
         expect(notesSorted[1].time).toBe(originalNotes[1].time);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
         resetNotes();
     });

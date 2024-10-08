@@ -16,6 +16,7 @@ import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { findTraceInRange, getTracesInRange } from '@/functions/getEventsInRange';
+import { useLoopsStore } from './loopsStore';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -332,7 +333,7 @@ export const useToolStore = defineStore("tool", () => {
     const snap = useSnapStore();
     const lanes = useAutomationLaneStore();
     const ftRec = ref(false);
-
+    const loops = useLoopsStore();
     // TODO: should rename into currentMode and currentTool instead of current and currentLeftHand
     /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
@@ -842,7 +843,7 @@ export const useToolStore = defineStore("tool", () => {
             }
             loopThatWouldBeCreated.value.time = t;
             loopThatWouldBeCreated.value.timeEnd = t;
-            applySnapToLoop(loopThatWouldBeCreated.value, project.loops);
+            applySnapToLoop(loopThatWouldBeCreated.value, loops.list);
 
             keepLoop = true;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateAutomationPoint) {

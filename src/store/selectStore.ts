@@ -14,12 +14,14 @@ import { useProjectStore } from './projectStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
 import { Loop } from '@/dataTypes/Loop';
+import { useLoopsStore } from './loopsStore';
 export type SelectableRange = TimeRange & (OctaveRange | VelocityRange | {})
 
 export const useSelectStore = defineStore("select", () => {
     const selected = ref(new Set() as Set<Trace>);
     const project = useProjectStore();
     const layers = useLayerStore();
+    const loops = useLoopsStore();
     const tool = useToolStore();
     const view = useViewStore();
     const lanes = useAutomationLaneStore();
@@ -30,7 +32,7 @@ export const useSelectStore = defineStore("select", () => {
     const refreshTraceSelectionState = () => {
         // TODO: is it really necessary?
         project.notes.forEach(n => setSelection(n, isSelected(n)));
-        project.loops.forEach(n => setSelection(n, isSelected(n)));
+        loops.list.forEach(n => setSelection(n, isSelected(n)));
         lanes.forEachAutomationPoint(n => setSelection(n, isSelected(n)));
     }
     const length = computed(() => selected.value.size);
@@ -154,7 +156,7 @@ export const useSelectStore = defineStore("select", () => {
         const whatToSelect:Trace[] = []
         switch (tool.current) {
             case Tool.Loop:
-                whatToSelect.push(...project.loops)
+                whatToSelect.push(...loops.list)
                 break;
             case Tool.Automation:{
                 const currentLane = tool.laneBeingEdited
@@ -173,7 +175,7 @@ export const useSelectStore = defineStore("select", () => {
     const selectLoopAndNotes = (loop: Loop) => {
         const startingInRange = getTracesStartingInRange([
             ...project.notes,
-            ...project.loops,
+            ...loops.list,
         ], {
             time: loop.time,
             timeEnd: loop.timeEnd
@@ -198,7 +200,8 @@ export const useSelectStore = defineStore("select", () => {
         deleteSelected() {
 
             project.notes = project.notes.filter(note => !note.selected)
-            project.loops = project.loops.filter(note => !note.selected)
+            // TODO: Should I create a function within the store, do we loose necessary references elsewhere?
+            loops.list = loops.list.filter(note => !note.selected)
             project.lanes.lanes.forEach((lane) => lane.content = lane.content.filter(p => !p.selected))
             
             tool.resetState();

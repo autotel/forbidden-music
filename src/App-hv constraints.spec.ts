@@ -1,25 +1,19 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
-import { Tool } from './dataTypes/Tool';
-import './style.css';
+import { appCleanup } from './test-helpers/appCleanup';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
-import { appCleanup } from './test-helpers/appCleanup';
-let generalInterval = 500;
-
 
 describe('app horizontal and vertical constrained edits', async () => {
 
     const testRuntime = await appMount();
     const {
-        interactionTarget,
         roboMouse,
         viewStore,
         projectStore,
         selectStore,
         snapStore,
         toolStore,
-        app,
     } = testRuntime;
 
     it('can constrain note dragging to be only horizontal', async () => {

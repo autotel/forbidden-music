@@ -13,6 +13,7 @@ import { useProjectStore } from "./projectStore.js";
 import { useToolStore } from "./toolStore.js";
 import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
 import { useAutomationLaneStore } from "./automationLanesStore.js";
+import { useLoopsStore } from "./loopsStore.js";
 
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -114,6 +115,7 @@ export const useViewStore = defineStore("view", () => {
     const layers = useLayerStore();
     const tool = useToolStore();
     const lanes = useAutomationLaneStore();
+    const loops = useLoopsStore();
     const memoizedNoteHeight = computed(() => {
         return Math.abs(octaveToPx(1 / 12));
     });
@@ -139,7 +141,7 @@ export const useViewStore = defineStore("view", () => {
 
     const visibleLoops = computed((): Loop[] => {
         visibleNotesRefreshKey.value;
-        const items = [...project.loops];
+        const items = [...loops.list];
 
         return items.filter((item) => {
             return item.timeEnd >= timeOffset.value && item.time <= timeOffset.value + viewWidthTime.value;
