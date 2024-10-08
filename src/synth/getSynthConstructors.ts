@@ -5,7 +5,7 @@ import { ConvolutionReverbEffect } from "./effects/ConvolutionReverbEffect";
 import { FilterEffect } from "./effects/FilterEffect";
 import { GainEffect } from "./effects/GainEffect";
 import { RingModEffect } from "./effects/RingModEffect";
-import { SimpleDelayEffect } from "./effects/SimpleDelayEffect";
+import { DelayEffect } from "./effects/DelayEffect";
 import { ExternalMidiSynth } from "./generators/ExternalMidiSynth";
 import { FmSynth } from "./generators/FmSynth";
 import { FourierSynth } from "./generators/FourierSynth";
@@ -131,7 +131,7 @@ export default function getSynthConstructors(
 
     addAvailableSynth(OscilloScope, 'Oscilloscope');
 
-    addAvailableSynth(SimpleDelayEffect, 'SimpleDelayEffect');
+    addAvailableSynth(DelayEffect, 'DelayEffect');
     addAvailableSynth(RingModEffect, 'RingModEffect');
     addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect');
     addAvailableSynth(FilterEffect, 'FilterEffect');
