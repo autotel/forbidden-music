@@ -174,11 +174,13 @@ export const useViewStore = defineStore("view", () => {
     });
 
     const visibleLoopDrawables = computed<TimelineRect<Loop>[]>(() => {
+        const loopHeight = 38;
         let returnValue: TimelineRect<Loop>[] = [];
         for (const loop of visibleLoops.value) {
             traverse(loop, (loop, level) => {
                 const loopRect = rectOfLoop(loop.value);
-                loopRect.y = 40 + level * 40;
+                loopRect.y = 24 + level * loopHeight;
+                loopRect.height = loopHeight;
                 returnValue.push(loopRect);
             });
         }
@@ -236,7 +238,7 @@ export const useViewStore = defineStore("view", () => {
 
         let rect = {
             x: timeToPxWithOffset(item.time),
-            y: 40,
+            y: 0,
             width: timeToPx(itemDuration),
             height: 40,
             event: item,

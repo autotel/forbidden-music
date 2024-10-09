@@ -123,12 +123,6 @@ const grdy = (pos: number) => {
 <template>
     <g ref="loopBody" class="loop" :class="{ blink: enqueued }">
 
-        <text class="texts" :x="grdx(4)" :y="eventRect.y + 18" font-size="20"
-            v-if="!interactionDisabled && eventRect.rightEdge">
-            {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
-            {{ eventRect.event.count }}
-            [{{ eventRect.event.dev_id }}]
-        </text>
         <rect class="body" v-bind="$attrs" :class="{
             selected: eventRect.event.selected,
             greyed: greyed,
@@ -143,37 +137,46 @@ const grdy = (pos: number) => {
         </template>
         <line v-if="interactionDisabled" :x1="eventRect.x" :y1="eventRect.y" :x2="eventRect.x" :y2="view.viewHeightPx"
             stroke="currentColor" stroke-width="1" />
+        <template v-if="eventRect.width > 200">
 
-        <SvgLittleButton :x="grdx(0)" :y="grdy(0)" :onClick="() => playme()" tooltip="jump to this loop">
-            ▶
-        </SvgLittleButton>
-        <template v-if="!props.interactionDisabled && showButtons">
-            <SvgLittleButton :x="grdx(1)" :y="grdy(0)" :onClick="() => eventRect.event.count--"
-                tooltip="less repetitions"> -
+            <text class="texts" :x="grdx(3.4)" :y="eventRect.y + 18" font-size="20"
+                v-if="!interactionDisabled && eventRect.rightEdge">
+                {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
+                {{ eventRect.event.count }}
+                [{{ eventRect.event.dev_id }}]
+            </text>
+            
+            <SvgLittleButton :x="grdx(0)" :y="grdy(0)" :onClick="() => playme()" tooltip="jump to this loop">
+                ▶
             </SvgLittleButton>
-            <SvgLittleButton :x="grdx(2)" :y="grdy(0)" :onClick="() => eventRect.event.count++"
-                tooltip="more repetitions"> +
-            </SvgLittleButton>
-            <SvgLittleButton :x="grdx(1)" :y="grdy(1)" :onClick="() => {
-                eventRect.event.count = 0;
-                eventRect.event.repetitionsLeft = 0;
-            }" tooltip="disable loop">
-                ∅
-            </SvgLittleButton>
-            <SvgLittleButton :x="grdx(2)" :y="grdy(1)" :onClick="() => {
-                eventRect.event.count = Infinity;
-                eventRect.event.repetitionsLeft = Infinity;
-            }" tooltip="infinite repetitions"> ∞ </SvgLittleButton>
+            <template v-if="!props.interactionDisabled && showButtons">
+                <SvgLittleButton :x="grdx(1)" :y="grdy(0)" :onClick="() => eventRect.event.count--"
+                    tooltip="less repetitions"> -
+                </SvgLittleButton>
+                <SvgLittleButton :x="grdx(2)" :y="grdy(0)" :onClick="() => eventRect.event.count++"
+                    tooltip="more repetitions"> +
+                </SvgLittleButton>
+                <SvgLittleButton :x="grdx(1)" :y="grdy(1)" :onClick="() => {
+                    eventRect.event.count = 0;
+                    eventRect.event.repetitionsLeft = 0;
+                }" tooltip="disable loop">
+                    ∅
+                </SvgLittleButton>
+                <SvgLittleButton :x="grdx(2)" :y="grdy(1)" :onClick="() => {
+                    eventRect.event.count = Infinity;
+                    eventRect.event.repetitionsLeft = Infinity;
+                }" tooltip="infinite repetitions"> ∞ </SvgLittleButton>
 
-        </template>
+            </template>
 
-        <template v-if="!props.interactionDisabled">
-            <SvgLittleButton :x="grdx(-1)" :y="grdy(0)" :onClick="() => magicLoopDuplicator(eventRect.event)"
-                tooltip="copy to the right"> ©
-            </SvgLittleButton>
-            <SvgLittleButton :x="grdx(-2)" :y="grdy(0)" :onClick="() => selection.selectLoopAndNotes(eventRect.event)"
-                tooltip="select loop and contained notes"> [s]
-            </SvgLittleButton>
+            <template v-if="!props.interactionDisabled">
+                <SvgLittleButton :x="grdx(-1)" :y="grdy(0)" :onClick="() => magicLoopDuplicator(eventRect.event)"
+                    tooltip="copy to the right"> ©
+                </SvgLittleButton>
+                <SvgLittleButton :x="grdx(-2)" :y="grdy(0)" :onClick="() => selection.selectLoopAndNotes(eventRect.event)"
+                    tooltip="select loop and contained notes"> [s]
+                </SvgLittleButton>
+            </template>
         </template>
     </g>
 </template>

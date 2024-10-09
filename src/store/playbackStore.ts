@@ -249,7 +249,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         remainder = 0;
         if (remainder > 0) {
             const jumpLoopStartNotes = getNotesBetween(loopTo.time, loopTo.time + remainder);
-            console.log("catch up notes", jumpLoopStartNotes.length);
             remainderNotesArray.push(...jumpLoopStartNotes);
         }
 
@@ -270,7 +269,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (loopNowHierarchical && loopNow !== lastLoopAtPlayhead) {
             // enteredNewLoop = true;
             // loopNow?.repetitionsLeft && loopNow.repetitionsLeft--;
-            if (loopToJumpTo) {
+            if (loopToJumpTo.value) {
                 jumpToJumpLoop(0, []);
             }
         }
@@ -298,7 +297,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         if (loopRestarted) {
             // in order to keep time precise, start new loop with 'remainder' start offset
             const remainder = scoreTimeFrameEnd - loopRestarted.timeEnd;
-            if (loopToJumpTo) {
+            if (loopToJumpTo.value) {
                 // find notes between that loop start and remainder to play
                 jumpToJumpLoop(remainder, playNotes);
             } else if (loopRestarted.repetitionsLeft) {
