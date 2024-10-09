@@ -32,7 +32,6 @@ export const useSelectStore = defineStore("select", () => {
         return selected.value.has(item);
     };
     const refreshTraceSelectionState = () => {
-        // TODO: is it really necessary?
         notes.list.forEach(n => setSelection(n, isSelected(n)));
         loops.list.forEach(n => setSelection(n, isSelected(n)));
         lanes.forEachAutomationPoint(n => setSelection(n, isSelected(n)));
@@ -182,7 +181,7 @@ export const useSelectStore = defineStore("select", () => {
             time: loop.time,
             timeEnd: loop.timeEnd
         });
-        add(...startingInRange)
+        select(...startingInRange)
     }
 
     throttledWatch(() => selected.value.size, refreshTraceSelectionState);

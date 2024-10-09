@@ -27,7 +27,7 @@ const loopBody = ref<SVGRectElement>();
 const rightDragHandle = ref<SVGRectElement>();
 const leftDragHandle = ref<SVGRectElement>();
 const timeRangeEdits = useTimeRangeEdits();
-
+const enqueued = ref<boolean>(false);
 const magicLoopDuplicator = (sourceLoop: Loop) => {
     timeRangeEdits.duplicateTimeRange(sourceLoop);
 }
@@ -54,10 +54,18 @@ const leftDragHandleMouseLeaveListener = (e: MouseEvent) => {
 
 const playme = () => {
     console.log("jump here");
-    playback.stop();
-    playback.currentScoreTime = props.eventRect.event.time;
-    playback.play();
+    // playback.stop();
+    // playback.currentScoreTime = props.eventRect.event.time;
+    // playback.play();
+    playback.enqueueLoop(props.eventRect.event);
+    enqueued.value = true;
 }
+
+watch(()=>playback.loopToJumpTo, (newVal, oldVal) => {
+    if (newVal === false) {
+        enqueued.value = false;
+    }
+})
 
 watch(rightDragHandle, (newVal, oldVal) => {
     if (oldVal) {
@@ -113,7 +121,14 @@ const grdy = (pos: number) => {
 
 </script>
 <template>
-    <g ref="loopBody" class="loop">
+    <g ref="loopBody" class="loop" :class="{ blink: enqueued }">
+
+        <text class="texts" :x="grdx(4)" :y="eventRect.y + 18" font-size="20"
+            v-if="!interactionDisabled && eventRect.rightEdge">
+            {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
+            {{ eventRect.event.count }}
+            [{{ eventRect.event.dev_id }}]
+        </text>
         <rect class="body" v-bind="$attrs" :class="{
             selected: eventRect.event.selected,
             greyed: greyed,
@@ -140,17 +155,15 @@ const grdy = (pos: number) => {
                 tooltip="more repetitions"> +
             </SvgLittleButton>
             <SvgLittleButton :x="grdx(1)" :y="grdy(1)" :onClick="() => {
-                    eventRect.event.count = 0;
-                    eventRect.event.repetitionsLeft = 0;
-                }"
-                tooltip="disable loop">
+                eventRect.event.count = 0;
+                eventRect.event.repetitionsLeft = 0;
+            }" tooltip="disable loop">
                 ∅
             </SvgLittleButton>
             <SvgLittleButton :x="grdx(2)" :y="grdy(1)" :onClick="() => {
-                    eventRect.event.count = Infinity;
-                    eventRect.event.repetitionsLeft = Infinity;
-                }"
-                tooltip="infinite repetitions"> ∞ </SvgLittleButton>
+                eventRect.event.count = Infinity;
+                eventRect.event.repetitionsLeft = Infinity;
+            }" tooltip="infinite repetitions"> ∞ </SvgLittleButton>
 
         </template>
 
@@ -162,13 +175,6 @@ const grdy = (pos: number) => {
                 tooltip="select loop and contained notes"> [s]
             </SvgLittleButton>
         </template>
-
-        <text class="texts" :x="grdx(4)" :y="eventRect.y + 18" font-size="20"
-            v-if="!interactionDisabled && eventRect.rightEdge">
-            {{ eventRect.event.repetitionsLeft ? eventRect.event.repetitionsLeft + ' of ' : '' }}
-            {{ eventRect.event.count }}
-            [{{ eventRect.event.dev_id }}]
-        </text>
     </g>
 </template>
 <style scoped>
@@ -193,5 +199,20 @@ const grdy = (pos: number) => {
 
 .loop .texts {
     fill: #11aacc;
+}
+
+.blink {
+    animation: blink 0.3s linear infinite;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
 }
 </style>

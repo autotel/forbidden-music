@@ -5,7 +5,7 @@ import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/Autom
 import { loop, Loop } from "../dataTypes/Loop";
 import { Note, note } from "../dataTypes/Note";
 import { getDuration } from "../dataTypes/TimelineItem";
-import { TraceType, transposeTime } from "../dataTypes/Trace";
+import { Trace, TraceType, transposeTime } from "../dataTypes/Trace";
 import isTauri, { tauriObject } from '../functions/isTauri';
 import devMidiInputHandler from '../midiInputHandlers/log';
 import octatrackMidiInputHandler from '../midiInputHandlers/octatrack';
@@ -19,6 +19,7 @@ import { useNotesStore } from './notesStore';
 import { useProjectStore } from './projectStore';
 import { useSynthStore } from './synthStore';
 import { useViewStore } from './viewStore';
+import { P } from '@tauri-apps/api/event-41a9edf5';
 
 
 interface MidiInputInterface {
@@ -229,6 +230,35 @@ export const usePlaybackStore = defineStore("playback", () => {
         return webAudioTime * rate;
     }
 
+
+    let loopToJumpTo = ref<Loop | false>(false);
+
+    const enqueueLoop = (loop: Loop) => {
+        loopToJumpTo.value = loop;
+        if (!playing.value) {
+            currentScoreTime.value = loopToJumpTo.value.time;
+            play();
+        }
+    }
+
+    const jumpToJumpLoop = (remainder: number, remainderNotesArray: Trace[]) => {
+        if (!loopToJumpTo.value) return;
+        const loopTo = loopToJumpTo.value;
+        loopToJumpTo.value = false;
+        // feature is not working 
+        remainder = 0;
+        if (remainder > 0) {
+            const jumpLoopStartNotes = getNotesBetween(loopTo.time, loopTo.time + remainder);
+            console.log("catch up notes", jumpLoopStartNotes.length);
+            remainderNotesArray.push(...jumpLoopStartNotes);
+        }
+
+        currentScoreTime.value = loopTo.time + remainder;
+        loopNow = loopTo;
+        loopNow.repetitionsLeft = loopNow.count - 1;
+        loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
+    }
+
     const _clockAction = () => {
         const audioContext = audioContextStore.audioContext;
         if (!audioContext) throw new Error("audio context not created");
@@ -237,10 +267,13 @@ export const usePlaybackStore = defineStore("playback", () => {
         loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
         loopNow = loopNowHierarchical?.value;
         // If I do this, left plays are discounted when going back from deeper to higher loops
-        // if (loopNowHierarchical && loopNow !== lastLoopAtPlayhead) {
-        //     enteredNewLoop = true;
-        //     loopNow?.repetitionsLeft && loopNow.repetitionsLeft--;
-        // }
+        if (loopNowHierarchical && loopNow !== lastLoopAtPlayhead) {
+            // enteredNewLoop = true;
+            // loopNow?.repetitionsLeft && loopNow.repetitionsLeft--;
+            if (loopToJumpTo) {
+                jumpToJumpLoop(0, []);
+            }
+        }
         lastLoopAtPlayhead = loopNow;
 
         // reference time to consider as zero towards each event to be queued
@@ -263,17 +296,21 @@ export const usePlaybackStore = defineStore("playback", () => {
         playNotes = getNotesBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
 
         if (loopRestarted) {
+            // in order to keep time precise, start new loop with 'remainder' start offset
             const remainder = scoreTimeFrameEnd - loopRestarted.timeEnd;
-            const transposeNoteTime = getDuration(loopRestarted);
-            const loopStartNotes = getNotesBetween(loopRestarted.time, loopRestarted.time + remainder)
-                .map(inote => {
-                    const noteClone = note(inote);
-                    transposeTime(noteClone, transposeNoteTime);
-                    return noteClone;
-                })
-            playNotes.push(...loopStartNotes);
-            currentScoreTime.value = loopRestarted.time + remainder;
-            if (loopRestarted.repetitionsLeft) {
+            if (loopToJumpTo) {
+                // find notes between that loop start and remainder to play
+                jumpToJumpLoop(remainder, playNotes);
+            } else if (loopRestarted.repetitionsLeft) {
+                const loopStartNotes = getNotesBetween(loopRestarted.time, loopRestarted.time + remainder)
+                // .map(inote => {
+                //     const noteClone = note(inote);
+                //     transposeTime(noteClone, transposeNoteTime);
+                //     return noteClone;
+                // })
+                playNotes.push(...loopStartNotes);
+
+                currentScoreTime.value = loopRestarted.time + remainder;
                 loopRestarted.repetitionsLeft--;
                 if (loopNowHierarchical) loops.resetChildrenLoopRepetitions(loopNowHierarchical);
             }
@@ -395,6 +432,8 @@ export const usePlaybackStore = defineStore("playback", () => {
         play,
         stop,
         pause,
+        enqueueLoop,
+        loopToJumpTo,
         resetLoopRepetitions,
         catchUpAutomations,
         midiInputs, currentMidiInput,

@@ -71,7 +71,6 @@ export const useLoopsStore = defineStore('loops score', () => {
                 ret = loop;
             }
         });
-        console.log(ret?.value.dev_id);
         return ret
     }
 

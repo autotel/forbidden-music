@@ -44,7 +44,7 @@ export const getTracesStartingInRange = <T extends Trace>(
             || !('octave' in trace)
             || (trace.octave >= octaveStart && trace.octave <= octaveEnd!);
 
-        const timeInRange = trace.time >= timeStart && trace.time <= timeEnd;
+        const timeInRange = trace.time >= timeStart && trace.time < timeEnd;
         return octaveInRange && timeInRange;
     });
 }
