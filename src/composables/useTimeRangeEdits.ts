@@ -37,12 +37,9 @@ export const useTimeRangeEdits = () => {
             return otherLoop.time >= rangeCopy.time;
         });
 
-        console.log('move', loopsAfterLoop.map((loop) => loop.dev_id));
-
         const timeDuration = rangeCopy.timeEnd - rangeCopy.time;
 
         const insideCloneArea = (time: number) => {
-            console.log('insideCloneArea', time, rangeCopy.time, rangeCopy.timeEnd, time >= rangeCopy.time && time < rangeCopy.timeEnd);
             return time >= rangeCopy.time && time < rangeCopy.timeEnd;
         }
 
@@ -82,7 +79,6 @@ export const useTimeRangeEdits = () => {
         loopsAfterLoop.forEach((originalLoop) => {
             if (insideCloneArea(originalLoop.time)) {
                 loopsToPush.push(loop(originalLoop));
-                console.log('copy', originalLoop.dev_id, '->', loopsToPush[loopsToPush.length - 1].dev_id);
             }
             transposeTime(originalLoop, timeDuration);
         })
