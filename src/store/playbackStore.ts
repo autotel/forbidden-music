@@ -288,20 +288,21 @@ export const usePlaybackStore = defineStore("playback", () => {
 
         let playNotes: Note[] = [];
 
-        let loopRestarted = (loopNow && scoreTimeFrameEnd >= loopNow.timeEnd) ? loopNow : false;
+        let loopEndReached = (loopNow && scoreTimeFrameEnd >= loopNow.timeEnd) ? loopNow : false;
 
         let playRangeEnd = currentScoreTime.value;
-        if (loopRestarted) playRangeEnd = loopRestarted.timeEnd;
+        if (loopEndReached) playRangeEnd = loopEndReached.timeEnd;
         playNotes = getNotesBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
 
-        if (loopRestarted) {
+        if (loopEndReached) {
+            console.log('restart loop');
             // in order to keep time precise, start new loop with 'remainder' start offset
-            const remainder = scoreTimeFrameEnd - loopRestarted.timeEnd;
+            const remainder = scoreTimeFrameEnd - loopEndReached.timeEnd;
             if (loopToJumpTo.value) {
                 // find notes between that loop start and remainder to play
                 jumpToJumpLoop(remainder, playNotes);
-            } else if (loopRestarted.repetitionsLeft) {
-                const loopStartNotes = getNotesBetween(loopRestarted.time, loopRestarted.time + remainder)
+            } else if (loopEndReached.repetitionsLeft) {
+                const loopStartNotes = getNotesBetween(loopEndReached.time, loopEndReached.time + remainder)
                 // .map(inote => {
                 //     const noteClone = note(inote);
                 //     transposeTime(noteClone, transposeNoteTime);
@@ -309,13 +310,13 @@ export const usePlaybackStore = defineStore("playback", () => {
                 // })
                 playNotes.push(...loopStartNotes);
 
-                currentScoreTime.value = loopRestarted.time + remainder;
-                loopRestarted.repetitionsLeft--;
+                currentScoreTime.value = loopEndReached.time + remainder;
+                loopEndReached.repetitionsLeft--;
                 if (loopNowHierarchical) loops.resetChildrenLoopRepetitions(loopNowHierarchical);
             }
         }
 
-        if (catchUp || loopRestarted) {
+        if (catchUp || loopEndReached) {
             catchUpAutomations(scoreTimeFrameStart);
         }
 

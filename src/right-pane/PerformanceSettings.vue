@@ -12,6 +12,7 @@ import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useToolStore } from '../store/toolStore';
 import Collapsible from './Collapsible.vue';
+import GoFullscreenButton from '@/bottom-pane/components/GoFullscreenButton.vue';
 
 const monoModeInteraction = useMonoModeInteraction();
 
@@ -40,25 +41,19 @@ const workletWorkbench = () => {
             Settings
         </template>
         <div>
-            <div class="form-row" v-if="userSettings.viewportTech === ViewportTech.Pixi">
-                <Toggle v-model="userSettings.showFPS" />
-                <label>Show FPS</label>
-            </div>
-
-            <div class="form-row" v-if="userSettings.viewportTech === ViewportTech.Pixi">
-                <input v-model="userSettings.fontSize" type="number" />
-                <label>Font Size</label>
-            </div>
+            <div class="form-section">Pen & Tablet usability</div>
 
             <div class="form-row">
-                <Toggle v-model="tool.showReferenceKeyboard" />
-                <label>Reference Keyboard</label>
+                <GoFullscreenButton /> <label> [f11]</label>
             </div>
+            <Tooltip
+                tooltip="Makes the cursor disappear when dragging on a parameter knob. It's a great usability feature, but can cause trouble in some cases">
+                <div class="form-row">
+                    <Toggle v-model="userSettings.useKnobCapture" />
+                    <label>Use pointer capture</label>
+                </div>
+            </Tooltip>
 
-            <div class="form-row">
-                <input v-model="userSettings.octaveToTimeRatio" type="number" step="0.01" min="0.1" max="4" />
-                <label>Octave to time ratio</label>
-            </div>
 
             <div class="form-section">Advanced features</div>
 
@@ -99,24 +94,25 @@ const workletWorkbench = () => {
                 <label>Viewport Tech</label>
             </div>
 
-            <Tooltip
-                tooltip="Makes the cursor disappear when dragging on a parameter knob. It's a great usability feature, but can cause trouble in some cases">
-                <div class="form-row">
-                    <Toggle v-model="userSettings.useKnobCapture" />
-                    <label>Use pointer capture</label>
-                </div>
-            </Tooltip>
-            <!-- 
-            <div class="form-row">
-                <Toggle v-model="userSettings.performanceSettingsEnabled" />
-                <label>Performance Settings (!)</label>
-            </div> -->
-            <div v-if="isDev()" class="form-row">
-                <Button @click="fullReset" tooltip="Reset locally stored settings to default values">
-                    Full reset
-                </Button>
 
-                <label> Delete all settings, including projects </label>
+            <div class="form-row" v-if="userSettings.viewportTech === ViewportTech.Pixi">
+                <Toggle v-model="userSettings.showFPS" />
+                <label>Show FPS</label>
+            </div>
+
+            <div class="form-row" v-if="userSettings.viewportTech === ViewportTech.Pixi">
+                <input v-model="userSettings.fontSize" type="number" />
+                <label>Font Size</label>
+            </div>
+
+            <div class="form-row">
+                <Toggle v-model="tool.showReferenceKeyboard" />
+                <label>Reference Keyboard</label>
+            </div>
+
+            <div class="form-row">
+                <input v-model="userSettings.octaveToTimeRatio" type="number" step="0.01" min="0.1" max="4" />
+                <label>Octave to time ratio</label>
             </div>
 
             <div v-if="isDev()" class="form-row">
@@ -126,10 +122,24 @@ const workletWorkbench = () => {
 
             </div>
 
-            <Button @click="userSettings.deleteSettings"
-                tooltip="Delete locally stored settings and use default values">Unsave
-                settings</Button>
-            <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test beep</Button>
+            <div class="form-section">Danger zone</div>
+
+            <div class="form-row">
+                <Button @click="userSettings.deleteSettings"
+                    tooltip="Delete locally stored settings and use default values">Unsave
+                    settings</Button>
+                <Button v-if="isTauri()" @click="usePlaybackStore().testBeep()" tooltip="Test beep sound">Test
+                    beep</Button>
+
+            </div>
+            <div class="form-row">
+                <Button @click="fullReset" tooltip="Reset locally stored settings to default values">
+                    Full reset
+                </Button>
+
+                <label> Delete all settings, including projects </label>
+            </div>
+
 
 
 

@@ -107,8 +107,8 @@ const saveToLocalStorage = async (filename: string, inValue: LibraryItem) => {
     console.log("saved to local storage", filename);
 }
 
-const retrieveFromLocalStorage = (filename: string) => {
-    const storageItem = userSettingsStorage.getItem(filename);
+const retrieveFromLocalStorage = async (filename: string) => {
+    const storageItem = await userSettingsStorage.getItem(filename);
     if (!storageItem) throw new Error(`storageItem "${filename}" is ${storageItem}`);
     let retrieved = JSON.parse(decompress(storageItem, { inputEncoding: "BinaryString" }));
     if (!retrieved) throw new Error("retrieved is undefined");
@@ -118,7 +118,7 @@ const retrieveFromLocalStorage = (filename: string) => {
 }
 
 const listLocalStorageFiles = async () => {
-    const keys = await userSettingsStorage.getKeys(); 
+    const keys = await userSettingsStorage.getKeys();
 
     return keys.filter((n: string) => !reservedEntryNames.includes(n));
 }
@@ -207,10 +207,10 @@ export const useLibraryStore = defineStore("library store", () => {
         filenamesList.value = await listLocalStorageFiles();
     }
 
-    const loadFromLibraryItem = (filename: string) => {
+    const loadFromLibraryItem = async (filename: string) => {
         clear();
         console.log("opening", filename);
-        const item = retrieveFromLocalStorage(filename);
+        const item = await retrieveFromLocalStorage(filename);
         importObject(item);
         nextTick(() => {
             inSyncWithStorage.value = true;
