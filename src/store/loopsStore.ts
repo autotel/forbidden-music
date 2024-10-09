@@ -54,7 +54,7 @@ export const useLoopsStore = defineStore('loops score', () => {
     }
     const resetChildrenLoopRepetitions = (loop: HierarchicalLoop) => {
         loop.children.forEach(child => {
-            child.value.repetitionsLeft = child.value.count;
+            child.value.repetitionsLeft = child.value.count - 1;
             resetChildrenLoopRepetitions(child);
         });
     }

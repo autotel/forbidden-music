@@ -236,11 +236,11 @@ export const usePlaybackStore = defineStore("playback", () => {
         let enteredNewLoop = false;
         loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
         loopNow = loopNowHierarchical?.value;
-        
-        if (loopNowHierarchical && loopNow !== lastLoopAtPlayhead) {
-            enteredNewLoop = true;
-            loopNow?.repetitionsLeft && loopNow.repetitionsLeft--;
-        }
+        // If I do this, left plays are discounted when going back from deeper to higher loops
+        // if (loopNowHierarchical && loopNow !== lastLoopAtPlayhead) {
+        //     enteredNewLoop = true;
+        //     loopNow?.repetitionsLeft && loopNow.repetitionsLeft--;
+        // }
         lastLoopAtPlayhead = loopNow;
 
         // reference time to consider as zero towards each event to be queued
