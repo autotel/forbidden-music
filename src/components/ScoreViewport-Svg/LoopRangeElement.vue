@@ -36,11 +36,11 @@ const magicLoopDuplicator = (sourceLoop: Loop) => {
         sourceLoop.repetitionsLeft = 1;
     }
     // add new loop
-    loops.append(loop({
-        time: sourceLoop.time + timeDuration,
-        timeEnd: sourceLoop.timeEnd + timeDuration,
-        count: sourceLoop.count,
-    }));
+    // loops.append(loop({
+    //     time: sourceLoop.time + timeDuration,
+    //     timeEnd: sourceLoop.timeEnd + timeDuration,
+    //     count: sourceLoop.count,
+    // }));
 }
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
@@ -150,11 +150,17 @@ const grdy = (pos: number) => {
             <SvgLittleButton :x="grdx(2)" :y="grdy(0)" :onClick="() => eventRect.event.count++"
                 tooltip="more repetitions"> +
             </SvgLittleButton>
-            <SvgLittleButton :x="grdx(1)" :y="grdy(1)" :onClick="() => eventRect.event.count = 0"
+            <SvgLittleButton :x="grdx(1)" :y="grdy(1)" :onClick="() => {
+                    eventRect.event.count = 0;
+                    eventRect.event.repetitionsLeft = 0;
+                }"
                 tooltip="disable loop">
                 ∅
             </SvgLittleButton>
-            <SvgLittleButton :x="grdx(2)" :y="grdy(1)" :onClick="() => eventRect.event.count = Infinity"
+            <SvgLittleButton :x="grdx(2)" :y="grdy(1)" :onClick="() => {
+                    eventRect.event.count = Infinity;
+                    eventRect.event.repetitionsLeft = Infinity;
+                }"
                 tooltip="infinite repetitions"> ∞ </SvgLittleButton>
 
         </template>

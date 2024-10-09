@@ -1,4 +1,5 @@
 import { AutomationPoint, automationPoint } from "@/dataTypes/AutomationPoint";
+import { loop, Loop } from "@/dataTypes/Loop";
 import { Note, note } from "@/dataTypes/Note";
 import { TimeRange } from "@/dataTypes/TimelineItem";
 import { transposeTime } from "@/dataTypes/Trace";
@@ -16,54 +17,54 @@ export const useTimeRangeEdits = () => {
      * duplicate all events in time range, and shift all events after the time range
      */
     const duplicateTimeRange = (sourceRange: TimeRange) => {
+        const rangeCopy: TimeRange = {
+            time: sourceRange.time,
+            timeEnd: sourceRange.timeEnd,
+        };
         /** Automation points after time start */
         const automationPointsAfterLoop = lanes.getAutomationsForTime(
-            sourceRange.time, Infinity, true
+            rangeCopy.time, Infinity, true
         );
 
         /** Notes after loop start */
         const notesAfterLoop = getNotesInRange(notes.list, {
-            time: sourceRange.time,
+            time: rangeCopy.time,
             timeEnd: Infinity,
         });
 
-        const loopsAfterLoopEnd = loops.list.filter((otherLoop) => {
-            return otherLoop.time >= sourceRange.timeEnd;
+        /** Loops after loop start */
+        const loopsAfterLoop = loops.list.filter((otherLoop) => {
+            return otherLoop.time >= rangeCopy.time;
         });
 
-        const timeDuration = sourceRange.timeEnd - sourceRange.time;
+        console.log('move', loopsAfterLoop.map((loop) => loop.dev_id));
+
+        const timeDuration = rangeCopy.timeEnd - rangeCopy.time;
 
         const insideCloneArea = (time: number) => {
-            return time >= sourceRange.time && time < sourceRange.timeEnd;
+            console.log('insideCloneArea', time, rangeCopy.time, rangeCopy.timeEnd, time >= rangeCopy.time && time < rangeCopy.timeEnd);
+            return time >= rangeCopy.time && time < rangeCopy.timeEnd;
         }
+
         // TODO: possibly I could generalize the shifting of whichever trace
         // instead of going type by type
 
-        // shift loops
-        loopsAfterLoopEnd.forEach((loop) => {
-            console.log("shift loop", loop.time);
-            loop.time += timeDuration;
-            loop.timeEnd += timeDuration;
-            console.log(" >> ", loop.time);
-        })
-
-        // clone autom. 
+        // shift + clone autom. 
         for (let [lane, points] of automationPointsAfterLoop) {
-            // if within loop time, clone, otherwise only shift
-            const toPush: AutomationPoint[] = [];
+            const automationsToPush: AutomationPoint[] = [];
             points.forEach((point) => {
-                // counter-intuitiely, the cloned points are the ones who remain in the same time
+                // if within loop time, clone, otherwise only shift
                 if (insideCloneArea(point.time)) {
-                    toPush.push(automationPoint(point));
+                    automationsToPush.push(automationPoint(point));
                 }
                 transposeTime(
                     point,
                     timeDuration
                 )
             });
-            lane.content.push(...toPush);
+            lane.content.push(...automationsToPush);
         }
-        // clone notes
+        // shift + clone notes
         let notesToPush: Note[] = [];
         notesAfterLoop.forEach((originalNote) => {
             if (insideCloneArea(originalNote.time)) {
@@ -76,8 +77,17 @@ export const useTimeRangeEdits = () => {
         });
         notes.list.push(...notesToPush);
 
+        // shift + clone loops
+        let loopsToPush: Loop[] = [];
+        loopsAfterLoop.forEach((originalLoop) => {
+            if (insideCloneArea(originalLoop.time)) {
+                loopsToPush.push(loop(originalLoop));
+                console.log('copy', originalLoop.dev_id, '->', loopsToPush[loopsToPush.length - 1].dev_id);
+            }
+            transposeTime(originalLoop, timeDuration);
+        })
+        loops.append(...loopsToPush);
     }
-
 
     return {
         duplicateTimeRange
