@@ -30,17 +30,6 @@ const timeRangeEdits = useTimeRangeEdits();
 
 const magicLoopDuplicator = (sourceLoop: Loop) => {
     timeRangeEdits.duplicateTimeRange(sourceLoop);
-    const timeDuration = sourceLoop.timeEnd - sourceLoop.time;
-    if (sourceLoop.count === Infinity) {
-        sourceLoop.count = 4;
-        sourceLoop.repetitionsLeft = 1;
-    }
-    // add new loop
-    // loops.append(loop({
-    //     time: sourceLoop.time + timeDuration,
-    //     timeEnd: sourceLoop.timeEnd + timeDuration,
-    //     count: sourceLoop.count,
-    // }));
 }
 
 const bodyMouseEnterListener = (e: MouseEvent) => {
