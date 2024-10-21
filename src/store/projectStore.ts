@@ -1,27 +1,21 @@
-import { compress, decompress } from 'lzutf8';
+import { Loop } from '@/dataTypes/Loop';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
 import { LIBRARY_VERSION, LibraryItem } from '../dataTypes/LibraryItem';
-import { Note, NoteDef, note, noteDef } from '../dataTypes/Note';
-import { sanitizeTimeRanges } from '../dataTypes/TimelineItem';
-import { Trace, TraceType, transposeTime } from '../dataTypes/Trace';
-import { getNotesInRange } from '../functions/getEventsInRange';
-import { ifDev } from '../functions/isDev';
+import { Note } from '../dataTypes/Note';
+import { Trace, TraceType } from '../dataTypes/Trace';
 import { useAudioContextStore } from './audioContextStore';
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
 import { normalizeLibraryItem } from './libraryStore';
+import { useLoopsStore } from './loopsStore';
+import { useMasterEffectsStore } from './masterEffectsStore';
+import { useNotesStore } from './notesStore';
 import { usePlaybackStore } from './playbackStore';
 import demoProject from './project-default';
 import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
-import { AUTOSAVE_PROJECTNAME } from '../consts/ProjectName';
-import { useMasterEffectsStore } from './masterEffectsStore';
-import { automationPoint, AutomationPoint } from '@/dataTypes/AutomationPoint';
-import { tryDecompressAndParseArray } from '@/functions/tryDecompressAndParseArray';
-import { useLoopsStore } from './loopsStore';
-import { Loop } from '@/dataTypes/Loop';
-import { useNotesStore } from './notesStore';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,
@@ -82,14 +76,9 @@ export const useProjectStore = defineStore("current project", () => {
 
     const setFromProjectDefinition = (pDef: LibraryItem, recycleSynths = false) => {
         name.value = pDef.name;
-        
         created.value = pDef.created;
         edited.value = pDef.edited;
-
         notes.setFromDefs(pDef.notes);
-        
-
-
         loops.setFromDefs(pDef.loops);
 
         if (pDef.bpm) playback.bpm = pDef.bpm;
@@ -99,7 +88,6 @@ export const useProjectStore = defineStore("current project", () => {
             // @ts-ignore
             snaps.values[name].active = activeState;
         });
-
 
         layers.clear();
         pDef.layers.forEach(({ channelSlot, visible, locked, name }, index) => {
@@ -158,9 +146,9 @@ export const useProjectStore = defineStore("current project", () => {
     const loadEmptyProjectDefinition = () => {
         setFromProjectDefinition(emptyProjectDefinition);
     }
-
-
+    
     const loadDemoProjectDefinition = () => {
+        console.log("loading demo project");
         setFromProjectDefinition(normalizeLibraryItem(demoProject));
     }
 

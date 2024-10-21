@@ -1,20 +1,21 @@
-import { compress, decompress } from 'lzutf8';
-import { defineStore } from 'pinia';
-import { nextTick, ref, watch, watchEffect } from 'vue';
 import { AUTOSAVE_PROJECTNAME } from '@/consts/ProjectName';
+import { SynthChannelsDefinition } from '@/dataStructures/synthStructureFunctions';
 import {
     LIBRARY_VERSION, LibraryItem, LibraryItem_0_1_0, LibraryItem_0_2_0, LibraryItem_0_3_0, LibraryItem_0_4_0,
     LibraryItem_0_5_0, OldFormatLibraryItem
 } from '@/dataTypes/LibraryItem';
-import { Note, note } from '@/dataTypes/Note';
+import { Note } from '@/dataTypes/Note';
 import { SynthParamStored } from '@/synth/types/SynthParam';
 import { userShownDisclaimerLocalStorageKey } from '@/texts/userDisclaimer';
-import { useProjectStore } from './projectStore';
-import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
-import { SynthChannelsDefinition } from '@/dataStructures/synthStructureFunctions';
-import userSettingsStorageFactory from './userSettingsStorageFactory';
+import { compress, decompress } from 'lzutf8';
+import { defineStore } from 'pinia';
+import { nextTick, ref, watch, watchEffect } from 'vue';
 import { useLoopsStore } from './loopsStore';
 import { useNotesStore } from './notesStore';
+import { useProjectStore } from './projectStore';
+import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
+import userSettingsStorageFactory from './userSettingsStorageFactory';
+import sleep from '@/functions/sleep';
 
 
 const migrators = {
@@ -178,27 +179,16 @@ export const useLibraryStore = defineStore("library store", () => {
             // thus saved as '(backup) Unnamed'
             saveCurrent();
         } else {
-            let newName;
             if (project.name.includes("(autosave)")) {
                 console.log("autosaving this project");
-                newName = `${project.name}`;
-            } else {
-                newName = `(autosave) ${project.name}`;
-                console.log("autosaving to", newName);
+                try {
+                    saveToLocalStorage(project.name, project.getProjectDefintion());
+                } catch (e) {
+                    console.error("could not save", e);
+                    errorMessage.value = String(e);
+                }
+                udpateItemsList();
             }
-            try {
-                saveToLocalStorage(
-                    newName,
-                    {
-                        ...project.getProjectDefintion(),
-                        name: newName,
-                    }
-                );
-            } catch (e) {
-                console.error("could not save", e);
-                errorMessage.value = String(e);
-            }
-            udpateItemsList();
         }
 
     }
@@ -212,9 +202,10 @@ export const useLibraryStore = defineStore("library store", () => {
         console.log("opening", filename);
         const item = await retrieveFromLocalStorage(filename);
         importObject(item);
-        nextTick(() => {
-            inSyncWithStorage.value = true;
-        });
+        // setTimeout(() => {
+        // },1);
+        await sleep(1);
+        inSyncWithStorage.value = true;
     }
 
     const deleteItemNamed = (filename: string) => {
