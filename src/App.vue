@@ -2,23 +2,20 @@
 import WorkletWorkbench from '@/WorkletWorkbench.vue';
 import Fraction from 'fraction.js';
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import BottomPane from './bottom-pane/BottomPane.vue';
 import Button from './components/Button.vue';
 import FtView from './components/FtView.vue';
+import AnglesLeft from './components/icons/AnglesLeft.vue';
+import AnglesRight from './components/icons/AnglesRight.vue';
 import MousePopupDisplayer from './components/MousePopupDisplayer.vue';
 import Pianito from './components/Pianito.vue';
 import ScoreViewportPixi from './components/ScoreViewport-Pixi/ScoreViewport.vue';
 import ScoreViewportSvg from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
-import ToolSelector from './components/ToolSelector.vue';
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
-import Transport from './components/Transport.vue';
-import SynthPane from './bottom-pane/SynthPane.vue';
-import AnglesDown from './components/icons/AnglesDown.vue';
-import AnglesLeft from './components/icons/AnglesLeft.vue';
-import AnglesRight from './components/icons/AnglesRight.vue';
-import AnglesUp from './components/icons/AnglesUp.vue';
 import { Tool } from './dataTypes/Tool';
+import isDev from './functions/isDev';
 import { keyBindingsListener } from './functions/keyBindingsListener';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
@@ -26,6 +23,7 @@ import Modal from './modals/Modal.vue';
 import UserDisclaimer from './modals/UserDisclaimer.vue';
 import Harp from './overlays/Harp.vue';
 import RightPane from './right-pane/RightPane.vue';
+import { useBottomPaneStateStore } from './store/bottomPaneStateStore';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
 import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 import { useHistoryStore } from './store/historyStore';
@@ -37,9 +35,7 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-import isDev, { ifDev } from './functions/isDev';
-import BottomPane from './bottom-pane/BottomPane.vue';
-import { useBottomPaneStateStore } from './store/bottomPaneStateStore';
+import { useNotesStore } from './store/notesStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -48,6 +44,7 @@ const view = useViewStore();
 const playback = usePlaybackStore();
 const project = useProjectStore();
 const selection = useSelectStore();
+const notes = useNotesStore();
 const snap = useSnapStore();
 const mouseWidget = ref();
 const modalText = ref("");
@@ -267,7 +264,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement) {
         return;
     }
-    keyBindingsListener(e, { selection, tool, playback, view, history, project });
+    keyBindingsListener(e, { selection, tool, playback, view, history, project, notes });
 }
 
 const tryLoadStart = async () => {
