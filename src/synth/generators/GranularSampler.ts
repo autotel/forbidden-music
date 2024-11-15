@@ -1,7 +1,7 @@
 import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam, OtherSynthParam } from "../types/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { chromaticSampleKitManager, SampleKitUser, SampleSource, selectSampleSourceFromKit } from "../features/chromaticSampleKitUser";
-import { SampleKitDefinition } from "@/store/externalSampleLibrariesStore";
+import { SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
 
 interface SampleFileDefinition {
     name: string;

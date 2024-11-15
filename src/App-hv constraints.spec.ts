@@ -30,15 +30,15 @@ describe('app horizontal and vertical constrained edits', async () => {
             octave: 4.1,
             layer: 0
         }
-        projectStore.appendNote(note(noteToInsert));
+        projectStore.notes.append(note(noteToInsert));
         roboMouse.currentPosition = { x: 0, y: 0 };
 
 
-        if (projectStore.notes.length < 1) {
+        if (projectStore.notes.list.length < 1) {
             throw new Error("This test needs a one note to exist");
         }
 
-        const noteToDrag = projectStore.notes[0];
+        const noteToDrag = projectStore.notes.list[0];
         const noteBox = viewStore.rectOfNote(noteToDrag);
 
         const start = {
@@ -66,7 +66,7 @@ describe('app horizontal and vertical constrained edits', async () => {
 
         await wait(100);
 
-        expect(projectStore.notes[0].octave).toEqual(noteToInsert.octave);
+        expect(projectStore.notes.list[0].octave).toEqual(noteToInsert.octave);
     });
 
     it('horizontally constrained movement persists even when yielding note outside of snap possibilities', async () => {
@@ -84,15 +84,15 @@ describe('app horizontal and vertical constrained edits', async () => {
             octave: 4.1,
             layer: 0
         }
-        projectStore.appendNote(note(noteToInsert));
+        projectStore.notes.append(note(noteToInsert));
         roboMouse.currentPosition = { x: 0, y: 0 };
 
 
-        if (projectStore.notes.length < 1) {
+        if (projectStore.notes.list.length < 1) {
             throw new Error("This test needs a one note to exist");
         }
 
-        const noteToDrag = projectStore.notes[0];
+        const noteToDrag = projectStore.notes.list[0];
         const noteBox = viewStore.rectOfNote(noteToDrag);
 
         const start = {
@@ -121,7 +121,7 @@ describe('app horizontal and vertical constrained edits', async () => {
 
         await wait(100);
 
-        expect(projectStore.notes[0].octave).toEqual(noteToInsert.octave);
+        expect(projectStore.notes.list[0].octave).toEqual(noteToInsert.octave);
     });
 
     appCleanup(testRuntime);

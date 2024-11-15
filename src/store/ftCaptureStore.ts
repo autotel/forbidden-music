@@ -78,7 +78,7 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
     const convertToNote = (captured: CapturedTone) => {
         const nNote = note(captured);
         nNote.layer = tool.currentLayerNumber;
-        project.notes.push(nNote);
+        project.notes.list.push(nNote);
         capturedTones.value.delete(captured.identifier);
     }
 

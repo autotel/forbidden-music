@@ -49,7 +49,7 @@ describe('app modulation mode', async () => {
             bubbles: true,
         }));
         await wait(generalInterval / 3);
-        const existingNotes = projectStore.notes.length;
+        const existingNotes = projectStore.notes.list.length;
         expect(selectStore.getNotes().length).toBe(existingNotes);
 
         selectStore.select();

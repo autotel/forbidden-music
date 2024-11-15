@@ -60,8 +60,8 @@ describe('app snapping', async () => {
         }, generalInterval / timeDiv);
         roboMouse.mouseup();
         await wait(generalInterval / timeDiv);
-        expect(projectStore.notes.length).toBe(1);
-        expect(projectStore.notes[0].octave).toEqual(expectedNote.octave);
+        expect(projectStore.notes.list.length).toBe(1);
+        expect(projectStore.notes.list[0].octave).toEqual(expectedNote.octave);
     }, generalInterval);
 
     it('creates a note without snapping if no snap is active', async () => {
@@ -70,7 +70,7 @@ describe('app snapping', async () => {
         Object.values(snapStore.values).forEach((value) => {
             value.active = false;
         });
-        projectStore.notes.length = 0;
+        projectStore.notes.list.length = 0;
         const noteToInsert = {
             time: 0,
             timeEnd: 2,
@@ -89,8 +89,8 @@ describe('app snapping', async () => {
         }, generalInterval / timeDiv);
         roboMouse.mouseup();
         await wait(generalInterval / timeDiv);
-        expect(projectStore.notes.length).toBe(1);
-        expect(projectStore.notes[0].octave).toBeCloseTo(noteToInsert.octave);
+        expect(projectStore.notes.list.length).toBe(1);
+        expect(projectStore.notes.list[0].octave).toBeCloseTo(noteToInsert.octave);
     }, generalInterval);
 
     appCleanup(testRuntime);
