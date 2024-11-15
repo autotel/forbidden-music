@@ -235,9 +235,17 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const enqueueLoop = (loop: Loop) => {
         loopToJumpTo.value = loop;
+        console.log("loop to jump to", {
+            playing: playing.value,
+            loopNowHierarchical,
+            loopNow,
+        });
         if (!playing.value) {
             currentScoreTime.value = loopToJumpTo.value.time;
             play();
+        }
+        if(!loopNowHierarchical) {
+            currentScoreTime.value = loopToJumpTo.value.time;
         }
     }
 
@@ -262,7 +270,6 @@ export const usePlaybackStore = defineStore("playback", () => {
         const audioContext = audioContextStore.audioContext;
         if (!audioContext) throw new Error("audio context not created");
 
-        let enteredNewLoop = false;
         loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
         loopNow = loopNowHierarchical?.value;
         // If I do this, left plays are discounted when going back from deeper to higher loops
