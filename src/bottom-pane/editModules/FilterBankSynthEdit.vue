@@ -1,13 +1,10 @@
 <script setup lang="ts">
 
-import { computed, onBeforeUnmount, onMounted, onUnmounted, Ref, ref, watch } from 'vue';
-import { KickSynth } from '@/synth/generators/KickSynth';
-import { ParamType, SynthParam } from '@/synth/types/SynthParam';
-import NumberSynthParam from '../components/NumberSynthParam.vue';
-import BooleanSynthParam from '../components/BooleanSynthParam.vue';
-import { useThrottleFn } from '@vueuse/core';
 import { FilterBankSynth, FilterDefinition } from '@/synth/generators/FilterBankSynth';
-import { S } from 'vitest/dist/reporters-5f784f42';
+import { ParamType, SynthParam } from '@/synth/types/SynthParam';
+import { computed, ref } from 'vue';
+import BooleanSynthParam from '../components/BooleanSynthParam.vue';
+import NumberSynthParam from '../components/NumberSynthParam.vue';
 
 type microVec = [number, number];
 const canvasSize: microVec = [300, 92];
