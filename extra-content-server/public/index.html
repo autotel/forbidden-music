@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extra Content Server</title>
+</head>
+<body>
+
+</body>
+<script>
+    const documentReadyHandler = async () => {
+        const res = await fetch('/samples.json');
+        const data = await res.json();
+        console.log(data);
+        data.forEach((item) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<h1>${item.name}</h1>`;
+            item.samples?.forEach((sample) => {
+                const src = sample.path;
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.innerHTML = sample.frequency;
+                audio.src = src;
+                div.appendChild(audio);
+            });
+            document.body.appendChild(div);
+        });
+    }
+    window.addEventListener('DOMContentLoaded', documentReadyHandler);
+</script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    div {
+        margin-bottom: 20px;
+        width: 100%;
+        display:flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    h1 {
+        margin-bottom: 10px;
+        width: 100%;
+    }
+    a {
+        margin-right: 10px;
+        display: static;
+    }
+</style>
+</html>

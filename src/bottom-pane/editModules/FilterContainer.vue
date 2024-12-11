@@ -34,10 +34,7 @@ const width = computed(() => {
         <template v-for="param in audioModule.params">
             <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
             <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
-            <OptionSynthParam 
-                v-else-if="param.type === ParamType.option && param.options.length > 1" 
-                :param="param"
-            />
+            <OptionSynthParam v-else-if="param.type === ParamType.option && param.options.length > 1" :param="param" />
             <NumberArraySynthParam v-else-if="param.type === ParamType.nArray" :param="param" />
         </template>
         <Button style="background-color: #ccc1;" v-if="audioModule.credits" @click="showInfo(audioModule.credits)"
@@ -48,8 +45,10 @@ const width = computed(() => {
 .layout {
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center;
+    justify-content: space-around;
     height: 100%;
+    flex-wrap: wrap;
+    padding: 0.9em;
 }
 </style>
