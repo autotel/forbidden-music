@@ -2,7 +2,7 @@
 import { ComputedRef, Ref, computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '@/components/Tooltip.vue';
 import { abbreviate } from '@/functions/abbreviate';
-import { NumberSynthParam } from '@/synth/types/SynthParam';
+import { NumberSynthParam, ProgressSynthParam } from '@/synth/types/SynthParam';
 import { AutomatableSynthParam, isAutomatable } from '@/synth/types/Automatable';
 import { useAutomationLaneStore } from '@/store/automationLanesStore';
 import { useToolStore } from '@/store/toolStore';
@@ -12,8 +12,9 @@ import { AutomationLane } from '@/dataTypes/AutomationLane';
 import { automationPoint } from '@/dataTypes/AutomationPoint';
 import { useProjectStore } from '@/store/projectStore';
 import { useThrottleFn } from '@vueuse/core';
+import { useCustomSettingsStore } from '@/store/customSettingsStore';
 const props = defineProps<{
-    param: NumberSynthParam
+    param: NumberSynthParam | ProgressSynthParam,
     noLabel?: boolean
 }>();
 
@@ -21,6 +22,7 @@ const emit = defineEmits(['update']);
 const automation = useAutomationLaneStore();
 const tool = useToolStore();
 const project = useProjectStore();
+const userSettingsStore = useCustomSettingsStore();
 let mouseDownPos = {
     x: 0, y: 0,
 };
@@ -183,17 +185,20 @@ const windowMouseMove = (e: MouseEvent) => {
 const mouseDown = async (e: MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    try {
-        await mouseCaptureCanvas.value?.requestPointerLock();
-        // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
-        if (document.pointerLockElement === mouseCaptureCanvas.value) {
-            console.log("The pointer lock status is now locked");
-            // window.addEventListener("mousemove", lockedPointerMoved, false);
+    if(userSettingsStore.useKnobCapture){
+        try {
+            await mouseCaptureCanvas.value?.requestPointerLock();
+            // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
+            if (document.pointerLockElement === mouseCaptureCanvas.value) {
+                console.log("The pointer lock status is now locked");
+                // window.addEventListener("mousemove", lockedPointerMoved, false);
+            }
+        }
+        catch (e) {
+            console.warn('pointer lock did not work');
         }
     }
-    catch (e) {
-        console.warn('pointer lock did not work');
-    }
+
     if (automated.value) {
         enterAutomation();
     }
@@ -240,8 +245,8 @@ const tooltip = computed(() => {
                     <canvas ref="mouseCaptureCanvas" width="8" height="2.5"></canvas>
                 </div>
             </div>
-            <small v-if="!noLabel">{{ computedLabel }}</small>
-            <small>{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
+            <small v-if="dragging">{{ props.param.displayValue || props.param.value.toFixed(2) }}</small>
+            <small v-else-if="!noLabel">{{ computedLabel }}</small>
             <Tooltip :tooltip="automated ? 'Edit automation. [Ctl+A] & [Del] To erase' : 'automate parameter'"
                 :force-hide="dragging">
                 <button class="animate-button" v-if="canBeAutomated" :class="{ on: automationLaneIsOpen }"
@@ -262,7 +267,7 @@ const tooltip = computed(() => {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.2em;
+    gap: 0;
     position: relative;
 }
 

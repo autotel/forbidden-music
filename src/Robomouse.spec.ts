@@ -24,7 +24,7 @@ describe('robomouse', async () => {
 
 
 
-    projectStore.notes.push(note({
+    projectStore.notes.list.push(note({
         time: 2,
         timeEnd: 4,
         octave: 4,
@@ -32,10 +32,10 @@ describe('robomouse', async () => {
     }));
     
     it('selects by hovering and clicking', async () => {
-        if(projectStore.notes.length < 1) {
+        if(projectStore.notes.list.length < 1) {
             throw new Error("This test needs a one note to exist");
         }
-        const noteToDrag = projectStore.notes[0];
+        const noteToDrag = projectStore.notes.list[0];
         
         const noteBox = viewStore.rectOfNote(noteToDrag);
         const start = {

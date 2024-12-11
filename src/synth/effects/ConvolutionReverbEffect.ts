@@ -5,7 +5,14 @@ import { SynthParam, OptionSynthParam, ParamType, NumberSynthParam, BooleanSynth
 export interface ImpulseResponseSampleDefinition {
     name: string,
     path: string,
-    readme: string,
+    kitName: string,
+}
+
+export interface ImpulseResponseKitDefinition {
+    name: string,
+    samples: ImpulseResponseSampleDefinition[],
+    fromLibrary?: string,
+    readme?: string,
 }
 
 const createConvolutionReverb = async (
@@ -35,7 +42,7 @@ export class ConvolutionReverbEffect extends AudioModule {
     alreadyBuiltReverbs: { [key: string]: { input: AudioNode, output: AudioNode } } = {};
     constructor(
         audioContext: AudioContext,
-        sampleDefinitions: ImpulseResponseSampleDefinition[],
+        samplesKit: ImpulseResponseKitDefinition,
     ) {
         super();
         this.audioContext = audioContext;
@@ -89,11 +96,12 @@ export class ConvolutionReverbEffect extends AudioModule {
                 currentConvolver.output.connect(this.output);
             }
         }
+        const sampleDefinitions = samplesKit.samples;
         let currentSampleDefinition: ImpulseResponseSampleDefinition = sampleDefinitions[0];
         const changeImpulseResponse = async (sampleDefinition: ImpulseResponseSampleDefinition) => {
             await changeImplulseResponseUrl(sampleDefinition.path);
             currentSampleDefinition = sampleDefinition;
-            this.credits = sampleDefinition.readme;
+            this.credits = samplesKit.readme || '';
         }
 
         const sampleChoiceDefinition: OptionSynthParam = {

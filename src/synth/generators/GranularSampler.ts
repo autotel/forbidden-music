@@ -1,6 +1,7 @@
-import { findSampleSourceClosestToFrequency } from "./Sampler";
-import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam } from "../types/SynthParam";
+import { ParamType, SynthParam, ProgressSynthParam, ReadoutSynthParam, NumberSynthParam, OtherSynthParam } from "../types/SynthParam";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
+import { chromaticSampleKitManager, SampleKitUser, SampleSource, selectSampleSourceFromKit } from "../features/chromaticSampleKitUser";
+import { SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
 
 interface SampleFileDefinition {
     name: string;
@@ -62,7 +63,7 @@ const granularSamplerVoice = (
             const grain = getSoundGrain(
                 audioContext,
                 currentSampleSource.sampleBuffer,
-                currentSampleSource.sampleInherentFrequency
+                currentSampleSource.frequency
             );
             if (time <= latestGrainStartTime) continue;
             latestGrainStartTime = time;
@@ -100,7 +101,7 @@ const granularSamplerVoice = (
             
             this.inUse = true;
             
-            currentSampleSource = findSampleSourceClosestToFrequency(sampleSources, frequency, velocity);
+            currentSampleSource = selectSampleSourceFromKit(sampleSources, frequency, velocity);
 
             if(!currentSampleSource?.sampleBuffer) throw new Error("No sample source loaded");
             // transform proportional start time to real start time
@@ -228,50 +229,6 @@ class Scheduler {
 }
 
 
-class SampleSource {
-    private audioContext: AudioContext;
-    sampleBuffer?: AudioBuffer;
-    sampleInherentFrequency: number;
-    sampleInherentVelocity?: number;
-    isLoaded: boolean = false;
-    isLoading: boolean = false;
-
-    load = async () => {
-        console.error("samplesource constructed wrong");
-    };
-
-    constructor(audioContext: AudioContext, sampleDefinition: SampleFileDefinition) {
-        this.audioContext = audioContext;
-        this.sampleInherentFrequency = sampleDefinition.frequency;
-        if ('velocity' in sampleDefinition) {
-            this.sampleInherentVelocity = sampleDefinition.velocity;
-        }
-
-        this.load = async () => {
-
-            if (this.isLoaded || this.isLoading) throw new Error("redundant load call");
-            this.isLoading = true;
-            // const fetchHeaders = new Headers();
-            const response = await fetch(sampleDefinition.path, {
-                cache: "default",
-            })
-            console.groupCollapsed("header: " + sampleDefinition.path);
-            response.headers.forEach((value, key) => {
-                if (key.match('date')) {
-                    console.log("loaded:", (Date.now() - Date.parse(value)) / 1000 / 60, " minutes ago");
-                } else if (key.match('cache-control')) {
-                    console.log(key + ":", value);
-                }
-            });
-            console.groupEnd();
-            const arrayBuffer = await response.arrayBuffer();
-            this.sampleBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-            this.isLoaded = true;
-            this.isLoading = false;
-        }
-    }
-}
-
 const createParameters = (sampler: GranularSampler) => {
 
     sampler.params.push({
@@ -393,7 +350,7 @@ const createParameters = (sampler: GranularSampler) => {
     };
 }
 
-export class GranularSampler extends Synth {
+export class GranularSampler extends Synth implements SampleKitUser {
     realtimeParams: GrainRealtimeParams = {
         fadeInTime: 0.5,
         sustainTime: 0,
@@ -404,39 +361,27 @@ export class GranularSampler extends Synth {
     loadingProgress = 0;
     credits: string = "";
     needsFetching=true;
+    name = "Granular Sampler";
+    sampleKitManager: ReturnType<typeof chromaticSampleKitManager>;
+    sampleKitParam: OtherSynthParam;
+    loadingProgressParam: ProgressSynthParam;
     constructor(
         audioContext: AudioContext,
-        sampleDefinitions: SampleFileDefinition[],
-        name?: string,
-        credits?: string
+        initialSamplesDefinition: SampleKitDefinition,
     ) {
-
-        const sampleSources = sampleDefinitions.map((sampleDefinition) => {
-            return new SampleSource(audioContext, sampleDefinition);
-        });
+        const sampleKitManager = chromaticSampleKitManager(audioContext, initialSamplesDefinition)
 
         super(audioContext, () => granularSamplerVoice(
             audioContext,
             this.realtimeParams,
-            sampleSources,
+            sampleKitManager.sampleSources,
         ))
         this.output.gain.value = 0.3;
-
-        if (credits) this.credits = credits;
+        this.sampleKitManager = sampleKitManager;
 
         createParameters(this);
-
-        let enableCalled = false;
-
-        this.enable = async () => {
-            if (enableCalled) return;
-            enableCalled = true;
-            let sampleSourcePromises = sampleSources.map((sampleSource) => sampleSource.load());
-            await Promise.all(sampleSourcePromises);
-            this.markReady();
-        }
-        this.disable = () => {
-        }
+        this.sampleKitParam = sampleKitManager.sampleKitParam;
+        this.loadingProgressParam = sampleKitManager.loadingProgressParam;
 
     }
     params = [] as SynthParam[];

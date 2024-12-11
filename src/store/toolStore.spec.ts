@@ -63,8 +63,8 @@ describe('toolStore', () => {
     }
 
     it('can select and drag-move a note horizontally', () => {
-        for (let i = 0; i < project.notes.length; i++) {
-            const noteToMove = project.notes[i];
+        for (let i = 0; i < project.notes.list.length; i++) {
+            const noteToMove = project.notes.list[i];
             const origintalNoteTime = noteToMove.time;
             const timeDelta = i* 1.2 - 5;
             noteMover(noteToMove, 0, timeDelta);
@@ -76,8 +76,8 @@ describe('toolStore', () => {
     });
 
     it('can select and drag-move a note vertically', () => {
-        for (let i = 0; i < project.notes.length; i++) {
-            const noteToMove = project.notes[i];
+        for (let i = 0; i < project.notes.list.length; i++) {
+            const noteToMove = project.notes.list[i];
             const origintalNoteOctave = noteToMove.octave;
             const octaveDelta = i* 1.2 - 5;
             noteMover(noteToMove, octaveDelta, 0);
@@ -89,9 +89,9 @@ describe('toolStore', () => {
     });
 
     it('note lengths are not affected by drag', () => {
-        for (let i = 0; i < project.notes.length; i++) {
+        for (let i = 0; i < project.notes.list.length; i++) {
             const timeDelta = i* 1.2 - 5;
-            const noteToMove = project.notes[i];
+            const noteToMove = project.notes.list[i];
             const origintalNoteTime = noteToMove.time;
             const originalNoteDuration = getDuration(noteToMove);
             

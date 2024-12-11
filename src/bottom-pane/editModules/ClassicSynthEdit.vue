@@ -127,7 +127,6 @@ const groups = computed(() => [
 .layout {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: left;
     height: 100%;

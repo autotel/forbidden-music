@@ -41,8 +41,8 @@ const setSelectedNotesLayerToCurrent = () => {
 
 const handleRemoveClick = (no: number, element: HTMLElement) => {
     console.log('handleRemoveClick');
-    const isLayerEmpty = project.notes.filter(note => note.layer === no).length === 0;
-    const notesToLayerTranspose = project.notes.filter(note => note.layer > no);
+    const isLayerEmpty = project.notes.list.filter(note => note.layer === no).length === 0;
+    const notesToLayerTranspose = project.notes.list.filter(note => note.layer > no);
     if (isLayerEmpty) {
         layers.layers.splice(no, 1);
         notesToLayerTranspose.forEach(note => note.layer--);

@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useViewStore } from '../store/viewStore';
-import Button from './Button.vue';
 
 const view = useViewStore();
 const playback = usePlaybackStore();
@@ -11,9 +9,8 @@ const barSkip = (e: MouseEvent) => {
         const leftPx = e.offsetX;
         const time = view.pxToTimeWithOffset(leftPx);
         playback.currentScoreTime = time;
-        playback.timeReturnPoint = time;
+        playback.timeReturnPoint = time; 
         playback.resetLoopRepetitions();
-
         playback.catchUpAutomations(time);
     }
 }

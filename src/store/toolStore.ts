@@ -1,5 +1,5 @@
 import { clamp, useThrottleFn } from '@vueuse/core';
-import { defineStore } from 'pinia';
+import { defineStore, Store } from 'pinia';
 import { computed, reactive, ref, watch } from 'vue';
 import { AutomationLane } from '../dataTypes/AutomationLane';
 import { AutomationPoint, automationPoint } from '../dataTypes/AutomationPoint';
@@ -16,10 +16,13 @@ import { SelectableRange, useSelectStore } from './selectStore';
 import { useSnapStore } from './snapStore';
 import { useViewStore } from './viewStore';
 import { findTraceInRange, getTracesInRange } from '@/functions/getEventsInRange';
+import { useLoopsStore } from './loopsStore';
+import { useNotesStore } from './notesStore';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
 type ProjectStore = ReturnType<typeof useProjectStore>;
+type NotesStore = ReturnType<typeof useNotesStore>;
 type SelectStore = ReturnType<typeof useSelectStore>;
 type AutomationLaneStore = ReturnType<typeof useAutomationLaneStore>;
 type Reference<T> = { value: T };
@@ -62,6 +65,7 @@ interface ToolMouse {
 
 interface Stores {
     project: ProjectStore,
+    notes: NotesStore,
     snap: SnapStore,
     view: ViewStore,
     selection: SelectStore,
@@ -114,7 +118,7 @@ const mouseDuplicateTraces = ({
 const mouseDragSelectedTraces = ({
     drag, disallowOctaveChange, disallowTimeChange
 }: ToolMouse, {
-    view, snap, project, lanes,
+    view, snap, notes, lanes,
 }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
@@ -132,7 +136,7 @@ const mouseDragSelectedTraces = ({
 
     const snappedTrace = snap.snapIfSnappable(
         preSnapDragTrace,
-        project.notes.filter(n => {
+        notes.list.filter(n => {
             let ret = n !== drag.trace
             ret &&= !drag.traces.includes(n);
             return ret;
@@ -217,7 +221,7 @@ const mouseDragAutomationSelectedTraces = (
 
     });
 }
-const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, project, selection }: Stores) => {
+const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, selection }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
@@ -230,7 +234,7 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, project, se
     traceWithTimeEnd.timeEnd = drag.traceWhenDragStarted.timeEnd + timeMovement;
     const snapped = snap.snapIfSnappable(
         traceWithTimeEnd,
-        project.notes,
+        notes.list,
         true,
     );
 
@@ -248,7 +252,7 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, project, se
     const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
-const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, project, selection }: Stores) => {
+const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selection }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
@@ -264,7 +268,7 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, project, sel
 
     const snapped = snap.snapIfSnappable(
         traceWithTimeEnd,
-        project.notes,
+        notes.list,
         true,
     );
     const timeAfterSnap = snapped.time;
@@ -280,20 +284,25 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, project, sel
     const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
-const mouseErase = ({ pos }: ToolMouse, { project, view }: Stores) => {
+const mouseErase = ({ pos }: ToolMouse, { project, view, notes }: Stores) => {
     const pxRange = 5;
     const time = view.pxToTimeWithOffset(pos.x - pxRange);
     const timeEnd = view.pxToTimeWithOffset(pos.x + pxRange);
     const octave = view.pxToOctaveWithOffset(pos.y + pxRange);
     const octaveEnd = view.pxToOctaveWithOffset(pos.y - pxRange);
     const visibleTraces = view.visibleNotes;
-    const note = findTraceInRange(visibleTraces, {
+    const note = findTraceInRange<Note>(visibleTraces, {
         time, timeEnd, octave, octaveEnd
     });
-    const projectNoteIndex = note?project.notes.indexOf(note):-1;
-    if(projectNoteIndex !== -1) {
-        console.log("erase note", note);
-        project.notes.splice(projectNoteIndex, 1);
+    if (note) {
+        note.velocity -= 0.05;
+        if (note.velocity <= 0) {
+            const projectNoteIndex = note ? notes.list.indexOf(note) : -1;
+            if (projectNoteIndex !== -1) {
+                console.log("erase note", note);
+                notes.list.splice(projectNoteIndex, 1);
+            }
+        }
     }
 }
 export enum MouseDownActions {
@@ -324,10 +333,10 @@ export const useToolStore = defineStore("tool", () => {
     const selection = useSelectStore();
     const view = useViewStore();
     const project = useProjectStore();
-    const snap = useSnapStore();
+    const notes = useNotesStore(); const snap = useSnapStore();
     const lanes = useAutomationLaneStore();
     const ftRec = ref(false);
-
+    const loops = useLoopsStore();
     // TODO: should rename into currentMode and currentTool instead of current and currentLeftHand
     /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
@@ -589,7 +598,7 @@ export const useToolStore = defineStore("tool", () => {
             } else {
                 ret = MouseDownActions.CreateNote;
             }
-        } 
+        }
         return ret;
     }
 
@@ -607,9 +616,9 @@ export const useToolStore = defineStore("tool", () => {
     const touchDown = (touch: { clientX: number, clientY: number }) => {
         const now = Date.now();
         const interval = now - lastTapTime;
-        if (whatWouldMouseDownDo() === MouseDownActions.Erase){
+        if (whatWouldMouseDownDo() === MouseDownActions.Erase) {
             mouseDown(touch);
-        }else if (interval < dblTapMaxInterval) {
+        } else if (interval < dblTapMaxInterval) {
             mouseDown(touch);
         }
         lastTapTime = Date.now();
@@ -787,7 +796,7 @@ export const useToolStore = defineStore("tool", () => {
     const applySnapToLoop = (targetLoop: Loop, otherTraces: Trace[]) => {
         const snappedLoop: Loop = snap.snapTimeRange(
             targetLoop,
-            project.notes,
+            notes.list,
             true,
         );
         if (snappedLoop.timeEnd < snappedLoop.time) {
@@ -819,7 +828,7 @@ export const useToolStore = defineStore("tool", () => {
 
             const snapNote = snap.filteredSnap(
                 theNote,
-                project.notes,
+                notes.list,
                 true,
             );
 
@@ -837,7 +846,7 @@ export const useToolStore = defineStore("tool", () => {
             }
             loopThatWouldBeCreated.value.time = t;
             loopThatWouldBeCreated.value.timeEnd = t;
-            applySnapToLoop(loopThatWouldBeCreated.value, project.loops);
+            applySnapToLoop(loopThatWouldBeCreated.value, loops.list);
 
             keepLoop = true;
         } else if (whatWouldMouseDownDo() === MouseDownActions.CreateAutomationPoint) {
@@ -858,13 +867,14 @@ export const useToolStore = defineStore("tool", () => {
     }
 
 
-    const storesPill = {
+    const storesPill: Stores = {
         project,
         snap,
         view,
         selection,
         lanes,
-    } as Stores;
+        notes,
+    };
 
     const mouseMove = (e: { clientX: number, clientY: number }) => {
         registerMouseMove({

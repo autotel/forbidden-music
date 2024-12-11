@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watchEffect } from 'vue';
+import { computed, onMounted, ref, watchEffect } from 'vue';
 import Floaty from './overlays/Floaty.vue';
 
 type ExpectedFnReturn = {
@@ -190,7 +190,7 @@ const floatyWidth = computed(() => {
     background-color: white;
     display: flex;
     width: 100%;
-    height: calc(100%-20px);
+    height: calc(100% - 20px);
     top: 20px;
 }
 

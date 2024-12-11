@@ -7,7 +7,7 @@ import { SynthVoice, Synth } from "../types/Synth";
 // https://itnext.io/algorithmic-reverb-and-web-audio-api-e1ccec94621a
 // perhaps its even cheaper computationally and allow me more exploration
 
-type KarplusExciterType = "noise" | "multiplux";
+type KarplusExciterType = "noise" | "plucker" | "input";
 
 interface KarplusStopVoiceMessage {
     stop: true;
@@ -97,21 +97,23 @@ const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth): SynthVoi
     }
 }
 
-// NOTE: implements instead of extends because it manages its own voices 
-// in a different way than usual
+// TODO: load worklet in the same fashion as foldedsaturatorworklet and oneshotenvelope
 export class KarplusSynth extends Synth {
     engine?: AudioWorkletNode;
     audioContext: AudioContext;
+    input: GainNode;
     constructor(audioContext: AudioContext) {
         super(audioContext, karplusVoice);
         this.audioContext = audioContext;
         this.output.gain.value = 0.5;
+        this.input = audioContext.createGain();
         const enginePromise = createKarplusWorklet(audioContext)
 
         enginePromise.then((engine) => {
             this.engine = engine;
             console.log("new karplus audio worklet", engine);
             this.engine.connect(this.output);
+            this.input.connect(this.engine);
         });
 
         const postToPromised = async (promise: Promise<AudioWorkletNode>, message: any) => {
@@ -119,6 +121,32 @@ export class KarplusSynth extends Synth {
             return target.port.postMessage(message);
         };
 
+        const extypeParam: OptionSynthParam = {
+            type: ParamType.option,
+            set value(v: number) {
+                if (v >= this.options.length) v = 0;
+                this._v = v;
+                postToPromised(enginePromise, {
+                    extype: this.options[v].value,
+                } as KarplusParamsChangeMessage);
+            },
+            get value() {
+                return this._v;
+            },
+            exportable: true,
+            options: [{
+                value: "noise",
+                displayName: "noise",
+            }, {
+                value: "input",
+                displayName: "audio in",
+            },{
+                value: "plucker",
+                displayName: "plucker",
+            }],
+            displayName: "exciter type",
+        }
+        this.params.push(extypeParam)
         const fffParam = {
             type: ParamType.number,
             _v: 1,
@@ -334,29 +362,6 @@ export class KarplusSynth extends Synth {
         this.params.push(adetParam)
         adetParam.value = 0
 
-        const extypeParam: OptionSynthParam = {
-            type: ParamType.option,
-            set value(v: number) {
-                if (v >= this.options.length) v = 0;
-                this._v = v;
-                postToPromised(enginePromise, {
-                    extype: this.options[v].value,
-                } as KarplusParamsChangeMessage);
-            },
-            get value() {
-                return this._v;
-            },
-            exportable: true,
-            options: [{
-                value: "noise",
-                displayName: "noise",
-            }, {
-                value: "multiplux",
-                displayName: "multiplux",
-            },],
-            displayName: "exciter type",
-        }
-        this.params.push(extypeParam)
 
     }
     params = [] as SynthParam[];

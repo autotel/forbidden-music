@@ -1,57 +1,63 @@
-const forever = () => new Promise(() => {});
+const forever = () => new Promise(() => { });
+import {
+    BaseDirectory,
+    exists,
+    readBinaryFile,
+    readDir,
+    readTextFile,
+    writeFile,
+    writeTextFile,
+} from '@tauri-apps/api/fs';
+
+import { invoke } from '@tauri-apps/api';
+import { open, save } from '@tauri-apps/api/dialog';
+import { listen } from '@tauri-apps/api/event';
+import {
+    appCacheDir,
+    appConfigDir,
+    appDataDir,
+    appLocalDataDir,
+    appLogDir,
+    audioDir,
+    basename,
+    cacheDir,
+    configDir,
+    dataDir,
+    delimiter,
+    desktopDir,
+    dirname,
+    documentDir,
+    downloadDir,
+    executableDir,
+    extname,
+    fontDir,
+    homeDir,
+    isAbsolute,
+    join,
+    localDataDir,
+    normalize,
+    pictureDir,
+    publicDir,
+    resolve,
+    resolveResource,
+    resourceDir,
+    runtimeDir,
+    sep,
+    templateDir,
+    videoDir
+} from '@tauri-apps/api/path';
 
 const tauriObjectPromise = (async () => {
-    if(!isTauri()) await forever();
-    const {
-        readTextFile,
-        BaseDirectory,
-        writeFile,
-        writeTextFile
-    } = await require('@tauri-apps/api/fs');
-
-    const {
-        appCacheDir,
-        appConfigDir,
-        appDataDir,
-        appLocalDataDir,
-        appLogDir,
-        audioDir,
-        basename,
-        cacheDir,
-        configDir,
-        dataDir,
-        delimiter,
-        desktopDir,
-        dirname,
-        documentDir,
-        downloadDir,
-        executableDir,
-        extname,
-        fontDir,
-        homeDir,
-        isAbsolute,
-        join,
-        localDataDir,
-        normalize,
-        pictureDir,
-        publicDir,
-        resolve,
-        resolveResource,
-        resourceDir,
-        runtimeDir,
-        sep,
-        templateDir,
-        videoDir
-    } = await require('@tauri-apps/api/path');
-    const { open, save } = await require('@tauri-apps/api/dialog');
-    const { invoke } = require("@tauri-apps/api");
-    const { listen } = require("@tauri-apps/api/event");
+    if (!isTauri()) await forever();
 
     return {
         invoke, listen,
         fs: {
             readTextFile, BaseDirectory,
             writeFile, writeTextFile,
+            readDir,
+            exists,
+            readBinaryFile
         },
         dialog: {
             open,
@@ -94,7 +100,6 @@ const tauriObjectPromise = (async () => {
     }
 })();
 
-// make sure to also allow whatever new capabilities in tauri config
 export const tauriObject = async () => {
     return await tauriObjectPromise;
 }

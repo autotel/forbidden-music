@@ -1,12 +1,11 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { useTimeRangeEdits } from './composables/useTimeRangeEdits';
 import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import './style.css';
+import { appCleanup } from './test-helpers/appCleanup';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
-import { appCleanup } from './test-helpers/appCleanup';
-import { MouseDownActions } from './store/toolStore';
-
 
 let generalInterval = 5000;
 
@@ -14,25 +13,26 @@ let generalInterval = 5000;
 describe('app loop editing', async () => {
 
     const testRuntime = await appMount();
+
+    const timeRangeEdits = useTimeRangeEdits();
     const {
         interactionTarget,
         roboMouse,
         viewStore,
         projectStore,
-        selectStore,
-        snapStore,
         toolStore,
-        app,
+        loopsStore,
+        notesStore,
     } = testRuntime;
 
     const resetNotes = () => {
-        projectStore.notes = [];
-        projectStore.notes.push(note({
+        notesStore.clear();
+        notesStore.append(note({
             time: 2,
             timeEnd: 4,
             octave: 4,
             layer: 0
-        }),note({
+        }), note({
             time: 3,
             timeEnd: 5,
             octave: 4.6,
@@ -41,7 +41,7 @@ describe('app loop editing', async () => {
     }
 
     resetNotes();
-    
+
     it('creates a loop by clicking and dragging', async () => {
         const interval = 50;
         const targetLoopDef = {
@@ -54,8 +54,8 @@ describe('app loop editing', async () => {
         roboMouse.currentPosition = { x: 0, y: 0 };
 
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-        
-        expect (toolStore.current).toBe(Tool.Loop);
+
+        expect(toolStore.current).toBe(Tool.Loop);
 
         const startX = viewStore.timeToPxWithOffset(targetLoopDef.time);
         const endX = viewStore.timeToPxWithOffset(targetLoopDef.timeEnd);
@@ -69,27 +69,27 @@ describe('app loop editing', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, interval);
         await wait(interval * 2);
 
-        expect(projectStore.loops.length).toBe(1);
+        expect(loopsStore.list.length).toBe(1);
 
-        projectStore.loops = [];
+        loopsStore.clear();
         toolStore.current = Tool.Select;
-        
+
     }, generalInterval);
-    
+
     it('creates the loop at the correct time', async () => {
         const interval = 50;
         const targetLoopDef = {
             time: 2,
             timeEnd: 4,
         };
-        
+
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
         roboMouse.currentPosition = { x: 0, y: 0 };
 
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-        
-        expect (toolStore.current).toBe(Tool.Loop);
+
+        expect(toolStore.current).toBe(Tool.Loop);
 
         const startX = viewStore.timeToPxWithOffset(targetLoopDef.time);
         const endX = viewStore.timeToPxWithOffset(targetLoopDef.timeEnd);
@@ -103,10 +103,10 @@ describe('app loop editing', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, interval);
         await wait(interval * 2);
 
-        expect(projectStore.loops[0].time).toBe(targetLoopDef.time);
-        expect(projectStore.loops[0].timeEnd).toBe(targetLoopDef.timeEnd);
+        expect(loopsStore.list[0].time).toBe(targetLoopDef.time);
+        expect(loopsStore.list[0].timeEnd).toBe(targetLoopDef.timeEnd);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
     });
     it('can duplicate loops & their content', async () => {
@@ -116,14 +116,14 @@ describe('app loop editing', async () => {
             time: 2,
             timeEnd: 4,
         };
-        
+
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
         roboMouse.currentPosition = { x: 0, y: 0 };
 
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-        
-        expect (toolStore.current).toBe(Tool.Loop);
+
+        expect(toolStore.current).toBe(Tool.Loop);
 
         const startX = viewStore.timeToPxWithOffset(targetLoopDef.time);
         const endX = viewStore.timeToPxWithOffset(targetLoopDef.timeEnd);
@@ -137,14 +137,14 @@ describe('app loop editing', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, interval);
         await wait(interval * 2);
 
-        projectStore.magicLoopDuplicator(projectStore.loops[0]);
-        
+        timeRangeEdits.duplicateTimeRange(loopsStore.list[0]);
+
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(projectStore.loops.length).toBe(2);
-        expect(projectStore.notes.length).toBe(4);
+        expect(loopsStore.list.length).toBe(2);
+        expect(notesStore.list.length).toBe(4);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
         // note: Not resetting notes for next test
     });
@@ -155,14 +155,14 @@ describe('app loop editing', async () => {
             time: 2,
             timeEnd: 4,
         };
-        
+
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
         roboMouse.currentPosition = { x: 0, y: 0 };
 
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-        
-        expect (toolStore.current).toBe(Tool.Loop);
+
+        expect(toolStore.current).toBe(Tool.Loop);
 
         const startX = viewStore.timeToPxWithOffset(targetLoopDef.time);
         const endX = viewStore.timeToPxWithOffset(targetLoopDef.timeEnd);
@@ -179,20 +179,20 @@ describe('app loop editing', async () => {
         await wait(interval * 2);
 
 
-        let notesSorted = projectStore.notes.sort((a, b) => a.time - b.time).map(note);
+        let notesSorted = notesStore.list.sort((a, b) => a.time - b.time).map(note);
         const originalNotes = notesSorted.slice(0, 2);
 
 
-        projectStore.magicLoopDuplicator(projectStore.loops[0]);
-        
+        timeRangeEdits.duplicateTimeRange(loopsStore.list[0]);
+
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(projectStore.loops.length).toBe(2);
-        expect(projectStore.notes.length).toBe(6);
-        expect(projectStore.loops[0].time).toBe(targetLoopDef.time);
-        expect(projectStore.loops[0].timeEnd).toBe(targetLoopDef.timeEnd);
+        expect(loopsStore.list.length).toBe(2);
+        expect(notesStore.list.length).toBe(6);
+        expect(loopsStore.list[0].time).toBe(targetLoopDef.time);
+        expect(loopsStore.list[0].timeEnd).toBe(targetLoopDef.timeEnd);
 
-        notesSorted = projectStore.notes.sort((a, b) => a.time - b.time);
+        notesSorted = notesStore.list.sort((a, b) => a.time - b.time);
 
         expect(notesSorted[0].time).toBe(originalNotes[0].time);
         expect(notesSorted[1].time).toBe(originalNotes[1].time);
@@ -201,7 +201,7 @@ describe('app loop editing', async () => {
         expect(notesSorted[4].time).toBe(originalNotes[0].time + expectedTimeIncrease * 2);
         expect(notesSorted[5].time).toBe(originalNotes[1].time + expectedTimeIncrease * 2);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
         resetNotes();
     });
@@ -212,18 +212,18 @@ describe('app loop editing', async () => {
         const expectedTimeIncrease = 2;
 
         const targetLoopDef = {
-            time: projectStore.notes[0].timeEnd,
-            timeEnd: projectStore.notes[0].timeEnd + expectedTimeIncrease,
+            time: notesStore.list[0].timeEnd,
+            timeEnd: notesStore.list[0].timeEnd + expectedTimeIncrease,
         };
-        
+
         if (!interactionTarget) throw new Error("interactionTarget is null");
 
         roboMouse.eventTarget = interactionTarget;
         roboMouse.currentPosition = { x: 0, y: 0 };
 
         window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
-        
-        expect (toolStore.current).toBe(Tool.Loop);
+
+        expect(toolStore.current).toBe(Tool.Loop);
 
         const startX = viewStore.timeToPxWithOffset(targetLoopDef.time);
         const endX = viewStore.timeToPxWithOffset(targetLoopDef.timeEnd);
@@ -238,22 +238,22 @@ describe('app loop editing', async () => {
 
         await wait(interval * 2);
 
-        let notesSorted = projectStore.notes.sort((a, b) => a.time - b.time).map(note);
+        let notesSorted = notesStore.list.sort((a, b) => a.time - b.time).map(note);
         const originalNotes = notesSorted.slice(0, 2);
 
-        projectStore.magicLoopDuplicator(projectStore.loops[0]);
-        
+        timeRangeEdits.duplicateTimeRange(loopsStore.list[0]);
+
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(projectStore.loops.length).toBe(2);
-        expect(projectStore.notes.length).toBe(2);
-        
-        notesSorted = projectStore.notes.sort((a, b) => a.time - b.time);
+        expect(loopsStore.list.length).toBe(2);
+        expect(notesStore.list.length).toBe(2);
+
+        notesSorted = notesStore.list.sort((a, b) => a.time - b.time);
 
         expect(notesSorted[0].time).toBe(originalNotes[0].time);
         expect(notesSorted[1].time).toBe(originalNotes[1].time);
 
-        projectStore.loops = [];
+        loopsStore.list = [];
         toolStore.current = Tool.Select;
         resetNotes();
     });

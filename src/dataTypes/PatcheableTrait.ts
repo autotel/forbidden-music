@@ -1,5 +1,3 @@
-import { SynthParam } from "../synth/types/SynthParam";
-
 export enum PatcheableType {
     AudioModule,
     AudioVoiceModule,
@@ -7,8 +5,8 @@ export enum PatcheableType {
     SynthChain,
 }
 
-export type PatcheableTrait = { 
-    input?: AudioNode, 
+export type PatcheableTrait = {
+    input?: AudioNode,
     output?: AudioNode, 
     name?: string,
     disable: false | (() => void),

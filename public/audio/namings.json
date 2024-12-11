@@ -1,0 +1,79 @@
+[{
+    "path":"chromatic/bassoon",
+    "type":"chromatic",
+    "kitName":"Bassoon",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/celtic_harp",
+    "type":"chromatic",
+    "kitName":"Celtic Harp",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/glockenspiel",
+    "type":"chromatic",
+    "kitName":"Glockenspiel",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/harpsichord",
+    "type":"chromatic",
+    "kitName":"Harpsichord",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/hohner_pianet",
+    "type":"chromatic",
+    "kitName":"Hohner Pianet",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/kankles",
+    "type":"chromatic",
+    "kitName":"Kankles",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/nylon_strings",
+    "type":"chromatic",
+    "kitName":"Nylon Strings",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/old_trombone",
+    "type":"chromatic",
+    "kitName":"Old Trombone",
+    "pattern":"([^_]+)_(\\d+(?:\\.*\\d+))",
+    "maps":"velocity frequency"
+},{
+    "path":"chromatic/test-tone",
+    "type":"chromatic",
+    "kitName":"Test Tone",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/vibraphone",
+    "type":"chromatic",
+    "kitName":"Vibraphone",
+    "pattern":"(\\d+(?:\\.*\\d+))",
+    "maps":"frequency"
+},{
+    "path":"chromatic/violin_section",
+    "type":"chromatic",
+    "kitName":"Violin Section",
+    "pattern":"([^_]+)_(\\d+(?:\\.*\\d+))",
+    "maps":"velocity frequency"
+},{
+    "path":"ir/airwindows",
+    "type":"impulse-response",
+    "kitName":"AirWindows IR",
+    "pattern":"\\w+",
+    "maps":"name"
+},{
+    "path":"ir/snb",
+    "type":"impulse-response",
+    "kitName":"SNB IR",
+    "pattern":"\\w+",
+    "maps":"name"
+}]

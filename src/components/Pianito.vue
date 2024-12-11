@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useViewStore } from '../store/viewStore';
-const octavesHeight = 8;
+import { frequencyToOctave } from '@/functions/toneConverters';
+const octavesHeight = frequencyToOctave(440 * 16);
 const view = useViewStore();
 const eightOctavesHeight = ref(0);
 const topOctavePosition = ref(0);
 const posUpdate = () => {
-    eightOctavesHeight.value = Math.abs(view.octaveToPx(octavesHeight + (1/24))); /// the offset is so that it aligns to the center of the note
-    topOctavePosition.value = view.octaveToPxWithOffset(octavesHeight);
+    eightOctavesHeight.value = -(view.octaveToPx(octavesHeight )); 
+    topOctavePosition.value = view.octaveToPxWithOffset(octavesHeight- (1/24));/// the offset is so that it aligns to the center of the note
 }
 
 watch(view,posUpdate);
@@ -35,7 +36,7 @@ const keyboardHtml = (()=>{
     const octaves = 8;
     const keyRect = (note:number,w:number) => {
         const black = isIBlack[note%12];
-        return `<rect x="-5" y="${note}" width="10" height="1" fill="${black?"black":"white"}"></rect>`;
+        return `<rect x="-5" y="${note}" width="10" height="1" fill="${black?"black":"white"}" stroke="transparent"></rect>`;
     }
     const octave = (octave:number) => {
         const octaveRects = [];

@@ -7,10 +7,12 @@ import { usePlaybackStore } from "../store/playbackStore";
 import { Tool } from "../dataTypes/Tool";
 import { useHistoryStore } from "../store/historyStore";
 import { useViewStore } from "../store/viewStore";
+import { useNotesStore } from "../store/notesStore";
 
 interface Stores {
     tool: ReturnType<typeof useToolStore>,
     project: ReturnType<typeof useProjectStore>
+    notes: ReturnType<typeof useNotesStore>
     selection: ReturnType<typeof useSelectStore>
     playback: ReturnType<typeof usePlaybackStore>
     history: ReturnType<typeof useHistoryStore>
@@ -19,28 +21,28 @@ interface Stores {
 
 export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
     const {
-        tool, project, selection, playback, history, view
+        tool, project, selection, playback, history, view, notes
     } = stores
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
     switch (keyAction) {
         case KeyActions.Cut: {
             console.log("cut");
             const selected = selection.getNotes();
-            project.notes = project.notes.filter(note => !note.selected);
-            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            notes.list = notes.list.filter(note => !note.selected);
+            navigator.clipboard.writeText(notes.stringify(selected));
             break;
         }
         case KeyActions.Copy: {
             console.log("copy");
             const selected = selection.getNotes();
-            navigator.clipboard.writeText(project.stringifyNotes(selected));
+            navigator.clipboard.writeText(notes.stringify(selected));
             break;
         }
         case KeyActions.Paste: {
             console.log("paste");
             (async () => {
                 const text = await navigator.clipboard.readText();
-                const editNotes = project.parseNotes(text);
+                const editNotes = notes.parse(text);
 
                 const earliestPastedNote = editNotes.reduce((acc, note) => note.time < acc.time ? note : acc, editNotes[0]);
                 let timeDiff = view.pxToTimeWithOffset(tool.mouse.pos.x) - earliestPastedNote.time;
@@ -54,7 +56,7 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
                     transposeTime(note, timeDiff);
                 })
 
-                project.notes.push(...editNotes);
+                notes.append(...editNotes);
                 selection.select(...editNotes);
 
             })();

@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { SynthChain } from "../dataStructures/SynthChain";
 import { AudioModule } from "../synth/types/AudioModule";
 import { useAudioContextStore } from "./audioContextStore";
-import getSynthConstructors, { SynthConstructorWrapper } from "@/synth/getSynthConstructors";
+import getSynthConstructors from "@/synth/getSynthConstructors";
 import { useExclusiveContentsStore } from "./exclusiveContentsStore";
 import { SynthChainDefinition, synthStructureManager } from "@/dataStructures/synthStructureFunctions";
 

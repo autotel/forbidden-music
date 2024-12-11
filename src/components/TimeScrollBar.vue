@@ -72,10 +72,6 @@ onMounted(() => {
             // width: view.timeToBounds(view.viewWidthTime) * 100 + '%',
             left: view.timeToBounds(view.timeOffset) * 100 + '%'
         }">
-            <!-- <div 
-            class="resize"
-            ref="resize"
-        ></div> -->
         </div>
     </div>
 </template>

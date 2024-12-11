@@ -12,18 +12,17 @@ const click = (e:MouseEvent) => {
 }
 </script>
 <template>
-    <div :class="layerObject.mute?'mute':'default'" :onClick="click" tooltip="mute layer">
+    <div :class="{
+        muted: layerObject.mute,
+    }" :onClick="click" tooltip="mute layer">
         <MusicNoteNot v-if="layerObject.mute" />
         <MusicNote v-else/>
     </div>
 </template>
 <style scoped>
-.mute {
+.muted * {
     fill: #e50;
     color: #e50;
     background-color: transparent;
-}
-.default {
-    /* opacity: 0.3; */
 }
 </style>

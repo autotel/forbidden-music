@@ -9,7 +9,7 @@ export class AudioModule implements PatcheableTrait, AsyncEnableObject {
     readonly patcheableType = PatcheableType.AudioModule;
 
     // AsyncEnableObject
-    waitReady = Promise.resolve();
+    waitReady: Promise<void>;
     markReady: () => void;
 
     // AudioModule
@@ -22,7 +22,7 @@ export class AudioModule implements PatcheableTrait, AsyncEnableObject {
      * generally don't use synths that've been disabled.
      * There will be no clear warning if such is done.
      */
-    disable = () => {};
+    disable = () => { };
     enable = () => {
         this.markReady();
     };

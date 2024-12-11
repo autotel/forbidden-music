@@ -1,7 +1,7 @@
-import { createMaximizerWorklet } from "../../functions/maximizerWorkletFactory";
+import { os } from "@tauri-apps/api";
 import { AutomatableSynthParam, getTweenSlice } from "../types/Automatable";
-import { ParamType, NumberSynthParam, SynthParam } from "../types/SynthParam";
-import { EventParamsBase, Synth } from "../types/Synth";
+import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
+import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 
 
 type ClusterSineNoteParams = EventParamsBase & {
@@ -9,11 +9,18 @@ type ClusterSineNoteParams = EventParamsBase & {
     relativeGains: number[],
     perc: boolean,
 }
+type ClusterSineVoice = SynthVoice & {
+    scheduleStart: (frequency: number, absoluteStartTime: number, params: ClusterSineNoteParams) => ClusterSineVoice,
+    scheduleEnd: (absoluteEndTime?: number) => ClusterSineVoice,
+    stop: () => void,
+    releaseVoice: () => void,
+}
 
-const sineVoice = (audioContext: AudioContext) => {
+const sineVoice = (audioContext: AudioContext, synth: SineCluster): ClusterSineVoice => {
 
     const oscillators = [] as OscillatorNode[];
-    const gainNode = audioContext.createGain();
+    const gains = [] as GainNode[];
+    const output = audioContext.createGain();
     let noteStarted = 0;
     let noteVelocity = 0;
     let currentStopTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -21,14 +28,46 @@ const sineVoice = (audioContext: AudioContext) => {
     let relativeOctaves = [-1.2, -0.6, 0, 0.6, 1.2];
     let relativeGains = [0.25, 0.5, 1, 0.5, 0.25]; // ???
     let frequencyMultipliers = new Map() as Map<number, number>;
+    let isPercussive = false;
 
-    const getOrMakeOscillator = (index: number) => {
-        if (oscillators[index]) return oscillators[index];
+    const rebuildOscillator = (index: number, startTime: number, gainDest:GainNode):OscillatorNode => {
+        const gain = gainDest;
         const oscillator = audioContext.createOscillator();
-        oscillator.connect(gainNode);
-        oscillator.start();
         oscillators[index] = oscillator;
+        oscillator.start(startTime);
+        oscillator.connect(gain);
         return oscillator;
+    }
+
+    const getOrMakeGain = (index: number): GainNode => {
+        if (gains[index]) {
+            return gains[index]!;
+        }
+        const gain = audioContext.createGain();
+        gain.gain.value = 0;
+        gain.connect(output);
+        gains[index] = gain;
+        return gain;
+    }
+
+    const getOrMakeOscillator = (
+        index: number, 
+        startTime:number
+    ): [OscillatorNode, GainNode] => {
+        let oscillator: OscillatorNode;
+        let gain = getOrMakeGain(index);
+        if (oscillators[index]) {
+            oscillator = oscillators[index];
+            if(synth.restartPhases.value) {
+                oscillator.stop();
+                oscillator.disconnect();
+                oscillator = rebuildOscillator(index, startTime, gain);
+            }
+        } else {
+            oscillator = rebuildOscillator(index, startTime, gain);
+        }
+        gain.gain.value = 0;
+        return [oscillator, gain];
     }
 
     const getOrMakeFrequencyMultiplier = (relativeOctave: number): number => {
@@ -40,24 +79,11 @@ const sineVoice = (audioContext: AudioContext) => {
         return frequencyMultiplier;
     }
 
-    const forEachRelativeOctave = (callback: (
-        relativeOctave: number,
-        frequencyMultiplier: number,
-        oscillator: OscillatorNode,
-        index: number
-    ) => void) => {
-        relativeOctaves.forEach((relativeOctave, index) => {
-            const oscillator = getOrMakeOscillator(index);
-            const frequencyMultiplier = getOrMakeFrequencyMultiplier(relativeOctave);
-            oscillator.frequency.value = 440 * relativeOctave;
-            callback(relativeOctave, frequencyMultiplier, oscillator, index);
-        });
-    }
-
-    const purgeUnusedOscillators = () => {
-        oscillators.forEach((oscillator, index) => {
+    const purgeUnused = () => {
+        oscillators.forEach((oscillator, index) => { 
             if (relativeOctaves[index] === undefined) {
                 oscillator.stop();
+                oscillator.disconnect();
                 delete oscillators[index];
             }
         });
@@ -65,16 +91,7 @@ const sineVoice = (audioContext: AudioContext) => {
 
     return {
         inUse: false,
-        output: gainNode,
-        imprecision: 0 as number,
-        pan: 0 as number,
-
-        setValues: (ro: number[], rg: number[]) => {
-            relativeOctaves = ro;
-            relativeGains = rg;
-            purgeUnusedOscillators();
-        },
-
+        output,
         scheduleStart(
             frequency: number,
             absoluteStartTime: number,
@@ -85,37 +102,64 @@ const sineVoice = (audioContext: AudioContext) => {
                 currentStopTimeout = undefined;
             }
             noteVelocity = params.velocity;
+            isPercussive = params.perc;
+            let imprecision = synth.imprecision;
+
             this.inUse = true;
-            gainNode.gain.cancelScheduledValues(absoluteStartTime);
-            const { relativeOctaves, relativeGains } = params;
-            this.setValues(relativeOctaves, relativeGains);
-            // this synth is strange in the sense that the peak volume is 
-            // scheduled in relation to the note duration
-            gainNode.gain.setValueAtTime(0, absoluteStartTime);
-            forEachRelativeOctave((relativeOctave, frequencyMultiplier, oscillator, index) => {
-                const fq = frequency * frequencyMultiplier + frequency * this.imprecision * (Math.random() - 0.5);
+            output.gain.cancelScheduledValues(absoluteStartTime);
+            output.gain.setValueAtTime(0, absoluteStartTime);
+            relativeGains = params.relativeGains;
+            relativeOctaves = params.relativeOctaves;
+
+
+            if (isPercussive) {
+                if (synth.percAttackTimeParam.value) {
+                    output.gain.linearRampToValueAtTime(
+                        noteVelocity,
+                        absoluteStartTime + synth.percAttackTimeParam.value
+                    );
+                } else {
+                    output.gain.setValueAtTime(
+                        noteVelocity, absoluteStartTime
+                    );
+                }
+            }
+
+            relativeOctaves.forEach((relativeOctave, index) => {
+                const [oscillator, gain] = getOrMakeOscillator(index, absoluteStartTime);
+                const frequencyMultiplier = getOrMakeFrequencyMultiplier(relativeOctave);
+                gain.gain.setValueAtTime(relativeGains[index], absoluteStartTime);
+                oscillator.frequency.value = 440 * relativeOctave;
+                const fq = frequency * frequencyMultiplier + frequency * imprecision * (Math.random() - 0.5) ;
                 oscillator.frequency.setValueAtTime(fq, absoluteStartTime);
             });
+
+            purgeUnused();
+
             noteStarted = absoluteStartTime;
-            if (params.perc) {
-                gainNode.gain.setValueAtTime(
-                    noteVelocity, absoluteStartTime
-                );
-            }
+
             return this;
         },
+
         scheduleEnd(absoluteEndTime?: number) {
-            if(absoluteEndTime) {
+            if (absoluteEndTime) {
                 const noteDuration = absoluteEndTime - noteStarted;
-                gainNode.gain.cancelScheduledValues(absoluteEndTime);
-                gainNode.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
-                // firefox has a bit of a hard time with this stuff
-                gainNode.gain.linearRampToValueAtTime(0, absoluteEndTime);
+                output.gain.cancelScheduledValues(absoluteEndTime);
+
+                if(!isPercussive) {
+                    output.gain.linearRampToValueAtTime(noteVelocity, noteStarted + noteDuration / 4);
+                }
+
+                output.gain.linearRampToValueAtTime(0, absoluteEndTime);
+                if(currentStopTimeout) {
+                    clearTimeout(currentStopTimeout);
+                }
                 currentStopTimeout = setTimeout(() => {
                     this.releaseVoice();
-                }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
-            }else{
-                this.releaseVoice();
+                }, (absoluteEndTime + synth.percAttackTimeParam.value - audioContext.currentTime) * 1000 + 1000);
+            } else {
+                // it should happen only on playback stop anyway
+                this.scheduleEnd(audioContext.currentTime + synth.percAttackTimeParam.value + 0.1);
             }
             return this;
         },
@@ -124,10 +168,9 @@ const sineVoice = (audioContext: AudioContext) => {
             this.scheduleEnd(now);
         },
         releaseVoice() {
-            gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-            // firefox has a bit of a hard time with this stuff
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.value = 0;
+            output.gain.cancelScheduledValues(audioContext.currentTime);
+            output.gain.value = 0;
+            oscillators.forEach(oscillator => oscillator.frequency.value=0);
             this.inUse = false;
             currentStopTimeout = undefined;
         }
@@ -137,6 +180,16 @@ const sineVoice = (audioContext: AudioContext) => {
 
 
 const buildParams = (synth: SineCluster) => {
+
+    const percAttackTimeParam = {
+        displayName: "Percussion Attack",
+        exportable: true,
+        type: ParamType.number,
+        value: 0.01,
+        min: 0,
+        max: 0.3,
+    } as NumberSynthParam;
+    synth.params.push(percAttackTimeParam);
 
     synth.params.push({
         displayName: "oscillators count",
@@ -205,10 +258,10 @@ const buildParams = (synth: SineCluster) => {
         max: 1,
     });
     return {
-        octavesIntervalParam
+        octavesIntervalParam,
+        percAttackTimeParam,
     }
 }
-type ClusterSineVoice = ReturnType<typeof sineVoice>;
 
 export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
     voices: ClusterSineVoice[] = [];
@@ -218,15 +271,13 @@ export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
     oscillatorsCount: number = 3;
     imprecision: number = 0;
     octavesInterval: AutomatableSynthParam;
-
-    panCorrParam = {
-        displayName: "octave - pan correlation",
+    percAttackTimeParam: NumberSynthParam;
+    restartPhases = {
+        type: ParamType.boolean,
+        value: false,
+        displayName: "Restart Phases",
         exportable: true,
-        type: ParamType.number,
-        value: 0,
-        min: -1,
-        max: 1,
-    } as NumberSynthParam;
+    }as BooleanSynthParam;
 
     memoizedCluster = {
         octavesInterval: 0,
@@ -236,15 +287,15 @@ export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
         gains: [] as number[],
     }
 
-    octaveToPan = (octave: number) => {
-        const corr = this.panCorrParam.value;
-        const refOct = 3;
-        const octDiff = octave - refOct;
-        const pan = octDiff * corr;
-        if (pan < -1) return -1;
-        if (pan > 1) return 1;
-        return pan;
-    }
+    // octaveToPan = (octave: number) => {
+    //     const corr = this.panCorrParam.value;
+    //     const refOct = 3;
+    //     const octDiff = octave - refOct;
+    //     const pan = octDiff * corr;
+    //     if (pan < -1) return -1;
+    //     if (pan > 1) return 1;
+    //     return pan;
+    // }
 
     getCluster = (atTime: number) => {
         this.octavesInterval.updateValue(atTime);
@@ -292,10 +343,12 @@ export class SineCluster extends Synth<EventParamsBase, ClusterSineVoice> {
             } as ClusterSineNoteParams;
         }
         const {
-            octavesIntervalParam
+            octavesIntervalParam,
+            percAttackTimeParam,
         } = buildParams(this);
         this.octavesInterval = octavesIntervalParam;
-        this.params.push(this.panCorrParam);
+        this.percAttackTimeParam = percAttackTimeParam;
+        this.params.push(this.restartPhases);
     }
     params = [] as SynthParam[];
 }

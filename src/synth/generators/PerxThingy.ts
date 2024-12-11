@@ -2,7 +2,7 @@ import { createFoldedSaturatorWorklet } from "@/functions/foldedSaturatorWorklet
 import { oneShotEnvelope } from "../features/oneShotEnvelope";
 import { AutomatableSynthParam, automatableNumberSynthParam, getTweenSlice } from "../types/Automatable";
 import { EventParamsBase, Synth } from "../types/Synth";
-import { NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { BooleanSynthParam, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 
 
 type PerxThingyNoteParams = {
@@ -13,21 +13,18 @@ type PerxThingyNoteParams = {
 const perxVoice = (audioContext: AudioContext, parentSynth: PerxThingy) => {
 
     const oscillator = audioContext.createOscillator();
+    const modulator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    const filterNode = audioContext.createBiquadFilter();
-    const filterQamp = audioContext.createGain();
+    const modulatorGain = audioContext.createGain();
     gainNode.gain.value = 0;
-    filterQamp.gain.value = 56;
-    oscillator.type = "sawtooth";
-    filterNode.type = "bandpass";
 
-    oscillator.connect(filterNode)
-    filterNode.connect(gainNode);
+    oscillator.connect(gainNode)
+    modulator.connect(modulatorGain);
+    modulatorGain.connect(oscillator.frequency);
     oscillator.start();
+    modulator.start();
 
     let audioBufferSource = audioContext.createBufferSource();
-    let noteStarted = 0;
-    let noteVelocity = 0;
     let currentStopTimeout: ReturnType<typeof setTimeout> | undefined;
 
     return {
@@ -45,41 +42,35 @@ const perxVoice = (audioContext: AudioContext, parentSynth: PerxThingy) => {
                 clearTimeout(currentStopTimeout);
                 currentStopTimeout = undefined;
             }
-            noteVelocity = params.velocity;
             const buffer = params.envelopeBuffer;
             this.inUse = true;
+
+            if (parentSynth.ignoreInputTone.value) {
+                frequency = 110;
+            }
+            
             oscillator.frequency.value = frequency;
-            filterNode.frequency.value = frequency;
+            modulator.frequency.value = parentSynth.modulatorOctave.hertz;
+
+            oscillator.type = parentSynth.oscillatorType.getWave();
+
+            modulatorGain.gain.value = parentSynth.modulatorAmount.value;
             audioBufferSource = audioContext.createBufferSource();
             audioBufferSource.buffer = buffer;
             audioBufferSource.connect(gainNode.gain);
-            audioBufferSource.connect(filterQamp);
-            filterQamp.connect(filterNode.frequency);
-            filterQamp.connect(filterNode.Q);
-            filterQamp.gain.value = 60 + 20 * noteVelocity;
             audioBufferSource.start(absoluteStartTime);
-
-            return this;
-        },
-        scheduleEnd(absoluteEndTime?: number) {
-            if (absoluteEndTime) {
-                const noteDuration = absoluteEndTime - noteStarted;
-                audioBufferSource.stop(absoluteEndTime);
-                currentStopTimeout = setTimeout(() => {
-                    this.releaseVoice();
-                }, (absoluteEndTime - audioContext.currentTime) * 1000 + 10);
-            } else {
+            audioBufferSource.onended = () => {
                 this.releaseVoice();
             }
             return this;
         },
+        scheduleEnd() {
+            return this;
+        },
         stop() {
-            const now = audioContext.currentTime;
-            this.scheduleEnd(now);
         },
         releaseVoice() {
             audioBufferSource.disconnect();
-
             this.inUse = false;
             currentStopTimeout = undefined;
         }
@@ -89,43 +80,65 @@ const perxVoice = (audioContext: AudioContext, parentSynth: PerxThingy) => {
 
 type PerxThingyVoice = ReturnType<typeof perxVoice>;
 
+const initialModulatorOctave = 4;
+
 export class PerxThingy extends Synth<EventParamsBase> {
     voices: PerxThingyVoice[] = [];
 
     envelopeGen: ReturnType<typeof oneShotEnvelope>;
 
-    panCorrParam = {
-        displayName: "octave - pan correlation",
-        exportable: true,
+    modulatorOctave = {
         type: ParamType.number,
-        value: 0,
-        min: -1,
-        max: 1,
+        displayName: "Modulator Frequency",
+        _mapFn: (v: number) => Math.pow(2, v) / 10,
+        value: initialModulatorOctave,
+        get hertz() {
+            return this._mapFn(this.value);
+        },
+        get displayValue() {
+            return `${this.hertz.toFixed(3)} Hz`;
+        },
+        min: 0,
+        max: 15,
+        exportable: true,
     } as NumberSynthParam;
 
-    memoizedCluster = {
-        octavesInterval: 0,
-        volumeRolloff: 0,
-        oscillatorsCount: 0,
-        relativeOctaves: [] as number[],
-        gains: [] as number[],
-    }
+    modulatorAmount = {
+        type: ParamType.number,
+        displayName: "Modulation",
+        value: 0,
+        min: 0,
+        max: 1200,
+        exportable: true,
+    } as NumberSynthParam;
 
-    octaveToPan = (octave: number) => {
-        const corr = this.panCorrParam.value;
-        const refOct = 3;
-        const octDiff = octave - refOct;
-        const pan = octDiff * corr;
-        if (pan < -1) return -1;
-        if (pan > 1) return 1;
-        return pan;
-    }
+    oscillatorType = {
+        displayName: "oscillator type",
+        exportable: true,
+        type: ParamType.option,
+        value: 0,
+        getWave() {
+            return this.options[this.value].value;
+        },
+        options: [
+            { value: "sine", displayName: "sine" },
+            { value: "sawtooth", displayName: "sawtooth" },
+            { value: "square", displayName: "square" },
+            { value: "triangle", displayName: "triangle" },
+        ],
+    } as OptionSynthParam;
+
+    ignoreInputTone = {
+        type: ParamType.boolean,
+        displayName: "Atonal",
+        value: true,
+        exportable: true,
+    } as BooleanSynthParam
 
     constructor(
         audioContext: AudioContext,
     ) {
         super(audioContext);
-
 
         this.transformTriggerParams = (params: EventParamsBase): PerxThingyNoteParams => {
             return {
@@ -155,16 +168,20 @@ export class PerxThingy extends Synth<EventParamsBase> {
                 decayCurveParam,
             } = this.envelopeGen;
 
-            attackParam.max = 0.5;
+            attackParam.max = 0.1;
+            decayParam.max = 0.1;
 
+            this.params.push(this.oscillatorType);
             this.params.push(attackParam, decayParam, attackCurveParam, decayCurveParam);
-
             this.params.push(automatableNumberSynthParam(
                 preGainParam, 'fold pre-gain', 0, 1.5
             ));
             this.params.push(automatableNumberSynthParam(
                 postGainParam, 'gain'
             ));
+            this.params.push(this.modulatorOctave);
+            this.params.push(this.modulatorAmount);
+            this.params.push(this.ignoreInputTone);
 
             foldedSaturator.connect(this.output);
 

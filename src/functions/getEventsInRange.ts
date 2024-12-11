@@ -22,7 +22,6 @@ export const getNotesInRange = (
         let timeInRange = greedy ? (
             editNote.time <= timeEnd && editNote.timeEnd >= timeStart
         ) : (
-            // note that a note spanning all through & beyond the range is skipped
             editNote.time >= timeStart && editNote.timeEnd <= timeEnd
         );
 
@@ -31,12 +30,31 @@ export const getNotesInRange = (
     });
 };
 
+export const getTracesStartingInRange = <T extends Trace>(
+    traces: T[],
+    range: SelectableRange,
+):T[] =>  {
+    // range is expected to come in positive ranges
+    const timeStart = range.time;
+    const timeEnd = range.timeEnd;
+    const octaveStart = 'octave' in range ? range.octave : undefined;
+    const octaveEnd = 'octaveEnd' in range ? range.octaveEnd : undefined;
+    return traces.filter((trace) => {
+        const octaveInRange = (octaveStart === undefined)
+            || !('octave' in trace)
+            || (trace.octave >= octaveStart && trace.octave <= octaveEnd!);
+
+        const timeInRange = trace.time >= timeStart && trace.time < timeEnd;
+        return octaveInRange && timeInRange;
+    });
+}
+
 
 export const getTracesInRange = <T extends Trace>(
     traces: T[],
     range: SelectableRange,
     includePrevAndNext = false,
-) => {
+):T[] =>  {
     // range is expected to come in positive ranges
     const timeStart = range.time;
     const timeEnd = range.timeEnd;

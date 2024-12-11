@@ -2,6 +2,7 @@ import { PatcheableSynthVoice } from "./Synth"
 import { AudioModule } from "./AudioModule"
 
 export enum ParamType {
+    other = "other",
     number = "number",
     progress = "progress",
     boolean = "boolean",
@@ -23,7 +24,6 @@ export type SynthParamMinimum<T> = {
     exportable: boolean,
     [key: string]: any,
 }
-
 
 export interface ReadoutSynthParam extends SynthParamMinimum<string> {
     type: ParamType.readout,
@@ -56,10 +56,17 @@ export interface BooleanSynthParam extends SynthParamMinimum<boolean> {
     displayName: string,
     default?: boolean,
 }
+
+export interface OtherSynthParam extends SynthParamMinimum<any> {
+    displayName: string,
+    type: ParamType.other,
+}
+
 type OptionDef = {
     value: string | number,
     displayName: string,
 }
+
 export interface OptionSynthParam extends SynthParamMinimum<number> {
     type: ParamType.option,
     /** choice number */
@@ -146,6 +153,7 @@ export type SynthParam =
     ProgressSynthParam |
     ReadoutSynthParam |
     ArraySynthParam |
+    OtherSynthParam |
     VoicePatchSynthParam
 
 
@@ -178,7 +186,7 @@ export function numberSynthParam(
         displayName,
         exportable,
     } as NumberSynthParam;
-    if(automatable){
+    if (automatable) {
         synthParam.animate = (startTime: number, destTime: number, destValue: number) => {
             targetParam.linearRampToValueAtTime(destValue, destTime);
         };

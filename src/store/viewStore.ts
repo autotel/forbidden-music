@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref, watchEffect } from "vue";
+import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
 import { Loop } from "../dataTypes/Loop.js";
 import { Note } from "../dataTypes/Note.js";
 import { TimeRange, getDuration } from "../dataTypes/TimelineItem.js";
@@ -8,11 +9,11 @@ import { Trace } from "../dataTypes/Trace.js";
 import { getNotesInRange, getTracesInRange } from "../functions/getEventsInRange.js";
 import { frequencyToOctave } from "../functions/toneConverters.js";
 import { useLayerStore } from "./layerStore.js";
+import { HierarchicalLoop, useLoopsStore } from "./loopsStore.js";
+import { useNotesStore } from "./notesStore.js";
 import { usePlaybackStore } from "./playbackStore.js";
-import { useProjectStore } from "./projectStore.js";
 import { useToolStore } from "./toolStore.js";
-import { AutomationPoint } from "../dataTypes/AutomationPoint.js";
-import { useAutomationLaneStore } from "./automationLanesStore.js";
+import { traverse, TreeStucture } from "@/dataTypes/TreeStructure.js";
 
 const rgbToHex = (r: number, g: number, b: number) => {
     r = r & 0xff;
@@ -106,14 +107,14 @@ export const useViewStore = defineStore("view", () => {
     // TODO integrate this, so that view always zooms to center or mouse pos).
     const _offsetPxX = ref(1920 / 2);
     const _offsetPxY = ref(1080);
-    const project = useProjectStore();
     const followPlayback = ref(false);
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
+    const notes = useNotesStore();
     const memoizedNoteRects: Drawable<Note>[] = [];
     const layers = useLayerStore();
     const tool = useToolStore();
-    const lanes = useAutomationLaneStore();
+    const loops = useLoopsStore();
     const memoizedNoteHeight = computed(() => {
         return Math.abs(octaveToPx(1 / 12));
     });
@@ -128,22 +129,19 @@ export const useViewStore = defineStore("view", () => {
     // filter by type and then by screen?
     const visibleNotes = computed((): Note[] => {
         visibleNotesRefreshKey.value;
-        const layerVisibleNotes = project.notes.filter(({ layer }) => layers.isVisible(layer));
+        const layerVisibleNotes = notes.list.filter(({ layer }) => layers.isVisible(layer));
         return getNotesInRange(layerVisibleNotes, {
             time: timeOffset.value,
             timeEnd: timeOffset.value + viewWidthTime.value,
             octave: -octaveOffset.value,
             octaveEnd: -octaveOffset.value + viewHeightOctaves.value,
-        },true);
+        }, true);
     });
 
-    const visibleLoops = computed((): Loop[] => {
+    const visibleLoops = computed((): HierarchicalLoop[] => {
         visibleNotesRefreshKey.value;
-        const items = [...project.loops];
-
-        return items.filter((item) => {
-            return item.timeEnd >= timeOffset.value && item.time <= timeOffset.value + viewWidthTime.value;
-        });
+        const items = [...loops.hierarchical.children];
+        return items;
 
     });
 
@@ -175,11 +173,18 @@ export const useViewStore = defineStore("view", () => {
         })
     });
 
-    const visibleLoopDrawables = computed((): TimelineRect<Loop>[] => {
-        return visibleLoops.value.map((item) => {
-            let r = rectOfLoop(item) as TimelineRect<Loop>;
-            return r;
-        })
+    const visibleLoopDrawables = computed<TimelineRect<Loop>[]>(() => {
+        const loopHeight = 38;
+        let returnValue: TimelineRect<Loop>[] = [];
+        for (const loop of visibleLoops.value) {
+            traverse(loop, (loop, level) => {
+                const loopRect = rectOfLoop(loop.value);
+                loopRect.y = 24 + level * loopHeight;
+                loopRect.height = loopHeight;
+                returnValue.push(loopRect);
+            });
+        }
+        return returnValue;
     });
 
     const visibleAutomationPointDrawables = computed((): TimelineDot<AutomationPoint>[] => {
@@ -230,13 +235,12 @@ export const useViewStore = defineStore("view", () => {
 
     const rectOfLoop = (item: TimeRange): TimelineRect<Loop> => {
         let itemDuration = item.timeEnd - item.time;
-        const isFullHeight = tool.current === Tool.Loop;
 
         let rect = {
             x: timeToPxWithOffset(item.time),
-            y: 40,
+            y: 0,
             width: timeToPx(itemDuration),
-            height: isFullHeight ? viewHeightPx.value : 40,
+            height: 40,
             event: item,
 
         } as TimelineRect<Loop>;
@@ -269,7 +273,6 @@ export const useViewStore = defineStore("view", () => {
             y: 'octave' in trace ? octaveToPxWithOffset(trace.octave) : 0,
         }
     }
-
 
     const castIfDefined = (castFn = (v: number) => v, v: number | undefined, otherwise: null | number = null) => {
         return v === undefined ? otherwise : castFn(v);

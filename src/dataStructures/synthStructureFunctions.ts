@@ -1,5 +1,4 @@
 import { PatcheableType } from "../dataTypes/PatcheableTrait";
-import { abbreviate } from "../functions/abbreviate";
 import { useAutomationLaneStore } from "../store/automationLanesStore";
 import { AudioModule } from "../synth/types/AudioModule";
 import { SynthParam, SynthParamStored, isValidParam } from "../synth/types/SynthParam";
@@ -27,7 +26,7 @@ export interface SynthConstructorIdentifier {
 }
 export const synthStructureManager = <ConstId extends SynthConstructorIdentifier>(
     audioContext: AudioContext,
-    synthConstructorWrappers: ConstId[]
+    synthFactories: ConstId[]
 ) => {
     const automationStore = useAutomationLaneStore();
 
@@ -72,22 +71,22 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
                         "described as", chainStep,
                         "not matching", targetChain.children[i]?.name, chainStep.type
                     );
-                    let synthConstructor = synthConstructorWrappers.find((s) => s.name === chainStep.type);
-                    if (!synthConstructor) {
+                    let synthFactory = synthFactories.find((s) => s.name === chainStep.type);
+                    if (!synthFactory) {
                         const regex = new RegExp(chainStep.type.slice(0, 3));
-                        const loosely = synthConstructorWrappers.find((s) => s.name.match(regex));
+                        const loosely = synthFactories.find((s) => s.name.match(regex));
                         if (loosely) {
                             console.warn("synth named", chainStep.type, "not found, looking for similarly named: ", loosely?.name);
-                            synthConstructor = loosely;
+                            synthFactory = loosely;
                         }
                     }
-                    if (!synthConstructor) {
+                    if (!synthFactory) {
                         console.warn("synth not found", chainStep.type);
-                        synthConstructor = synthConstructorWrappers[0];
+                        synthFactory = synthFactories[0];
                     }
 
                     const paramsDef = chainStep.params;
-                    synth = synthConstructor.create(paramsDef);
+                    synth = synthFactory.create(paramsDef);
                     targetChain.addAudioModule(i, synth);
                 }
 

@@ -208,9 +208,6 @@ g#notes-being-created rect.body {
     opacity: 1;
 }
 
-.loops .body {
-    fill: rgb(255, 183, 164);
-}
 
 #automation-point-would-be-created circle,
 .automation line,

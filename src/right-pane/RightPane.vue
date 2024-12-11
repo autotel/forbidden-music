@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
+import ExtraContentSources from './ExtraContentSources.vue';
 import FileManager from './FileManager.vue';
-import WorkingMemory from './WorkingMemory.vue';
-import MidiInputConfig from './MidiInputConfig.vue';
-import SnapSelector from './SnapSelector.vue';
-import PerformanceSettings from './PerformanceSettings.vue';
-import { usePlaybackStore } from '../store/playbackStore';
-import LayersManager from './LayersManager.vue';
-import Physical from './Physical.vue';
 import FtCaptureManager from './FtCaptureManager.vue';
+import LayersManager from './LayersManager.vue';
+import MidiInputConfig from './MidiInputConfig.vue';
+import PerformanceSettings from './PerformanceSettings.vue';
+import Physical from './Physical.vue';
+import SnapSelector from './SnapSelector.vue';
+import WorkingMemory from './WorkingMemory.vue';
 defineProps<{
     paneWidth: number
     paneHeight: number
@@ -18,8 +18,9 @@ defineProps<{
 <template>
     <div class="right-pane"
         :style="{ width: paneWidth + 'px', height: paneHeight + 'px', display: paneWidth ? 'unset' : 'none' }">
+        <FileManager startExpanded/>
         <WorkingMemory startExpanded />
-        <FileManager />
+        <ExtraContentSources/>
         <LayersManager />
         <SnapSelector startExpanded />
         <FtCaptureManager />

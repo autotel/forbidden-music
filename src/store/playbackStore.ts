@@ -1,25 +1,25 @@
 
 import { defineStore } from 'pinia';
 import { computed, ref, watch, watchEffect } from 'vue';
-import { Loop } from "../dataTypes/Loop";
+import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
+import { loop, Loop } from "../dataTypes/Loop";
 import { Note, note } from "../dataTypes/Note";
 import { getDuration } from "../dataTypes/TimelineItem";
-import { TraceType, transposeTime } from "../dataTypes/Trace";
+import { Trace, TraceType, transposeTime } from "../dataTypes/Trace";
 import isTauri, { tauriObject } from '../functions/isTauri';
 import devMidiInputHandler from '../midiInputHandlers/log';
 import octatrackMidiInputHandler from '../midiInputHandlers/octatrack';
 import reaperMidiInputHandler from '../midiInputHandlers/reaper';
+import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
 import { useAudioContextStore } from "./audioContextStore";
+import { useAutomationLaneStore } from './automationLanesStore';
+import { useLayerStore } from './layerStore';
+import { HierarchicalLoop, useLoopsStore } from './loopsStore';
+import { useNotesStore } from './notesStore';
 import { useProjectStore } from './projectStore';
 import { useSynthStore } from './synthStore';
 import { useViewStore } from './viewStore';
-import { useAutomationLaneStore } from './automationLanesStore';
-import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
-import { filterMap } from '../functions/filterMap';
-import { SynthParam } from '../synth/types/SynthParam';
-import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
-import { probe } from '../functions/probe';
-import { useLayerStore } from './layerStore';
+import { P } from '@tauri-apps/api/event-41a9edf5';
 
 
 interface MidiInputInterface {
@@ -107,10 +107,11 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
 
 
 export const usePlaybackStore = defineStore("playback", () => {
-    const project = useProjectStore();
     const automation = useAutomationLaneStore();
     const audioContextStore = useAudioContextStore();
+    const loops = useLoopsStore();
     const synth = useSynthStore();
+    const notes = useNotesStore();
     const layers = useLayerStore();
     // TODO: many of these need not to be refs nor be exported.
     const playing = ref(false);
@@ -134,10 +135,6 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const midiInputs = ref([] as MidiInputInterface[]);
     const currentMidiInput = ref<MidiInputInterface | null>(null);
-
-    const sortedLoops = computed<Loop[]>(() => {
-        return project.loops.sort((a, b) => a.timeEnd - b.timeEnd);
-    });
 
     const clockTicker = () => {
         if (playing.value) {
@@ -188,29 +185,10 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
     });
 
-    const setToNextLoop = () => {
-        if (loopNow?.repetitionsLeft === 0) lastFinishedLoop = loopNow;
-        let expectedLoopEnd = lastFinishedLoop?.timeEnd || currentScoreTime.value;
-        loopNow = sortedLoops.value.find((loop) => {
-            return (
-                loop.timeEnd > expectedLoopEnd
-            );
-        });
-        if (loopNow) loopNow.repetitionsLeft = loopNow.count - 1;
-    }
-
-    const resetLoopRepetitions = () => {
-        lastFinishedLoop = undefined;
-        setToNextLoop();
-        project.loops.forEach((loop) => {
-            if (loop === loopNow) return;
-            delete loop.repetitionsLeft;
-        });
-    }
 
     const getNotesBetween = (frameStartTime: number, frameEndTime: number, catchUp = false) => {
-        const events = project.notes.filter((editNote) => {
-            if(layers.isMute(editNote.layer)) return false;
+        const events = notes.list.filter((editNote) => {
+            if (layers.isMute(editNote.layer)) return false;
             return (catchUp ? editNote.timeEnd : editNote.time) >= frameStartTime && editNote.time < frameEndTime;
         });
         return events;
@@ -219,10 +197,10 @@ export const usePlaybackStore = defineStore("playback", () => {
     const catchUpAutomations = (scoreTime: number) => {
         const catchUpAutomations = new Map<AutomatableSynthParam, AutomationPoint>();
         const filteredAutomations = automation.getAutomationsAroundTime(scoreTime);
-        for (let [lane, contents] of filteredAutomations){
+        for (let [lane, contents] of filteredAutomations) {
             const param = lane.targetParameter;
             if (!param) continue;
-            for(let point of contents){
+            for (let point of contents) {
                 const prevAutomation = catchUpAutomations.get(param);
                 if (prevAutomation) {
                     const interpolated = automation.getValueBetweenTwoPoints(
@@ -240,7 +218,9 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     let isFirtClockAfterPlay = true;
     let loopNow: Loop | undefined;
+    let loopNowHierarchical: HierarchicalLoop | undefined;
     let lastFinishedLoop: Loop | undefined;
+    let lastLoopAtPlayhead: Loop | undefined;
     const musicalTimeToWebAudioTime = (musicalTime: number) => {
         const rate = bpm.value / 60;
         return musicalTime / rate;
@@ -250,13 +230,57 @@ export const usePlaybackStore = defineStore("playback", () => {
         return webAudioTime * rate;
     }
 
+
+    let loopToJumpTo = ref<Loop | false>(false);
+
+    const enqueueLoop = (loop: Loop) => {
+        loopToJumpTo.value = loop;
+        console.log("loop to jump to", {
+            playing: playing.value,
+            loopNowHierarchical,
+            loopNow,
+        });
+        if (!playing.value) {
+            currentScoreTime.value = loopToJumpTo.value.time;
+            play();
+        }
+        if(!loopNowHierarchical) {
+            currentScoreTime.value = loopToJumpTo.value.time;
+        }
+    }
+
+    const jumpToJumpLoop = (remainder: number, remainderNotesArray: Trace[]) => {
+        if (!loopToJumpTo.value) return;
+        const loopTo = loopToJumpTo.value;
+        loopToJumpTo.value = false;
+        // feature is not working 
+        remainder = 0;
+        if (remainder > 0) {
+            const jumpLoopStartNotes = getNotesBetween(loopTo.time, loopTo.time + remainder);
+            remainderNotesArray.push(...jumpLoopStartNotes);
+        }
+
+        currentScoreTime.value = loopTo.time + remainder;
+        loopNow = loopTo;
+        loopNow.repetitionsLeft = loopNow.count - 1;
+        loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
+    }
+
     const _clockAction = () => {
         const audioContext = audioContextStore.audioContext;
         if (!audioContext) throw new Error("audio context not created");
 
-        if (!loopNow?.repetitionsLeft) {
-            setToNextLoop();
+        loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
+        loopNow = loopNowHierarchical?.value;
+        // If I do this, left plays are discounted when going back from deeper to higher loops
+        if (loopNowHierarchical && loopNow !== lastLoopAtPlayhead) {
+            // enteredNewLoop = true;
+            // loopNow?.repetitionsLeft && loopNow.repetitionsLeft--;
+            if (loopToJumpTo.value) {
+                jumpToJumpLoop(0, []);
+            }
         }
+        lastLoopAtPlayhead = loopNow;
 
         // reference time to consider as zero towards each event to be queued
         const tickTime = audioContext.currentTime;
@@ -271,27 +295,35 @@ export const usePlaybackStore = defineStore("playback", () => {
 
         let playNotes: Note[] = [];
 
-        let loopRestarted = (loopNow && scoreTimeFrameEnd >= loopNow.timeEnd) ? loopNow : false;
+        let loopEndReached = (loopNow && scoreTimeFrameEnd >= loopNow.timeEnd) ? loopNow : false;
 
         let playRangeEnd = currentScoreTime.value;
-        if (loopRestarted) playRangeEnd = loopRestarted.timeEnd;
+        if (loopEndReached) playRangeEnd = loopEndReached.timeEnd;
         playNotes = getNotesBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
 
-        if (loopRestarted) {
-            const remainder = scoreTimeFrameEnd - loopRestarted.timeEnd;
-            const transposeNoteTime = getDuration(loopRestarted);
-            const loopStartNotes = getNotesBetween(loopRestarted.time, loopRestarted.time + remainder)
-                .map(inote => {
-                    const noteClone = note(inote);
-                    transposeTime(noteClone, transposeNoteTime);
-                    return noteClone;
-                })
-            playNotes.push(...loopStartNotes);
-            currentScoreTime.value = loopRestarted.time + remainder;
-            if (loopRestarted.repetitionsLeft) loopRestarted.repetitionsLeft--;
+        if (loopEndReached) {
+            console.log('restart loop');
+            // in order to keep time precise, start new loop with 'remainder' start offset
+            const remainder = scoreTimeFrameEnd - loopEndReached.timeEnd;
+            if (loopToJumpTo.value) {
+                // find notes between that loop start and remainder to play
+                jumpToJumpLoop(remainder, playNotes);
+            } else if (loopEndReached.repetitionsLeft) {
+                const loopStartNotes = getNotesBetween(loopEndReached.time, loopEndReached.time + remainder)
+                // .map(inote => {
+                //     const noteClone = note(inote);
+                //     transposeTime(noteClone, transposeNoteTime);
+                //     return noteClone;
+                // })
+                playNotes.push(...loopStartNotes);
+
+                currentScoreTime.value = loopEndReached.time + remainder;
+                loopEndReached.repetitionsLeft--;
+                if (loopNowHierarchical) loops.resetChildrenLoopRepetitions(loopNowHierarchical);
+            }
         }
 
-        if (catchUp || loopRestarted) {
+        if (catchUp || loopEndReached) {
             catchUpAutomations(scoreTimeFrameStart);
         }
 
@@ -313,12 +345,12 @@ export const usePlaybackStore = defineStore("playback", () => {
                 console.error("could not schedule event", editNote, e);
             }
         });
-        
+
         const automationsInTime = automation.getAutomationsForTime(scoreTimeFrameStart, scoreTimeFrameEnd, catchUp);
-        for(let [lane, contents] of automationsInTime){
+        for (let [lane, contents] of automationsInTime) {
             const param = lane.targetParameter;
             if (!param) continue;
-            for(let point of contents){
+            for (let point of contents) {
                 const mappedValue = automationRangeToParamRange(point.value, {
                     min: param.min, max: param.max
                 });
@@ -329,7 +361,7 @@ export const usePlaybackStore = defineStore("playback", () => {
                 }
             }
         }
-        
+
         previousClockTime = tickTime;
 
         if (currentTimeout.value) clearTimeout(currentTimeout.value);
@@ -340,6 +372,10 @@ export const usePlaybackStore = defineStore("playback", () => {
      * in order to indicate upon playback, whether its paused or stopped
      */
     let isPaused = false;
+
+    const resetLoopRepetitions = () => {
+        loops.resetLoopRepetitions();
+    }
 
     const play = async () => {
         if (!isPaused) resetLoopRepetitions();
@@ -403,6 +439,8 @@ export const usePlaybackStore = defineStore("playback", () => {
         play,
         stop,
         pause,
+        enqueueLoop,
+        loopToJumpTo,
         resetLoopRepetitions,
         catchUpAutomations,
         midiInputs, currentMidiInput,

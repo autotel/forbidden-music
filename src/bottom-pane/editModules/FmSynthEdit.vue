@@ -121,7 +121,6 @@ const presetsMode = ref(true);
 .layout {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
     height: 100%;

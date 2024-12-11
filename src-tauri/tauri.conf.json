@@ -14,15 +14,8 @@
     "allowlist": {
       "all": false,
       "fs": {
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "scope": [
-          "$DOWNLOAD/**",
-          "$HOME/**",
-          "$APP_DATA/**",
-          "$APP/**"
-        ]
+        "all": true,
+        "scope": ["**", "**/*", "/**/*", "/**/.*/**", "/**/.*", "/home/*/.local/share/**"]
       },
       "path": {
         "all": true
@@ -37,7 +30,13 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "protocol": {
+        "all": true,
+        "asset": true,
+        "assetScope": ["**"]
       }
+    
     },
     "bundle": {
       "active": true,

@@ -14,6 +14,7 @@ import { useProjectStore } from '../store/projectStore';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useLayerStore } from '../store/layerStore';
 import { useToolStore } from '../store/toolStore';
+import { useNotesStore } from '@/store/notesStore';
 const snap = useSnapStore();
 const view = useViewStore();
 const synth = useSynthStore();
@@ -45,6 +46,7 @@ const importFreqs = () => {
 const line = ref({ x1: 0, y1: 0, x2: 0, y2: 0 });
 let lastTime = 0;
 const project = useProjectStore();
+const notes = useNotesStore();
 const playback = usePlaybackStore();
 const tool = useToolStore();
 const mouseEntered = (e: MouseEvent) => {
@@ -63,7 +65,7 @@ const addEvent = (octave: number) => {
         velocity: 0.7,
         octave,
     });
-    project.appendNote(newEvent);
+    notes.append(newEvent);
 }
 
 // myModal.activate();
