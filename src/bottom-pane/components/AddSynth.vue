@@ -20,6 +20,7 @@ const expanded = ref(false);
 const bottomPaneState = useBottomPaneStateStore();
 const mainContainer = ref<HTMLDivElement | null>(null);
 const addSynth = (synthCon: SynthConstructorWrapper) => {
+    console.log("addsynth add", synthCon);
     const newSynth = synth.instanceAudioModule(synthCon);
     props.targetChain.addAudioModule(
         props.position,

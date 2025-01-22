@@ -10,7 +10,7 @@ export type SamplesLibraryDefinition = {
 
 
 export const assertSampleLibraryDefinition = (def: Object): SamplesLibraryDefinition => {
-    requireProperties(def, ['url', 'name', 'content'], 'Library definition');
+    requireProperties(def, ['name', 'content'], 'Library definition');
     if (typeof def !== 'object') {
         throw new Error('Library definition must be an object');
     }

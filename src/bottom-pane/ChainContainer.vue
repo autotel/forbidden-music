@@ -36,6 +36,8 @@ import GranularSamplerEdit from './editModules/GranularSamplerEdit.vue';
 import StackContainer from './editModules/StackContainer.vue';
 import ThingyEdit from './editModules/ThingyEdit.vue';
 import { useBottomPaneStateStore } from '@/store/bottomPaneStateStore';
+import ConvolverEdit from './editModules/ConvolverEdit.vue';
+import { ConvolutionReverbEffect } from '@/synth/effects/ConvolutionReverbEffect';
 
 const props = defineProps<{
     synthChain: SynthChain
@@ -115,6 +117,7 @@ const patchItemDragEnd = (e: MouseEvent) => {
                     <KickSynthEdit v-else-if="(audioModule instanceof KickSynth)" :audioModule="audioModule" />
                     <PerxThingyEdit v-else-if="(audioModule instanceof PerxThingy)" :audioModule="audioModule" />
                     <SamplerEdit v-else-if="(audioModule instanceof Sampler)" :audioModule="audioModule" />
+                    <ConvolverEdit v-else-if="(audioModule instanceof ConvolutionReverbEffect)" :audioModule="audioModule" />
                     <GranularSamplerEdit v-else-if="(audioModule instanceof GranularSampler)"
                         :audioModule="audioModule" />
                     <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />

@@ -145,9 +145,8 @@ export class Sampler extends Synth implements SampleKitUser {
 
     constructor(
         audioContext: AudioContext,
-        initialSamplesDefinition: SampleKitDefinition,
     ) {
-        const sampleKitManager = chromaticSampleKitManager(audioContext, initialSamplesDefinition);
+        const sampleKitManager = chromaticSampleKitManager(audioContext);
 
         super(audioContext, (a) => samplerVoice(a, this));
 

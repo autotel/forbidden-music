@@ -2,7 +2,6 @@ import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
 import { automatableNumberSynthParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
-import { env } from "process";
 import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
 
 type SineNoteParams = EventParamsBase & {

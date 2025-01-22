@@ -1,18 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import Button from "../components/Button.vue";
-import FileOpen from "../components/icons/FileOpen.vue";
-import Folder from "../components/icons/Folder.vue";
-import Save from "../components/icons/Save.vue";
-import SaveAs from "../components/icons/SaveAs.vue";
-import isTauri, { ifTauri } from "../functions/isTauri";
-import { KeyActions, getActionForKeys } from "../keyBindings";
-import { useLibraryStore } from "../store/libraryStore";
-import { useMonoModeInteraction } from "../store/monoModeInteraction";
-import { useProjectStore } from "../store/projectStore";
-import Collapsible from "./Collapsible.vue";
-import externalSampleLibrariesStore from "@/store/externalSampleLibrariesStore";
 import ButtonSub from "@/components/ButtonSub.vue";
+import externalSampleLibrariesStore from "@/store/externalSampleLibrariesStore";
+import Button from "../components/Button.vue";
+import Folder from "../components/icons/Folder.vue";
+import Collapsible from "./Collapsible.vue";
 
 const externalSampleLibraries = externalSampleLibrariesStore();
 
@@ -44,7 +35,7 @@ const addSampleLibrary = async () => {
                         </div>
                     </div>
                     <div>
-                    <ButtonSub @click="()=>deleteSampleLibrary(library.url)" tooltip="Delete a sample library">
+                    <ButtonSub v-if="library.url !== '/audio/samples.json'" @click="()=>deleteSampleLibrary(library.url)" tooltip="Delete a sample library">
                         ×
                     </ButtonSub>
                     </div>
@@ -59,6 +50,9 @@ const addSampleLibrary = async () => {
             <Button @click="addSampleLibrary" tooltip="Add a sample library">
                 add +
             </Button>
+            <Button @click="externalSampleLibraries.resetValue" tooltip="Add a sample library">
+                reset to default
+            </Button>
         </div>
     </Collapsible>
 </template>
@@ -68,8 +62,6 @@ const addSampleLibrary = async () => {
 .side-by-side {
     display: flex;
     justify-content: space-between;
-}
-.contents-list {
 }
 .contents-list .library {
     border-bottom: 1px solid #ccc;

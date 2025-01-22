@@ -145,7 +145,7 @@ const fsFetchSampleSource: SampleSourceFetcher = async (sampleDefinition: Sample
     // const castedPath = convertFileSrc(sampleDefinition.path);
     // const response = await fetch(castedPath);
     // const arrayBuffer = await response.arrayBuffer();
-    return arrayBuffer;
+    return arrayBuffer as ArrayBuffer;
 }
 
 export class SampleSource implements SampleFileDefinition {
@@ -219,7 +219,25 @@ const serializeSampleKit = (sampleKitDef: SampleKitDefinition) => {
     } as SampleKitDefinition;
 }
 
-export const chromaticSampleKitManager = (audioContext: AudioContext, initialSamplesDefinition: SampleKitDefinition) => {
+const initialSamplesDefinition: SampleKitDefinition = {
+  "name": "Test Tone",
+  "fromLibrary": "chromatic/test-tone",
+  "type": "chromatic",
+  "loadFrom": "http",
+  "samples": [
+    {
+      "frequency": 440,
+      "path": "audio/chromatic/test-tone/440.wav",
+      "name": "440.wav",
+      "velocityStart": 0,
+      "velocityEnd": 127,
+      "frequencyStart": 220,
+      "frequencyEnd": Infinity
+    }
+  ]
+}
+
+export const chromaticSampleKitManager = (audioContext: AudioContext) => {
     const sampleKitChangedListeners: SampleKitChangedListenerType[] = [];
     const sampleItemChosenListeners: SampleItemChosenListenerType[] = [];
     const sampleLoadedListeners: SampleItemLoadedListenerType[] = [];

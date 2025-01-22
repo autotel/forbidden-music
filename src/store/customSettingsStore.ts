@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { onMounted, watch, watchEffect } from "vue";
+import useExternalSAmpleLibrariesStore from "./externalSampleLibrariesStore";
 import userCustomPerformanceSettingsKey from "./userCustomPerformanceSettingsKey";
 import userSettingsStorageFactory from "./userSettingsStorageFactory";
 import { useViewStore } from "./viewStore";
@@ -19,6 +20,7 @@ const storedSettingsDefaults = {
     showHarp: false,
     useKnobCapture: true,
 }
+
 
 export const useCustomSettingsStore = defineStore("custom settings store", () => {
     const view = useViewStore();
@@ -65,7 +67,6 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         // Cannot watch changes from the returnValue
         const thisStore = useCustomSettingsStore();
 
-
         watchEffect(() => {
             nsLocalStorage.setItem(userCustomPerformanceSettingsKey, stringifySettings(thisStore));
             console.log('saved user performance settings');
@@ -74,10 +75,14 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         watch(thisStore, () => {
             console.log('user performance settings changed');
         });
+
         watch(thisStore, () => {
             view.setOctaveToTimeRatio(thisStore.octaveToTimeRatio);
         })
+        
         view.setOctaveToTimeRatio(thisStore.octaveToTimeRatio);
+
+        
     });
 
 

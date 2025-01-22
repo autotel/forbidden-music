@@ -3,14 +3,15 @@
 import Button from '@/components/Button.vue';
 import { SampleType, SampleKitDefinition } from '@/dataTypes/SampleKitDefinition';
 import externalSampleLibrariesStore from '@/store/externalSampleLibrariesStore';
-import { SampleKitUser } from '@/synth/features/chromaticSampleKitUser';
+import { ConvolutionReverbEffect } from '@/synth/effects/ConvolutionReverbEffect';
+import { SampleFileDefinition, SampleKitUser } from '@/synth/features/chromaticSampleKitUser';
 import { Synth } from '@/synth/types/Synth';
 import { computed, ref } from 'vue';
 
 
 
 const props = defineProps<{
-    audioModule: Synth & SampleKitUser,
+    audioModule: ConvolutionReverbEffect,
     types?: SampleType[],
 }>();
 
@@ -37,8 +38,8 @@ const filteredOptions = computed(() => {
 
 await props.audioModule.waitReady;
 
-const sampleSelectOption = (option: SampleKitDefinition) => {
-    props.audioModule.sampleKitParam.value = option;
+const sampleSelectOption = (option: SampleFileDefinition) => {
+    
 }
 
 </script>
