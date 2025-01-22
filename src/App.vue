@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import WorkletWorkbench from '@/WorkletWorkbench.vue';
+// import WorkletWorkbench from '@/WorkletWorkbench.vue';
 import Fraction from 'fraction.js';
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import BottomPane from './bottom-pane/BottomPane.vue';
@@ -15,7 +15,7 @@ import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import { Tool } from './dataTypes/Tool';
-import isDev from './functions/isDev';
+import isDev, { ifDev } from './functions/isDev';
 import { keyBindingsListener } from './functions/keyBindingsListener';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
@@ -29,13 +29,13 @@ import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 import { useHistoryStore } from './store/historyStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
+import { useNotesStore } from './store/notesStore';
 import { usePlaybackStore } from './store/playbackStore';
 import { useProjectStore } from './store/projectStore';
 import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-import { useNotesStore } from './store/notesStore';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -171,7 +171,7 @@ const touchDownListener = (e: TouchEvent) => {
     console.log(e.touches.length)
     switch (e.touches.length) {
         case 1: {
-            if(singleTouchTimer) {
+            if (singleTouchTimer) {
                 clearTimeout(singleTouchTimer);
             }
 
@@ -182,7 +182,7 @@ const touchDownListener = (e: TouchEvent) => {
             break;
         }
         case 2: {
-            if(singleTouchTimer) {
+            if (singleTouchTimer) {
                 clearTimeout(singleTouchTimer);
             }
             const averageX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
@@ -392,9 +392,9 @@ watch([sidePaneWidth, bottomPaneStateStore], () => {
     <Modal name="octave table editor">
         <CustomOctaveTableTextEditor />
     </Modal>
-    <Modal name="plot util" style="display:block; width:90vw; height:90vh;">
+    <!-- <Modal v-if="isDev()" name="plot util" style="display:block; width:90vw; height:90vh;">
         <WorkletWorkbench />
-    </Modal>
+    </Modal> -->
     <Modal name="relation fraction editor">
         <div class="form-row">
             <label>Simplicity: &nbsp;</label>
@@ -439,5 +439,4 @@ watch([sidePaneWidth, bottomPaneStateStore], () => {
 .unclickable {
     pointer-events: none;
 }
-
 </style>
