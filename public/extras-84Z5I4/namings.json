@@ -1,0 +1,29 @@
+[{
+    "path":"AC30-brilliant-SNB",
+    "type":"impulse-response",
+    "kitName":"AC30 Brilliant",
+    "pattern":"",
+    "maps":""
+},{
+    "path":"AC30-normal-SNB",
+    "type":"impulse-response",
+    "kitName":"AC30 Normal",
+    "pattern":"",
+    "maps":""
+},{
+    "path":"new-mallets",
+    "type":"chromatic",
+    "pattern":"([^_]+)_([^_]+)",
+    "maps":"kitName cdeNote"
+},{
+    "path":"autotel-drums",
+    "type":"atonal",
+    "pattern":"([^_]+)_(\\D+)((\\d|\\.)+)",
+    "maps":"kitName name frequency"
+},{
+    "path":"uni-iowa-piano",
+    "type":"chromatic",
+    "kitName":"Uiowa Grand Piano",
+    "pattern":"([^_]+)_([^_]+)",
+    "maps":"velocity frequency"
+}]
