@@ -1,25 +1,24 @@
 
+import { devWarn } from '@/functions/isDev';
 import { defineStore } from 'pinia';
 import { computed, ref, watch, watchEffect } from 'vue';
 import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
-import { loop, Loop } from "../dataTypes/Loop";
-import { Note, note } from "../dataTypes/Note";
+import { Loop } from "../dataTypes/Loop";
+import { Note } from "../dataTypes/Note";
 import { getDuration } from "../dataTypes/TimelineItem";
-import { Trace, TraceType, transposeTime } from "../dataTypes/Trace";
+import { Trace, TraceType } from "../dataTypes/Trace";
 import isTauri, { tauriObject } from '../functions/isTauri';
 import devMidiInputHandler from '../midiInputHandlers/log';
 import octatrackMidiInputHandler from '../midiInputHandlers/octatrack';
 import reaperMidiInputHandler from '../midiInputHandlers/reaper';
-import { AutomatableSynthParam, addAutomationDestinationPoint, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
+import { addAutomationDestinationPoint, AutomatableSynthParam, isAutomatable, stopAndResetAnimations } from '../synth/types/Automatable';
 import { useAudioContextStore } from "./audioContextStore";
 import { useAutomationLaneStore } from './automationLanesStore';
 import { useLayerStore } from './layerStore';
 import { HierarchicalLoop, useLoopsStore } from './loopsStore';
 import { useNotesStore } from './notesStore';
-import { useProjectStore } from './projectStore';
 import { useSynthStore } from './synthStore';
 import { useViewStore } from './viewStore';
-import { P } from '@tauri-apps/api/event-41a9edf5';
 
 
 interface MidiInputInterface {
@@ -219,7 +218,6 @@ export const usePlaybackStore = defineStore("playback", () => {
     let isFirtClockAfterPlay = true;
     let loopNow: Loop | undefined;
     let loopNowHierarchical: HierarchicalLoop | undefined;
-    let lastFinishedLoop: Loop | undefined;
     let lastLoopAtPlayhead: Loop | undefined;
     const musicalTimeToWebAudioTime = (musicalTime: number) => {
         const rate = bpm.value / 60;
@@ -331,6 +329,7 @@ export const usePlaybackStore = defineStore("playback", () => {
             if (editNote.mute) return;
             let noteStartRelative = musicalTimeToWebAudioTime(editNote.time - scoreTimeFrameStart);
             if (noteStartRelative < 0) {
+                devWarn("playback look-ahead is not long enough for precise timing");
                 noteStartRelative = 0;
             }
             const eventStartAbsolute = tickTime + noteStartRelative;

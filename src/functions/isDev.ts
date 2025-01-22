@@ -24,3 +24,8 @@ export function devLog(...args: any[]) {
         console.log(...args);
     }
 }
+export function devWarn(...args: any[]) {
+    if (isDev()) {
+        console.warn(...args);
+    }
+}

@@ -28,8 +28,8 @@ const fullReset = () => {
     window.localStorage.clear();
     window.location.reload();
 }
+
 const workletWorkbench = () => {
-    // e.stopImmediatePropagation()
     monoModeInteraction.activate("plot util")
 }
 
@@ -119,7 +119,6 @@ const workletWorkbench = () => {
                 <Button v-if="isDev()" @click="workletWorkbench()" tooltip="Open worklet workbench">Worklet
                     workbench
                 </Button>
-
             </div>
 
             <div class="form-section">Danger zone</div>

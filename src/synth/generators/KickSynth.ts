@@ -1,6 +1,8 @@
 import { useDebounceFn } from "@vueuse/core";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { ifDev } from "@/functions/isDev";
+import { event } from "@tauri-apps/api";
 
 const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<EventParamsBase> => {
 
@@ -37,6 +39,11 @@ const kickVoice = (audioContext: AudioContext, synth: KickSynth): SynthVoice<Eve
             source.playbackRate.value = frequency / synth.inherentSampleFrequency;
             source.start(absoluteStartTime);
             output.gain.value = evtParams.velocity;
+            ifDev(()=>{
+                if(eventStartedTime < audioContext.currentTime) return console.warn("event started in the past");
+                if(eventStartedTime < audioContext.currentTime + 0.001) console.warn("event scheduled with quite short notice!");
+            });
+
             return this;
         },
         scheduleEnd(absoluteStopTime?: number) {
