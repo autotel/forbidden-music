@@ -9,11 +9,13 @@ import { useSelectStore } from '../store/selectStore';
 import { useSnapStore } from '../store/snapStore';
 import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
-import '../style.css';
+import '@/style.css';
 import { disclaimer } from '../texts/userDisclaimer';
 import { TestRuntime } from './testRuntime';
 import { RoboMouse, wait } from './RoboMouse';
 import { useLoopsStore } from '@/store/loopsStore';
+import { useCustomSettingsStore } from '@/store/customSettingsStore';
+import { useNotesStore } from '@/store/notesStore';
 export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) => {
 
     console.log("appMount");
@@ -37,17 +39,6 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
     body.appendChild(containerDiv);
 
 
-    // const interactionProtectDiv = document.createElement('div');
-    // interactionProtectDiv.id = "interaction-protect";
-    // interactionProtectDiv.style.width = "100vw";
-    // interactionProtectDiv.style.height = "100vh";
-    // interactionProtectDiv.style.left = "0";
-    // interactionProtectDiv.style.top = "0";
-    // interactionProtectDiv.style.position = "fixed";
-    // interactionProtectDiv.style.zIndex = "10";
-
-    // body.appendChild(interactionProtectDiv);
-
 
     const roboMouse = new RoboMouse();
 
@@ -56,7 +47,10 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
     const selectStore = useSelectStore();
     const snapStore = useSnapStore();
     const toolStore = useToolStore();
+    const notesStore = useNotesStore();
     const loopsStore = useLoopsStore();
+    const userSettingsStore = useCustomSettingsStore();
+    
 
     let interactionTarget: HTMLElement | null;
 
@@ -65,8 +59,10 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         projectStore,
         viewStore,
         toolStore,
+        notesStore,
         loopsStore,
         snapStore,
+        userSettingsStore,
         pinia,
         app,
         body,
@@ -88,7 +84,6 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         app.mount(containerDiv);
         // empty the project preventing default demo project interfering with tests
         projectStore.loadEmptyProjectDefinition();
-        
 
         interactionTarget = containerDiv.querySelector("#viewport");
         if (!interactionTarget) throw new Error("interactionTarget is null");

@@ -1,8 +1,10 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { describe, expect, it } from 'vitest';
 import { useAudioContextStore } from './audioContextStore';
-describe('AudioContextStore', () => {
-    setActivePinia(createPinia());
+import { appMount } from '@/test-helpers/appSetup';
+describe('AudioContextStore', async() => {
+    const testRuntime = await appMount();
+    
 
     it('can be instanced', () => {
         const audioContextStore = useAudioContextStore();

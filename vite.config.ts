@@ -31,6 +31,7 @@ export default defineConfig(async () => ({
     outDir: "forbidden-music",
 
   },
+
   optimizeDeps: {
     esbuildOptions: { target: "es2020", supported: { bigint: true } },
   },
@@ -42,8 +43,9 @@ export default defineConfig(async () => ({
   },
   test: {
     browser: {
+      // provider: 'playwright','
       enabled: true,
-      name: 'chrome',
-    },
-  }
+      name: 'firefox',
+    }
+  },
 } as UserConfig));

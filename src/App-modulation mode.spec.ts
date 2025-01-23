@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
-import './style.css';
+import '@/style.css';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
 import { appCleanup } from './test-helpers/appCleanup';
@@ -11,7 +11,6 @@ let generalInterval = 500;
 describe('app modulation mode', async () => {
 
     const testRuntime = await appMount();
-
 
 
 
@@ -49,7 +48,7 @@ describe('app modulation mode', async () => {
             bubbles: true,
         }));
         await wait(generalInterval / 3);
-        const existingNotes = projectStore.notes.list.length;
+        const existingNotes = testRuntime.notesStore.list.length;
         expect(selectStore.getNotes().length).toBe(existingNotes);
 
         selectStore.select();

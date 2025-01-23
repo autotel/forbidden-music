@@ -82,7 +82,7 @@ onMounted(async () => {
 }
 
 #hrow-items>* {
-    display: inline-block;
+    /* display: inline-block; */
     margin: 0.25em;
     margin-bottom: 0;
     vertical-align: top;

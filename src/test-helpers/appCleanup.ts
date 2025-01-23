@@ -7,6 +7,7 @@ export const appCleanup = (
     afterAll(async () => {
         app.unmount()
         body.removeChild(containerDiv);
+        
         localStorage.clear();
     })
 }

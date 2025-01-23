@@ -13,7 +13,6 @@ describe('app basic editing tools', async () => {
         interactionTarget,
         roboMouse,
         viewStore,
-        projectStore,
         notesStore,
         selectStore,
     } = testRuntime;

@@ -33,10 +33,10 @@ export const useNotesStore = defineStore('notes score', () => {
         return str;
     }
     /** Convert note defs to notes */
-    const deserialize = (loopDefs: NoteDef[]) => loopDefs.map(note);
+    const deserialize = (defs: NoteDef[]) => defs.map(note);
 
-    const setFromDefs = (loopDefs: NoteDef[]) => {
-        list.value = deserialize(loopDefs);
+    const setFromDefs = (defs: NoteDef[]) => {
+        list.value = deserialize(defs);
         updateLayersToList();
     }
 
