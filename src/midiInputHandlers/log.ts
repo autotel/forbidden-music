@@ -7,7 +7,7 @@ const midiLog = (...p: (string | number)[]) => {
         }
         return p
     });
-    console.log(...transformedLog)
+    devLog(...transformedLog)
 }
 
 const devInputHandler:MidiInputHandlerFactory = (

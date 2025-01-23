@@ -13,6 +13,7 @@ import { automationPoint } from '@/dataTypes/AutomationPoint';
 import { useProjectStore } from '@/store/projectStore';
 import { useThrottleFn } from '@vueuse/core';
 import { useCustomSettingsStore } from '@/store/customSettingsStore';
+import { devLog } from '@/functions/isDev';
 const props = defineProps<{
     param: NumberSynthParam | ProgressSynthParam,
     noLabel?: boolean
@@ -190,7 +191,7 @@ const mouseDown = async (e: MouseEvent) => {
             await mouseCaptureCanvas.value?.requestPointerLock();
             // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
             if (document.pointerLockElement === mouseCaptureCanvas.value) {
-                console.log("The pointer lock status is now locked");
+                devLog("The pointer lock status is now locked");
                 // window.addEventListener("mousemove", lockedPointerMoved, false);
             }
         }

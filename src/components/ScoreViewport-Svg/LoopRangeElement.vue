@@ -53,7 +53,6 @@ const leftDragHandleMouseLeaveListener = (e: MouseEvent) => {
 }
 
 const playme = () => {
-    console.log("jump here");
     // playback.stop();
     // playback.currentScoreTime = props.eventRect.event.time;
     // playback.play();

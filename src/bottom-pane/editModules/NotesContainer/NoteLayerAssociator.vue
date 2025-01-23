@@ -21,7 +21,6 @@ const isLayerAssociatedToMe = computed<boolean>({
         return layersStore.layers[props.no].channelSlot === props.channelSlotNo;
     },
     set(value: boolean) {
-        console.log('set', value);
         layersStore.layers[props.no].channelSlot = value ? props.channelSlotNo : 0;
     }
 });

@@ -26,7 +26,6 @@ const printPreset = () => {
     props.audioModule.workletParams?.forEach((param) => {
         obj[param.displayName] = param.value;
     });
-    console.log(obj);
 }
 
 const groups = computed(() => [

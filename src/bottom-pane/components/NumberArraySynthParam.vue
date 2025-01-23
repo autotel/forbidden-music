@@ -12,7 +12,6 @@ let cols = props.cols || 4;
 const colWidth = 20;
 const emit = defineEmits(['update']);
 const update = (v: number, i: number) => {
-    console.log('update', v, i);
     props.param.value[i] = v;
     emit('update');
 }

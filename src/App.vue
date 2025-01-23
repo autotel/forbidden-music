@@ -150,7 +150,6 @@ const mouseUpListener = (e: MouseEvent) => {
 }
 
 const mouseDownListener = (e: MouseEvent) => {
-    console.log("mouse dn", e);
     // middle wheel
     if (e.button === 1) {
         e.stopPropagation();
@@ -168,7 +167,6 @@ const mouseDownListener = (e: MouseEvent) => {
 }
 let singleTouchTimer = false as false | ReturnType<typeof setTimeout>
 const touchDownListener = (e: TouchEvent) => {
-    console.log(e.touches.length)
     switch (e.touches.length) {
         case 1: {
             if (singleTouchTimer) {

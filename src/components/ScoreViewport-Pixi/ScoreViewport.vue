@@ -78,7 +78,6 @@ const mouseMoveListener = (e: MouseEvent) => {
     if (didHoverChange(hoveredThing, isRightEdge)) {
         if (firstNoteRect) {
             if (isRightEdge) {
-                console.log("here");
                 tool.timelineItemRightEdgeMouseEnter(firstNoteRect.event as Trace);
             } else {
                 tool.timelineItemRightEdgeMouseLeave();
@@ -378,8 +377,8 @@ const refreshView = (time: number) => {
         // draw task timings text
         stepsToLog.sort((a, b) => b.time - a.time);
         const totalTime = performance.now() - startTime;
+
         const log = `${totalTime} \n${stepsToLog.map(step => `${step.taskName}: ${step.time.toFixed(2)}ms`).join("\n")}`;
-        // console.log(log);
         {
             let text = getText();
             text.text = log;

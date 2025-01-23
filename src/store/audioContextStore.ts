@@ -8,9 +8,7 @@ export const useAudioContextStore = defineStore('audio-context', () => {
     const startContextListener = async () => {
         if (audioContextListenerAlreadyStarted) return;
         audioContextListenerAlreadyStarted = true;
-        console.log("waiting for audio context permission");
         await audioContext.resume();
-        console.log("audio context permission granted");
         console.log("audio is ready");
         if (audioContext.state === "running") {
             window.removeEventListener("mousedown", startContextListener);
@@ -28,7 +26,6 @@ export const useAudioContextStore = defineStore('audio-context', () => {
             resolve(audioContext);
         });
         if (audioContext.state === "running") {
-            console.log("audio context allowed without interaction");
         } else {
             window.addEventListener("mousedown", () => {
                 audioContext.resume();

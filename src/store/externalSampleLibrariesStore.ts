@@ -150,10 +150,8 @@ export default defineStore('externalSampleLibrariesStore', () => {
     const alreadyAddedLibs = [] as Url[];
 
     const addLibraryUrl = async (definitionUrl: string) => {
-        console.log("add library", definitionUrl);
         let error = '';
         if (alreadyAddedLibs.includes(definitionUrl)) {
-            console.log("already present", definitionUrl);
             return;
         }
         alreadyAddedLibs.push(definitionUrl);

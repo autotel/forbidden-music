@@ -22,7 +22,6 @@ const synthChain = computed<SynthChain | null>(() => bottomPaneState.activeLayer
 const thereIsAudio = ref(false);
 
 watch(() => synth.channels.children, (newVal, oldVal) => {
-    console.log('synth.channels changed', newVal, oldVal);
     hardForcePaneRefresh();
 });
 

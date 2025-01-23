@@ -6,9 +6,7 @@ const namespace = 'continuous-piano-roll-settings.json';
 
 const getFullSettingsPath = async () => {
   console.group("getFullSettingsPath");
-  console.log("get path object from tauriobject");
   const { path } = await tauriObject();
-  console.log("resolve path");
   const resolvedPath = await path.join(userSettingsPath, namespace);
   console.groupEnd();
   return resolvedPath;
@@ -23,7 +21,6 @@ const createStorageFileIfNotExists = async (filePath: string) => {
   if (await fs.exists(filePath) && await fs.readTextFile(filePath) !== '') {
     return;
   }
-  console.log("creating storage file", filePath);
   try {
     await fs.writeFile(filePath, '{}');
   } catch (e) {
@@ -53,9 +50,7 @@ const jsonStore = async (filePath: string, data: any) => {
     console.warn("Do not use jsonStore outside of tauri");
     return;
   }
-  console.log("acquire fs object");
   const { fs } = await tauriObject();
-  console.log("write to", filePath);
   try {
     await fs.writeTextFile(filePath, JSON.stringify(data, null, 2));
   } catch (e) {
@@ -120,21 +115,15 @@ export class TauriNsLocalStorage implements AsyncStorage {
 
   async syncToLocalStorage () {
     console.group("syncToLocalStorage");
-    console.log("get full settings path");
     const saveTo = await getFullSettingsPath();
-    console.log("sync tauriNsLocalstorage to", saveTo);
-    console.log("lock io");
     const releaseLock = await this.lockIo('sync to local storage');
     const obj = mapToObject(this.storage);
-    console.log("store json");
     await jsonStore(saveTo, obj);
-    console.log("release lock");
     releaseLock();
     console.groupEnd();
   }
   async syncFromLocalStorage() {
     const saveTo = await getFullSettingsPath();
-    console.log("sync tauriNsLocalstorage from", saveTo);
     const releaseLock = await this.lockIo('sync from local storage');
     await this.ioLock;
     const obj = await jsonOpen(saveTo);

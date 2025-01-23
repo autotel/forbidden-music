@@ -25,7 +25,6 @@ const keyDownListener = (e: KeyboardEvent) => {
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
     switch (keyAction) {
         case KeyActions.Save: {
-            console.log("save");
             libraryStore.saveCurrent();
             e.preventDefault();
             e.stopPropagation();

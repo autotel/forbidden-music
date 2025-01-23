@@ -5,6 +5,7 @@ import { SynthParam, SynthParamStored, isValidParam } from "../synth/types/Synth
 import { Synth, PatcheableSynthVoice } from "../synth/types/Synth";
 import { SynthChain } from "./SynthChain";
 import { SynthStack } from "./SynthStack";
+import { devLog } from "@/functions/isDev";
 
 type EitherAccessible = AudioModule | SynthChain | SynthStack | SynthParam | undefined;
 
@@ -35,7 +36,7 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
         definition: SynthChainDefinition,
         recycle = false
     ) => {
-        console.log("applying chain definition", definition);
+        devLog("applying chain definition", definition);
         if (targetChain === undefined) throw new Error("target chain is undefined");
         if (!recycle) {
             targetChain.setAudioModules([]);
@@ -46,7 +47,7 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
                 let stackInstance: SynthStack | undefined = undefined;
                 if (recycle && targetChain.children[i] instanceof SynthStack) {
                     stackInstance = targetChain.children[i] as SynthStack;
-                    console.log("recycling", stackInstance.name);
+                    devLog("recycling", stackInstance.name);
                 }
                 const stackDef: SynthStackDefinition = chainStep;
                 if (!stackInstance) {
@@ -61,7 +62,7 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
 
                 if (recycle && targetChain.children[i] && targetChain.children[i].name === chainStep.type) {
                     synth = targetChain.children[i] as AudioModule;
-                    console.log("recycling", synth.name);
+                    devLog("recycling", synth.name);
                 }
 
                 if (!synth) {
@@ -101,7 +102,7 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
             let chainInstance: SynthChain | undefined = undefined;
             if (recycle && stack.children[i] instanceof SynthChain) {
                 chainInstance = stack.children[i] as SynthChain;
-                console.log("recycling", chainInstance.name);
+                devLog("recycling", chainInstance.name);
             }
             if (!chainInstance) {
                 if (recycle) console.warn("recyclable chain not found in ", stack.children, "step", i, "described as", chainDef);
@@ -119,16 +120,16 @@ export const synthStructureManager = <ConstId extends SynthConstructorIdentifier
 
         console.group("applying channels definition", definition);
         if (recycle) {
-            console.log("recycling synths");
+            devLog("recycling synths");
         } else {
             targetStack.empty();
         }
         definition.forEach((chainDef, i) => {
-            console.log("loading channel chain", chainDef);
+            devLog("loading channel chain", chainDef);
             let chainInstance: SynthChain | undefined = undefined;
             if (recycle && targetStack.children[i] instanceof SynthChain) {
                 chainInstance = targetStack.children[i] as SynthChain;
-                console.log("recycling", chainInstance.name);
+                devLog("recycling", chainInstance.name);
             }
             if (!chainInstance) {
                 if (recycle) console.warn("recyclable chain not found in ", targetStack.children, "step", i, "described as", chainDef);

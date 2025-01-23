@@ -15,7 +15,6 @@ export const useHistoryStore = defineStore("undo history store", () => {
         const json = JSON.stringify(project.getProjectDefintion());
         const zipped = compress(json, { outputEncoding: "Base64" });
         if (zipped !== lazyProjectDefinitionZipped.value) {
-            console.log("store to undo history");
             lazyProjectDefinitionZipped.value = zipped;
         }
     }, 1000);
@@ -32,7 +31,6 @@ export const useHistoryStore = defineStore("undo history store", () => {
     const undoStateWriter = watchPausable(lazyProjectDefinitionZipped, () => {
         // so that it stores fewer steps
         undoStateWriter.pause();
-        // console.log("store to undo history");
         //////
         undoApplicator.pause();
         projectStateZipped.value = lazyProjectDefinitionZipped.value;

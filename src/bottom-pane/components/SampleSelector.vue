@@ -20,7 +20,6 @@ const filterWord = ref('');
 
 const typeFilteredOptions = computed(() => {
     const libs = externalSamplesStore.listOfAvailableSampleKits;
-    console.log('for types', props.types, libs);
 
     // samples whose parent kits match the filter criteria
     let result = externalSamplesStore.listOfAvailableSampleKits.filter(kit => {
@@ -49,7 +48,6 @@ const filteredOptions = computed(() => {
 await props.audioModule.waitReady;
 
 const sampleSelectOption = (option: SampleDefinition) => {
-    console.log("sample selector would set", option);
     props.audioModule.sampleParam.value = option;
 }
 

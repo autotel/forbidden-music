@@ -10,9 +10,7 @@ export async function adsrWorkletManager(
     { name: 'release', defaultValue: 0, minValue: 0, maxValue: 60, automationRate: "k-rate" },
     { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "a-rate" },
   ];
-  console.log("loading ADSR worklet", workletUrl)
   await context.audioWorklet.addModule(workletUrl);
-  console.log("worklet ready");
   const create = () => {
     const worklet = new AudioWorkletNode(context, "adsr-generator");
 

@@ -16,6 +16,7 @@ import { useProjectStore } from './projectStore';
 import userCustomPerformanceSettingsKey from './userCustomPerformanceSettingsKey';
 import userSettingsStorageFactory from './userSettingsStorageFactory';
 import sleep from '@/functions/sleep';
+import { devLog } from '@/functions/isDev';
 
 
 const migrators = {
@@ -90,7 +91,7 @@ const reservedEntryNames = [
 
 export const normalizeLibraryItem = (obj: any): LibraryItem => {
     if (!obj.version) obj.version = "0.0.0";
-    console.log("normalizing", obj.version);
+    devLog("normalizing", obj.version);
     while (obj.version in migrators) {
         // @ts-ignore
         const migrator = migrators[obj.version];
@@ -256,7 +257,6 @@ export const useLibraryStore = defineStore("library store", () => {
     const importObject = (iobj: PossibleImportObjects) => {
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
-            console.log({ iobj });
             project.setFromProjectDefinition(iobj as LibraryItem);
         } else if (Array.isArray(iobj)) {
             // assuming iobj is an array of notes

@@ -89,7 +89,6 @@ const getWaveValueAt = (iMin: number, iMax: number) => {
 }
 const draw = () => {
     if (!context.value) return;
-    console.log('draw');
     const ctx = context.value;
     // ctx.clearRect(0, 0, ...canvasSize);
     ctx.fillRect(0, 0, ...canvasSize);

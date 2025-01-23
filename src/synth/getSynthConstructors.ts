@@ -159,7 +159,6 @@ export default function getSynthConstructors(
         addAvailableSynth(FilterBankSynth, "(xp) Filter Bank Synth", [], false, true);
     }
 
-    console.log("available channels", returnArray.map(s => s.name));
 
     return returnArray;
 }

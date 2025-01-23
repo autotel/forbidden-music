@@ -26,20 +26,17 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
     switch (keyAction) {
         case KeyActions.Cut: {
-            console.log("cut");
             const selected = selection.getNotes();
             notes.list = notes.list.filter(note => !note.selected);
             navigator.clipboard.writeText(notes.stringify(selected));
             break;
         }
         case KeyActions.Copy: {
-            console.log("copy");
             const selected = selection.getNotes();
             navigator.clipboard.writeText(notes.stringify(selected));
             break;
         }
         case KeyActions.Paste: {
-            console.log("paste");
             (async () => {
                 const text = await navigator.clipboard.readText();
                 const editNotes = notes.parse(text);
@@ -101,28 +98,24 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             break;
         }
         case KeyActions.Undo: {
-            console.log("undo");
             history.undo();
             e.preventDefault();
             e.stopPropagation();
             break;
         }
         case KeyActions.SelectAll: {
-            console.log("select all");
             selection.selectAll();
             e.preventDefault();
             e.stopPropagation();
             break;
         }
         case KeyActions.MoveDown: {
-            console.log("move down");
             selection.getNotes().forEach(eNote => eNote.octave -= 1);
             e.preventDefault();
             e.stopPropagation();
             break;
         }
         case KeyActions.MoveUp: {
-            console.log("move up");
             selection.getNotes().forEach(eNote => eNote.octave += 1);
             e.preventDefault();
             e.stopPropagation();
@@ -130,14 +123,12 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             break;
         }
         case KeyActions.MoveLeft: {
-            console.log("move left");
             selection.getNotes().forEach(eNote => transposeTime(eNote, -1));
             e.preventDefault();
             e.stopPropagation();
             break;
         }
         case KeyActions.MoveRight: {
-            console.log("move right");
             selection.getNotes().forEach(eNote => transposeTime(eNote, 1));
             e.preventDefault();
             e.stopPropagation();

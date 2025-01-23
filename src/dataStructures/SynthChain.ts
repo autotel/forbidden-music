@@ -48,7 +48,6 @@ export class SynthChain implements PatcheableTrait {
         this.input = audioContext.createGain();
     }
     handleChanged = () => {
-        console.log("children changed");
         this.rewire();
         this.chainChangedEventListeners.forEach(listener => listener());
     }

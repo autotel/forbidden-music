@@ -16,7 +16,6 @@ export const useAudioCaptureStore = defineStore('audio-capture', () => {
         if (alreadyResolved) return audioCapturePromise;
 
         navigator.mediaDevices.getUserMedia({ audio: true }).then((stream)=>{
-            console.log("audio capture stream", stream);
             let audioSource = audioContextStore.audioContext.createMediaStreamSource(stream);
             audioSource.connect(inputNode);
             resolveAudioCapturePromise(stream);

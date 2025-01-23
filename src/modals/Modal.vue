@@ -12,7 +12,6 @@ const props = defineProps<{
 const monoModeInteraction = ref(useMonoModeInteraction().getInteractionModal(props.name))
 
 const close = (e: Event) => {
-    console.log('close')
     monoModeInteraction.value.deactivate()
     if (props.onClose) props.onClose()
 }

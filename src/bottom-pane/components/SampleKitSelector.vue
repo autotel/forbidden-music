@@ -20,7 +20,6 @@ const filterWord = ref('');
 
 const filteredOptions = computed(() => {
     let result = externalSamplesStore.listOfAvailableSampleKits;
-    console.log('for types', props.types, result );
     
     if (props.types && props.types.length > 0) {
         result = result.filter(option => {

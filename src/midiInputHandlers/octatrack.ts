@@ -1,3 +1,4 @@
+import { devLog } from "@/functions/isDev";
 import { MidiInputHandlerFactory } from "./inputHandlerTypes";
 
 const midiLog = (...p: (string | number)[]) => {
@@ -7,7 +8,7 @@ const midiLog = (...p: (string | number)[]) => {
         }
         return p
     });
-    console.log(...transformedLog)
+    devLog(...transformedLog)
 }
 
 const midiTickIntervalToBpm = (tickInterval: number) => {

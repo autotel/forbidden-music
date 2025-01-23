@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import Tooltip from '@/components/Tooltip.vue';
 import { abbreviate } from '@/functions/abbreviate';
 import { NumberSynthParam } from '@/synth/types/SynthParam';
+import { devLog } from '@/functions/isDev';
 const props = defineProps<{
     value: number,
     max: number,
@@ -73,7 +74,7 @@ const mouseDown = async (e: MouseEvent) => {
         await canvas.value?.requestPointerLock();
         // better practice would be to make this on listener document.addEventListener("pointerlockchange", lockChangeAlert, false);
         if (document.pointerLockElement === canvas.value) {
-            console.log("The pointer lock status is now locked");
+            devLog("The pointer lock status is now locked");
             // window.addEventListener("mousemove", lockedPointerMoved, false);
         }
     }

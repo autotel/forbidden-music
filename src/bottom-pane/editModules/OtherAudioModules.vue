@@ -29,7 +29,6 @@ const rows = () => {
         ({ type }) => type === ParamType.option
     ).length * 2;
     const infoButton = props.audioModule.credits ? 1 : 0;
-    console.log('optionParamsCount', optionParamsCount);
     return Math.ceil((props.audioModule.params.length + optionParamsCount + infoButton) / 4);
 }
 const width = computed(() => {

@@ -131,9 +131,7 @@ watchEffect(() => {
         const testFn = scopedEval({
             FFT, noise, sineWindow, calculateDerivate, nOrZero, fn
         }, plotFn.value);
-        console.log("Function", testFn);
         colorWaves.value = testFn();
-        console.log("evaluates as ", testFn());
         graphLen.value = Object.keys(colorWaves.value).reduce((acc, key) => {
             return Math.max(acc, colorWaves.value[key].length);
         }, 0);
