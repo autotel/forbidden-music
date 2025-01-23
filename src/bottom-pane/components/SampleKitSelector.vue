@@ -52,8 +52,12 @@ const sampleSelectOption = (option: SampleKitDefinition) => {
         </div>
         <template v-if="expanded">
             <template v-for="option in filteredOptions">
-                <Button :active="option.name === audioModule.sampleKitParam.value.name"
-                    :onClick="() => sampleSelectOption(option)">{{ option.name }}</Button>
+                <Button 
+                    :active="option.name === audioModule.sampleKitParam.value.name"
+                    :onClick="() => sampleSelectOption(option)"
+                >
+                    {{ option.name }}
+                </Button>
             </template>
         </template>
         <template v-else>

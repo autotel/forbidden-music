@@ -1,8 +1,6 @@
 import { SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
 import { tauriObject } from "@/functions/isTauri";
 import { OtherSynthParam, ParamType, ProgressSynthParam } from "../types/SynthParam";
-import { libPathIsRemote } from "@/store/externalSampleLibrariesStore";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
 
 /**
  * Definition of a single loadable sample

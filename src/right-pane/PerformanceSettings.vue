@@ -47,7 +47,7 @@ const workletWorkbench = () => {
                 <GoFullscreenButton /> <label> [f11]</label>
             </div>
             <Tooltip
-                tooltip="Makes the cursor disappear when dragging on a parameter knob. It's a great usability feature, but can cause trouble in some cases">
+                tooltip="Makes the cursor disappear when dragging on a parameter knob. Turn this off if you are using touchscreen, scribe, or if you are having any issue with the knobs">
                 <div class="form-row">
                     <Toggle v-model="userSettings.useKnobCapture" />
                     <label>Use pointer capture</label>

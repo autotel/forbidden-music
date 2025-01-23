@@ -49,7 +49,7 @@ const width = 'auto';
             </Button>
         </div>
         <template v-if="showKitSelector">
-            <SampleSelector :audioModule="audioModule" /><!--:types="['', 'atonal']"  -->
+            <SampleSelector :audioModule="audioModule" :types="['impulse-response', 'atonal']"/>
         </template>
         <div class="group" style="width: 10em">
             <template v-for="param in audioModule.params">

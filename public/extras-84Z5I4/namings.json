@@ -1,27 +1,32 @@
 [{
-    "path":"AC30-brilliant-SNB",
+    "path":"/extras-84Z5I4/AC30-brilliant-SNB",
+    "loadFrom":"http",
     "type":"impulse-response",
     "kitName":"AC30 Brilliant",
     "pattern":"",
     "maps":""
 },{
-    "path":"AC30-normal-SNB",
+    "path":"/extras-84Z5I4/AC30-normal-SNB",
+    "loadFrom":"http",
     "type":"impulse-response",
     "kitName":"AC30 Normal",
     "pattern":"",
     "maps":""
 },{
-    "path":"new-mallets",
+    "path":"/extras-84Z5I4/new-mallets",
+    "loadFrom":"http",
     "type":"chromatic",
     "pattern":"([^_]+)_([^_]+)",
     "maps":"kitName cdeNote"
 },{
-    "path":"autotel-drums",
+    "path":"/extras-84Z5I4/autotel-drums",
+    "loadFrom":"http",
     "type":"atonal",
     "pattern":"([^_]+)_(\\D+)((\\d|\\.)+)",
     "maps":"kitName name frequency"
 },{
-    "path":"uni-iowa-piano",
+    "path":"/extras-84Z5I4/uni-iowa-piano",
+    "loadFrom":"http",
     "type":"chromatic",
     "kitName":"Uiowa Grand Piano",
     "pattern":"([^_]+)_([^_]+)",
