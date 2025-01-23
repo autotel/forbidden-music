@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import * as PIXI from 'pixi.js';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { Note, getFrequency } from '../../dataTypes/Note';
 import { Tool } from '../../dataTypes/Tool';
-import { Trace, TraceType } from '../../dataTypes/Trace';
+import { Trace } from '../../dataTypes/Trace';
 import { baseFrequency, octaveToFrequency } from '../../functions/toneConverters';
 import { useCustomSettingsStore } from '../../store/customSettingsStore';
 import { useGridsStore } from '../../store/gridsStore';
@@ -11,7 +10,7 @@ import { useMonoModeInteraction } from '../../store/monoModeInteraction';
 import { usePlaybackStore } from '../../store/playbackStore';
 import { useSnapStore } from '../../store/snapStore';
 import { useToolStore } from '../../store/toolStore';
-import { Drawable, TimelineDot, layerNoteColors, useViewStore } from '../../store/viewStore';
+import { Drawable, layerNoteColors, useViewStore } from '../../store/viewStore';
 
 const tool = useToolStore();
 const playback = usePlaybackStore();
@@ -135,7 +134,6 @@ const stop = () => {
     requestedAnimationFrame.value = 0;
 }
 
-
 let graphics = new PIXI.Graphics();
 
 onMounted(() => {
@@ -143,8 +141,10 @@ onMounted(() => {
     if (!canvasContainer.value) throw new Error("canvas container not found");
     mainInteraction.addEventListener(canvasContainer.value, "mousemove", mouseMoveListener);
     canvasContainer.value.appendChild(pixiApp.view as unknown as HTMLElement);
-    pixiApp.stage.addChild(graphics);
-
+    pixiApp.stage.addChild(
+        // Pixi went nuts??
+        graphics as unknown as PIXI.DisplayObject
+    );
 })
 
 onBeforeUnmount(() => {
@@ -173,7 +173,10 @@ const getText = (): PIXI.Text => {
     let retValue: PIXI.Text | null = null;
     if (!texts[textToUse]) {
         texts[textToUse] = new PIXI.Text();
-        pixiApp.stage.addChild(texts[textToUse]);
+        pixiApp.stage.addChild(
+            // Pixi went nuts??
+            texts[textToUse] as unknown as PIXI.DisplayObject
+        );
     }
     retValue = texts[textToUse];
     retValue.style.fontSize = userSettings.fontSize;

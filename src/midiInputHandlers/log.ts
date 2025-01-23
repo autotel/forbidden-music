@@ -1,3 +1,4 @@
+import { devLog } from "@/functions/isDev";
 import { MidiInputHandlerFactory } from "./inputHandlerTypes";
 
 const midiLog = (...p: (string | number)[]) => {

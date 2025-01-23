@@ -365,11 +365,8 @@ export class GranularSampler extends Synth implements SampleKitUser {
     sampleKitManager: ReturnType<typeof chromaticSampleKitManager>;
     sampleKitParam: OtherSynthParam;
     loadingProgressParam: ProgressSynthParam;
-    constructor(
-        audioContext: AudioContext,
-        initialSamplesDefinition: SampleKitDefinition,
-    ) {
-        const sampleKitManager = chromaticSampleKitManager(audioContext, initialSamplesDefinition)
+    constructor(audioContext: AudioContext) {
+        const sampleKitManager = chromaticSampleKitManager(audioContext)
 
         super(audioContext, () => granularSamplerVoice(
             audioContext,
