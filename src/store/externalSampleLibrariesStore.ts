@@ -219,6 +219,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
     // Sync with local storage
     (async () => {
         const savedLibs = await nsLocalStorage.getItem('externalSampleLibraries');
+        console.log("try load user external samples", savedLibs)
         if (savedLibs) {
             try {
                 const parsed = JSON.parse(savedLibs);
@@ -235,7 +236,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
     const resetValue = () => {
         listOfExternalLibs.value = [];
         alreadyAddedLibs.length = 0;
-        addLibraryUrl('/audio/samples.json');
+        addLibraryUrl('audio/samples.json');
     }
 
     if(listOfExternalLibs.value.length === 0) {
