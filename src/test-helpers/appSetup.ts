@@ -51,6 +51,7 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
     const loopsStore = useLoopsStore();
     const userSettingsStore = useCustomSettingsStore();
     
+    projectStore.loadEmptyProjectDefinition();
 
     let interactionTarget: HTMLElement | null;
 

@@ -35,7 +35,7 @@ const addSampleLibrary = async () => {
                         </div>
                     </div>
                     <div>
-                    <ButtonSub v-if="library.url !== '/audio/samples.json'" @click="()=>deleteSampleLibrary(library.url)" tooltip="Delete a sample library">
+                    <ButtonSub v-if="library.url !== 'audio/samples.json'" @click="()=>deleteSampleLibrary(library.url)" tooltip="Delete a sample library">
                         ×
                     </ButtonSub>
                     </div>
