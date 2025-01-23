@@ -84,6 +84,7 @@ export const appMount = promisify((ready: (err: any, r: TestRuntime) => void) =>
         app.mount(containerDiv);
         // empty the project preventing default demo project interfering with tests
         projectStore.loadEmptyProjectDefinition();
+        selectStore.clear();
 
         interactionTarget = containerDiv.querySelector("#viewport");
         if (!interactionTarget) throw new Error("interactionTarget is null");

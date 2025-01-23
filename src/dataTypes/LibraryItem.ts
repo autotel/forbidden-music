@@ -4,8 +4,8 @@ import { AutomationLane } from "./AutomationLane";
 import { AutomationPointDef } from "./AutomationPoint";
 import { LoopDef } from "./Loop";
 import { NoteDef } from "./Note";
-const version = "0.5.0";
-export const LIBRARY_VERSION = version;
+export const currentProjectVersion = "0.5.0";
+export const LIBRARY_VERSION = currentProjectVersion;
 
 export interface LibraryItem_0_1_0 {
     version: string;

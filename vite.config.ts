@@ -43,9 +43,10 @@ export default defineConfig(async () => ({
   },
   test: {
     browser: {
-      // provider: 'playwright','
+      provider: 'playwright',
       enabled: true,
-      name: 'firefox',
+      // name: 'firefox',
+      name: 'chromium',
     }
   },
 } as UserConfig));

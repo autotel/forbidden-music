@@ -24,7 +24,7 @@ describe('app loop editing', async () => {
         loopsStore,
         notesStore,
     } = testRuntime;
-
+    projectStore.loadEmptyProjectDefinition();
     const resetNotes = () => {
         notesStore.clear();
         notesStore.append(note({

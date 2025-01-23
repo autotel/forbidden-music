@@ -15,9 +15,10 @@ describe('app basic editing tools', async () => {
         viewStore,
         notesStore,
         selectStore,
+        projectStore,
     } = testRuntime;
 
-
+    projectStore.loadEmptyProjectDefinition();
     notesStore.append(note({
         time: 2,
         timeEnd: 4,
