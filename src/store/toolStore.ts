@@ -897,7 +897,7 @@ export const useToolStore = defineStore("tool", () => {
             if (mouse.disallowTimeChange) {
                 localDelta.x = 0;
             }
-
+                       
             if (mouse.currentAction === MouseDownActions.Erase) {
                 mouseErase(mouse, storesPill);
             } else if (current.value === Tool.Modulation) {
@@ -942,7 +942,7 @@ export const useToolStore = defineStore("tool", () => {
                         mouse, storesPill
                     );
                 } else {
-                    console.log(" ??? ", MouseDownActions[mouse.currentAction]);
+                    console.log(" No mouse drag action defined for ", MouseDownActions[mouse.currentAction]);
                 }
         } else {
             updateItemThatWouldBeCreated(mouse.pos);

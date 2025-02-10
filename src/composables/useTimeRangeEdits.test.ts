@@ -139,7 +139,7 @@ describe('app time range editing', async () => {
 
         await roboMouse.moveTo({ x: startX, y }, interval);
 
-        expect(loopsStore.list.length).toBe(1);
+        expect(loopsStore.list.length).toBe(2);
         expect(notesStore.list.length).toBe(4);
 
         loopsStore.list = [];

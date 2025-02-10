@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, test } from 'vitest';
 import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import '@/style.css';
@@ -11,7 +11,6 @@ let generalInterval = 500;
 describe('app modulation mode', async () => {
 
     const testRuntime = await appMount();
-
 
 
     it('enters modulation tool', async () => {
