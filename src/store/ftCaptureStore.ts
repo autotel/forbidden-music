@@ -135,6 +135,9 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
             }
         }
     }
+    const clearCapturedTones = () => {
+        capturedTones.value.clear();
+    }
 
     const analyzedCallbacks: AnalyzedCallback[] = [];
     const addAnalyzedCallback = (cb: AnalyzedCallback) => {
@@ -253,7 +256,7 @@ export const useFtCaptureStore = defineStore('ftCapture', () => {
         analyze,
         topPeaksTracker, capturedTones,
         activate, deactivate,
-        deleteCapturedTonesAtTime, flushCapturedTones,
+        deleteCapturedTonesAtTime, flushCapturedTones, clearCapturedTones,
 
         addAnalyzedCallback, removeAnalyzedCallback,
         recordToNotes,

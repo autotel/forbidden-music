@@ -36,6 +36,10 @@ const toggleFtRec = () => {
                 :active="ftCapture.recordToNotes">
                 Record to notes
             </Button>
+            <Button :onClick="() => ftCapture.clearCapturedTones()"
+                :active="ftCapture.recordToNotes">
+                Clear captured tones
+            </Button>
             <div class="audio-filter-params">
                 <h4>Audio Filter Parameters</h4>
                 <template v-for="param in ftCapture.audioParams">
