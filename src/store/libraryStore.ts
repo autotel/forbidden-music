@@ -25,7 +25,6 @@ const migrators = {
         obj.notes = obj.notes.map((note: any) => {
             note.time = note.start;
             note.timeEnd = note.end;
-            console.log(note);
             return note;
         });
         if (!obj.bpm) obj.bpm = 120;
@@ -73,7 +72,6 @@ const migrators = {
             ...obj,
             channels: newChans,
         } as LibraryItem_0_5_0;
-        console.log(obj.channels, newChans);
         newObj.version = LIBRARY_VERSION;
         return newObj;
     }
@@ -85,6 +83,7 @@ const userSettingsStorage = userSettingsStorageFactory();
 
 const reservedEntryNames = [
     "forbidden-music",
+    "externalSampleLibraries",
     userShownDisclaimerLocalStorageKey,
     userCustomPerformanceSettingsKey,
 ];
@@ -160,7 +159,7 @@ export const useLibraryStore = defineStore("library store", () => {
         udpateItemsList();
     }
 
-    const saveCurrent = () => {
+    const saveCurrent = (errorThrow: Boolean = false) => {
         try {
             saveToLocalStorage(
                 project.name,
@@ -168,6 +167,9 @@ export const useLibraryStore = defineStore("library store", () => {
             );
             inSyncWithStorage.value = true;
         } catch (e) {
+            if(errorThrow) {
+                throw e;
+            }
             console.error("could not save", e);
             errorMessage.value = String(e);
         }
@@ -198,10 +200,11 @@ export const useLibraryStore = defineStore("library store", () => {
         filenamesList.value = await listLocalStorageFiles();
     }
 
-    const loadFromLibraryItem = async (filename: string) => {
+    const loadFromLibraryItem = async (filename: string, throwError = false) => {
         clear();
         console.log("opening", filename);
         const item = await retrieveFromLocalStorage(filename);
+        if(!item && throwError) throw new Error(`localStorage item named ${filename} is ${item}`);
         importObject(item);
         // setTimeout(() => {
         // },1);
@@ -255,6 +258,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const importObject = (iobj: PossibleImportObjects) => {
+        console.log("importbject");
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
             project.setFromProjectDefinition(iobj as LibraryItem);

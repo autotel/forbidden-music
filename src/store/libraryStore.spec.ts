@@ -45,12 +45,20 @@ describe('Library store', () => {
             ...demoProject,
             name: "test"
         });
-        libraryStore.saveCurrent();
+        
+        // Failures below here mean failure in other places than lib saving/loading the project
+        expect(notesStore.list.length).toEqual(demoProject.notes.length);
+            
+        libraryStore.saveCurrent(true);
         projectStore.loadEmptyProjectDefinition();
+
         expect(notesStore.list.length).toBe(0);
         expect(loopsStore.list.length).toBe(0);
+        
         expect([...projectStore.lanes.lanes].length).toBe(0);
-        libraryStore.loadFromLibraryItem("test");
+
+        // Failures below here indicate failures within the intended test scope
+        libraryStore.loadFromLibraryItem("test", true);
         expect(notesStore.list.length).toEqual(demoProject.notes.length);
         expect(loopsStore.list.length).toEqual(demoProject.loops.length);
         expect([...projectStore.lanes.lanes].length).toEqual(demoProject.lanes.length);

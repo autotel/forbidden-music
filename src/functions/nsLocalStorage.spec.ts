@@ -46,7 +46,7 @@ describe('nslocalstorage', () => {
         const nsKey = storage.nameSpaceKey(key);
         await storage.setItem('test', newItem);
         await storage.removeItem('test');
-        expect(await storage.getItem('test')).toBe(undefined);
+        expect(await storage.getItem('test')).toBe(null);
         expect(await targetStorage.getItem(nsKey)).toBe(null);
     });
 
