@@ -57,6 +57,7 @@ export const useProjectStore = defineStore("current project", () => {
             loops: loops.serialize(),
             lanes: lanes.getAutomationLaneDefs(),
             customOctavesTable: snaps.customOctavesTable,
+            customEDO: snaps.customEDO,
             snap_simplify: snaps.simplify,
             created: created.value,
             edited: edited.value,
@@ -104,6 +105,7 @@ export const useProjectStore = defineStore("current project", () => {
 
 
         if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
+        if (pDef.customEDO) snaps.customEDO = pDef.customEDO;
         if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
 
         (async () => {

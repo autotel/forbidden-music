@@ -94,13 +94,9 @@ onMounted(() => {
     octavesTextControl.pause();
     frequenciesTextControl.pause();
 
-    if (snap.customOctavesTable.length > 40) {
-        octavesTableText.value = snap.customOctavesTable.join(",\n");
-        frequenciesTableText.value = snap.customOctavesTable.map(octaveToFrequency).join(",\n");
-    } else {
-        octavesTableText.value = snap.customOctavesTable.join(", ");
-        frequenciesTableText.value = snap.customOctavesTable.map(octaveToFrequency).join(", ");
-    }
+    octavesTableText.value = snap.customOctavesTable.join(",\n");
+    frequenciesTableText.value = snap.customOctavesTable.map(octaveToFrequency).join(",\n");
+    
     
     octavesTextControl.resume();
     frequenciesTextControl.resume();

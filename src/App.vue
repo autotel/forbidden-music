@@ -36,6 +36,7 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
+import { octaveToFrequency } from './functions/toneConverters';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -419,6 +420,15 @@ watch([sidePaneWidth, bottomPaneStateStore], () => {
                     }}
                 </li>
             </ul>
+        </div>
+    </Modal>
+    <Modal name="custom EDO selector">
+        <div class="form-row">
+            <label>Divide an octave in &nbsp;</label>
+            <input type="number" v-model="snap.customEDO" step="1" min="0" />
+        </div>
+        <div class="form-row">
+            <small>Fundamental frequency is {{ octaveToFrequency(0) }}. It cannot be changed for now, sorry </small>
         </div>
     </Modal>
     <UserDisclaimer />

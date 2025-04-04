@@ -115,6 +115,7 @@ export interface LibraryItem_0_5_0 {
     masterEffects: SynthChainDefinition;
 
     customOctavesTable?: number[];
+    customEDO?: number;
     snap_simplify?: number;
 
     notes: NoteDef[];

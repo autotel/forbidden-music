@@ -18,6 +18,11 @@ const frequencyTableEditButtonHandler = (e: MouseEvent) => {
   monoModeInteraction.activate("octave table editor")
   snap.values.customFrequencyTable.active = true
 }
+const customEdoEditButtonHandler = (e: MouseEvent) => {
+  e.stopImmediatePropagation()
+  monoModeInteraction.activate("custom EDO selector")
+  snap.values.equalCustom.active = true
+}
 const relationFractionEditButtonHandler = (e: MouseEvent) => {
   e.stopImmediatePropagation()
   monoModeInteraction.activate("relation fraction editor")
@@ -58,6 +63,11 @@ const onlyWithyNotesInDifferentLayerToggle = (e: MouseEvent) => {
       {{ isnap.icon }}
       <template v-if="snapName === 'customFrequencyTable'">
         <ButtonSub :onClick="frequencyTableEditButtonHandler" tooltip="Edit custom frequencies table">
+          <Pen />
+        </ButtonSub>
+      </template>
+      <template v-if="snapName === 'equalCustom'">
+        <ButtonSub :onClick="customEdoEditButtonHandler" tooltip="Edit custom EDO">
           <Pen />
         </ButtonSub>
       </template>

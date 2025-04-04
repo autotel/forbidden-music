@@ -190,6 +190,12 @@ const snaps = {
         type: SnapType.Tone,
         active: false,
     },
+    equalCustom: {
+        description: "Custom Equal Temperament",
+        icon: "N EDO",
+        type: SnapType.Tone,
+        active: false,
+    },
     hzFundamentalMultiple: {
         description: "frequencies which are multiple of the fundamental frequency (" + fundamental + ")",
         icon: "FF\u00d7",
@@ -303,6 +309,8 @@ export const useSnapStore = defineStore("snap", () => {
     const currentlyInvolvedSnaps = ref([] as SnapDefinition[]);
 
     const customOctavesTable = ref(colundi as number[]);
+    const customEDO = ref(36);
+
     const onlyWithMutedNotes = ref(false);
     const onlyWithSimultaneousNotes = ref(false);
     const onlyWithNotesInView = ref(true);
@@ -459,6 +467,10 @@ export const useSnapStore = defineStore("snap", () => {
         if (snapValues.equal48.active === true) {
             EDOSsnap(48, targetOctave, toneSnap, snapValues.equal48);
         }
+        if (snapValues.equalCustom.active === true) {
+            EDOSsnap(customEDO.value, targetOctave, toneSnap, snapValues.equalCustom);
+        }
+
 
         /** 
          * target / other = other * 1 / target
@@ -916,6 +928,7 @@ export const useSnapStore = defineStore("snap", () => {
         toneSnapExplanation,
         currentlyInvolvedSnaps,
         customOctavesTable,
+        customEDO,
         onlyWithMutedNotes,
         onlyWithSimultaneousNotes,
         onlyWithNotesInView,
