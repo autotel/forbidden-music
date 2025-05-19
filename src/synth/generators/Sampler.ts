@@ -10,7 +10,9 @@ const samplerVoice = (
     let velocityToStartPoint: number = 0;
     let bufferSource: AudioBufferSourceNode | undefined;
     const output = audioContext.createGain();
+    const panner = audioContext.createStereoPanner();
     output.gain.value = 0;
+    panner.connect(output);
     let timeAccumulator = 0;
     let currentAdsr = [0.01, 10, 0, 0.2];
 
@@ -38,7 +40,7 @@ const samplerVoice = (
 
         bufferSource = audioContext.createBufferSource();
         bufferSource.buffer = sampleSource.sampleBuffer;
-        bufferSource.connect(output);
+        bufferSource.connect(panner);
     }
 
 
@@ -72,10 +74,10 @@ const samplerVoice = (
             if (noteStartedTimeAgo > 0) {
                 skipSample = noteStartedTimeAgo;
             }
-            
+
             const sampleSource = parentSynth.sampleKitManager.selectSampleSourceFromKit(frequency, velocity);
-            
-            if(!sampleSource) {
+
+            if (!sampleSource) {
                 console.error("no sample source available");
                 return;
             }
@@ -84,8 +86,8 @@ const samplerVoice = (
             resetBufferSource(sampleSource);
 
             if (!bufferSource) throw new Error("bufferSource not created");
-            
-            if(!parentSynth.atonalParam.value) {
+
+            if (!parentSynth.atonalParam.value) {
                 bufferSource.playbackRate.value = frequency / sampleSource.frequency;
             }
 
@@ -104,6 +106,7 @@ const samplerVoice = (
                 skipSample += velocityToStartPoint * (1 - velocity);
             }
 
+            panner.pan.value = frequency  * parentSynth.stereoPanParam.value / 880 - (parentSynth.panOffsetParam.value);
             bufferSource.start(absoluteStartTime, skipSample);
             bufferSource.addEventListener("ended", releaseVoice);
             return this;
@@ -140,6 +143,20 @@ export class Sampler extends Synth implements SampleKitUser {
         tooltip: "When enabled, the source samples are no longer pitch-shifted; useful if the sample kit is atonal",
         type: ParamType.boolean,
         value: false,
+        exportable: true,
+    } as SynthParam
+    stereoPanParam = {
+        displayName: "Tone Panning",
+        type: ParamType.number,
+        min: -2, max: 2,
+        value: 0,
+        exportable: true,
+    } as SynthParam
+    panOffsetParam = {
+        displayName: "Panning Offset",
+        type: ParamType.number,
+        min: -2, max: 2,
+        value: 0,
         exportable: true,
     } as SynthParam
 
@@ -214,7 +231,11 @@ export class Sampler extends Synth implements SampleKitUser {
             exportable: true,
         } as SynthParam);
 
-        sampleKitManager.addSampleKitChangedListener( (sampleKitDef: SampleKitDefinition) => {
+        this.params.push(this.stereoPanParam);
+        this.params.push(this.panOffsetParam);
+
+
+        sampleKitManager.addSampleKitChangedListener((sampleKitDef: SampleKitDefinition) => {
             this.credits = sampleKitDef.readme || '';
             this.instances.forEach((instance) => instance.scheduleEnd(audioContext.currentTime));
             this.instances.length = 0;
