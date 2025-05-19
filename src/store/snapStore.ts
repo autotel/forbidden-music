@@ -281,7 +281,7 @@ const snaps = {
         active: false,
     },
     sameStart: {
-        description: "Start positions equal to the start positions of other notes.",
+        description: "Start positions equal to the start or end positions of other notes.",
         icon: "=",
         type: SnapType.Time,
         active: false,
@@ -783,6 +783,13 @@ export const useSnapStore = defineStore("snap", () => {
                         relatedNote: otherNote,
                         snapDefinition: snapValues.sameStart,
                     });
+                    if('timeEnd' in otherNote) {
+                        timeSnap.addSnappedValue(otherNote.timeEnd, {
+                            text: "Same start",
+                            relatedNote: otherNote,
+                            snapDefinition: snapValues.sameStart,
+                        });
+                    }
                 }
             }
         }

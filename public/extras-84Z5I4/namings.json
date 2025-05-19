@@ -31,4 +31,18 @@
     "kitName":"Uiowa Grand Piano",
     "pattern":"([^_]+)_([^_]+)",
     "maps":"velocity frequency"
+},{
+    "path":"/extras-84Z5I4/tongue-drum/IR",
+    "loadFrom":"http",
+    "type":"impulse-response",
+    "pattern":"IR-([^.]+)",
+    "maps":"name",
+    "kitName":"Tongue Drum IR"
+},{
+    "path":"/extras-84Z5I4/tongue-drum/tones",
+    "loadFrom":"http",
+    "type":"chromatic",
+    "kitName":"Tongue Drum",
+    "pattern":"([^_]+)_([^_]+)_([^_.]+\\.[^_.]+)",
+    "maps":"_ name frequency"
 }]

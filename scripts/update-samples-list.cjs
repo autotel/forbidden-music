@@ -6,16 +6,16 @@ const generateSamplesList = require('./functions/generateManifest.cjs');
 const path = require('path');
 const scriptDir = "./"
 
-const samplesDirRelative = 'audio';
-const samplesDir = path.join(scriptDir, "/public", samplesDirRelative);
+const samplesDirRelative = 'extras-84Z5I4';
+const samplesDir = path.join(scriptDir, "/public");
 
 const getKits = async (samplesDir) => {
-    const namingsPath = path.join(samplesDir, '/namings.json');
+    const namingsPath = path.join(samplesDir, samplesDirRelative, '/namings.json');
     const resNamingPath = path.resolve(scriptDir, namingsPath);
     const namings = JSON.parse(
         readFileSync(resNamingPath, 'utf8')
     );
-    return generateSamplesList(namings, samplesDir , 'audio', 'factory samples', 'http');
+    return generateSamplesList(namings, samplesDir, samplesDirRelative, 'factory samples', 'http');
 }
 
 function censor(key, value) {
@@ -30,17 +30,17 @@ const stringifier = (samplesList) => {
     return JSON.stringify(samplesList, censor, 2);
 }
 const tsStringifier = (samplesList) => {
-    return "export default " + stringifier(samplesList).replace(/\"Infinity\"/g,"Infinity");
+    return "export default " + stringifier(samplesList).replace(/\"Infinity\"/g, "Infinity");
 }
 
 getKits(samplesDir).then((theKits) => {
 
     writeFile(
-        path.join(scriptDir, './public/audio', 'samples.json'),
+        path.join(samplesDir, samplesDirRelative, 'samples.json'),
         stringifier({
-            url: '/audio',
+            url: '/' + samplesDirRelative,
             name: 'factory',
-            content:theKits
+            content: theKits
         })
     );
 });

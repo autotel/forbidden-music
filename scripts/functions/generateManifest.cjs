@@ -106,7 +106,7 @@ const generateSamplesList = (dirsList, localPublicPath, baseUrl, kitName, loadFr
                     }
                 }
 
-                parsed.path = baseUrl + '/' + path.join(dirItem.path, fileName);
+                parsed.path = /*baseUrl + '/' +*/ path.join(dirItem.path, fileName);
 
                 if (!parsed.name) parsed.name = fileName;
 
