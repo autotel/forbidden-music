@@ -116,7 +116,7 @@ export default function getSynthConstructors(
     // TODO: homologate choice of impulse response w methods on chromatic sampler
     addAvailableSynth(
         ConvolutionReverbEffect,
-        "Convolver", [{
+        "Convolver/Reverb", [{
             "name": "AC30 Brilliant",
             "fromLibrary": "AC30-brilliant-SNB",
             "pathBase": "./",

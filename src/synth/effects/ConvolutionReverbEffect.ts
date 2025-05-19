@@ -44,7 +44,6 @@ export class ConvolutionReverbEffect extends AudioModule {
     private loadingProgress = 0;
 
     input: AudioNode;
-    name = "";
     output: AudioNode;
     params: SynthParam[] = [];
     credits: string = "-";
@@ -115,45 +114,6 @@ export class ConvolutionReverbEffect extends AudioModule {
                 currentConvolver.output.connect(this.output);
             }
         });
-        // const changeImplulseResponseUrl = async (path: string) => {
-        //     if (!this.alreadyBuiltReverbs[path]) {
-        //         this.alreadyBuiltReverbs[path] = await createConvolutionReverb(path, this.audioContext);
-        //     }
-        //     send.disconnect();
-        //     currentConvolver = this.alreadyBuiltReverbs[path];
-        //     send.connect(currentConvolver.input);
-        //     if (dcOffsetRemoverParam.value) {
-        //         currentConvolver.output.connect(dcOffsetRemover);
-        //     } else {
-        //         currentConvolver.output.connect(this.output);
-        //     }
-        // }
-        // const sampleDefinitions = samplesKit.samples;
-
-        // const changeImpulseResponse = async (sampleDefinition: ImpulseResponseSampleDefinition) => {
-        //     await changeImplulseResponseUrl(sampleDefinition.path);
-        //     this.credits = samplesKit.readme || '';
-        // }
-
-        // const sampleChoiceDefinition: OptionSynthParam = {
-        //     type: ParamType.option,
-        //     displayName: 'Sample',
-        //     _v: 0,
-        //     options: sampleDefinitions.map((sampleDefinition) => {
-        //         return {
-        //             displayName: sampleDefinition.name,
-        //             value: sampleDefinition.path,
-        //         }
-        //     }),
-        //     set value(value: number) {
-        //         this._v = value;
-        //         changeImpulseResponse(sampleDefinitions[this._v]);
-        //     },
-        //     get value() {
-        //         return this._v;
-        //     },
-        //     exportable: true,
-        // }
 
         const sendParam = automatableNumberSynthParam(
             send.gain, 'Send level', 0, 1
@@ -163,7 +123,7 @@ export class ConvolutionReverbEffect extends AudioModule {
         );
 
         this.params = [
-            // sampleChoiceDefinition,
+            this.sampleManager.sampleParam,
             sendParam,
             dryParam,
             dcOffsetRemoverParam,
