@@ -35,7 +35,7 @@ describe('Library store', () => {
         expect(localStorage.length).toBeGreaterThan(1);
         libraryStore.saveCurrent();
     });
-    it('can save, and then load the project', () => {
+    it('can save, and then load the project', async () => {
         const projectStore = useProjectStore();
         const notesStore = useNotesStore();
         const libraryStore = useLibraryStore();
@@ -52,14 +52,14 @@ describe('Library store', () => {
         libraryStore.saveCurrent(true);
         projectStore.loadEmptyProjectDefinition();
 
-        expect(notesStore.list.length).toBe(0);
         expect(loopsStore.list.length).toBe(0);
+        expect(notesStore.list.length).toBe(0);
         
         expect([...projectStore.lanes.lanes].length).toBe(0);
 
         // Failures below here indicate failures within the intended test scope
-        libraryStore.loadFromLibraryItem("test", true);
-        expect(notesStore.list.length).toEqual(demoProject.notes.length);
+        await libraryStore.loadFromLibraryItem("test", true);
+        expect(projectStore.notes.list.length).toEqual(demoProject.notes.length);
         expect(loopsStore.list.length).toEqual(demoProject.loops.length);
         expect([...projectStore.lanes.lanes].length).toEqual(demoProject.lanes.length);
     });
