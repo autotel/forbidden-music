@@ -5,7 +5,7 @@ const slots = useSlots()
 const communications = useCommunicationStore();
 
 const props = defineProps<{
-    onClick: ((payload: MouseEvent) => void)
+    onClick?: ((payload: MouseEvent) => void)
     active?: boolean | undefined
     danger?: boolean | undefined
     tooltip?: string
@@ -45,6 +45,7 @@ button {
     display: inline-block;
     margin-top: -0.1em;
     margin-bottom: -0.1em;
+    overflow: hidden;
 }
 
 button:hover {

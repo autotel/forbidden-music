@@ -29,15 +29,22 @@ import { SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
 
 type SynthMinimalConstructor = new (audioContext: AudioContext, ...p: any) => (AudioModule);
 
+export enum AudioModuleType {
+    Sound = 'Sound',
+    Effect = 'Effect',
+    Scope = 'Scope',
+}
+
+
 export class SynthConstructorWrapper {
     constructor(
         public audioContext: AudioContext,
         public constructorFunction: SynthMinimalConstructor,
         public extraParams: unknown[] = [],
         public name: string,
+        public type: AudioModuleType,
         public instantFetch?: boolean,
-    ) {
-    }
+    ) { }
     create = (withParams?: SynthParamStored[]): AudioModule => {
         const instance = new this.constructorFunction(this.audioContext, ...this.extraParams);
         instance.name = this.name;
@@ -85,15 +92,10 @@ export default function getSynthConstructors(
 ): SynthConstructorWrapper[] {
     let returnArray = [] as SynthConstructorWrapper[];
 
-    // Sorry for the contortionist code.
-    // I need a constructor that can be instanced at runtime
-    // and know the name beforehand.
-    // Before making better code I would need to make the sampler's sample 
-    // chooseable after instantiation.
-
     const addAvailableSynth = <T extends any[]>(
         constr: SynthMinimalConstructor,
         name: string,
+        type: AudioModuleType,
         extraParams?: T,
         isExclusive?: boolean,
         isOnlyLocal?: boolean,
@@ -105,18 +107,23 @@ export default function getSynthConstructors(
             new SynthConstructorWrapper(
                 audioContext, constr, epp,
                 name || camelCaseToUName(constr.name),
+                type,
                 exclusivesMode
             )
         );
     }
 
-    addAvailableSynth(PlaceholderSynth, 'PlaceholderSynth');
-    addAvailableSynth(Sampler, "Chromatic Sampler");
-    addAvailableSynth(GranularSampler, "Granular Sampler");
+    addAvailableSynth(SineSynth, 'SineSynth', AudioModuleType.Sound);
+    addAvailableSynth(SineCluster, 'SineCluster', AudioModuleType.Sound);
+    // addAvailableSynth(PlaceholderSynth, 'PlaceholderSynth', AudioModuleType.Sound);
+    addAvailableSynth(Sampler, "Chromatic Sampler", AudioModuleType.Sound);
+    addAvailableSynth(GranularSampler, "Granular Sampler", AudioModuleType.Sound);
     // TODO: homologate choice of impulse response w methods on chromatic sampler
     addAvailableSynth(
         ConvolutionReverbEffect,
-        "Convolver/Reverb", [{
+        "Convolver/Reverb",
+        AudioModuleType.Effect,
+        [{
             "name": "AC30 Brilliant",
             "fromLibrary": "AC30-brilliant-SNB",
             "pathBase": "./",
@@ -129,34 +136,32 @@ export default function getSynthConstructors(
                     "name": "AC30 brilliant bx44 neve close_dc.wav"
                 },
             ]
-            }], true, false
+        }], true, false
     );
 
-    addAvailableSynth(KickSynth, 'KickSynth');
-    addAvailableSynth(KarplusSynth, 'KarplusSynth');
-    addAvailableSynth(SineCluster, 'SineCluster');
-    addAvailableSynth(SineSynth, 'SineSynth');
-    addAvailableSynth(ClassicSynth, 'ClassicSynth');
-    addAvailableSynth(FourierSynth, "Fourier Synth", [], false, false);
+    addAvailableSynth(KickSynth, 'KickSynth', AudioModuleType.Sound);
+    addAvailableSynth(KarplusSynth, 'KarplusSynth', AudioModuleType.Sound);
+    addAvailableSynth(ClassicSynth, 'ClassicSynth', AudioModuleType.Sound);
+    addAvailableSynth(FourierSynth, "Fourier Synth", AudioModuleType.Sound, [], false, false);
 
-    addAvailableSynth(OscilloScope, 'Oscilloscope');
+    addAvailableSynth(OscilloScope, 'Oscilloscope', AudioModuleType.Scope);
 
-    addAvailableSynth(DelayEffect, 'DelayEffect');
-    addAvailableSynth(RingModEffect, 'RingModEffect');
-    addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect');
-    addAvailableSynth(FilterEffect, 'FilterEffect');
-    addAvailableSynth(GainEffect, 'GainEffect');
-    addAvailableSynth(WaveFolderEffect, 'WaveFolderEffect');
+    addAvailableSynth(DelayEffect, 'DelayEffect',AudioModuleType.Effect);
+    addAvailableSynth(RingModEffect, 'RingModEffect',AudioModuleType.Effect);
+    addAvailableSynth(AutoMaximizerEffect, 'AutoMaximizerEffect',AudioModuleType.Effect);
+    addAvailableSynth(FilterEffect, 'FilterEffect',AudioModuleType.Effect);
+    addAvailableSynth(GainEffect, 'GainEffect',AudioModuleType.Effect);
+    addAvailableSynth(WaveFolderEffect, 'WaveFolderEffect',AudioModuleType.Effect);
 
     if (isDev()) {
         // bc. unfinished
-        addAvailableSynth(FmSynth, "(xp) Fm Synth", [], false, true);
-        addAvailableSynth(ThingyScoreFx, "(xp) Thingy Score Effect");
-        addAvailableSynth(ExternalMidiSynth, "(xp) External  [],Midi Synth");
+        addAvailableSynth(FmSynth, "(xp) Fm Synth", AudioModuleType.Sound, [], false, true);
+        addAvailableSynth(ThingyScoreFx, "(xp) Thingy Score Effect", AudioModuleType.Sound);
+        addAvailableSynth(ExternalMidiSynth, "(xp) External  [],Midi Synth", AudioModuleType.Sound);
 
-        addAvailableSynth(PerxThingy, 'PerxThingy');
-        addAvailableSynth(PatcheableSynth, "(xp) Dyna synth", [], false, true);
-        addAvailableSynth(FilterBankSynth, "(xp) Filter Bank Synth", [], false, true);
+        addAvailableSynth(PerxThingy, 'PerxThingy', AudioModuleType.Sound);
+        addAvailableSynth(PatcheableSynth, "(xp) Dyna synth", AudioModuleType.Sound, [], false, true);
+        addAvailableSynth(FilterBankSynth, "(xp) Filter Bank Synth", AudioModuleType.Sound, [], false, true);
     }
 
 
