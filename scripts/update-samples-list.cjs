@@ -6,6 +6,7 @@ const generateSamplesList = require('./functions/generateManifest.cjs');
 const path = require('path');
 const scriptDir = "./"
 
+const samplesListFilename = 'samplesLibrary.json';
 const samplesDirRelative = 'extras-84Z5I4';
 const samplesDir = path.join(scriptDir, "/public");
 
@@ -36,10 +37,10 @@ const tsStringifier = (samplesList) => {
 getKits(samplesDir).then((theKits) => {
 
     writeFile(
-        path.join(samplesDir, samplesDirRelative, 'samples.json'),
+        path.join(samplesDir, samplesDirRelative, samplesListFilename),
         stringifier({
             url: '/' + samplesDirRelative,
-            name: 'factory',
+            name: samplesDirRelative,
             content: theKits
         })
     );

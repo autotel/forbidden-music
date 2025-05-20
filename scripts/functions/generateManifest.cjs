@@ -107,7 +107,6 @@ const generateSamplesList = (dirsList, localPublicPath, baseUrl, kitName, loadFr
                 }
 
                 parsed.path = /*baseUrl + '/' +*/ path.join(dirItem.path, fileName);
-
                 if (!parsed.name) parsed.name = fileName;
 
                 const library = getKit(parsed.kitName, dirItem.path, sampleKitType);
