@@ -149,6 +149,9 @@ export default defineStore('externalSampleLibrariesStore', () => {
 
     const alreadyAddedLibs = [] as Url[];
 
+    const saveLibsToStorage = () =>
+        nsLocalStorage.setItem('externalSampleLibraries', JSON.stringify(serializeValue()));
+
     const addLibraryUrl = async (definitionUrl: string) => {
         let error = '';
         if (alreadyAddedLibs.includes(definitionUrl)) {
@@ -166,7 +169,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
                 error,
             }];
 
-
+            saveLibsToStorage();
         } catch (e) {
             listOfExternalLibs.value = [...listOfExternalLibs.value, {
                 url: definitionUrl,
@@ -181,9 +184,8 @@ export default defineStore('externalSampleLibrariesStore', () => {
     const removeLibraryUrl = (definitionUrl: string) => {
         listOfExternalLibs.value = listOfExternalLibs.value.filter(({ url }) => url !== definitionUrl);
         alreadyAddedLibs.splice(alreadyAddedLibs.indexOf(definitionUrl), 1);
+        saveLibsToStorage();
     }
-    // addLibraryUrl('http://127.0.0.1:3010/samplesLibrary.json');
-    // addLibraryUrl('http://autotel-forbidden-music.atwebpages.com/samples.json');
 
     (async () => {
         const { kits, libraries } = await listLocalSampleKits();
@@ -229,6 +231,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
             }
         }
         watch(listOfExternalLibs, (value, oldValue) => {
+            console.log("external libs watcher triggered");
             nsLocalStorage.setItem('externalSampleLibraries', JSON.stringify(serializeValue()));
         });
     })();
@@ -239,7 +242,7 @@ export default defineStore('externalSampleLibrariesStore', () => {
         addLibraryUrl('audio/samples.json');
     }
 
-    if(listOfExternalLibs.value.length === 0) {
+    if (listOfExternalLibs.value.length === 0) {
         resetValue();
     }
 
