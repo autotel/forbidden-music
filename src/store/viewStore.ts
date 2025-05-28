@@ -459,6 +459,7 @@ export const useViewStore = defineStore("view", () => {
 
     // Automation vals
     const valueRange = 1.1;
+
     const valueToPx = (value: number): number => {
         // if(valueRange === 0) return 0;
         return (value * viewHeightPx.value) / valueRange;
@@ -475,6 +476,7 @@ export const useViewStore = defineStore("view", () => {
     };
 
     let ratio = 1;
+
     const applyRatioToTime = () => {
         if (viewWidthPx.value === 0) return 0;
         const viewPxRatio = viewWidthPx.value / viewHeightPx.value;
@@ -489,10 +491,49 @@ export const useViewStore = defineStore("view", () => {
         applyRatioToTime();
     };
 
-
     const setOctaveToTimeRatio = (newRatio: number) => {
         ratio = newRatio;
         applyRatioToTime();
+    }
+
+
+    const zoomAround = (
+        wouldViewHeightOctaves: number,
+        zoomCenterX: number,
+        zoomCenterY: number
+    ) => {
+
+        const OTDatumBefore = {
+            time: pxToTimeWithOffset(zoomCenterX),
+            octave: -pxToOctaveWithOffset(zoomCenterY),
+        };
+
+        if (
+            wouldViewHeightOctaves < 200 &&
+            wouldViewHeightOctaves > 0.1
+        ) {
+            viewHeightOctaves.value = wouldViewHeightOctaves;
+        }
+
+        applyRatioToTime();
+
+        // offset zoom center back 
+        const OTDAtumAfter = {
+            time: pxToTimeWithOffset(zoomCenterX),
+            octave: -pxToOctaveWithOffset(zoomCenterY),
+        };
+
+        const OTDatumDelta = {
+            time: OTDatumBefore.time - OTDAtumAfter.time,
+            octave: OTDatumBefore.octave - OTDAtumAfter.octave,
+        };
+
+        timeOffset.value += OTDatumDelta.time;
+        octaveOffset.value += OTDatumDelta.octave;
+
+        if (timeOffset.value < 0) {
+            timeOffset.value = 0;
+        }
     }
 
     watchEffect(() => {
@@ -568,6 +609,7 @@ export const useViewStore = defineStore("view", () => {
 
         applyRatioToTime,
         setOctaveToTimeRatio,
+        zoomAround,
     };
 });
 

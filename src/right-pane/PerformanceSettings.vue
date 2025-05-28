@@ -52,6 +52,10 @@ const workletWorkbench = () => {
                     <Toggle v-model="userSettings.useKnobCapture" />
                     <label>Use pointer capture</label>
                 </div>
+                <div class="form-row">
+                    <Toggle v-model="userSettings.useZoomWheel" />
+                    <label>Show tablet navigator</label>
+                </div>
             </Tooltip>
 
 
