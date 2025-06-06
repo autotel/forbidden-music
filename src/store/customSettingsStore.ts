@@ -18,7 +18,7 @@ const storedSettingsDefaults = {
     octaveToTimeRatio: 2.8,
     showHarp: false,
     useKnobCapture: true,
-    useZoomWheel: true,
+    useZoomWheel: false,
 }
 
 
