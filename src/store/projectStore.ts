@@ -16,6 +16,7 @@ import { usePlaybackStore } from './playbackStore';
 import demoProject from './project-default';
 import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
+import { useCustomOctavesTableStore } from './customOctavesTableStore';
 
 const emptyProjectDefinition: LibraryItem = {
     name: AUTOSAVE_PROJECTNAME,
@@ -40,6 +41,7 @@ export const useProjectStore = defineStore("current project", () => {
     const created = ref(Date.now().valueOf() as Number);
     const playback = usePlaybackStore();
     const synths = useSynthStore();
+    const customOctaves = useCustomOctavesTableStore();
     const masterEffects = useMasterEffectsStore();
     const audioContextStore = useAudioContextStore();
     const name = ref(AUTOSAVE_PROJECTNAME);
@@ -56,7 +58,7 @@ export const useProjectStore = defineStore("current project", () => {
             notes: notes.serialize(),
             loops: loops.serialize(),
             lanes: lanes.getAutomationLaneDefs(),
-            customOctavesTable: snaps.customOctavesTable,
+            customOctavesTable: customOctaves.table,
             customEDO: snaps.customEDO,
             snap_simplify: snaps.simplify,
             created: created.value,
@@ -104,7 +106,10 @@ export const useProjectStore = defineStore("current project", () => {
         });
 
 
-        if (pDef.customOctavesTable) snaps.customOctavesTable = pDef.customOctavesTable;
+        if (pDef.customOctavesTable) {
+            customOctaves.frequenciesMode = false;
+            customOctaves.setOctaves = pDef.customOctavesTable;
+        }
         if (pDef.customEDO) snaps.customEDO = pDef.customEDO;
         if (pDef.snap_simplify) snaps.simplify = pDef.snap_simplify;
 

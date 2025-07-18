@@ -12,6 +12,7 @@ import colundi from '../scales/colundi';
 import { useLayerStore } from './layerStore';
 import { useToolStore } from './toolStore';
 import { useViewStore } from './viewStore';
+import { useCustomOctavesTableStore } from './customOctavesTableStore';
 const fundamental = octaveToFrequency(0);
 console.log("fundamental", fundamental);
 
@@ -299,6 +300,7 @@ const snaps = {
 export const useSnapStore = defineStore("snap", () => {
     const view = useViewStore();
     const tool = useToolStore();
+    const customOctaves = useCustomOctavesTableStore();
     const layers = useLayerStore();
     const simplify = ref<number>(0.12);
     const values = ref(snaps);
@@ -307,8 +309,6 @@ export const useSnapStore = defineStore("snap", () => {
     const timeSnapExplanation = ref([] as SnapExplanation[]);
     const toneSnapExplanation = ref([] as SnapExplanation[]);
     const currentlyInvolvedSnaps = ref([] as SnapDefinition[]);
-
-    const customOctavesTable = ref(colundi as number[]);
     const customEDO = ref(36);
 
     const onlyWithMutedNotes = ref(false);
@@ -418,9 +418,9 @@ export const useSnapStore = defineStore("snap", () => {
         const toneSnap = new SnapTracker(targetOctave);
 
         if (snapValues.customFrequencyTable.active === true) {
-            if (customOctavesTable.value.length > 0) {
+            if (customOctaves.table.length > 0) {
                 // find the closest frequency in the table
-                const closestOctave = customOctavesTable.value.reduce((prev, curr) => {
+                const closestOctave = customOctaves.table.reduce((prev, curr) => {
                     return (Math.abs(curr - targetOctave) < Math.abs(prev - targetOctave) ? curr : prev);
                 });
                 toneSnap.addSnappedValue(closestOctave, {
@@ -934,7 +934,6 @@ export const useSnapStore = defineStore("snap", () => {
         timeSnapExplanation,
         toneSnapExplanation,
         currentlyInvolvedSnaps,
-        customOctavesTable,
         customEDO,
         onlyWithMutedNotes,
         onlyWithSimultaneousNotes,
