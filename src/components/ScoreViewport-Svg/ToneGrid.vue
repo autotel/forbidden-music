@@ -8,7 +8,7 @@ const view = useViewStore();
 <template>
     <!-- draw a line for each horizontal grid line -->
     <template v-for="(linePositionPy, i) in grids.linePositionsPy" :key="i">
-        <line class="grid-line" x1="0" :x2="view.viewWidthPx" :y1="linePositionPy" :y2="linePositionPy" />
+        <line class="grid-line" x1="100" :x2="view.viewWidthPx" :y1="linePositionPy" :y2="linePositionPy" />
     </template>
     <!-- draw a label for each grid line -->
     <template v-for="(label, i) in grids.lineLabels" :key="'label-' + i">
@@ -16,6 +16,10 @@ const view = useViewStore();
     </template>
 </template>
 <style scoped>
+text {
+    font-size: 0.7em;
+    opacity: 0.3;
+}
 .grid-line {
     stroke: #e0e0e0;
     /* stroke: #250909; */
