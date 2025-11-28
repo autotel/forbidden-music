@@ -3,12 +3,14 @@ import { automatableNumberSynthParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
 import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
+import { frequencyToOctave } from "@/functions/toneConverters";
+import { noiseWorkletManager } from "@/functions/noiseWorkletManager";
 
 type SineNoteParams = EventParamsBase & {
     perc: boolean,
 }
 
-const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth): SynthVoice => {
+const classicSynthVoice = (audioContext: AudioContext, parentSynth: SimpleSynth): SynthVoice => {
 
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -35,6 +37,7 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         filter.type = parentSynth.filterTypeParam.getType();
         filter.Q.value = parentSynth.filterQParam.value;
         filter.frequency.value = parentSynth.filterOctaveParam.getHertz();
+
         oscillator.type = parentSynth.waveShapeParam.getType();
 
         env1.params.attack.value = parentSynth.envelopes[0].attackParam.mappedValue;
@@ -52,13 +55,16 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
         env2Mapper.gain.value = parentSynth.filterEnvParam.value;
 
         waveFolder.params.preGain.value = parentSynth.waveFoldParam.value;
-        // waveFolder.params.postGain.value = 1 / parentSynth.waveFoldParam.value;
+        waveFolder.params.postGain.value = 1 / parentSynth.waveFoldParam.value;
+
+        parentSynth.noiseGain.gain.value = parentSynth.noiseLevelParam.value;
     }
 
     let noteStarted = 0;
 
     oscillator.connect(waveFolder.worklet);
     waveFolder.worklet.connect(filter);
+    parentSynth.noiseGain.connect(filter);
     filter.connect(gainNode);
     oscillator.start();
 
@@ -71,7 +77,6 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
             params: SineNoteParams
         ) {
             this.inUse = true;
-
             gainNode.gain.value = 0;
 
             env1.triggerAtTime(absoluteStartTime, params.velocity);
@@ -80,6 +85,8 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: ClassicSynth
             oscillator.frequency.value = frequency;
             oscillator.frequency.setValueAtTime(frequency, absoluteStartTime);
             applySynthParams();
+            filter.frequency.value += frequency * parentSynth.filterKeyParam.value;
+            
             noteStarted = absoluteStartTime;
 
             if (params.perc) {
@@ -156,7 +163,14 @@ class EnvelopeParamsList {
     ] as SynthParam[];
 }
 
-export class ClassicSynth extends Synth {
+export class SimpleSynth extends Synth {
+    noiseLevelParam = {
+        type: ParamType.number,
+        displayName: 'Noise Amount',
+        value: 0,
+        min: 0, max: 1,
+        exportable: true,
+    } as NumberSynthParam;
     waveShapeParam = {
         type: ParamType.option,
         displayName: 'Wave shape',
@@ -179,12 +193,21 @@ export class ClassicSynth extends Synth {
         max: 15,
         exportable: true,
     } as NumberSynthParam;
+    /** How much the notes' frequency affects the filter octave */
+    filterKeyParam = {
+        type: ParamType.number,
+        displayName: "Filter keythrough",
+        value: 1,
+        min: 0,
+        max: 1,
+        exportable: true,
+    } as NumberSynthParam;
     filterQParam = {
         type: ParamType.number,
         displayName: "Filter Q",
         value: 1,
         min: 0,
-        max: 6,
+        max: 12,
         exportable: true,
     } as NumberSynthParam;
     filterEnvParam = {
@@ -244,6 +267,10 @@ export class ClassicSynth extends Synth {
     input: GainNode;
     adsrWorkletManager?: Awaited<ReturnType<typeof adsrWorkletManager>>;
     waveFolderWorkletManager?: Awaited<ReturnType<typeof foldedSaturatorWorkletManager>>;
+    noiseWorkletManager?: Awaited<ReturnType<typeof noiseWorkletManager>>;
+
+    noiseGenerator?: AudioNode;
+    noiseGain: GainNode;
 
     constructor(
         audioContext: AudioContext,
@@ -261,9 +288,15 @@ export class ClassicSynth extends Synth {
         this.params.push(gain);
         this.params.unshift(numberSynthParam(this.input.gain, 'input', 0, 1));
 
+        // Only one noise is needed for all the voices, hence it's instanced at synth level
+        this.noiseGain = audioContext.createGain();
+
         this.enable = async () => {
             this.adsrWorkletManager = await adsrWorkletManager(audioContext);
             this.waveFolderWorkletManager = await foldedSaturatorWorkletManager(audioContext);
+            this.noiseWorkletManager = await noiseWorkletManager(audioContext);
+            this.noiseGenerator = this.noiseWorkletManager.create().worklet;
+            this.noiseGenerator.connect(this.noiseGain);
             this.markReady();
         }
 

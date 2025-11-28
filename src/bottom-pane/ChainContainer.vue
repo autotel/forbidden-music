@@ -5,7 +5,7 @@ import { SynthStack } from '@/dataStructures/SynthStack';
 import { PatcheableTrait, PatcheableType } from '@/dataTypes/PatcheableTrait';
 import { AutoMaximizerEffect } from '@/synth/effects/AutoMaximizerEffect';
 import { FilterEffect } from '@/synth/effects/FilterEffect';
-import { ClassicSynth } from '@/synth/generators/ClassicSynth';
+import { SimpleSynth } from '@/synth/generators/SimpleSynth';
 import { FilterBankSynth } from '@/synth/generators/FilterBankSynth';
 import { FmSynth } from '@/synth/generators/FmSynth';
 import { FourierSynth } from '@/synth/generators/FourierSynth';
@@ -21,7 +21,7 @@ import { onMounted, ref, watch } from 'vue';
 import AddSynth from './components/AddSynth.vue';
 import ModuleContainer from './components/ModuleContainer.vue';
 import AutoMaximizerEdit from './editModules/AutoMaximizerEdit.vue';
-import ClassicSynthEdit from './editModules/ClassicSynthEdit.vue';
+import SimpleSynthEdit from './editModules/SimpleSynthEdit.vue';
 import FilterBankSynthEdit from './editModules/FilterBankSynthEdit.vue';
 import FilterContainer from './editModules/FilterContainer.vue';
 import FmSynthEdit from './editModules/FmSynthEdit.vue';
@@ -121,7 +121,7 @@ const patchItemDragEnd = (e: MouseEvent) => {
                     <GranularSamplerEdit v-else-if="(audioModule instanceof GranularSampler)"
                         :audioModule="audioModule" />
                     <ThingyEdit v-else-if="(audioModule instanceof ThingyScoreFx)" :audioModule="audioModule" />
-                    <ClassicSynthEdit v-else-if="audioModule instanceof ClassicSynth" :audioModule="audioModule" />
+                    <SimpleSynthEdit v-else-if="audioModule instanceof SimpleSynth" :audioModule="audioModule" />
                     <FourierSynthEdit v-else-if="(audioModule instanceof FourierSynth)" :audioModule="audioModule" />
                     <PatcheableSynthEdit v-else-if="(audioModule instanceof PatcheableSynth)"
                         :audioModule="audioModule" />

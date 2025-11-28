@@ -1,18 +1,14 @@
 <script setup lang="ts">
 
-import { Ref, computed, inject } from 'vue';
+import Button from '@/components/Button.vue';
 import { useMonoModeInteraction } from '@/store/monoModeInteraction';
-import { AudioModule } from '@/synth/types/AudioModule';
-import { ParamType } from '@/synth/types/SynthParam';
-import BooleanSynthParam from '../components/BooleanSynthParam.vue';
-import NumberArraySynthParam from '../components/NumberArraySynthParam.vue';
+import { SimpleSynth } from '@/synth/generators/SimpleSynth';
+import { Ref, inject } from 'vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
-import Button from '@/components/Button.vue';
-import { ClassicSynth } from '@/synth/generators/ClassicSynth';
 
 const props = defineProps<{
-    audioModule: ClassicSynth
+    audioModule: SimpleSynth
 }>();
 const infoTextModal = inject<Ref<string>>('modalText');
 const monoModeInteraction = useMonoModeInteraction();
@@ -26,42 +22,21 @@ const rows = () => {
     return Math.ceil(props.audioModule.params.length / 4);
 }
 
-const groups = computed(() => [
-    [
-        props.audioModule.waveShapeParam,
-        props.audioModule.gainParam,
-    ], [
-        props.audioModule.envelopes[0].attackParam,
-        props.audioModule.envelopes[0].attackCurveParam,
-        props.audioModule.envelopes[0].decayParam,
-        props.audioModule.envelopes[0].sustainParam,
-        props.audioModule.envelopes[0].releaseParam,
-    ], [
-        props.audioModule.envelopes[1].attackParam,
-        props.audioModule.envelopes[1].attackCurveParam,
-        props.audioModule.envelopes[1].decayParam,
-        props.audioModule.envelopes[1].sustainParam,
-        props.audioModule.envelopes[1].releaseParam,
-    ], [
-        props.audioModule.filterTypeParam,
-        props.audioModule.filterOctaveParam,
-        props.audioModule.filterQParam,
-        props.audioModule.filterEnvParam,
-    ]
-]);
 
 </script>
 <template>
-    <div style="width:37em" class="layout">
+    <div style="width:26em" class="layout">
         <div class="group" style="width: 14em">
             <div class="title"><p>Wave</p></div>
             <OptionSynthParam :param="props.audioModule.waveShapeParam"  style="width:7em" />
             <NumberSynthParam :param="props.audioModule.waveFoldParam" />
+            <NumberSynthParam :param="props.audioModule.noiseLevelParam" />
         </div>
-        <div class="group" style="width:21em">
+        <div class="group" style="width:26em">
             <div class="title"><p>Filter</p></div>
             <OptionSynthParam :param="props.audioModule.filterTypeParam" style="width:8em"/>
             <NumberSynthParam :param="props.audioModule.filterOctaveParam" />
+            <NumberSynthParam :param="props.audioModule.filterKeyParam" />
             <NumberSynthParam :param="props.audioModule.filterQParam" />
             <NumberSynthParam :param="props.audioModule.filterEnvParam" /> 
         </div>
@@ -82,23 +57,22 @@ const groups = computed(() => [
             <NumberSynthParam :param="props.audioModule.envelopes[1].releaseParam" />
         </div>
         
+    </div>
+    <div style="" class="layout">
         <div class="group" style="">
             <NumberSynthParam :param="props.audioModule.gainParam" />
         </div>
-
         <div class="group" style="">
-        <Button style="background-color: #ccc1;" @click="showInfo('All these parameters are applied on note on, therefore their effect is not heard until a new note is played.')"
-            class="credits-button">* Note </Button>
+            <Button style="background-color: #ccc1;" @click="showInfo('All these parameters are applied on note on, their effect is not heard until a new note is played.')"
+                class="credits-button">* Note </Button>
         </div>
-    </div>
+    </div>  
 </template>
 <style scoped>
 .group {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* background-color: rgba(177, 176, 176, 0.1); */
-    /* border:solid 1px; */
     border-radius: 1em;
     margin: 0 0.5em;
     height: 5em;
@@ -126,9 +100,10 @@ const groups = computed(() => [
 }
 .layout {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
     justify-content: left;
     height: 100%;
+    margin-top: 6px;
 }
 </style>

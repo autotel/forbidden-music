@@ -21,7 +21,7 @@ import { ThingyScoreFx } from "./scoreEffects/Thingy";
 import { AudioModule } from "./types/AudioModule";
 import { SynthParamStored } from "./types/SynthParam";
 import { WaveFolderEffect } from "./effects/WaveFoldEffect";
-import { ClassicSynth } from "./generators/ClassicSynth";
+import { SimpleSynth } from "./generators/SimpleSynth";
 import { OscilloScope } from "./scope/OscilloScope";
 import { FilterBankSynth } from "./generators/FilterBankSynth";
 import { camelCaseToUName } from "@/functions/caseConverters";
@@ -141,7 +141,7 @@ export default function getSynthConstructors(
 
     addAvailableSynth(KickSynth, 'KickSynth', AudioModuleType.Sound);
     addAvailableSynth(KarplusSynth, 'KarplusSynth', AudioModuleType.Sound);
-    addAvailableSynth(ClassicSynth, 'ClassicSynth', AudioModuleType.Sound);
+    addAvailableSynth(SimpleSynth, 'SimpleSynth', AudioModuleType.Sound);
     addAvailableSynth(FourierSynth, "Fourier Synth", AudioModuleType.Sound, [], false, false);
 
     addAvailableSynth(OscilloScope, 'Oscilloscope', AudioModuleType.Scope);
