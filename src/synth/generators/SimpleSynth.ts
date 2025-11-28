@@ -1,10 +1,10 @@
 import { adsrWorkletManager } from "@/functions/adsrWorkletManager";
+import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
+import { noiseWorkletManager } from "@/functions/noiseWorkletManager";
 import { automatableNumberSynthParam } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
-import { castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
-import { foldedSaturatorWorkletManager } from "@/functions/foldedSaturatorWorkletManager";
-import { frequencyToOctave } from "@/functions/toneConverters";
-import { noiseWorkletManager } from "@/functions/noiseWorkletManager";
+import { BooleanSynthParam, castToOptionDefList, numberSynthParam, NumberSynthParam, OptionSynthParam, ParamType, SynthParam } from "../types/SynthParam";
+import { frequencyToOctave, octaveToFrequency } from "@/functions/toneConverters";
 
 type SineNoteParams = EventParamsBase & {
     perc: boolean,
@@ -85,8 +85,13 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: SimpleSynth)
             oscillator.frequency.value = frequency;
             oscillator.frequency.setValueAtTime(frequency, absoluteStartTime);
             applySynthParams();
-            filter.frequency.value += frequency * parentSynth.filterKeyParam.value;
-            
+
+            if (parentSynth.filterKeyParam.value > 0) {
+                const filterOctave = frequencyToOctave(filter.frequency.value);
+                const noteOctave = frequencyToOctave(frequency);
+                filter.frequency.value += octaveToFrequency(filterOctave + noteOctave * parentSynth.filterKeyParam.value - 2);
+            }
+
             noteStarted = absoluteStartTime;
 
             if (params.perc) {
@@ -197,9 +202,8 @@ export class SimpleSynth extends Synth {
     filterKeyParam = {
         type: ParamType.number,
         displayName: "Filter keythrough",
-        value: 1,
-        min: 0,
-        max: 1,
+        value: 0,
+        min:0, max: 1,
         exportable: true,
     } as NumberSynthParam;
     filterQParam = {

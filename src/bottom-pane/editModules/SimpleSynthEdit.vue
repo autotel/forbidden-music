@@ -6,6 +6,7 @@ import { SimpleSynth } from '@/synth/generators/SimpleSynth';
 import { Ref, inject } from 'vue';
 import NumberSynthParam from '../components/NumberSynthParam.vue';
 import OptionSynthParam from '../components/OptionSynthParam.vue';
+import BooleanSynthParam from '../components/BooleanSynthParam.vue';
 
 const props = defineProps<{
     audioModule: SimpleSynth
@@ -26,7 +27,7 @@ const rows = () => {
 </script>
 <template>
     <div style="width:26em" class="layout">
-        <div class="group" style="width: 14em">
+        <div class="group" style="width: 16em">
             <div class="title"><p>Wave</p></div>
             <OptionSynthParam :param="props.audioModule.waveShapeParam"  style="width:7em" />
             <NumberSynthParam :param="props.audioModule.waveFoldParam" />
