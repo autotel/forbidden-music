@@ -14,9 +14,11 @@ import ScoreViewportSvg from './components/ScoreViewport-Svg/ScoreViewport.vue';
 import SkipBar from './components/SkipBar.vue';
 import TimeScrollBar from "./components/TimeScrollBar.vue";
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
+import ZoomWheel from './components/ZoomWheel.vue';
 import { Tool } from './dataTypes/Tool';
-import isDev, { ifDev } from './functions/isDev';
+import isDev from './functions/isDev';
 import { keyBindingsListener } from './functions/keyBindingsListener';
+import { octaveToFrequency } from './functions/toneConverters';
 import { KeyActions, getActionForKeys } from './keyBindings';
 import CustomOctaveTableTextEditor from './modals/CustomOctaveTableTextEditor.vue';
 import Modal from './modals/Modal.vue';
@@ -36,7 +38,6 @@ import { useSelectStore } from './store/selectStore';
 import { useSnapStore } from './store/snapStore';
 import { useToolStore } from './store/toolStore';
 import { useViewStore } from './store/viewStore';
-import { octaveToFrequency } from './functions/toneConverters';
 
 const libraryStore = useLibraryStore();
 const monoModeInteraction = useMonoModeInteraction();
@@ -76,47 +77,9 @@ let viewDragStartOctaveHeight = 0;
 
 const mouseWheelListener = (e: WheelEvent) => {
     e.preventDefault();
-    zoomAround(view.viewHeightOctaves ** (1 + e.deltaY / 1000), e.clientX, e.clientY);
+    view.zoomAround(view.viewHeightOctaves ** (1 + e.deltaY / 1000), e.clientX, e.clientY);
 }
 
-const zoomAround = (
-    wouldViewHeightOctaves: number,
-    zoomCenterX: number,
-    zoomCenterY: number
-) => {
-
-    const OTDatumBefore = {
-        time: view.pxToTimeWithOffset(zoomCenterX),
-        octave: -view.pxToOctaveWithOffset(zoomCenterY),
-    };
-
-    if (
-        wouldViewHeightOctaves < 200 &&
-        wouldViewHeightOctaves > 0.1
-    ) {
-        view.viewHeightOctaves = wouldViewHeightOctaves;
-    }
-
-    view.applyRatioToTime();
-
-    // offset zoom center back 
-    const OTDAtumAfter = {
-        time: view.pxToTimeWithOffset(zoomCenterX),
-        octave: -view.pxToOctaveWithOffset(zoomCenterY),
-    };
-
-    const OTDatumDelta = {
-        time: OTDatumBefore.time - OTDAtumAfter.time,
-        octave: OTDatumBefore.octave - OTDAtumAfter.octave,
-    };
-
-    view.timeOffset += OTDatumDelta.time;
-    view.octaveOffset += OTDatumDelta.octave;
-
-    if (view.timeOffset < 0) {
-        view.timeOffset = 0;
-    }
-}
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
@@ -220,7 +183,7 @@ const touchMoveListener = (e: TouchEvent) => {
 
         const touchDistanceDelta = newDistance - viewTouchDistanceStart;
         const newOctaves = viewDragStartOctaveHeight + view.pxToOctave(touchDistanceDelta);
-        zoomAround(newOctaves, averageX, averageY);
+        view.zoomAround(newOctaves, averageX, averageY);
 
         view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
         view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
@@ -263,6 +226,7 @@ const keyDownListener = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement) {
         return;
     }
+    console.log("key down", e.key);
     keyBindingsListener(e, { selection, tool, playback, view, history, project, notes });
 }
 
@@ -434,6 +398,7 @@ watch([sidePaneWidth, bottomPaneStateStore], () => {
     <UserDisclaimer />
     <TooltipDisplayer />
     <MousePopupDisplayer />
+    <ZoomWheel v-if="userSettings.useZoomWheel" />
 
 </template>
 <style>

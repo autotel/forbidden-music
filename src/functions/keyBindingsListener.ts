@@ -21,7 +21,7 @@ interface Stores {
 
 export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
     const {
-        tool, project, selection, playback, history, view, notes
+        tool, selection, playback, history, view, notes
     } = stores
     const keyAction = getActionForKeys(e.key, e.ctrlKey, e.shiftKey, e.altKey);
     switch (keyAction) {

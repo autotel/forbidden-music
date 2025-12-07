@@ -1,127 +1,105 @@
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import Button from '../components/Button.vue';
 import Toggle from '../components/inputs/Toggle.vue';
-import { frequencyToOctave, octaveToFrequency } from '../functions/toneConverters';
+import { octaveToFrequency, frequencyToOctave } from '../functions/toneConverters';
 import { useSelectStore } from '../store/selectStore';
-import { useSnapStore } from '../store/snapStore';
-import { watch } from 'fs';
-import { watchPausable } from '@vueuse/core';
+import { useCustomOctavesTableStore } from '@/store/customOctavesTableStore';
 
-// TODO: could be improved, there is no point in having two textareas
-
-const snap = useSnapStore();
-const valid = ref(false);
-const octavesTableText = ref("");
-const frequenciesTableText = ref("");
-const errorMsg = ref("");
-const frequencyMode = ref(true);
+const customOctaves = useCustomOctavesTableStore();
 const select = useSelectStore();
 
-const arrayUnique = (arr: any[]) => {
-    return arr.filter((value, index, self) => {
-        return self.indexOf(value) === index;
-    });
+const tableText = ref("");
+const errorMsg = ref("");
+const valid = ref(true);
+
+// Helper to parse input string to number array
+function parseInput(str: string): number[] {
+    return str.split(/[,\s]+/)
+        .filter(s => s.length > 0)
+        .map(s => {
+            const n = parseFloat(s);
+            if (isNaN(n)) throw new Error(`List includes non-number "${s}"`);
+            return n;
+        });
 }
 
-const setFromSelectedNotes = () => {
-    const selected = select.getNotes();
-    const octaves = arrayUnique(selected.map(n => n.octave));
-    const frequencies = octaves.map(octaveToFrequency);
-    octavesTableText.value = octaves.join(", ");
-    frequenciesTableText.value = frequencies.join(", ");
-    snap.customOctavesTable = octaves;
-
-}
-
-
-const octavesTextControl = watchPausable(octavesTableText, () => {
-    if (frequencyMode.value) return;
-    try {
-        const octaves = octavesTableText.value.split(",")
-            .filter(l => l)
-            .map((f) => {
-                const nn = parseFloat(f)
-                if (isNaN(nn)) {
-                    throw `List includes non-number "${f}"`;
-                }
-                return nn;
-            });
-        snap.customOctavesTable = octaves;
-        frequenciesTableText.value = octaves.map(octaveToFrequency).join(", ");
-        valid.value = true;
-    } catch (e: any) {
-        errorMsg.value = "" + e;
-        valid.value = false;
-        console.error(e);
-    }
-});
-
-const frequenciesTextControl = watchPausable(frequenciesTableText, () => {
-    if (!frequencyMode.value) return;
-    // on edit frequencies, update octaves
-    try {
-        const frequencies = frequenciesTableText.value.split(",")
-            .filter(l => l)
-            .map((f) => {
-                const nn = parseFloat(f)
-                if (isNaN(nn)) {
-                    throw `List includes non-number "${f}"`;
-                }
-                return nn;
-            });
-        snap.customOctavesTable = frequencies.map(frequencyToOctave);
-        octavesTableText.value = snap.customOctavesTable.join(", ");
-        valid.value = true;
-    } catch (e: any) {
-        errorMsg.value = "" + e;
-        valid.value = false;
-        console.error(e);
-    }
-});
-
-
-watchEffect(() => {
-    if (frequencyMode) {
-        octavesTextControl.pause();
-        frequenciesTextControl.resume();
+// Update textarea from store
+function updateTableTextFromStore() {
+    if (customOctaves.frequenciesMode) {
+        // Show frequencies
+        tableText.value = customOctaves.setFrequencies.join(", ");
     } else {
-        octavesTextControl.resume();
-        frequenciesTextControl.pause();
+        // Show octaves
+        tableText.value = customOctaves.setOctaves.join(", ");
     }
+    console.log('tableText after update:', tableText.value);
+}
+
+// Handle textarea input
+function onTableTextInput() {
+    try {
+        const arr = parseInput(tableText.value);
+        customOctaves.setCurrent(arr);
+        errorMsg.value = "";
+        valid.value = true;
+    } catch (e: any) {
+        errorMsg.value = e.message || String(e);
+        valid.value = false;
+    }
+}
+
+// Handle mode toggle
+watch(()=>customOctaves.frequenciesMode, () => {
+    // Value already toggled
+    if (customOctaves.frequenciesMode) {
+        customOctaves.setFrequencies = customOctaves.setOctaves.map(n=>octaveToFrequency(n))
+        console.log(customOctaves.setOctaves, customOctaves.setFrequencies)
+    } else {
+        customOctaves.setOctaves = customOctaves.setFrequencies.map(n=>frequencyToOctave(n))
+        console.log(customOctaves.setFrequencies, customOctaves.setOctaves)
+    }
+    updateTableTextFromStore();
+})
+
+// Set from selected notes
+function setFromSelectedNotes() {
+    const selected = select.getNotes();
+    const arrayUnique = (arr: any[]) => arr.filter((v, i, self) => self.indexOf(v) === i);
+    const octaves = arrayUnique(selected.map(n => n.octave));
+    if (customOctaves.frequenciesMode) {
+        // Set as frequencies
+        const frequencies = octaves.map(n=>octaveToFrequency(n));
+        customOctaves.setCurrent(frequencies);
+    } else {
+        customOctaves.setCurrent(octaves);
+    }
+    updateTableTextFromStore();
+}
+
+// Watch for mode changes
+watch(() => customOctaves.frequenciesMode, () => {
+    updateTableTextFromStore();
 });
+
 onMounted(() => {
-    octavesTextControl.pause();
-    frequenciesTextControl.pause();
-
-    octavesTableText.value = snap.customOctavesTable.join(",\n");
-    frequenciesTableText.value = snap.customOctavesTable.map(octaveToFrequency).join(",\n");
-    
-    
-    octavesTextControl.resume();
-    frequenciesTextControl.resume();
-
+    updateTableTextFromStore();
 });
-
 </script>
 
 <template>
     <div>
-        <h2>Paste or write {{ frequencyMode ? "frequencies" : "octaves" }}.</h2>
+        <h2>Paste or write {{ customOctaves.frequenciesMode ? "frequencies" : "octaves" }}.</h2>
         <p class="line">actually, I hope you are just going to paste them. Try heading to <a target="_blank"
                 href="https://autotel.co/tuning-explorer/">Tuning explorer</a></p>
         <p class="line">Or <Button :onClick="setFromSelectedNotes">set from selected notes</Button></p>
         <span class="line">
-            <Toggle v-model="frequencyMode" style="display:inline" />&nbsp;&Tab;Switch to
-            {{ frequencyMode ? 'octaves' : 'frequencies' }} (precision might be lost on each toggle)
+            <Toggle v-model="customOctaves.frequenciesMode" style="display:inline" />&nbsp;&Tab;Switch to
+            {{ customOctaves.frequenciesMode ? 'octaves' : 'frequencies' }} (precision might be lost on each toggle)
         </span>
-        <p class="line">Use period for decimal point, and comma to separate entries</p>
-        <template v-if="frequencyMode">
-            <textarea v-model="frequenciesTableText" style="width: 100%; height: 44em;"></textarea>
-        </template>
-        <template v-else>
-            <textarea v-model="octavesTableText" style="width: 100%; height: 44em;"></textarea>
-        </template>
+        <p class="line">Use period for decimal point, and comma or whitespace to separate entries</p>
+        <textarea :class="{ 'has-errors': !valid }" v-model="tableText" @input="onTableTextInput"
+            style="width: 100%; height: 40em;"></textarea>
         <p v-if="!valid" style="color: red;">{{ errorMsg }}</p>
     </div>
 </template>

@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { onMounted, watch, watchEffect } from "vue";
-import useExternalSAmpleLibrariesStore from "./externalSampleLibrariesStore";
 import userCustomPerformanceSettingsKey from "./userCustomPerformanceSettingsKey";
 import userSettingsStorageFactory from "./userSettingsStorageFactory";
 import { useViewStore } from "./viewStore";
@@ -19,6 +18,7 @@ const storedSettingsDefaults = {
     octaveToTimeRatio: 2.8,
     showHarp: false,
     useKnobCapture: true,
+    useZoomWheel: false,
 }
 
 
@@ -37,7 +37,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
 
     const getFromLocalStorage = async () => {
         const savedSettings = await nsLocalStorage.getItem(userCustomPerformanceSettingsKey);
-        try{
+        try {
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
                 // remove keys not present in storedSettingsDefaults
@@ -56,7 +56,7 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
 
 
     const returnValue: { [key: string]: any } = {
-        ... Object.assign({}, storedSettingsDefaults, getFromLocalStorage()),
+        ...Object.assign({}, storedSettingsDefaults, getFromLocalStorage()),
         deleteSettings: () => {
             nsLocalStorage.removeItem(userCustomPerformanceSettingsKey);
             Object.assign(returnValue, storedSettingsDefaults);
@@ -79,10 +79,10 @@ export const useCustomSettingsStore = defineStore("custom settings store", () =>
         watch(thisStore, () => {
             view.setOctaveToTimeRatio(thisStore.octaveToTimeRatio);
         })
-        
+
         view.setOctaveToTimeRatio(thisStore.octaveToTimeRatio);
 
-        
+
     });
 
 

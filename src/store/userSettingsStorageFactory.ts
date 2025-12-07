@@ -1,6 +1,4 @@
 import NsLocalStorage from "@/functions/browserLocalStorage";
-import isTauri from "@/functions/isTauri";
-import { TauriNsLocalStorage } from "@/functions/tauriNsLocalStorage";
 
 export type AsyncStorage = {
     getItem: (key: string) => Promise<string | null>;

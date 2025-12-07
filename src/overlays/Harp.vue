@@ -1,21 +1,21 @@
 <script setup lang="ts">
+import { useCustomOctavesTableStore } from '@/store/customOctavesTableStore';
+import { useNotesStore } from '@/store/notesStore';
 import { onMounted, ref } from 'vue';
-import { useSnapStore } from '../store/snapStore';
 import Button from '../components/Button.vue';
-import { useMonoModeInteraction } from '../store/monoModeInteraction';
+import { note } from '../dataTypes/Note';
+import { filterMap } from '../functions/filterMap';
+import { octaveToFrequency } from '../functions/toneConverters';
+import { useAudioContextStore } from '../store/audioContextStore';
+import { usePlaybackStore } from '../store/playbackStore';
+import { useProjectStore } from '../store/projectStore';
+import { useSynthStore } from '../store/synthStore';
+import { useToolStore } from '../store/toolStore';
 import { useViewStore } from '../store/viewStore';
 import Floaty from './Floaty.vue';
-import { useSynthStore } from '../store/synthStore';
-import { filterMap } from '../functions/filterMap';
-import { useAudioContextStore } from '../store/audioContextStore';
-import { getFrequency, note } from '../dataTypes/Note';
-import { octaveToFrequency } from '../functions/toneConverters';
-import { useProjectStore } from '../store/projectStore';
-import { usePlaybackStore } from '../store/playbackStore';
-import { useLayerStore } from '../store/layerStore';
-import { useToolStore } from '../store/toolStore';
-import { useNotesStore } from '@/store/notesStore';
-const snap = useSnapStore();
+
+
+const customOctaves = useCustomOctavesTableStore();
 const view = useViewStore();
 const synth = useSynthStore();
 
@@ -35,7 +35,7 @@ const mouseMoved = (e: MouseEvent) => {
     mouse.y = e.offsetY;
 }
 const importFreqs = () => {
-    const imported = snap.customOctavesTable.sort();
+    const imported = customOctaves.table.sort();
     octaves.value = imported.map((octave, i) => {
         const pos = (i + 0.5) / imported.length * floatyPos.width;
         return { pos, octave };
