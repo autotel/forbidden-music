@@ -15,6 +15,7 @@ import { useAudioContextStore } from "./audioContextStore";
 import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
+import { ScheduledModifications, SynthVoice } from '@/synth/types/Synth';
 
 export const useSynthStore = defineStore("synthesizers", () => {
     const layerStore = useLayerStore();
@@ -30,6 +31,8 @@ export const useSynthStore = defineStore("synthesizers", () => {
 
     channels.value.output.connect(masterEffectsStore.myInput);
 
+    const traceToVoice: Map<Note, SynthVoice> = new Map();
+
     const scheduleNote = (
         event: Note,
         eventStartAbsolute: number,
@@ -41,11 +44,13 @@ export const useSynthStore = defineStore("synthesizers", () => {
         synths.forEach(synth => {
             if (synth instanceof PlaceholderSynth) return;
             if (eventDuration) {
-                synth.scheduleStart(
+                const voice = synth.scheduleStart(
                     frequency,
                     eventStartAbsolute,
                     event
-                ).scheduleEnd(eventStartAbsolute + eventDuration);
+                )
+                voice.scheduleEnd(eventStartAbsolute + eventDuration);
+                traceToVoice.set(event, voice);
             } else {
                 synth.schedulePerc(
                     frequency,
@@ -66,10 +71,17 @@ export const useSynthStore = defineStore("synthesizers", () => {
         destinationParameter.animate(event.value, detinationTime);
     }
 
+    const scheduleNoteVoiceModification = (note: Note, mods: ScheduledModifications) => {
+        const voiceToAlter = traceToVoice.get(note);
+        if (voiceToAlter && voiceToAlter.scheduleModification) {
+            voiceToAlter.scheduleModification(mods, audioContextStore.audioContext.currentTime);
+        }
+    }
+
     const releaseAll = () => channels.value.children.forEach((chain) => chain.releaseAll());
-    
+
     // TODO: we could skip this call and call audioModule.create directly
-    const instanceAudioModule = (audioModule: SynthConstructorWrapper):AudioModule => {
+    const instanceAudioModule = (audioModule: SynthConstructorWrapper): AudioModule => {
         const newModule = audioModule.create();
         return newModule;
     }
@@ -120,6 +132,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
         getCurrentChannelsDefinition,
         scheduleNote,
         scheduleAutomation,
+        scheduleNoteVoiceModification,
         releaseAll,
         getLayerSynths,
         applyChannelsDefinition,

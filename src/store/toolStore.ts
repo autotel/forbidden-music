@@ -18,6 +18,8 @@ import { useViewStore } from './viewStore';
 import { findTraceInRange, getTracesInRange } from '@/functions/getEventsInRange';
 import { useLoopsStore } from './loopsStore';
 import { useNotesStore } from './notesStore';
+import { useSynthStore } from './synthStore';
+import { octaveToFrequency } from '@/functions/toneConverters';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -25,6 +27,7 @@ type ProjectStore = ReturnType<typeof useProjectStore>;
 type NotesStore = ReturnType<typeof useNotesStore>;
 type SelectStore = ReturnType<typeof useSelectStore>;
 type AutomationLaneStore = ReturnType<typeof useAutomationLaneStore>;
+type SynthStore = ReturnType<typeof useSynthStore>;
 type Reference<T> = { value: T };
 
 type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & (Trace) & { duration: number };
@@ -70,6 +73,7 @@ interface Stores {
     view: ViewStore,
     selection: SelectStore,
     lanes: AutomationLaneStore,
+    synth: SynthStore,
 }
 
 const polyfillTrace = (trace: Trace): PolyfillTrace => {
@@ -118,7 +122,7 @@ const mouseDuplicateTraces = ({
 const mouseDragSelectedTraces = ({
     drag, disallowOctaveChange, disallowTimeChange
 }: ToolMouse, {
-    view, snap, notes, lanes,
+    view, snap, notes, lanes, synth
 }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
@@ -163,6 +167,7 @@ const mouseDragSelectedTraces = ({
         if ('octave' in draggedTrace && (!disallowOctaveChange)) {
             if (!('octave' in correlativeDragStartClone)) throw new Error('no octave in correlativeDragStartClone');
             draggedTrace.octave = octaveDeltaAfterSnap + correlativeDragStartClone.octave;
+            synth.scheduleNoteVoiceModification(draggedTrace, {frequency: octaveToFrequency(draggedTrace.octave)})
         }
 
     });
@@ -171,7 +176,7 @@ const mouseDragSelectedTraces = ({
 
 const mouseDragModulationSelectedTraces = (
     { drag }: ToolMouse,
-    { view, snap, project, lanes }: Stores,
+    { view, synth }: Stores,
     /** provide this reference in order to set de initial velocity for new traces */
     lastVelocitySet: Reference<number> = { value: 0 }
 ) => {
@@ -187,6 +192,8 @@ const mouseDragModulationSelectedTraces = (
         const velocityWhenDragStarted = traceWhenDragStarted.velocity;
         trace.velocity = clamp(velocityWhenDragStarted + velocityDelta, 0, 1);
         lastVelocitySet.value = trace.velocity;
+
+        synth.scheduleNoteVoiceModification(trace, {velocity: trace.velocity})
     });
 }
 
@@ -337,6 +344,7 @@ export const useToolStore = defineStore("tool", () => {
     const lanes = useAutomationLaneStore();
     const ftRec = ref(false);
     const loops = useLoopsStore();
+    const synth = useSynthStore();
     // TODO: should rename into currentMode and currentTool instead of current and currentLeftHand
     /** current tool: the current main tool, what the user is focusing on atm */
     const current = ref(Tool.Edit);
@@ -874,6 +882,7 @@ export const useToolStore = defineStore("tool", () => {
         selection,
         lanes,
         notes,
+        synth,
     };
 
     const mouseMove = (e: { clientX: number, clientY: number }) => {
@@ -897,7 +906,7 @@ export const useToolStore = defineStore("tool", () => {
             if (mouse.disallowTimeChange) {
                 localDelta.x = 0;
             }
-                       
+
             if (mouse.currentAction === MouseDownActions.Erase) {
                 mouseErase(mouse, storesPill);
             } else if (current.value === Tool.Modulation) {

@@ -7,6 +7,11 @@ export interface EventParamsBase {
     velocity: number,
 }
 
+export interface ScheduledModifications {
+    frequency?: number,
+    velocity?: number,
+}
+
 export interface SynthVoice<A = EventParamsBase> {
     output?: AudioNode;
     inUse: boolean;
@@ -19,6 +24,7 @@ export interface SynthVoice<A = EventParamsBase> {
     scheduleEnd: (
         absoluteStopTime?: number,
     ) => void
+    scheduleModification?: (modifications: ScheduledModifications, time: number) => void;
 }
 
 export interface PatcheableSynthVoice<A = EventParamsBase> extends SynthVoice<A>, PatcheableTrait {
@@ -126,7 +132,10 @@ export class Synth<
         );
         return voice;
     }
-
+    /**
+     * Schedules end for all voices, in order to stop a voice in particular,
+     * call scheduleEnd of the voice
+     */
     scheduleEnd = (when?: number | undefined) => {
         this.instances.forEach((voice) => {
             voice.scheduleEnd(when);

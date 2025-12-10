@@ -59,6 +59,14 @@ const sineVoice = (audioContext: AudioContext): SynthVoice => {
                 this.inUse = false;
             }
             return this;
+        },
+        scheduleModification(mods, time) {
+            if(mods.frequency) {
+                oscillator.frequency.setValueAtTime(mods.frequency, time);
+            }
+            if(mods.velocity) {
+                gainNode.gain.setValueAtTime(mods.velocity, time);
+            }
         }
     };
 
