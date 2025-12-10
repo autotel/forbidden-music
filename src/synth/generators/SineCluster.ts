@@ -24,6 +24,7 @@ const sineVoice = (audioContext: AudioContext, synth: SineCluster): ClusterSineV
     let noteStarted = 0;
     let noteVelocity = 0;
     let currentStopTimeout: ReturnType<typeof setTimeout> | undefined;
+    let currentFrequency = 440;
 
     let relativeOctaves = [-1.2, -0.6, 0, 0.6, 1.2];
     let relativeGains = [0.25, 0.5, 1, 0.5, 0.25]; // ???
@@ -101,6 +102,7 @@ const sineVoice = (audioContext: AudioContext, synth: SineCluster): ClusterSineV
                 clearTimeout(currentStopTimeout);
                 currentStopTimeout = undefined;
             }
+            currentFrequency = frequency;
             noteVelocity = params.velocity;
             isPercussive = params.perc;
             let imprecision = synth.imprecision;
@@ -162,6 +164,25 @@ const sineVoice = (audioContext: AudioContext, synth: SineCluster): ClusterSineV
                 this.scheduleEnd(audioContext.currentTime + synth.percAttackTimeParam.value + 0.1);
             }
             return this;
+        },
+        scheduleModification(mods, time) {
+            if (mods.frequency) {
+                currentFrequency = mods.frequency;
+                let imprecision = synth.imprecision;
+                
+                // Update all oscillators with the new frequency
+                relativeOctaves.forEach((relativeOctave, index) => {
+                    if (oscillators[index]) {
+                        const frequencyMultiplier = getOrMakeFrequencyMultiplier(relativeOctave);
+                        const fq = mods.frequency! * frequencyMultiplier + mods.frequency! * imprecision * (Math.random() - 0.5);
+                        oscillators[index].frequency.setValueAtTime(fq, time);
+                    }
+                });
+            }
+            if (mods.velocity) {
+                noteVelocity = mods.velocity;
+                output.gain.setValueAtTime(mods.velocity, time);
+            }
         },
         stop() {
             const now = audioContext.currentTime;

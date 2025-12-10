@@ -118,6 +118,25 @@ const granularSamplerVoice = (
             myScheduler.scheduleStop(absoluteStopTime);
             return this;
         },
+        scheduleModification(mods, time) {
+            if (mods.frequency) {
+                triggerFrequency = mods.frequency;
+                // If sample source needs to change based on new frequency
+                if (currentSampleSource) {
+                    const newSampleSource = selectSampleSourceFromKit(sampleSources, mods.frequency, triggerVelocity);
+                    if (newSampleSource !== currentSampleSource) {
+                        currentSampleSource = newSampleSource;
+                        if (currentSampleSource?.sampleBuffer) {
+                            currentSampleStartOffsetSeconds = currentSampleSource.sampleBuffer.duration * grainRealtimeParams.sampleOffsetTime;
+                        }
+                    }
+                }
+            }
+            if (mods.velocity) {
+                triggerVelocity = mods.velocity;
+                output.gain.setValueAtTime(mods.velocity, time);
+            }
+        }
     }
 }
 

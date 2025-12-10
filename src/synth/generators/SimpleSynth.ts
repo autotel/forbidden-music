@@ -61,6 +61,7 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: SimpleSynth)
     }
 
     let noteStarted = 0;
+    let noteVelocity = 0;
 
     oscillator.connect(waveFolder.worklet);
     waveFolder.worklet.connect(filter);
@@ -76,6 +77,7 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: SimpleSynth)
             absoluteStartTime: number,
             params: SineNoteParams
         ) {
+            noteVelocity = params.velocity;
             this.inUse = true;
             gainNode.gain.value = 0;
 
@@ -114,6 +116,27 @@ const classicSynthVoice = (audioContext: AudioContext, parentSynth: SimpleSynth)
                 this.inUse = false;
             }
             return this;
+        },
+        scheduleModification(mods, time) {
+            if (mods.frequency) {
+                oscillator.frequency.setValueAtTime(mods.frequency, time);
+                
+                // Update filter frequency if filter key tracking is enabled
+                if (parentSynth.filterKeyParam.value > 0) {
+                    const filterOctave = frequencyToOctave(parentSynth.filterOctaveParam.getHertz());
+                    const noteOctave = frequencyToOctave(mods.frequency);
+                    const newFilterFreq = octaveToFrequency(filterOctave + noteOctave * parentSynth.filterKeyParam.value - 2);
+                    filter.frequency.setValueAtTime(newFilterFreq, time);
+                }
+            }
+            if (mods.velocity) {
+                noteVelocity = mods.velocity;
+                // The velocity affects the envelope, but we can't directly modify a running envelope
+                // Instead, we could scale the gain proportionally
+                // This is a simplified approach - a more sophisticated implementation might retrigger the envelope
+                const velocityScale = mods.velocity / (noteVelocity || 1);
+                gainNode.gain.setValueAtTime(gainNode.gain.value * velocityScale, time);
+            }
         }
     };
 

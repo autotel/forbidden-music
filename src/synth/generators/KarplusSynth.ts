@@ -30,6 +30,15 @@ interface KarplusStartVoiceMessage {
     i?: number;
 }
 
+interface KarplusModifyVoiceMessage {
+    // frequency modification
+    f?: number;
+    // amplitude/velocity modification
+    a?: number;
+    // identifier
+    i: number;
+}
+
 interface KarplusParamsChangeMessage {
     // feedback filter cutoff frequency
     fff?: number
@@ -92,8 +101,25 @@ const karplusVoice = (audioContext: AudioContext, synth: KarplusSynth): SynthVoi
             }
             return this;
         },
-
-
+        /** Works but the resulting sound is chaotic 
+        scheduleModification(mods, time) {
+            const message: KarplusModifyVoiceMessage = {
+                i: myVoiceIndex,
+            };
+            
+            if (mods.frequency !== undefined) {
+                message.f = mods.frequency;
+            }
+            if (mods.velocity !== undefined) {
+                message.a = mods.velocity;
+            }
+            
+            setTimeout(() => {
+                if (!synth.engine) throw new Error("engine not created");
+                synth.engine.port.postMessage(message);
+            }, (time - synth.audioContext.currentTime) * 1000);
+        }
+        */
     }
 }
 
