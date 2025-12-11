@@ -4,6 +4,7 @@ import externalSampleLibrariesStore from "@/store/externalSampleLibrariesStore";
 import Button from "../components/Button.vue";
 import Folder from "../components/icons/Folder.vue";
 import Collapsible from "./Collapsible.vue";
+import { ref, watch } from "vue";
 
 const externalSampleLibraries = externalSampleLibrariesStore();
 
@@ -12,11 +13,14 @@ const deleteSampleLibrary = (url: string) => {
 };
 
 const addSampleLibrary = async () => {
-    const url = prompt("Enter the URL of the sample library");
+    const url = newLibrary.value;
     if (url) {
+        console.log("adding", url);
         externalSampleLibraries.addLibraryUrl(url);
     }
 };
+
+const newLibrary = ref('');
 
 </script>
 <template>
@@ -47,9 +51,12 @@ const addSampleLibrary = async () => {
             </div>
         </div>
         <div class="actions">
-            <Button @click="addSampleLibrary" tooltip="Add a sample library">
-                add +
-            </Button>
+            <div class="side-by-side">
+                <input style="width: 237px; border: solid 1px;" type="text" v-model="newLibrary" />
+                <Button @click="addSampleLibrary" tooltip="Add a sample library">
+                    add +
+                </Button>
+            </div>
             <Button @click="externalSampleLibraries.resetValue" tooltip="Add a sample library">
                 reset to default
             </Button>
