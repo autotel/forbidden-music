@@ -28,10 +28,29 @@ export const useSynthStore = defineStore("synthesizers", () => {
     );
 
     const channels = ref<SynthStack>(new SynthStack(audioContextStore.audioContext));
-
     channels.value.output.connect(masterEffectsStore.myInput);
 
-    const traceToVoice: Map<Note, SynthVoice> = new Map();
+    const notesVoices: Map<Note, SynthVoice> = new Map();
+    
+    /** 
+     * to reduce the growth of notesVoices, 
+     * this function removes all the other note-voice entries
+     * for a given SynthVoice.
+     * notesVoice ends up having unique keys and unique values.
+     * There are still redundant entries on notesVoices because
+     * entries are not cleared when voice stops
+     */
+    const clearForVoice = (voice: SynthVoice) => {
+        let foundEntries = [...notesVoices.entries()]
+            .find(([, v]) => v === voice);
+        
+        if (foundEntries) notesVoices.delete(foundEntries[0]);
+    }
+
+    const addNotesVoices = (note: Note, voice: SynthVoice) => {
+        clearForVoice(voice);
+        notesVoices.set(note, voice);
+    }
 
     const scheduleNote = (
         event: Note,
@@ -50,7 +69,8 @@ export const useSynthStore = defineStore("synthesizers", () => {
                     event
                 )
                 voice.scheduleEnd(eventStartAbsolute + eventDuration);
-                traceToVoice.set(event, voice);
+                addNotesVoices(event, voice);
+                console.log('noteVoices length', notesVoices.size);
             } else {
                 synth.schedulePerc(
                     frequency,
@@ -72,7 +92,7 @@ export const useSynthStore = defineStore("synthesizers", () => {
     }
 
     const scheduleNoteVoiceModification = (note: Note, mods: ScheduledModifications) => {
-        const voiceToAlter = traceToVoice.get(note);
+        const voiceToAlter = notesVoices.get(note);
         if (voiceToAlter && voiceToAlter.scheduleModification) {
             voiceToAlter.scheduleModification(mods, audioContextStore.audioContext.currentTime);
         }
