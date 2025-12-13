@@ -8,6 +8,7 @@ import MidiInputConfig from './MidiInputConfig.vue';
 import PerformanceSettings from './PerformanceSettings.vue';
 import Physical from './Physical.vue';
 import SnapSelector from './SnapSelector.vue';
+import Transpose from './Transpose.vue';
 import WorkingMemory from './WorkingMemory.vue';
 defineProps<{
     paneWidth: number
@@ -23,6 +24,7 @@ defineProps<{
         <ExtraContentSources/>
         <LayersManager />
         <SnapSelector startExpanded />
+        <Transpose />
         <FtCaptureManager />
         <MidiInputConfig />
         <Physical />
