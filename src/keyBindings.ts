@@ -7,6 +7,7 @@ export enum KeyActions {
     ActivateCopyOnDrag,
     PlayPause,
     ActivateAreaSelectionMode,
+    ActivateAdditiveAreaSelectionMode,
     ActivateModulationMode,
     ActivateAutomationMode,
     ActivateLoopMode,
@@ -29,6 +30,7 @@ export enum KeyActions {
 
 type KeyActionTuple = [KeyActions, string, boolean, boolean, boolean];
 
+// action, key, ctrlKey, shiftKey, altKey
 const keyBindings: KeyActionTuple[] = [
     [KeyActions.Delete, 'Delete', false, false, false],
     [KeyActions.Delete, 'Backspace', false, false, false],
@@ -38,6 +40,7 @@ const keyBindings: KeyActionTuple[] = [
     [KeyActions.ActivateCopyOnDrag, 'Alt', false, false, false],
     [KeyActions.PlayPause, ' ', false, false, false],
     [KeyActions.ActivateAreaSelectionMode, 'Control', false, false, false],
+    [KeyActions.ActivateAdditiveAreaSelectionMode, 'Shift', true, false, false],
     [KeyActions.ActivateModulationMode, 'm', false, false, false],
     [KeyActions.ActivateAutomationMode, 'a', false, false, false],
     [KeyActions.ActivateLoopMode, 'l', false, false, false],

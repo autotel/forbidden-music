@@ -321,6 +321,7 @@ export enum MouseDownActions {
     DragNoteVelocity,
     CopyNote,
     AreaSelectNotes,
+    AdditiveAreaSelectNotes,
     MoveTraces,
     LengthenItem,
     MoveItem,
@@ -464,6 +465,7 @@ export const useToolStore = defineStore("tool", () => {
                 }
             }
             case MouseDownActions.AreaSelectNotes:
+            case MouseDownActions.AdditiveAreaSelectNotes:
                 return 'cursor-area-select';
             case MouseDownActions.Erase:
                 return 'cursor-eraser';
@@ -537,7 +539,9 @@ export const useToolStore = defineStore("tool", () => {
 
         if (
             current.value === Tool.Select ||
-            currentLeftHand.value === Tool.Select
+            current.value === Tool.SelectAdditive ||
+            currentLeftHand.value === Tool.Select ||
+            currentLeftHand.value === Tool.SelectAdditive
         ) {
             if (mouse.hovered?.trace) {
                 if (selection.isSelected(mouse.hovered?.trace)) {
@@ -551,8 +555,13 @@ export const useToolStore = defineStore("tool", () => {
                     }
                 }
             } else {
-                ret = MouseDownActions.AreaSelectNotes;
-                currentMouseStringHelper.value = "⃞";
+                if (current.value === Tool.SelectAdditive || currentLeftHand.value === Tool.SelectAdditive) {
+                    ret = MouseDownActions.AdditiveAreaSelectNotes;
+                    currentMouseStringHelper.value = "⃞+";
+                } else {
+                    ret = MouseDownActions.AreaSelectNotes;
+                    currentMouseStringHelper.value = "⃞";
+                }
             }
         } else if (current.value === Tool.Eraser) {
             ret = MouseDownActions.Erase;
@@ -640,6 +649,9 @@ export const useToolStore = defineStore("tool", () => {
         switch (mouse.currentAction) {
             case MouseDownActions.AreaSelectNotes: {
                 selection.clear();
+                // No break!
+            }
+            case MouseDownActions.AdditiveAreaSelectNotes: {
                 const x = e.clientX;
                 const y = e.clientY;
 
@@ -788,7 +800,8 @@ export const useToolStore = defineStore("tool", () => {
             sortedRange,
             current.value === Tool.Edit || current.value === Tool.Modulation,
             current.value === Tool.Automation,
-            current.value === Tool.Edit || current.value === Tool.Loop
+            current.value === Tool.Edit || current.value === Tool.Loop,
+            current.value === Tool.SelectAdditive || currentLeftHand.value === Tool.SelectAdditive
         );
     }, 25);
 
@@ -886,7 +899,8 @@ export const useToolStore = defineStore("tool", () => {
 
         if ((
             current.value === Tool.Select ||
-            currentLeftHand.value === Tool.Select
+            currentLeftHand.value === Tool.Select ||
+            currentLeftHand.value === Tool.SelectAdditive
         ) && selectRange.value.active) {
             refreshAndApplyRangeSelection(e);
         } else if (mouse.drag) {
