@@ -80,6 +80,10 @@ export const keyBindingsListener = (e: KeyboardEvent, stores: Stores) => {
             tool.currentLeftHand = Tool.Select;
             break;
         }
+        case KeyActions.ActivateAdditiveAreaSelectionMode: {
+            tool.currentLeftHand = Tool.SelectAdditive;
+            break;
+        }
         case KeyActions.ActivateModulationMode: {
             tool.current = tool.current === Tool.Modulation ? Tool.Edit : Tool.Modulation;
             break;

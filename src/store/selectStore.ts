@@ -84,8 +84,9 @@ export const useSelectStore = defineStore("select", () => {
         selectNotes = true,
         selectAutomationPoints = true,
         selectLoops = true,
+        additive = false,
     ) => {
-        select();
+        if(!additive) select();
 
         const pxRange = view.pxRangeOf(range);
 

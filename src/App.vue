@@ -215,9 +215,15 @@ const keyUpListener = (e: KeyboardEvent) => {
     switch (keyAction) {
         case KeyActions.ActivateCopyOnDrag: {
             tool.copyOnDrag = false;
+            break;
         }
         case KeyActions.ActivateAreaSelectionMode: {
             tool.currentLeftHand = Tool.None;
+            break;
+        }
+        case KeyActions.ActivateAdditiveAreaSelectionMode: {
+            tool.currentLeftHand = Tool.Select;
+            break;
         }
     }
 }

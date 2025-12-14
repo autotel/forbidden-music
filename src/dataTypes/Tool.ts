@@ -4,6 +4,7 @@ export enum Tool {
     Modulation,
     Automation,
     Select,
+    SelectAdditive,
     Loop,
     Eraser,
 }
