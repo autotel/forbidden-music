@@ -1,66 +1,38 @@
 {
+  "productName": "continuous-piano-roll",
+  "identifier": "com.forbidden-music",
+  "version": "0.1.0",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist",
-    "withGlobalTauri": false
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
   },
-  "package": {
-    "productName": "continuous-piano-roll",
-    "version": "0.0.0"
+  
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "fs": {
-        "all": true,
-        "scope": ["**", "**/*", "/**/*", "/**/.*/**", "/**/.*", "/home/*/.local/share/**"]
-      },
-      "path": {
-        "all": true
-      },
-      "dialog": {
-        "ask": true,
-        "confirm": true,
-        "message": true,
-        "open": true,
-        "save": true
-      },
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "protocol": {
-        "all": true,
-        "asset": true,
-        "assetScope": ["**"]
-      }
-    
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.forbidden-music",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    },
-    "security": {
-      "csp": null
-    },
+  "app": {
     "windows": [
       {
-        "fullscreen": false,
+        "label": "main",
+        "title": "autotel - nondiscrete piano roll",
+        "width": 800,
+        "height": 600,
         "resizable": true,
-        "title": "continuous-piano-roll",
-        "width": 1024,
-        "height": 768
+        "visible": true
       }
-    ]
+    ],
+    "security": {
+      "csp": null
+    }
   }
 }

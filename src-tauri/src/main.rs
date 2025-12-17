@@ -4,16 +4,14 @@
 //! Make some noise via cpal.
 #![allow(clippy::precedence)]
 // for MIDI, thanks to Till (https://till.md/)
-use assert_no_alloc::*;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{FromSample, Sample, SizedSample, Stream, SupportedStreamConfig};
+use cpal::{FromSample, Sample, SizedSample, SupportedStreamConfig};
 use fundsp::hacker::*;
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tauri::{Manager, Window, Wry};
-
+use tauri::{Emitter, Manager, Window, Wry};
 #[derive(Default)]
 pub struct MidiState {
     pub input: Mutex<Option<MidiInputConnection<()>>>,
@@ -78,7 +76,7 @@ fn open_midi_connection(
                         "midir",
                         move |_, message, _| {
                             handle
-                                .emit_all(
+                                .emit(
                                     "midi_message",
                                     MidiMessage {
                                         message: message.to_vec(),
@@ -141,12 +139,15 @@ fn main() -> anyhow::Result<()> {
         .setup(|app| {
             #[cfg(debug_assertions)] // only include this code on debug builds
             {
-                let window = app.get_window("main").unwrap();
-                //   window.open_devtools();
-                //   window.close_devtools();
-                window
-                    .set_title("autotel - nondiscrete piano roll")
-                    .expect("window title could not be set")
+                if let Some(window) = app.get_webview_window("main") {
+                    //   window.open_devtools();
+                    //   window.close_devtools();
+                    window
+                        .set_title("autotel - nondiscrete piano roll")
+                        .expect("window title could not be set");
+                } else {
+                    println!("Warning: main window not found in setup; title not set");
+                }
             }
             Ok(())
         })
@@ -246,7 +247,7 @@ impl VeryBasicVoice {
         self.in_use = true;
         self.envelope_countdown = self.envelope_duration;
         //
-        if(self.oscillator.amplitude == 0.0) {
+        if self.oscillator.amplitude == 0.0 {
             self.oscillator.amplitude = 0.2;
         }
     }
