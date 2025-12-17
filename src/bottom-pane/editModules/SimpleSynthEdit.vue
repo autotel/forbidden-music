@@ -76,7 +76,7 @@ const rows = () => {
     justify-content: space-between;
     border-radius: 1em;
     margin: 0 0.5em;
-    height: 5em;
+    height: 70px;
 }
 .group .title {
     position: relative;

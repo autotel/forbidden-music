@@ -2,12 +2,12 @@ const forever = () => new Promise(() => { });
 import {
     BaseDirectory,
     exists,
-    readBinaryFile,
+    readFile,
     readDir,
     readTextFile,
     writeFile,
     writeTextFile,
-} from '@tauri-apps/api/fs';
+} from '@tauri-apps/plugin-fs';
 
 import { invoke } from '@tauri-apps/api';
 import { open, save } from '@tauri-apps/api/dialog';
@@ -57,7 +57,7 @@ const tauriObjectPromise = (async () => {
             writeFile, writeTextFile,
             readDir,
             exists,
-            readBinaryFile
+            readFile
         },
         dialog: {
             open,
