@@ -17,8 +17,8 @@ export class RingModEffect extends AudioModule {
         const dry = audioContext.createGain();
         const wet = audioContext.createGain();
         const ringer = audioContext.createGain();
-        dry.gain.value = 0;
-        wet.gain.value = 1;
+        dry.gain.value = 1;
+        wet.gain.value = 0;
         const oscillator = audioContext.createOscillator();
         // Id' like to have noise too, but its not available. Later I could think of using periodic wave?
         oscillator.type = "sine";
