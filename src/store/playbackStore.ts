@@ -238,12 +238,9 @@ export const usePlaybackStore = defineStore("playback", () => {
             loopNowHierarchical,
             loopNow,
         });
-        if (!playing.value) {
+        if (!(playing.value && loopNowHierarchical)) {
             currentScoreTime.value = loopToJumpTo.value.time;
             play();
-        }
-        if(!loopNowHierarchical) {
-            currentScoreTime.value = loopToJumpTo.value.time;
         }
     }
 
@@ -259,8 +256,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
 
         currentScoreTime.value = loopTo.time + remainder;
-        loopNow = loopTo;
-        loopNow.repetitionsLeft = loopNow.count - 1;
+        loops.resetLoopRepetitions();
         loopNowHierarchical = loops.getLoopToPlay(currentScoreTime.value);
     }
 
