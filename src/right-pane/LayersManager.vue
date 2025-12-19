@@ -31,6 +31,10 @@ const switchLayerVisibility = (layerNo: number) => {
 const switchLayerLocked = (layerNo: number) => {
     const layer = layers.layers[layerNo];
     layer.locked = !layer.locked;
+    // deselect what's on the locked layer
+    selection.select(
+        ...([...selection.selected].filter(t=>!layers.isTraceLocked(t)))
+    )
 }
 const addLayer = () => {
     layers.addLayer();
