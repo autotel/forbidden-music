@@ -712,7 +712,7 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.AddToSelectionAndDrag:
                 if (!mouse.hovered?.trace) throw new Error('no traceBeingHovered');
-                if (layers.isTraceLocked(mouse.hovered.trace)) break;
+                // if (layers.isTraceLocked(mouse.hovered.trace)) break;
                 selection.add(mouse.hovered.trace);
                 if ('layer' in mouse.hovered.trace) {
                     currentLayerNumber.value = mouse.hovered?.trace.layer;

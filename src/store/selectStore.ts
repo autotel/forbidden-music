@@ -50,6 +50,7 @@ export const useSelectStore = defineStore("select", () => {
 
     const select = (...items: Trace[]) => {
         selected.value.clear();
+        items = items.filter(i=>layers.isTraceLocked(i))
         selected.value = new Set(items);
         refreshTraceSelectionState();
     };
@@ -74,6 +75,7 @@ export const useSelectStore = defineStore("select", () => {
     const add = (...trace: (Trace)[]) => {
         trace.forEach((n) => {
             if (!n) return;
+            if (layers.isTraceLocked(n)) return;
             selected.value.add(n);
         });
         refreshTraceSelectionState();
@@ -151,7 +153,7 @@ export const useSelectStore = defineStore("select", () => {
         const newNotes = getTracesInRange(
             notes.list,
             range
-        );
+        ).filter(i=>!layers.isTraceLocked(i))
         add(...newNotes);
     };
     const clear = () => {
@@ -184,7 +186,7 @@ export const useSelectStore = defineStore("select", () => {
         ], {
             time: loop.time,
             timeEnd: loop.timeEnd
-        });
+        }).filter(i=>!layers.isTraceLocked(i))
         select(...startingInRange)
     }
 
