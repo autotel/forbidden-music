@@ -152,7 +152,7 @@ const mouseDragSelectedTraces = ({
         octaveDeltaAfterSnap = snappedTrace.octave - octaveWhenDragStarted
     }
     drag.traces.map((draggedTrace, index) => {
-        // if(layers.isTraceLocked(draggedTrace)) return;
+        if(layers.isTraceLocked(draggedTrace)) return;
 
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (!correlativeDragStartClone) throw new Error('no correlativeDragStartClone');
@@ -185,7 +185,7 @@ const mouseDragModulationSelectedTraces = (
     // negative y bc. inverted by offset, but in this case we don't want the offset amt, only sign
     const velocityDelta = view.pxToVelocity(-drag.delta.y);
     drag.traces.forEach((trace, index) => {
-        // if(layers.isTraceLocked(trace)) return;
+        if(layers.isTraceLocked(trace)) return;
         if (trace.type !== TraceType.Note) return;
         const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
         if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
@@ -232,6 +232,8 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, sele
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
 
+    if(layers.isTraceLocked(drag.trace)) return;
+
     const traceWithTimeEnd = drag.trace as Trace & TimeRange;
     snap.resetSnapExplanation();
 
@@ -250,7 +252,7 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, sele
 
     const selectedTraces = selection.getTraces();
     selectedTraces.forEach((trace, index) => {
-        // if(layers.isTraceLocked(trace)) return;
+        if(layers.isTraceLocked(trace)) return;
         if (!('timeEnd' in trace)) return;
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
@@ -304,7 +306,7 @@ const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {
     });
 
     if (note) {
-        // if(layers.isTraceLocked(note)) return;
+        if(layers.isTraceLocked(note)) return;
         note.velocity -= 0.05;
         if (note.velocity <= 0) {
             const projectNoteIndex = note ? notes.list.indexOf(note) : -1;
@@ -692,14 +694,14 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.LengthenTrace:
                 if (!mouse.hovered?.traceRightEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceRightEdge);
                 if (!selection.isSelected(mouse.hovered?.traceRightEdge)) {
-                    // if(layers.isTraceLocked(mouse.hovered.traceRightEdge)) return;
+                    if(layers.isTraceLocked(mouse.hovered.traceRightEdge)) return;
                     selection.select(mouse.hovered?.traceRightEdge);
                 }
                 break;
             case MouseDownActions.LengthenAndMoveTrace:
                 if (!mouse.hovered?.traceLeftEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceLeftEdge);
                 if (!selection.isSelected(mouse.hovered?.traceLeftEdge)) {
-                    // if(layers.isTraceLocked(mouse.hovered.traceLeftEdge)) return;
+                    if(layers.isTraceLocked(mouse.hovered.traceLeftEdge)) return;
                     selection.select(mouse.hovered?.traceLeftEdge);
                 }
                 break;
@@ -712,7 +714,7 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.AddToSelectionAndDrag:
                 if (!mouse.hovered?.trace) throw new Error('no traceBeingHovered');
-                // if (layers.isTraceLocked(mouse.hovered.trace)) break;
+                // if (layers.isTraceLocked(mouse.hovered.trace)) return;
                 selection.add(mouse.hovered.trace);
                 if ('layer' in mouse.hovered.trace) {
                     currentLayerNumber.value = mouse.hovered?.trace.layer;
@@ -757,7 +759,7 @@ export const useToolStore = defineStore("tool", () => {
             }
             case MouseDownActions.CreateNote: {
                 if (!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
-                // if(layers.isTraceLocked(noteThatWouldBeCreated.value)) return; // hence not creating on locked layer
+                if(layers.isTraceLocked(noteThatWouldBeCreated.value)) return; // hence not creating on locked layer
                 selection.clear();
                 const cloned = cloneTrace(noteThatWouldBeCreated.value);
                 mouse.tracesBeingCreated = [cloned];
