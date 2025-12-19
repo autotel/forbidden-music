@@ -169,7 +169,7 @@ export const useSelectStore = defineStore("select", () => {
                 break;
             }
             default: {
-                const visibleLayerNotes = notes.list.filter(n => layers.isVisible(n.layer))
+                const visibleLayerNotes = notes.list.filter(n => layers.isVisible(n.layer) && !layers.isLocked(n.layer))
                 whatToSelect.push(...visibleLayerNotes)
             }
         }
