@@ -15,6 +15,8 @@ import { useSelectStore } from "../store/selectStore";
 import { useToolStore } from "../store/toolStore";
 import { layerNoteColorStrings } from "../store/viewStore";
 import Collapsible from "./Collapsible.vue";
+import Lock from "@/components/icons/Lock.vue";
+import LockOpen from "@/components/icons/LockOpen.vue";
 
 const communications = useCommunicationStore();
 const tool = useToolStore();
@@ -25,6 +27,10 @@ const project = useProjectStore();
 const switchLayerVisibility = (layerNo: number) => {
     const layer = layers.layers[layerNo];
     layer.visible = !layer.visible;
+}
+const switchLayerLocked = (layerNo: number) => {
+    const layer = layers.layers[layerNo];
+    layer.locked = !layer.locked;
 }
 const addLayer = () => {
     layers.addLayer();
@@ -80,6 +86,10 @@ const handleRemoveClick = (no: number, element: HTMLElement) => {
                 <span v-on:click="switchLayerVisibility(layerNo)">
                     <Eye v-if="layers.isVisible(layerNo)" />
                     <EyeNot v-else />
+                </span>
+                <span v-on:click="switchLayerLocked(layerNo)">
+                    <Lock v-if="layers.isLocked(layerNo)" />
+                    <LockOpen v-else />
                 </span>
                 <ToggleLayerMute :layerObject="layer" />
             </Button>

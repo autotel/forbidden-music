@@ -119,12 +119,15 @@ export const useSelectStore = defineStore("select", () => {
             )
         }).map(r => r.event);
 
+        const unlockedTracesWithinRange = tracesWithinRange.filter((t)=>!layers.isTraceLocked(t));
+
         if (
             'velocity' in range && 'velocityEnd' in range
         ) {
             const tracesWithingVeloRange = filterMap(tracesWithinTimeRange, rect => {
                 const evt = rect.event;
                 if (evt.type !== TraceType.Note) return false;
+                if (layers.isTraceLocked(evt)) return false;
                 const note = evt as Note;
                 return (
                     // bc. velolines appear at start of notes
@@ -141,7 +144,7 @@ export const useSelectStore = defineStore("select", () => {
 
 
         add(
-            ...tracesWithinRange,
+            ...unlockedTracesWithinRange,
         );
     };
     const addRange = (range: SelectableRange) => {
