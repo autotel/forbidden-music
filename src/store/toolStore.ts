@@ -492,6 +492,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const timelineItemMouseEnter = (trace: Trace) => {
         traceTypeSafetyCheck(trace);
+        if(layers.isTraceLocked(trace)) return;
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
         automationPointThatWouldBeCreated.value = false;
@@ -502,6 +503,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const timelineItemRightEdgeMouseEnter = (trace: Trace) => {
         // unhover all other but don't unhover item body
+        if(layers.isTraceLocked(trace)) return;
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
         mouse.hovered = {
@@ -512,6 +514,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const timelineItemLeftEdgeMouseEnter = (trace: Trace) => {
         // unhover all other but don't unhover item body
+        if(layers.isTraceLocked(trace)) return;
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
         mouse.hovered = {

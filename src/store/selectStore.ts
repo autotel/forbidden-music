@@ -50,7 +50,6 @@ export const useSelectStore = defineStore("select", () => {
 
     const select = (...items: Trace[]) => {
         selected.value.clear();
-        items = items.filter(i=>layers.isTraceLocked(i))
         selected.value = new Set(items);
         refreshTraceSelectionState();
     };
@@ -161,6 +160,7 @@ export const useSelectStore = defineStore("select", () => {
     };
     const selectAll = () => {
         const whatToSelect:Trace[] = []
+        console.log("select all");
         switch (tool.current) {
             case Tool.Loop:
                 whatToSelect.push(...loops.list)
