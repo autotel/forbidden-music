@@ -1,15 +1,13 @@
 <script setup lang="ts">
+import { useTimeRangeEdits } from '@/composables/useTimeRangeEdits';
 import { usePlaybackStore } from '@/store/playbackStore';
 import { useSelectStore } from '@/store/selectStore';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { loop, Loop } from '../../dataTypes/Loop';
+import { Loop } from '../../dataTypes/Loop';
 import { Tool } from '../../dataTypes/Tool';
-import { useProjectStore } from '../../store/projectStore';
 import { useToolStore } from '../../store/toolStore';
 import { TimelineRect, useViewStore } from '../../store/viewStore';
 import SvgLittleButton from './SvgLittleButton.vue';
-import { useTimeRangeEdits } from '@/composables/useTimeRangeEdits';
-import { useLoopsStore } from '@/store/loopsStore';
 
 
 const view = useViewStore();
@@ -19,8 +17,6 @@ const props = defineProps<{
     interactionDisabled?: boolean,
     greyed?: boolean,
 }>();
-const project = useProjectStore();
-const loops = useLoopsStore();
 const playback = usePlaybackStore();
 const selection = useSelectStore();
 const loopBody = ref<SVGRectElement>();
@@ -57,13 +53,10 @@ const playme = () => {
     // playback.currentScoreTime = props.eventRect.event.time;
     // playback.play();
     playback.enqueueLoop(props.eventRect.event);
-    enqueued.value = true;
 }
 
-watch(()=>playback.loopToJumpTo, (newVal, oldVal) => {
-    if (newVal === false) {
-        enqueued.value = false;
-    }
+watch(()=>playback.loopToJumpTo, (newVal) => {
+    enqueued.value = newVal === props.eventRect.event;
 })
 
 watch(rightDragHandle, (newVal, oldVal) => {
