@@ -1,3 +1,5 @@
+import { Note } from "@/dataTypes/Note";
+import { Trace } from "@/dataTypes/Trace";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -29,6 +31,22 @@ export const useLayerStore = defineStore("layer", () => {
             return true;
         }
         return layers.value[layer].mute;
+    }
+    
+    const isLocked = (layer: number): boolean => {
+        if(!layers.value[layer]) {
+            return true;
+        }
+        return layers.value[layer].locked;
+    }
+
+    const isTraceLocked = (trace: Trace) => {
+        if(!('layer' in trace)) return false
+        return layers.value[trace.layer]?.locked === true;
+    }
+
+    const onlyUnlocked = (notes: Note[]) => {
+        return notes.filter((n)=>layers.value[n.layer]?.locked === false)
     }
 
     const addLayer = () => {
@@ -70,7 +88,9 @@ export const useLayerStore = defineStore("layer", () => {
     return {
         layers,
         getOrMakeLayerWithIndex,
-        isVisible, isMute,
+        isVisible, isMute, isLocked,
+        isTraceLocked,
+        onlyUnlocked,
         addLayer,
         clear,
     };

@@ -20,6 +20,7 @@ import { useLoopsStore } from './loopsStore';
 import { useNotesStore } from './notesStore';
 import { useSynthStore } from './synthStore';
 import { octaveToFrequency } from '@/functions/toneConverters';
+import { useLayerStore } from './layerStore';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -28,6 +29,7 @@ type NotesStore = ReturnType<typeof useNotesStore>;
 type SelectStore = ReturnType<typeof useSelectStore>;
 type AutomationLaneStore = ReturnType<typeof useAutomationLaneStore>;
 type SynthStore = ReturnType<typeof useSynthStore>;
+type LayersStore = ReturnType<typeof useLayerStore>;
 type Reference<T> = { value: T };
 
 type PolyfillTrace = (OctaveRange & VelocityRange & TimeRange) & (Trace) & { duration: number };
@@ -74,6 +76,7 @@ interface Stores {
     selection: SelectStore,
     lanes: AutomationLaneStore,
     synth: SynthStore,
+    layers: LayersStore,
 }
 
 const polyfillTrace = (trace: Trace): PolyfillTrace => {
@@ -122,7 +125,7 @@ const mouseDuplicateTraces = ({
 const mouseDragSelectedTraces = ({
     drag, disallowOctaveChange, disallowTimeChange
 }: ToolMouse, {
-    view, snap, notes, lanes, synth
+    view, snap, notes, synth, layers
 }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.traceWhenDragStarted) throw new Error('no drag.traceWhenDragStarted');
@@ -153,6 +156,8 @@ const mouseDragSelectedTraces = ({
         octaveDeltaAfterSnap = snappedTrace.octave - octaveWhenDragStarted
     }
     drag.traces.map((draggedTrace, index) => {
+        if(layers.isTraceLocked(draggedTrace)) return;
+
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (!correlativeDragStartClone) throw new Error('no correlativeDragStartClone');
 
@@ -176,7 +181,7 @@ const mouseDragSelectedTraces = ({
 
 const mouseDragModulationSelectedTraces = (
     { drag }: ToolMouse,
-    { view, synth }: Stores,
+    { view, synth, layers }: Stores,
     /** provide this reference in order to set de initial velocity for new traces */
     lastVelocitySet: Reference<number> = { value: 0 }
 ) => {
@@ -185,6 +190,7 @@ const mouseDragModulationSelectedTraces = (
     // negative y bc. inverted by offset, but in this case we don't want the offset amt, only sign
     const velocityDelta = view.pxToVelocity(-drag.delta.y);
     drag.traces.forEach((trace, index) => {
+        if(layers.isTraceLocked(trace)) return;
         if (trace.type !== TraceType.Note) return;
         const traceWhenDragStarted = drag.tracesWhenDragStarted[index];
         if (!traceWhenDragStarted) throw new Error('no traceWhenDragStarted');
@@ -228,10 +234,12 @@ const mouseDragAutomationSelectedTraces = (
 
     });
 }
-const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, selection }: Stores) => {
+const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, selection, layers }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
+
+    if(layers.isTraceLocked(drag.trace)) return;
 
     const traceWithTimeEnd = drag.trace as Trace & TimeRange;
     snap.resetSnapExplanation();
@@ -251,6 +259,7 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, sele
 
     const selectedTraces = selection.getTraces();
     selectedTraces.forEach((trace, index) => {
+        if(layers.isTraceLocked(trace)) return;
         if (!('timeEnd' in trace)) return;
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
@@ -284,6 +293,7 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selec
 
     const selectedTraces = selection.getTraces();
     selectedTraces.forEach((trace, index) => {
+        // no trace whose left edge is draggable could be part of a lockable layer
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
         trace.time = correlativeDragStartClone.time + afterSnapTimeChange;
@@ -291,7 +301,7 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selec
     const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
-const mouseErase = ({ pos }: ToolMouse, { project, view, notes }: Stores) => {
+const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {
     const pxRange = 5;
     const time = view.pxToTimeWithOffset(pos.x - pxRange);
     const timeEnd = view.pxToTimeWithOffset(pos.x + pxRange);
@@ -301,7 +311,9 @@ const mouseErase = ({ pos }: ToolMouse, { project, view, notes }: Stores) => {
     const note = findTraceInRange<Note>(visibleTraces, {
         time, timeEnd, octave, octaveEnd
     });
+
     if (note) {
+        if(layers.isTraceLocked(note)) return;
         note.velocity -= 0.05;
         if (note.velocity <= 0) {
             const projectNoteIndex = note ? notes.list.indexOf(note) : -1;
@@ -343,6 +355,7 @@ export const useToolStore = defineStore("tool", () => {
     const project = useProjectStore();
     const notes = useNotesStore(); const snap = useSnapStore();
     const lanes = useAutomationLaneStore();
+    const layers = useLayerStore();
     const ftRec = ref(false);
     const loops = useLoopsStore();
     const synth = useSynthStore();
@@ -487,6 +500,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const timelineItemMouseEnter = (trace: Trace) => {
         traceTypeSafetyCheck(trace);
+        if(layers.isTraceLocked(trace)) return;
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
         automationPointThatWouldBeCreated.value = false;
@@ -497,6 +511,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const timelineItemRightEdgeMouseEnter = (trace: Trace) => {
         // unhover all other but don't unhover item body
+        if(layers.isTraceLocked(trace)) return;
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
         mouse.hovered = {
@@ -507,6 +522,7 @@ export const useToolStore = defineStore("tool", () => {
 
     const timelineItemLeftEdgeMouseEnter = (trace: Trace) => {
         // unhover all other but don't unhover item body
+        if(layers.isTraceLocked(trace)) return;
         loopThatWouldBeCreated.value = false;
         noteThatWouldBeCreated.value = false;
         mouse.hovered = {
@@ -551,7 +567,7 @@ export const useToolStore = defineStore("tool", () => {
             currentLeftHand.value === Tool.Select ||
             currentLeftHand.value === Tool.SelectAdditive
         ) {
-            if (mouse.hovered?.trace) {
+            if (mouse.hovered?.trace && !layers.isTraceLocked(mouse.hovered.trace)) {
                 if (selection.isSelected(mouse.hovered?.trace)) {
                     ret = MouseDownActions.RemoveFromSelection;
                     currentMouseStringHelper.value = "-";
@@ -689,12 +705,14 @@ export const useToolStore = defineStore("tool", () => {
             case MouseDownActions.LengthenTrace:
                 if (!mouse.hovered?.traceRightEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceRightEdge);
                 if (!selection.isSelected(mouse.hovered?.traceRightEdge)) {
+                    if(layers.isTraceLocked(mouse.hovered.traceRightEdge)) return;
                     selection.select(mouse.hovered?.traceRightEdge);
                 }
                 break;
             case MouseDownActions.LengthenAndMoveTrace:
                 if (!mouse.hovered?.traceLeftEdge) throw new Error('mouse.hovered is' + mouse.hovered?.traceLeftEdge);
                 if (!selection.isSelected(mouse.hovered?.traceLeftEdge)) {
+                    if(layers.isTraceLocked(mouse.hovered.traceLeftEdge)) return;
                     selection.select(mouse.hovered?.traceLeftEdge);
                 }
                 break;
@@ -707,8 +725,9 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.AddToSelectionAndDrag:
                 if (!mouse.hovered?.trace) throw new Error('no traceBeingHovered');
-                selection.add(mouse.hovered?.trace);
-                if ('layer' in mouse.hovered?.trace) {
+                // if (layers.isTraceLocked(mouse.hovered.trace)) return;
+                selection.add(mouse.hovered.trace);
+                if ('layer' in mouse.hovered.trace) {
                     currentLayerNumber.value = mouse.hovered?.trace.layer;
                 }
                 break;
@@ -722,6 +741,7 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             case MouseDownActions.SetSelectionAndDrag: {
                 if (!mouse.drag?.trace) throw new Error('no trace dragged');
+                // if(layers.isTraceLocked(mouse.drag.trace)) return;
                 selection.select(mouse.drag.trace);
                 snap.resetSnapExplanation();
                 snap.focusedTrace = mouse.drag.trace;
@@ -750,6 +770,7 @@ export const useToolStore = defineStore("tool", () => {
             }
             case MouseDownActions.CreateNote: {
                 if (!noteThatWouldBeCreated.value) throw new Error('no noteThatWouldBeCreated');
+                if(layers.isTraceLocked(noteThatWouldBeCreated.value)) return; // hence not creating on locked layer
                 selection.clear();
                 const cloned = cloneTrace(noteThatWouldBeCreated.value);
                 mouse.tracesBeingCreated = [cloned];
@@ -894,6 +915,7 @@ export const useToolStore = defineStore("tool", () => {
         view,
         selection,
         lanes,
+        layers,
         notes,
         synth,
     };

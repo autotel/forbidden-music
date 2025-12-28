@@ -74,6 +74,7 @@ export const useSelectStore = defineStore("select", () => {
     const add = (...trace: (Trace)[]) => {
         trace.forEach((n) => {
             if (!n) return;
+            if (layers.isTraceLocked(n)) return;
             selected.value.add(n);
         });
         refreshTraceSelectionState();
@@ -119,12 +120,15 @@ export const useSelectStore = defineStore("select", () => {
             )
         }).map(r => r.event);
 
+        const unlockedTracesWithinRange = tracesWithinRange.filter((t)=>!layers.isTraceLocked(t));
+
         if (
             'velocity' in range && 'velocityEnd' in range
         ) {
             const tracesWithingVeloRange = filterMap(tracesWithinTimeRange, rect => {
                 const evt = rect.event;
                 if (evt.type !== TraceType.Note) return false;
+                if (layers.isTraceLocked(evt)) return false;
                 const note = evt as Note;
                 return (
                     // bc. velolines appear at start of notes
@@ -141,14 +145,14 @@ export const useSelectStore = defineStore("select", () => {
 
 
         add(
-            ...tracesWithinRange,
+            ...unlockedTracesWithinRange,
         );
     };
     const addRange = (range: SelectableRange) => {
         const newNotes = getTracesInRange(
             notes.list,
             range
-        );
+        ).filter(i=>!layers.isTraceLocked(i))
         add(...newNotes);
     };
     const clear = () => {
@@ -156,6 +160,7 @@ export const useSelectStore = defineStore("select", () => {
     };
     const selectAll = () => {
         const whatToSelect:Trace[] = []
+        console.log("select all");
         switch (tool.current) {
             case Tool.Loop:
                 whatToSelect.push(...loops.list)
@@ -166,7 +171,7 @@ export const useSelectStore = defineStore("select", () => {
                 break;
             }
             default: {
-                const visibleLayerNotes = notes.list.filter(n => layers.isVisible(n.layer))
+                const visibleLayerNotes = notes.list.filter(n => layers.isVisible(n.layer) && !layers.isLocked(n.layer))
                 whatToSelect.push(...visibleLayerNotes)
             }
         }
@@ -181,7 +186,7 @@ export const useSelectStore = defineStore("select", () => {
         ], {
             time: loop.time,
             timeEnd: loop.timeEnd
-        });
+        }).filter(i=>!layers.isTraceLocked(i))
         select(...startingInRange)
     }
 
