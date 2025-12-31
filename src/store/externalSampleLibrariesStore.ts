@@ -5,6 +5,7 @@ import { FileEntry } from "@tauri-apps/api/fs";
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import userSettingsStorageFactory from "./userSettingsStorageFactory";
+import { DirEntry } from "@tauri-apps/plugin-fs";
 
 export const libPathIsRemote = (libPath: string) => {
     return !(libPath.startsWith('file://') || libPath.startsWith('/'));
@@ -18,22 +19,24 @@ const recursiveFileSearch = async <T>(
     const { fs } = await tauriObject();
     const results: T[] = [];
     try {
-        const entries: FileEntry[] = await fs.readDir(dir);
+        const entries: DirEntry[] = await fs.readDir(dir);
         for (const entry of entries) {
-            if (entry.children) {
+            if (entry.isDirectory) {
                 if (depthLeft > 0) {
-                    const subResults = await recursiveFileSearch(
-                        entry.path, foundCallback, depthLeft - 1
-                    );
-                    results.push(...subResults);
+                    // won't work due to tauri version breaking changes
+
+                    // const subResults = await recursiveFileSearch(
+                    //     entry.path, foundCallback, depthLeft - 1
+                    // );
+                    // results.push(...subResults);
                 } else {
                     console.warn("Max depth reached in", dir);
                 }
             } else {
-                const found = await foundCallback(entry.path);
-                if (found) {
-                    results.push(found);
-                }
+                // const found = await foundCallback(entry.path);
+                // if (found) {
+                //     results.push(found);
+                // }
             }
         }
     } catch (e) {

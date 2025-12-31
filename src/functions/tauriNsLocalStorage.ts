@@ -22,7 +22,7 @@ const createStorageFileIfNotExists = async (filePath: string) => {
     return;
   }
   try {
-    await fs.writeFile(filePath, '{}');
+    await fs.writeTextFile(filePath, '{}');
   } catch (e) {
     console.error('error creating storage file', filePath, e);
   }

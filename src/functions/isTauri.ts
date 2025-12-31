@@ -46,6 +46,7 @@ import {
     templateDir,
     videoDir
 } from '@tauri-apps/api/path';
+import { readBinaryFile } from '@tauri-apps/api/fs';
 
 const tauriObjectPromise = (async () => {
     if (!isTauri()) await forever();
@@ -57,7 +58,8 @@ const tauriObjectPromise = (async () => {
             writeFile, writeTextFile,
             readDir,
             exists,
-            readFile
+            readFile,
+            readBinaryFile,
         },
         dialog: {
             open,
