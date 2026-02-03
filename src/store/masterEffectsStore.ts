@@ -3,7 +3,6 @@ import { SynthChain } from "../dataStructures/SynthChain";
 import { AudioModule } from "../synth/types/AudioModule";
 import { useAudioContextStore } from "./audioContextStore";
 import getSynthConstructors from "@/synth/getSynthConstructors";
-import { useExclusiveContentsStore } from "./exclusiveContentsStore";
 import { SynthChainDefinition, synthStructureManager } from "@/dataStructures/synthStructureFunctions";
 
 type admissibleEffectTypes = AudioModule;
@@ -14,8 +13,7 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
     const effectsChain = new SynthChain(audioContextStore.audioContext);
     const myInput = effectsChain.input;
     const output = effectsChain.output;
-    const exclusives = useExclusiveContentsStore();
-    const synthConstructorWrappers = getSynthConstructors(audioContextStore.audioContext, exclusives.enabled);
+    const synthConstructorWrappers = getSynthConstructors(audioContextStore.audioContext);
 
     const addEffect = (effect: admissibleEffectTypes) => {
         effectsChain.addAudioModule(effectsChain.children.length, effect);
@@ -52,6 +50,7 @@ export const useMasterEffectsStore = defineStore('playback-effects', () => {
 
     return {
         myInput,
+        output,
         effectsChain,
         addEffect,
         removeEffect,

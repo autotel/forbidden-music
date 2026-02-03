@@ -11,6 +11,7 @@ export type LoadFromType = 'file' | 'http';
 export interface SampleKitDefinition {
     type: SampleType;
     name: string,
+    /** @deprecated No longer used - all sample kits are now loaded immediately */
     exclusive?: boolean;
     onlyLocal?: boolean;
     readme?: string;

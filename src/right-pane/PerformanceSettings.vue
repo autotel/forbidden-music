@@ -8,7 +8,6 @@ import Toggle from '../components/inputs/Toggle.vue';
 import isDev from '../functions/isDev';
 import isTauri from '../functions/isTauri';
 import { ViewportTech, useCustomSettingsStore } from '../store/customSettingsStore';
-import { useExclusiveContentsStore } from '../store/exclusiveContentsStore';
 import { usePlaybackStore } from '../store/playbackStore';
 import { useToolStore } from '../store/toolStore';
 import Collapsible from './Collapsible.vue';
@@ -17,7 +16,6 @@ import GoFullscreenButton from '@/bottom-pane/components/GoFullscreenButton.vue'
 const monoModeInteraction = useMonoModeInteraction();
 
 const userSettings = useCustomSettingsStore();
-const exclusives = useExclusiveContentsStore();
 const bottomPane = useBottomPaneStateStore();
 const tool = useToolStore();
 const viewportTechs = [
@@ -60,11 +58,6 @@ const workletWorkbench = () => {
 
 
             <div class="form-section">Advanced features</div>
-
-            <div v-if="isDev()" class="form-row">
-                <Toggle v-model="exclusives.enabled" />
-                <label>Exclusives mode</label>
-            </div>
 
             <div class="form-row">
                 <Toggle v-model="userSettings.midiInputEnabled" />

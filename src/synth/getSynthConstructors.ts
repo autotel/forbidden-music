@@ -88,7 +88,6 @@ export class SynthConstructorWrapper {
 
 export default function getSynthConstructors(
     audioContext: AudioContext,
-    exclusivesMode: boolean,
 ): SynthConstructorWrapper[] {
     let returnArray = [] as SynthConstructorWrapper[];
 
@@ -101,14 +100,14 @@ export default function getSynthConstructors(
         isOnlyLocal?: boolean,
     ) => {
         const epp = (extraParams || []) as T;
-        if (isExclusive && !exclusivesMode) return;
+        // isExclusive parameter is now ignored - all synths are always available
         if (isOnlyLocal && !isDev()) return;
         returnArray.push(
             new SynthConstructorWrapper(
                 audioContext, constr, epp,
                 name || camelCaseToUName(constr.name),
                 type,
-                exclusivesMode
+                true // Always enable instant fetch (formerly exclusivesMode)
             )
         );
     }

@@ -12,19 +12,16 @@ import { PlaceholderSynth } from '../synth/generators/PlaceholderSynth';
 import { AudioModule, ReceivesNotes } from '../synth/types/AudioModule';
 import { SynthParam } from '../synth/types/SynthParam';
 import { useAudioContextStore } from "./audioContextStore";
-import { useExclusiveContentsStore } from './exclusiveContentsStore';
 import { useLayerStore } from "./layerStore";
 import { useMasterEffectsStore } from "./masterEffectsStore";
 import { ScheduledModifications, SynthVoice } from '@/synth/types/Synth';
 
 export const useSynthStore = defineStore("synthesizers", () => {
     const layerStore = useLayerStore();
-    const exclusives = useExclusiveContentsStore();
     const audioContextStore = useAudioContextStore();
     const masterEffectsStore = useMasterEffectsStore();
     const synthConstructorWrappers = getSynthConstructors(
-        audioContextStore.audioContext,
-        exclusives.enabled
+        audioContextStore.audioContext
     );
 
     const channels = ref<SynthStack>(new SynthStack(audioContextStore.audioContext));

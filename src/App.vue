@@ -27,7 +27,6 @@ import Harp from './overlays/Harp.vue';
 import RightPane from './right-pane/RightPane.vue';
 import { useBottomPaneStateStore } from './store/bottomPaneStateStore';
 import { ViewportTech, useCustomSettingsStore } from './store/customSettingsStore';
-import { useExclusiveContentsStore } from './store/exclusiveContentsStore';
 import { useHistoryStore } from './store/historyStore';
 import { useLibraryStore } from './store/libraryStore';
 import { useMonoModeInteraction } from './store/monoModeInteraction';
@@ -57,7 +56,6 @@ const autosaveTimeout = ref<(ReturnType<typeof setInterval>) | null>(null);
 const sidePaneWidth = ref(300);
 const viewport = ref<HTMLElement>();
 const userSettings = useCustomSettingsStore();
-const exclusiveContentsStore = useExclusiveContentsStore();
 const bottomPaneStateStore = useBottomPaneStateStore();
 
 
@@ -248,7 +246,6 @@ const tryLoadStart = async () => {
 }
 
 onMounted(() => {
-    exclusiveContentsStore.evaluateFromUrl();
     if (clickOutsideCatcher.value) {
         window.addEventListener('wheel', (e) => {
             if (e.target === clickOutsideCatcher.value) {
