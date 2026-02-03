@@ -1,4 +1,3 @@
-import { os } from "@tauri-apps/api";
 import { AutomatableSynthParam, getTweenSlice } from "../types/Automatable";
 import { EventParamsBase, Synth, SynthVoice } from "../types/Synth";
 import { BooleanSynthParam, NumberSynthParam, ParamType, SynthParam } from "../types/SynthParam";

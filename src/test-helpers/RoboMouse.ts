@@ -11,18 +11,50 @@ export const tweener = (
         const startTime = Date.now();
         const endTime = startTime + duration;
         const range = end - start;
+
+        // Use setTimeout as fallback if rAF doesn't fire (common in test environments)
+        let lastStepTime = startTime;
+        let rafFired = false;
+
         const step = () => {
+            rafFired = true;
             const now = Date.now();
             const value = start + range * ((now - startTime) / duration);
             if (now < endTime) {
                 callback(value);
+                lastStepTime = now;
                 requestAnimationFrame(step);
+
+                // Safety: if rAF doesn't fire within 32ms, use setTimeout instead
+                setTimeout(() => {
+                    if (Date.now() - lastStepTime > 32 && now < endTime) {
+                        step();
+                    }
+                }, 32);
             } else {
                 callback(end);
                 resolve(null);
             }
         };
+
         step();
+
+        // Fallback: if rAF never fires, use setTimeout-based animation
+        setTimeout(() => {
+            if (!rafFired) {
+                const intervalId = setInterval(() => {
+                    const now = Date.now();
+                    const value = start + range * ((now - startTime) / duration);
+                    if (now < endTime) {
+                        callback(value);
+                    } else {
+                        callback(end);
+                        clearInterval(intervalId);
+                        resolve(null);
+                    }
+                }, 16);
+            }
+        }, 50);
     });
 }
 
@@ -73,11 +105,11 @@ export class RoboMouse {
         };
 
         if (!this.eventTarget) throw new Error("eventTarget is " + this.eventTarget);
-        
+
         if(to.x > this.eventTarget.clientWidth || to.y > this.eventTarget.clientHeight) {
             console.warn("mouse target coordinates are outside of eventTarget");
         }
-        
+
         const tween = tweener(0, 1, duration, (value) => {
 
             if (!this.eventTarget) throw new Error("eventTarget is " + this.eventTarget);
@@ -100,11 +132,15 @@ export class RoboMouse {
             }
 
         });
-        tween.then(() => {
+
+        const cleanup = () => {
             this.inTween = false;
-        })
+        };
 
+        tween.then(cleanup).catch(cleanup);
 
+        // Safety timeout: ensure inTween gets reset even if requestAnimationFrame fails
+        setTimeout(cleanup, duration + 100);
 
         return tween;
     }

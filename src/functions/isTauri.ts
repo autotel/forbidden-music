@@ -9,8 +9,8 @@ import {
     writeTextFile,
 } from '@tauri-apps/plugin-fs';
 
-import { invoke } from '@tauri-apps/api';
-import { open, save } from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { open, save } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
 import {
     appCacheDir,
@@ -46,7 +46,6 @@ import {
     templateDir,
     videoDir
 } from '@tauri-apps/api/path';
-import { readBinaryFile } from '@tauri-apps/api/fs';
 
 const tauriObjectPromise = (async () => {
     if (!isTauri()) await forever();
@@ -59,7 +58,7 @@ const tauriObjectPromise = (async () => {
             readDir,
             exists,
             readFile,
-            readBinaryFile,
+            readBinaryFile: readFile, // In Tauri v2, readFile returns Uint8Array
         },
         dialog: {
             open,

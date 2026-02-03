@@ -1,11 +1,17 @@
 import { assertSampleKitDefinition, SampleKitDefinition } from "@/dataTypes/SampleKitDefinition";
 import { assertSampleLibraryDefinition, SamplesLibraryDefinition } from "@/dataTypes/SampleLibraryDefinition";
 import { tauriObject } from "@/functions/isTauri";
-import { FileEntry } from "@tauri-apps/api/fs";
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import userSettingsStorageFactory from "./userSettingsStorageFactory";
-import { DirEntry } from "@tauri-apps/plugin-fs";
+import type { DirEntry } from "@tauri-apps/plugin-fs";
+
+// Custom type for file entries
+interface FileEntry {
+    name: string;
+    path: string;
+    isDirectory?: boolean;
+}
 
 export const libPathIsRemote = (libPath: string) => {
     return !(libPath.startsWith('file://') || libPath.startsWith('/'));
@@ -16,27 +22,28 @@ const recursiveFileSearch = async <T>(
     foundCallback: (path: string) => T,
     depthLeft: number = 5,
 ) => {
-    const { fs } = await tauriObject();
+    const { fs, path } = await tauriObject();
     const results: T[] = [];
     try {
         const entries: DirEntry[] = await fs.readDir(dir);
         for (const entry of entries) {
+            // In Tauri v2, DirEntry doesn't have path property, so we construct it
+            const entryPath = await path.join(dir, entry.name);
+
             if (entry.isDirectory) {
                 if (depthLeft > 0) {
-                    // won't work due to tauri version breaking changes
-
-                    // const subResults = await recursiveFileSearch(
-                    //     entry.path, foundCallback, depthLeft - 1
-                    // );
-                    // results.push(...subResults);
+                    const subResults = await recursiveFileSearch(
+                        entryPath, foundCallback, depthLeft - 1
+                    );
+                    results.push(...subResults);
                 } else {
                     console.warn("Max depth reached in", dir);
                 }
             } else {
-                // const found = await foundCallback(entry.path);
-                // if (found) {
-                //     results.push(found);
-                // }
+                const found = await foundCallback(entryPath);
+                if (found) {
+                    results.push(found);
+                }
             }
         }
     } catch (e) {
