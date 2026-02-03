@@ -559,8 +559,6 @@ export default {
         ]
     }]],
     "masterEffects": [{
-        type: "SimpleDelay", params: []
-    },{
         type: "AutoMaximizer", params: []
     }],
     "version": LIBRARY_VERSION

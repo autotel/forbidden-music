@@ -26,7 +26,7 @@ export default (() => {
         const fs = await fsPromise;
         return fs.readFile(path, options);
     }
-    const writeFile = async (path: string, contents: Uint8Array<ArrayBufferLike> | ReadableStream<Uint8Array<ArrayBufferLike>>, options?: WriteFileOptions | undefined): Promise<void> => {
+    const writeFile = async (path: string, contents: Uint8Array | ReadableStream<Uint8Array>, options?: WriteFileOptions | undefined): Promise<void> => {
         const fs = await fsPromise;
         return fs.writeFile(path, contents, options);
     }

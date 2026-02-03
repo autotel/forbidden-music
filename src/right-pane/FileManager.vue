@@ -128,13 +128,14 @@ const showJSONSaveDialog = () => {
             const firstSelected = Array.isArray(selected) ? selected[0] : selected;
             const fileNameWithExtension = firstSelected.endsWith(".json") ? firstSelected : firstSelected + ".json";
             try {
-                const libraryItem = project.getProjectDefintion();
-                const json = JSON.stringify(libraryItem);
-                await fs.writeFile({ path: fileNameWithExtension, contents: json });
-                console.log("save JSON", fileNameWithExtension, json);
-                workingDirectory.value = await path.dirname(fileNameWithExtension);
-                project.name = await path.basename(fileNameWithExtension, ".json");
-                console.log("update project name", workingDirectory.value, project.name);
+                // Won't work after tauri version update
+                // const libraryItem = project.getProjectDefintion();
+                // const json = JSON.stringify(libraryItem);
+                // await fs.writeFile({ path: fileNameWithExtension, contents: json });
+                // console.log("save JSON", fileNameWithExtension, json);
+                // workingDirectory.value = await path.dirname(fileNameWithExtension);
+                // project.name = await path.basename(fileNameWithExtension, ".json");
+                // console.log("update project name", workingDirectory.value, project.name);
             } catch (e) {
                 alert(`Error saving file ${firstSelected}: ${e}`);
             }
@@ -156,26 +157,27 @@ const download = () => {
 
 const refreshDirList = () => {
     ifTauri(async (tauriPromise) => {
-        const tauriResolved = await tauriPromise;
-        const { fs, path } = tauriResolved;
-        const dir = await fs.readDir(workingDirectory.value);
-        filesOnWorkingDirectory.value = dir.filter((file) => {
-            if (
-                (skipDotFiles && file.name?.startsWith("."))
-                || (skipNotJSONFiles && !file.children && !file.name?.endsWith(".json"))
-            ) {
-                return false;
-            }
-            return true;
-        }).sort((a, b) => {
-            if (a.children && !b.children) {
-                return -1;
-            }
-            if (!a.children && b.children) {
-                return 1;
-            }
-            return 0;
-        });
+        // broken due to tauri version update
+        // const tauriResolved = await tauriPromise;
+        // const { fs, path } = tauriResolved;
+        // const dir = await fs.readDir(workingDirectory.value);
+        // filesOnWorkingDirectory.value = dir.filter((file) => {
+        //     if (
+        //         (skipDotFiles && file.name?.startsWith("."))
+        //         || (skipNotJSONFiles && !file.children && !file.name?.endsWith(".json"))
+        //     ) {
+        //         return false;
+        //     }
+        //     return true;
+        // }).sort((a, b) => {
+        //     if (a.children && !b.children) {
+        //         return -1;
+        //     }
+        //     if (!a.children && b.children) {
+        //         return 1;
+        //     }
+        //     return 0;
+        // });
     })
 }
 
