@@ -14,7 +14,6 @@ const props = defineProps<{
     audioModule: FourierSynth
 }>();
 const suspend = ref(false);
-const width = 8;
 const levelsArrayParam = ref(props.audioModule.levelsArrayParam);
 const phasesArrayParam = ref(props.audioModule.phasesArrayParam);
 const cols = computed(()=>{
@@ -31,28 +30,40 @@ const refreshArrays = () => {
 }
 </script>
 <template>
-    <div :style="{width}" class="layout">
-        <template class="arrays-cont" v-if="!suspend">
-            <NumberArraySynthParam :param="levelsArrayParam" :cols="cols"/>
-            <NumberArraySynthParam :param="phasesArrayParam" :cols="cols"/>
-        </template>
-        <template v-for="param in audioModule.params">
-            <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
-            <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
-            <OptionSynthParam 
-                v-else-if="param.type === ParamType.option && param.options.length > 1" 
-                :param="param"
-                @update="refreshArrays"
-            />
-        </template>
+    <div style="width: 18em" class="layout">
+        <div class="group" style="">
+            <template class="arrays-cont" v-if="!suspend">
+                <NumberArraySynthParam :param="levelsArrayParam" :cols="cols"/>
+                <NumberArraySynthParam :param="phasesArrayParam" :cols="cols"/>
+            </template>
+        </div>
+        <div class="group">
+            <template v-for="param in audioModule.params">
+                <div>
+                <NumberSynthParam v-if="param.type === ParamType.number" :param="param" />
+                <BooleanSynthParam v-else-if="param.type === ParamType.boolean" :param="param" />
+                    <OptionSynthParam 
+                        v-else-if="param.type === ParamType.option && param.options.length > 1" 
+                        :param="param"
+                        @update="refreshArrays"
+                    />
+                </div>
+            </template>
+        </div>
     </div>
 </template>
 <style scoped>
+.group {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
 .layout {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: space-around;
     height: 100%;
 }
+
 </style>
