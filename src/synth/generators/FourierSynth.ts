@@ -65,7 +65,7 @@ export class FourierVoice implements PatcheableSynthVoice {
     name = "Fourier Voice";
     output: any;
     periodicWaveRef: SimpleRef<PeriodicWave>;
-    paramsRef = {value: []};
+    paramsRef = { value: [] };
     receivesNotes = true;
     scheduleStart: (frequency: number, absoluteStartTime: number, eventParams: EventParamsBase) => FourierVoice;
     scheduleEnd: (absoluteStopTime?: number) => FourierVoice;
@@ -117,7 +117,7 @@ export class FourierVoice implements PatcheableSynthVoice {
             absoluteStopTime?: number
         ) => {
             console.log('scheduling end voice');
-            if(absoluteStopTime){
+            if (absoluteStopTime) {
                 const duration = absoluteStopTime - noteStartedTime;
                 // If proportional attack is enabled, ramp to velocity over 1/4 of note duration
                 if (proportionalAttackRef.value) {
@@ -128,7 +128,7 @@ export class FourierVoice implements PatcheableSynthVoice {
                     releaseVoice();
                     currentReleaseTimeout = null;
                 }, duration * 1000);
-            }else{
+            } else {
                 releaseVoice();
             }
             return this;
@@ -255,6 +255,7 @@ export class FourierSynth extends Synth {
         } as BooleanSynthParam);
     }
     updatePeriodicWave = useThrottleFn(() => {
+        console.log("update periodic wave");
         if (this.periodicWaveRef.value === null) throw new Error("no periodicWave");
         const periodicWaveRef = this.periodicWaveRef as SimpleRef<PeriodicWave>;
         periodicWaveRef.value = this.audioContext.createPeriodicWave(

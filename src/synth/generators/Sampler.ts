@@ -97,7 +97,7 @@ const samplerVoice = (
             timeAccumulator += currentAdsr[0];
             output.gain.linearRampToValueAtTime(velocity, timeAccumulator);
             timeAccumulator += currentAdsr[1];
-            output.gain.linearRampToValueAtTime(/**value!*/currentAdsr[2], timeAccumulator);
+            output.gain.linearRampToValueAtTime(currentAdsr[2], timeAccumulator);
 
             if (velocityToStartPoint) {
                 if (velocity > 1) {
@@ -108,7 +108,6 @@ const samplerVoice = (
 
             panner.pan.value = frequency  * parentSynth.stereoPanParam.value / 880 - (parentSynth.panOffsetParam.value);
             bufferSource.start(absoluteStartTime, skipSample);
-            bufferSource.addEventListener("ended", releaseVoice);
             return this;
         },
         scheduleEnd(
@@ -116,6 +115,7 @@ const samplerVoice = (
         ) {
             const end = absoluteEndTime ? (absoluteEndTime + currentAdsr[3]) : 0;
             output.gain.linearRampToValueAtTime(0, end);
+            setTimeout(releaseVoice, absoluteEndTime?currentAdsr[3] * 1000:0);
             return this;
         },
         stop,
@@ -205,7 +205,7 @@ export class Sampler extends Synth implements SampleKitUser {
             this.params.push({
                 displayName: ['attack', 'decay', 'sustain', 'release'][i],
                 type: ParamType.number,
-                min: 0, max: 10,
+                min: 0, max: i==2?1:10,
                 get value() {
                     return parent.adsr[i];
                 },
