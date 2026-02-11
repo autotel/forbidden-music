@@ -3,10 +3,11 @@ import { note } from './dataTypes/Note';
 import { appCleanup } from './test-helpers/appCleanup';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
+import { TestRuntime } from './test-helpers/testRuntime';
 
 describe('app horizontal and vertical constrained edits', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
     const {
         roboMouse,
         viewStore,

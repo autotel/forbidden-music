@@ -4,13 +4,14 @@ import { Tool } from './dataTypes/Tool';
 import '@/style.css';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
+import { TestRuntime } from './test-helpers/testRuntime';
 import { appCleanup } from './test-helpers/appCleanup';
 let generalInterval = 500;
 
 
 describe('app modulation mode', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
 
 
     it('enters modulation tool', async () => {

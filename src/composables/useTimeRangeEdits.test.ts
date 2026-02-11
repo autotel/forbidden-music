@@ -4,6 +4,7 @@ import { Tool } from '../dataTypes/Tool';
 import { appCleanup } from '../test-helpers/appCleanup';
 import { appMount } from '../test-helpers/appSetup';
 import { wait } from '../test-helpers/RoboMouse';
+import { TestRuntime } from '../test-helpers/testRuntime';
 import { useTimeRangeEdits } from './useTimeRangeEdits';
 
 let generalInterval = 5000;
@@ -11,7 +12,7 @@ let generalInterval = 5000;
 
 describe('app time range editing', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
     const {
         interactionTarget,
         roboMouse,

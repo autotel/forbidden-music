@@ -3,12 +3,13 @@ import { note } from './dataTypes/Note';
 import { appCleanup } from './test-helpers/appCleanup';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
+import { TestRuntime } from './test-helpers/testRuntime';
 let generalInterval = 500;
 
 
 describe('app basic editing tools', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
     const {
         interactionTarget,
         roboMouse,
