@@ -149,13 +149,13 @@ export const usePlaybackStore = defineStore("playback", () => {
         clockTicker, () => play(), () => stop(), (to: number) => currentScoreTime.value = to
     ] as const;
 
-    const midiConectionModes = [
+    const midiConnectionModes = [
         octatrackMidiInputHandler(...inputHandlerParams),
         reaperMidiInputHandler(...inputHandlerParams),
         devMidiInputHandler(...inputHandlerParams),
     ] as MidiConnectionMode[];
 
-    const currentMidiConnectionMode = ref(midiConectionModes[0]);
+    const currentMidiConnectionMode = ref(midiConnectionModes[0]);
 
     getMidiInputsArray().then((inputs) => {
         if (!inputs) throw new Error("Midi inputs suceeded with null value");
@@ -219,7 +219,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
     }
 
-    let isFirtClockAfterPlay = true;
+    let isFirstClockAfterPlay = true;
     let loopNow: Loop | undefined;
     let loopNowHierarchical: HierarchicalLoop | undefined;
     let lastLoopAtPlayhead: Loop | undefined;
@@ -288,8 +288,8 @@ export const usePlaybackStore = defineStore("playback", () => {
         const scoreTimeFrameStart = currentScoreTime.value;
         const scoreTimeFrameEnd = currentScoreTime.value += webAudioTimeToMusicalTime(deltaTime);
 
-        let catchUp = isFirtClockAfterPlay;
-        isFirtClockAfterPlay = false;
+        let catchUp = isFirstClockAfterPlay;
+        isFirstClockAfterPlay = false;
 
         let playNotes: Note[] = [];
 
@@ -386,7 +386,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playing.value = true;
 
         previousClockTime = audioContext.currentTime;
-        isFirtClockAfterPlay = true;
+        isFirstClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
 
     }
@@ -422,7 +422,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     // i.e. when user skips in timeline
     watch(timeReturnPoint, () => {
-        isFirtClockAfterPlay = true;
+        isFirstClockAfterPlay = true;
         // synth.value?.releaseAll();
     })
 
@@ -443,7 +443,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         resetLoopRepetitions,
         catchUpAutomations,
         midiInputs, currentMidiInput,
-        midiConectionModes, currentMidiConnectionMode,
+        midiConnectionModes, currentMidiConnectionMode,
         testBeep: async () => {
             !isTauri() && console.warn("beep only works in tauri");
             const { invoke } = await tauriObject();
