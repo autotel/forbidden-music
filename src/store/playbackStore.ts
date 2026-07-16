@@ -55,22 +55,26 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
         const midiConnectionKeys = Object.keys(devicesObject as {})
         midiConnectionKeys.forEach((ck) => {
             const asInt = parseInt(ck);
+            let unlisten: (() => void) | null = null;
             const newObject = {
                 displayName: devicesObject[ck] ?? ck ?? 'unknown',
                 start: async () => {
+                    if (unlisten) return;
+                    unlisten = await listen('midi_message', (event: unknown) => {
+                        const eventTyped = event as MidiMessageEvent;
+                        newObject.onmidimessage(eventTyped.payload.message, 0)
+                    });
+                    await invoke('open_midi_connection', { inputIdx: asInt });
                 },
                 stop: () => {
+                    if (unlisten) {
+                        unlisten();
+                        unlisten = null;
+                    }
                     console.warn("close function not implemented");
                     // invoke('close_midi_connection', { inputIdx: asInt });
                 }
             } as MidiInputInterface;
-            newObject.start = async () => {
-                listen('midi_message', (event: unknown) => {
-                    const eventTyped = event as MidiMessageEvent;
-                    newObject.onmidimessage(eventTyped.payload.message, 0)
-                })
-                await invoke('open_midi_connection', { inputIdx: asInt });
-            }
             returnValues.push(newObject);
         })
 
