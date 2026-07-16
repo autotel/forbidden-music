@@ -124,12 +124,12 @@ const listLocalStorageFiles = async () => {
     return keys.filter((n: string) => !reservedEntryNames.includes(n));
 }
 
-const exists = (filename: string) => {
-    return userSettingsStorage.getItem(filename) !== null;
+const exists = async (filename: string) => {
+    return (await userSettingsStorage.getItem(filename)) !== null;
 }
 
-const deleteItem = (filename: string) => {
-    userSettingsStorage.removeItem(filename);
+const deleteItem = async (filename: string) => {
+    await userSettingsStorage.removeItem(filename);
 }
 
 export const useLibraryStore = defineStore("library store", () => {
@@ -139,13 +139,13 @@ export const useLibraryStore = defineStore("library store", () => {
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
     const loops = useLoopsStore();
-    const saveToNewLibraryItem = () => {
+    const saveToNewLibraryItem = async () => {
         try {
-            if (exists(project.name)) {
+            if (await exists(project.name)) {
                 throw new Error("File already exists");
             }
 
-            saveToLocalStorage(
+            await saveToLocalStorage(
                 project.name,
                 project.getProjectDefintion()
             );
@@ -159,9 +159,9 @@ export const useLibraryStore = defineStore("library store", () => {
         udpateItemsList();
     }
 
-    const saveCurrent = (errorThrow: Boolean = false) => {
+    const saveCurrent = async (errorThrow: boolean = false) => {
         try {
-            saveToLocalStorage(
+            await saveToLocalStorage(
                 project.name,
                 project.getProjectDefintion()
             );
@@ -176,16 +176,16 @@ export const useLibraryStore = defineStore("library store", () => {
         udpateItemsList();
     }
 
-    const autoSave = () => {
+    const autoSave = async () => {
 
         if (project.name === AUTOSAVE_PROJECTNAME) {
             // thus saved as '(backup) Unnamed'
-            saveCurrent();
+            await saveCurrent();
         } else {
             if (project.name.includes("(autosave)")) {
                 console.log("autosaving this project");
                 try {
-                    saveToLocalStorage(project.name, project.getProjectDefintion());
+                    await saveToLocalStorage(project.name, project.getProjectDefintion());
                 } catch (e) {
                     console.error("could not save", e);
                     errorMessage.value = String(e);
@@ -212,9 +212,9 @@ export const useLibraryStore = defineStore("library store", () => {
         inSyncWithStorage.value = true;
     }
 
-    const deleteItemNamed = (filename: string) => {
+    const deleteItemNamed = async (filename: string) => {
         console.log("deleting", filename);
-        deleteItem(filename);
+        await deleteItem(filename);
         udpateItemsList();
     }
 
@@ -270,9 +270,9 @@ export const useLibraryStore = defineStore("library store", () => {
 
     udpateItemsList();
 
-    window.onfocus = () => {
+    window.addEventListener('focus', () => {
         userSettingsStorage.syncFromLocalStorage();
-    }
+    });
 
     return {
         clear,
