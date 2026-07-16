@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import './style.css';
-import { appMount } from './test-helpers/appSetup';
+import { appMount, waitForStableView } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
 import { TestRuntime } from './test-helpers/testRuntime';
 import { appCleanup } from './test-helpers/appCleanup';
@@ -31,7 +31,8 @@ describe('app basic editing tools', async () => {
         octave: 4,
         layer: 0
     }));
-    
+
+
     it('creates a note by clicking and dragging', async () => {
         const timeDiv = 7;
         const targetNoteDef = {
@@ -44,6 +45,10 @@ describe('app basic editing tools', async () => {
         if (!interactionTarget) throw new Error("interactionTarget is null");
         roboMouse.eventTarget = interactionTarget;
         roboMouse.currentPosition = { x: 0, y: 0 };
+        // The viewport re-layouts (and briefly collapses) as this first test
+        // starts, changing the px<->musical mapping. Wait for it to settle before
+        // computing pixel targets, otherwise the mouse aims at the wrong time/octave.
+        await waitForStableView(viewStore, interactionTarget);
         const startX = viewStore.timeToPxWithOffset(targetNoteDef.time);
         const endX = viewStore.timeToPxWithOffset(targetNoteDef.timeEnd);
         const y = viewStore.octaveToPxWithOffset(targetNoteDef.octave);
@@ -56,7 +61,7 @@ describe('app basic editing tools', async () => {
         await roboMouse.moveTo({ x: 0, y: 0 }, generalInterval / timeDiv);
         await wait(generalInterval / timeDiv);
         expect(projectStore.notes.list.length).toBe(2);
-    }, generalInterval);
+    }, generalInterval * 6);
   
     it('selects by hovering and clicking', async () => {
         if(projectStore.notes.list.length < 1) {

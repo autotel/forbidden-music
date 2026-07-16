@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import './style.css';
-import { appMount } from './test-helpers/appSetup';
+import { appMount, waitForStableView } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
 import { TestRuntime } from './test-helpers/testRuntime';
 import { appCleanup } from './test-helpers/appCleanup';
@@ -37,6 +37,10 @@ describe('app snapping', async () => {
             bubbles: true,
         }));
         expect(snapStore.values.equal1?.active).toBe(true);
+        // The viewport re-layouts (and briefly collapses) as this first test
+        // starts, changing the px<->musical mapping. Settle before computing
+        // pixel targets so the created note lands at the intended time/octave.
+        await waitForStableView(viewStore, interactionTarget);
         const expectedNote = {
             time: 0,
             timeEnd: 2,
@@ -63,7 +67,7 @@ describe('app snapping', async () => {
         await wait(generalInterval / timeDiv);
         expect(projectStore.notes.list.length).toBe(1);
         expect(projectStore.notes.list[0].octave).toEqual(expectedNote.octave);
-    }, generalInterval);
+    }, generalInterval * 6);
 
     it('creates a note without snapping if no snap is active', async () => {
         const timeDiv = 4;

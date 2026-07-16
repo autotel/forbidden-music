@@ -27,6 +27,39 @@ beforeAll(async () => {
 });
 
 
+/**
+ * Wait until the viewport's coordinate mapping is stable before reading pixel
+ * positions. On mount and whenever the surrounding panes re-measure, App.vue's
+ * resize() re-runs updateSize(), which changes viewWidthPx and the derived
+ * viewWidthTime — and thus timeToPx/octaveToPx. Layout in the browser test
+ * environment thrashes briefly (e.g. the #viewport momentarily collapses to a
+ * tiny width) around reactive updates such as pushing a note, so a test that
+ * computes pixel targets at that instant aims its mouse at the wrong note/time.
+ * This polls until the view's tracked width matches the real #viewport element
+ * and stays stable for several consecutive samples.
+ */
+export const waitForStableView = async (
+    viewStore: ReturnType<typeof useViewStore>,
+    target: HTMLElement | null,
+    timeoutMs = 3000,
+) => {
+    const sample = () => `${viewStore.viewWidthPx}|${viewStore.viewHeightPx}`;
+    let stableCount = 0;
+    let last = sample();
+    const settleStart = Date.now();
+    while (Date.now() - settleStart < timeoutMs) {
+        await wait(50);
+        const current = sample();
+        const matchesElement = !target || Math.abs(viewStore.viewWidthPx - target.clientWidth) <= 1;
+        if (current === last && matchesElement) {
+            if (++stableCount >= 3) break;
+        } else {
+            stableCount = 0;
+            last = current;
+        }
+    }
+};
+
 function promisify<T>(fn: { (ready: (r: T) => void): void; (arg0: any, arg1: (err: any, data: any) => void): void; }) {
   return function() {
     return new Promise<T>((resolve, reject) => {
@@ -135,6 +168,8 @@ export const appMount = promisify((ready: (r: TestRuntime) => void) => {
         clearTimeout(timeout);
 
         projectStore.loadEmptyProjectDefinition();
+
+        await waitForStableView(viewStore, interactionTarget);
     })().catch((e) => {
         console.error(e);
         ready({} as TestRuntime);

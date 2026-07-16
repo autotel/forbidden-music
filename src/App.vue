@@ -63,7 +63,7 @@ const bottomPaneStateStore = useBottomPaneStateStore();
 provide('modalText', modalText);
 
 
-// concerning middle wheel dragging to pan
+// concerning middle wheel or right button dragging to pan
 let draggingView = false;
 let viewDragStartX = 0;
 let viewDragStartTime = 0;
@@ -112,8 +112,8 @@ const mouseUpListener = (e: MouseEvent) => {
 }
 
 const mouseDownListener = (e: MouseEvent) => {
-    // middle wheel
-    if (e.button === 1) {
+    // middle wheel, or right button: pan view
+    if (e.button === 1 || e.button === 2) {
         e.stopPropagation();
         e.preventDefault();
         draggingView = true;
@@ -121,7 +121,6 @@ const mouseDownListener = (e: MouseEvent) => {
         viewDragStartTime = view.timeOffset;
         viewDragStartY = e.clientY;
         viewDragStartOctave = view.octaveOffset;
-    } else if (e.button === 2) {
     } else {
         // left button
         tool.mouseDown(e);

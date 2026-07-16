@@ -134,6 +134,13 @@ dev usage:
 * run `npm install`
 * run `npm run dev`
 
+### Testing
+
+Tests run in a real browser via Vitest browser mode. See
+[`for developers/testing.md`](for%20developers/testing.md) for how the suite is
+structured, the RoboMouse fake-mouse helper, and the viewport coordinate-race
+trap that breaks integration tests — **read it before editing any `*.spec.ts`.**
+
 ## Visibility and editability
 
 ### Notes & Layers
