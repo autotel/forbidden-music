@@ -21,6 +21,7 @@ import { useNotesStore } from './notesStore';
 import { useSynthStore } from './synthStore';
 import { octaveToFrequency } from '@/functions/toneConverters';
 import { useLayerStore } from './layerStore';
+import { devLog } from '@/functions/isDev';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -314,7 +315,7 @@ const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {
         if(layers.isTraceLocked(note)) return;
         note.velocity -= 0.05;
         if (note.velocity <= 0) {
-            console.log("erase note", note);
+            devLog("erase note", note);
             notes.remove(note);
         }
     }
@@ -781,11 +782,11 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             }
             case MouseDownActions.Erase: {
-                console.log("start erasing");
+                devLog("start erasing");
                 break;
             }
             default:
-                console.log("-?- ", MouseDownActions[mouse.currentAction]);
+                devLog("-?- ", MouseDownActions[mouse.currentAction]);
         }
     }
 
@@ -980,7 +981,7 @@ export const useToolStore = defineStore("tool", () => {
                         mouse, storesPill
                     );
                 } else {
-                    console.log(" No mouse drag action defined for ", MouseDownActions[mouse.currentAction]);
+                    devLog(" No mouse drag action defined for ", MouseDownActions[mouse.currentAction]);
                 }
         } else {
             updateItemThatWouldBeCreated(mouse.pos);

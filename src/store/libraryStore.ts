@@ -94,7 +94,7 @@ export const normalizeLibraryItem = (obj: any): LibraryItem => {
     while (obj.version in migrators) {
         // @ts-ignore
         const migrator = migrators[obj.version];
-        console.log("version " + obj.version + " detected, migrating");
+        devLog("version " + obj.version + " detected, migrating");
         obj = migrator(obj);
     }
     return obj;
@@ -105,7 +105,7 @@ const saveToLocalStorage = async (filename: string, inValue: LibraryItem) => {
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
     await userSettingsStorage.setItem(filename, compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
-    console.log("saved to local storage", filename);
+    devLog("saved to local storage", filename);
 }
 
 const retrieveFromLocalStorage = async (filename: string) => {
@@ -183,7 +183,7 @@ export const useLibraryStore = defineStore("library store", () => {
             await saveCurrent();
         } else {
             if (project.name.includes("(autosave)")) {
-                console.log("autosaving this project");
+                devLog("autosaving this project");
                 try {
                     await saveToLocalStorage(project.name, project.getProjectDefintion());
                 } catch (e) {
@@ -202,7 +202,7 @@ export const useLibraryStore = defineStore("library store", () => {
 
     const loadFromLibraryItem = async (filename: string, throwError = false) => {
         clear();
-        console.log("opening", filename);
+        devLog("opening", filename);
         const item = await retrieveFromLocalStorage(filename);
         if(!item && throwError) throw new Error(`localStorage item named ${filename} is ${item}`);
         importObject(item);
@@ -213,7 +213,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const deleteItemNamed = async (filename: string) => {
-        console.log("deleting", filename);
+        devLog("deleting", filename);
         await deleteItem(filename);
         udpateItemsList();
     }
@@ -255,7 +255,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const importObject = (iobj: PossibleImportObjects) => {
-        console.log("importbject");
+        devLog("importbject");
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
             project.setFromProjectDefinition(iobj as LibraryItem);

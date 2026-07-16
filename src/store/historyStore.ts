@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 import { nextTick, ref } from 'vue';
 import { useProjectStore } from './projectStore.js';
 import { usePlaybackStore } from './playbackStore.js';
+import { devLog } from '@/functions/isDev';
 
 export const useHistoryStore = defineStore("undo history store", () => {
     const project = useProjectStore();
@@ -47,9 +48,9 @@ export const useHistoryStore = defineStore("undo history store", () => {
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {
         undoStateWriter.pause();
         if (!zipped) {
-            return console.log("undo history is empty");
+            return devLog("undo history is empty");
         }
-        console.log("apply from undo history");
+        devLog("apply from undo history");
         try {
             const wasPlaying = playback.playing;
             const currentPlaybackPosition = playback.currentScoreTime;

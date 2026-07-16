@@ -1,5 +1,5 @@
 
-import { devWarn } from '@/functions/isDev';
+import { devLog, devWarn } from '@/functions/isDev';
 import { defineStore } from 'pinia';
 import { computed, ref, watch, watchEffect } from 'vue';
 import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
@@ -50,7 +50,7 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
         const { invoke, listen } = await tauriObject();
         const devices = await invoke('list_midi_connections')
         const devicesObject = devices as { [key: string]: string }
-        console.log("midi devs from rust", devices);
+        devLog("midi devs from rust", devices);
 
         const midiConnectionKeys = Object.keys(devicesObject as {})
         midiConnectionKeys.forEach((ck) => {
@@ -174,7 +174,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
     watch(currentMidiInput, (newMidiInput, oldMidiInput) => {
         if (newMidiInput) {
-            console.log("activating midi input");
+            devLog("activating midi input");
             newMidiInput.onmidimessage = (data: number[], timeStamp: number) => {
                 onmidimessage(data, timeStamp);
             };
@@ -182,7 +182,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
 
         if (oldMidiInput) {
-            console.log("deactivating midi input");
+            devLog("deactivating midi input");
             oldMidiInput.onmidimessage = () => { };
             oldMidiInput.stop();
         }
@@ -237,7 +237,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const enqueueLoop = (loop: Loop) => {
         loopToJumpTo.value = loop;
-        console.log("loop to jump to", {
+        devLog("loop to jump to", {
             playing: playing.value,
             loopNowHierarchical,
             loopNow,
@@ -300,7 +300,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playNotes = getNotesBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
 
         if (loopEndReached) {
-            console.log('restart loop');
+            devLog('restart loop');
             // in order to keep time precise, start new loop with 'remainder' start offset
             const remainder = scoreTimeFrameEnd - loopEndReached.timeEnd;
             if (loopToJumpTo.value) {
@@ -382,7 +382,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         const audioContext = audioContextStore.audioContext;
 
         if (audioContext.state !== 'running') await audioContext.resume();
-        console.log("play");
+        devLog("play");
         playing.value = true;
 
         previousClockTime = audioContext.currentTime;
@@ -451,7 +451,7 @@ export const usePlaybackStore = defineStore("playback", () => {
                 frequency: 80 + 440 * Math.pow(2, Math.random()),
                 amplitude: 1,
             });
-            console.log("beeped");
+            devLog("beeped");
         }
 
     }

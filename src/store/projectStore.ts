@@ -17,6 +17,7 @@ import demoProject from './project-default';
 import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
 import { useCustomOctavesTableStore } from './customOctavesTableStore';
+import { devLog } from '@/functions/isDev';
 
 const emptyProjectDefinition = (): LibraryItem => ({
     name: AUTOSAVE_PROJECTNAME,
@@ -155,7 +156,7 @@ export const useProjectStore = defineStore("current project", () => {
     }
     
     const loadDemoProjectDefinition = () => {
-        console.log("loading demo project");
+        devLog("loading demo project");
         setFromProjectDefinition(normalizeLibraryItem(demoProject));
     }
 

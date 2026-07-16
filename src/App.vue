@@ -16,7 +16,7 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import ZoomWheel from './components/ZoomWheel.vue';
 import { Tool } from './dataTypes/Tool';
-import isDev from './functions/isDev';
+import isDev, { devLog } from './functions/isDev';
 import { keyBindingsListener } from './functions/keyBindingsListener';
 import { octaveToFrequency } from './functions/toneConverters';
 import { KeyActions, getActionForKeys } from './keyBindings';
@@ -224,16 +224,16 @@ const keyDownListener = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement) {
         return;
     }
-    console.log("key down", e.key);
+    devLog("key down", e.key);
     keyBindingsListener(e, { selection, tool, playback, view, history, project, notes });
 }
 
 const tryLoadStart = async () => {
     try {
-        console.log("loading project " + project.name);
+        devLog("loading project " + project.name);
         await libraryStore.loadFromLibraryItem(project.name);
     } catch (e) {
-        console.log("problem loading default project:", e);
+        devLog("problem loading default project:", e);
         // project.loadEmptyProjectDefinition();
         project.loadDemoProjectDefinition();
     }
