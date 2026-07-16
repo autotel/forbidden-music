@@ -397,8 +397,6 @@ export const useToolStore = defineStore("tool", () => {
     const loopThatWouldBeCreated = ref<Loop | false>(false);
     const automationPointThatWouldBeCreated = ref<AutomationPoint | false>(false);
 
-    let erasing = false;
-
     let mouse: ToolMouse = reactive({
         tracesBeingCreated: [] as Trace[],
         currentAction: MouseDownActions.None,

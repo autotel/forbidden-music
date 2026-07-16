@@ -241,9 +241,6 @@ export const useLibraryStore = defineStore("library store", () => {
     });
 
 
-    const exportMIDIPitchBend = () => {
-    }
-
     const importJSONFileList = (files: FileList) => {
         const file = files[0];
         const filename = file.name.replace(/.json\b/i, "");
@@ -284,7 +281,6 @@ export const useLibraryStore = defineStore("library store", () => {
         deleteItemNamed,
 
         importJSONFileList,
-        exportMIDIPitchBend,
         importObject,
 
         filenamesList,

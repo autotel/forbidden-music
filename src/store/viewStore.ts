@@ -111,7 +111,6 @@ export const useViewStore = defineStore("view", () => {
     const playback = usePlaybackStore();
     const visibleNotesRefreshKey = ref(0);
     const notes = useNotesStore();
-    const memoizedNoteRects: Drawable<Note>[] = [];
     const layers = useLayerStore();
     const tool = useToolStore();
     const loops = useLoopsStore();
@@ -165,12 +164,7 @@ export const useViewStore = defineStore("view", () => {
     });
 
     const visibleNoteDrawables = computed((): Drawable<Note>[] => {
-        memoizedNoteRects.length = 0;
-        return visibleNotes.value.map((note) => {
-            let r = rectOfNote(note);
-            memoizedNoteRects.push(r);
-            return r;
-        })
+        return visibleNotes.value.map((note) => rectOfNote(note));
     });
 
     const visibleLoopDrawables = computed<TimelineRect<Loop>[]>(() => {
@@ -381,7 +375,6 @@ export const useViewStore = defineStore("view", () => {
 
     const forceRefreshVisibleNotes = () => {
         visibleNotesRefreshKey.value++;
-        memoizedNoteRects.length = 0;
     };
 
     const setTimeOffset = (newTimeOffset: number) => {
