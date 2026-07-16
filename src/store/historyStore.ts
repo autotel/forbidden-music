@@ -11,8 +11,12 @@ export const useHistoryStore = defineStore("undo history store", () => {
     const projectStateZipped = ref<string | null>(null);
     const lazyProjectDefinitionZipped = ref<string | null>(null);
     const playback = usePlaybackStore();
+    let lastProjectJson: string | null = null;
     setInterval(() => {
+        if (document.hidden) return;
         const json = JSON.stringify(project.getProjectDefintion());
+        if (json === lastProjectJson) return;
+        lastProjectJson = json;
         const zipped = compress(json, { outputEncoding: "Base64" });
         if (zipped !== lazyProjectDefinitionZipped.value) {
             lazyProjectDefinitionZipped.value = zipped;
