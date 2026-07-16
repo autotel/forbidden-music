@@ -47,14 +47,19 @@ export const useHistoryStore = defineStore("undo history store", () => {
         }
         console.log("apply from undo history");
         try {
+            const wasPlaying = playback.playing;
             const currentPlaybackPosition = playback.currentScoreTime;
             const json = decompress(zipped, { inputEncoding: "Base64" });
             const pDef = JSON.parse(json) as ReturnType<typeof project.getProjectDefintion>;
             project.setFromProjectDefinition(pDef, true);
-            // Otherwise, when undoing, playback exits the loop
-            playback.stop();
-            playback.currentScoreTime = currentPlaybackPosition;
-            playback.play();
+            if (wasPlaying) {
+                // Otherwise, when undoing, playback exits the loop
+                playback.stop();
+                playback.currentScoreTime = currentPlaybackPosition;
+                playback.play();
+            } else {
+                playback.currentScoreTime = currentPlaybackPosition;
+            }
         } catch (e) {
             console.error("undo history seems to be corrupted");
             console.error(e);
