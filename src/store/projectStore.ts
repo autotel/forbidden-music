@@ -18,7 +18,7 @@ import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
 import { useCustomOctavesTableStore } from './customOctavesTableStore';
 
-const emptyProjectDefinition: LibraryItem = {
+const emptyProjectDefinition = (): LibraryItem => ({
     name: AUTOSAVE_PROJECTNAME,
     notes: [],
     loops: [],
@@ -31,7 +31,7 @@ const emptyProjectDefinition: LibraryItem = {
     channels: [[]],
     masterEffects: [],
     version: LIBRARY_VERSION,
-};
+});
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
@@ -128,7 +128,7 @@ export const useProjectStore = defineStore("current project", () => {
         loops.clear();
         lanes.clear();
         layers.clear();
-        setFromProjectDefinition(emptyProjectDefinition);
+        setFromProjectDefinition(emptyProjectDefinition());
     }
 
     const append = (...traces: Trace[]) => {
@@ -151,7 +151,7 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const loadEmptyProjectDefinition = () => {
-        setFromProjectDefinition(emptyProjectDefinition);
+        setFromProjectDefinition(emptyProjectDefinition());
     }
     
     const loadDemoProjectDefinition = () => {

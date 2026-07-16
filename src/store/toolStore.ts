@@ -656,7 +656,7 @@ export const useToolStore = defineStore("tool", () => {
     }
 
     const touchUp = (touch: { clientX: number, clientY: number }) => {
-        mouseUp(touch);
+        mouseUp({ ...touch, button: 0 });
     }
 
     const touchMove = (touch: { clientX: number, clientY: number }) => {
@@ -995,14 +995,14 @@ export const useToolStore = defineStore("tool", () => {
         }
     }
 
-    const mouseUp = (e: any) => {
+    const mouseUp = (e: { clientX: number, clientY: number, button: number }) => {
         if (mouse.drag) {
             mouse.drag.traces.forEach(editNote => {
                 // prolly unneeded
                 dragEnd(editNote);
             });
         }
-        if (mouse.tracesBeingCreated.length && e.button !== 1) {
+        if (mouse.tracesBeingCreated.length && e.button === 0) {
             project.append(...mouse.tracesBeingCreated);
             mouse.tracesBeingCreated = [];
         }
