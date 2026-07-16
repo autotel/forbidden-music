@@ -78,6 +78,22 @@ const mouseWheelListener = (e: WheelEvent) => {
     view.zoomAround(view.viewHeightOctaves ** (1 + e.deltaY / 1000), e.clientX, e.clientY);
 }
 
+// applies an in-progress view drag (from viewDragStartX/Y) given the current pointer position
+const panViewTo = (currentX: number, currentY: number) => {
+    const deltaX = currentX - viewDragStartX;
+    const deltaY = currentY - viewDragStartY;
+
+    view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
+    view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
+    // prevent timeOffset from going out of bounds
+    if (view.timeOffset < 0) {
+        view.timeOffset = 0;
+    }
+    if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+        view.timeOffset = view.scrollBound - view.viewWidthTime;
+    }
+}
+
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
@@ -86,19 +102,8 @@ const mouseMoveListener = (e: MouseEvent) => {
         mouseWidget.value.style.top = e.clientY + 10 + "px";
     }
     if (draggingView) {
-        // pan view, if dragging middle wheel
-        const deltaX = e.clientX - viewDragStartX;
-        const deltaY = e.clientY - viewDragStartY;
-
-        view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
-        view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
-        // prevent timeOffset from going out of bounds
-        if (view.timeOffset < 0) {
-            view.timeOffset = 0;
-        }
-        if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
-            view.timeOffset = view.scrollBound - view.viewWidthTime;
-        }
+        // pan view, if dragging middle wheel or right button
+        panViewTo(e.clientX, e.clientY);
     } else {
 
         tool.mouseMove(e);
@@ -172,25 +177,15 @@ const touchMoveListener = (e: TouchEvent) => {
     if (draggingView) {
         // testTouchEl.style.left = averageX + 'px';
         // testTouchEl.style.top = averageY + 'px';
-        // pan view, if dragging middle wheel
-        const deltaX = averageX - viewDragStartX;
-        const deltaY = averageY - viewDragStartY;
-
-        const newDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-
-        const touchDistanceDelta = newDistance - viewTouchDistanceStart;
-        const newOctaves = viewDragStartOctaveHeight + view.pxToOctave(touchDistanceDelta);
-        view.zoomAround(newOctaves, averageX, averageY);
-
-        view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
-        view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
-        // prevent timeOffset from going out of bounds
-        if (view.timeOffset < 0) {
-            view.timeOffset = 0;
+        // pan (and pinch-zoom, if a second finger is still down)
+        if (e.touches.length >= 2) {
+            const newDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            const touchDistanceDelta = newDistance - viewTouchDistanceStart;
+            const newOctaves = viewDragStartOctaveHeight + view.pxToOctave(touchDistanceDelta);
+            view.zoomAround(newOctaves, averageX, averageY);
         }
-        if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
-            view.timeOffset = view.scrollBound - view.viewWidthTime;
-        }
+
+        panViewTo(averageX, averageY);
     } else {
         tool.touchMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
     }

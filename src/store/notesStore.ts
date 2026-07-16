@@ -78,10 +78,18 @@ export const useNotesStore = defineStore('notes score', () => {
         list.value.push(...notes);
         updateLayersToList(notes);
     }
-    
+
+    const remove = (...notes: Note[]) => {
+        notes.forEach((note) => {
+            const index = list.value.indexOf(note);
+            if (index !== -1) list.value.splice(index, 1);
+        });
+    }
+
     const returnValue = {
         list,
         append,
+        remove,
         clear,
         set,
         sort,

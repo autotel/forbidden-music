@@ -314,11 +314,8 @@ const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {
         if(layers.isTraceLocked(note)) return;
         note.velocity -= 0.05;
         if (note.velocity <= 0) {
-            const projectNoteIndex = note ? notes.list.indexOf(note) : -1;
-            if (projectNoteIndex !== -1) {
-                console.log("erase note", note);
-                notes.list.splice(projectNoteIndex, 1);
-            }
+            console.log("erase note", note);
+            notes.remove(note);
         }
     }
 }
