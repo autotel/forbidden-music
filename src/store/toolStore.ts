@@ -234,7 +234,7 @@ const mouseDragAutomationSelectedTraces = (
 
     });
 }
-const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, selection, layers }: Stores) => {
+const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, layers }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
@@ -257,18 +257,17 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, sele
     drag.trace.timeEnd = drag.trace.time + durationAfterSnap;
     const durationDeltaAfterSnap = durationAfterSnap - drag.traceWhenDragStarted.duration;
 
-    const selectedTraces = selection.getTraces();
-    selectedTraces.forEach((trace, index) => {
+    drag.traces.forEach((trace, index) => {
         if(layers.isTraceLocked(trace)) return;
         if (!('timeEnd' in trace)) return;
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
         trace.timeEnd = correlativeDragStartClone.timeEnd + durationDeltaAfterSnap;
     });
-    const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
+    const selectedTimeRanges = drag.traces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
-const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selection }: Stores) => {
+const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, layers }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
@@ -291,14 +290,13 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selec
     const afterSnapTimeChange = timeAfterSnap - drag.traceWhenDragStarted.time;
     drag.trace.time = timeAfterSnap;
 
-    const selectedTraces = selection.getTraces();
-    selectedTraces.forEach((trace, index) => {
-        // no trace whose left edge is draggable could be part of a lockable layer
+    drag.traces.forEach((trace, index) => {
+        if(layers.isTraceLocked(trace)) return;
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
         trace.time = correlativeDragStartClone.time + afterSnapTimeChange;
     });
-    const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
+    const selectedTimeRanges = drag.traces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
 const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {

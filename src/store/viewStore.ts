@@ -435,11 +435,8 @@ export const useViewStore = defineStore("view", () => {
         return octaveToPxWithOffset(frequencyToOctave(frequency));
     };
     const isOctaveInView = (octave: number): boolean => {
-        const ioctave = viewHeightOctaves.value - octave;
-        return (
-            ioctave >= octaveOffset.value &&
-            ioctave <= octaveOffset.value + viewHeightOctaves.value
-        );
+        const px = octaveToPxWithOffset(octave);
+        return px >= 0 && px <= viewHeightPx.value;
     };
     const veloPXK = 4;
     const velocityToPx = (velocity: number): number => {
