@@ -21,6 +21,7 @@ import { useNotesStore } from './notesStore';
 import { useSynthStore } from './synthStore';
 import { octaveToFrequency } from '@/functions/toneConverters';
 import { useLayerStore } from './layerStore';
+import { devLog } from '@/functions/isDev';
 
 type SnapStore = ReturnType<typeof useSnapStore>;
 type ViewStore = ReturnType<typeof useViewStore>;
@@ -234,7 +235,7 @@ const mouseDragAutomationSelectedTraces = (
 
     });
 }
-const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, selection, layers }: Stores) => {
+const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, layers }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
@@ -257,18 +258,17 @@ const mouseDragTracesRightEdge = ({ drag }: ToolMouse, { view, snap, notes, sele
     drag.trace.timeEnd = drag.trace.time + durationAfterSnap;
     const durationDeltaAfterSnap = durationAfterSnap - drag.traceWhenDragStarted.duration;
 
-    const selectedTraces = selection.getTraces();
-    selectedTraces.forEach((trace, index) => {
+    drag.traces.forEach((trace, index) => {
         if(layers.isTraceLocked(trace)) return;
         if (!('timeEnd' in trace)) return;
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
         trace.timeEnd = correlativeDragStartClone.timeEnd + durationDeltaAfterSnap;
     });
-    const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
+    const selectedTimeRanges = drag.traces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
-const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selection }: Stores) => {
+const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, layers }: Stores) => {
     if (!drag) throw new Error('misused drag handler');
     if (!drag.trace) throw new Error('no drag.trace');
     if (!('timeEnd' in drag.trace)) return;
@@ -291,14 +291,13 @@ const mouseDragTracesLeftEdge = ({ drag }: ToolMouse, { view, snap, notes, selec
     const afterSnapTimeChange = timeAfterSnap - drag.traceWhenDragStarted.time;
     drag.trace.time = timeAfterSnap;
 
-    const selectedTraces = selection.getTraces();
-    selectedTraces.forEach((trace, index) => {
-        // no trace whose left edge is draggable could be part of a lockable layer
+    drag.traces.forEach((trace, index) => {
+        if(layers.isTraceLocked(trace)) return;
         const correlativeDragStartClone = drag.tracesWhenDragStarted[index];
         if (trace === drag.trace) return;
         trace.time = correlativeDragStartClone.time + afterSnapTimeChange;
     });
-    const selectedTimeRanges = selectedTraces.filter((t) => 'timeEnd' in t) as TimeRange[];
+    const selectedTimeRanges = drag.traces.filter((t) => 'timeEnd' in t) as TimeRange[];
     sanitizeTimeRanges(...selectedTimeRanges);
 }
 const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {
@@ -316,11 +315,8 @@ const mouseErase = ({ pos }: ToolMouse, { view, notes, layers }: Stores) => {
         if(layers.isTraceLocked(note)) return;
         note.velocity -= 0.05;
         if (note.velocity <= 0) {
-            const projectNoteIndex = note ? notes.list.indexOf(note) : -1;
-            if (projectNoteIndex !== -1) {
-                console.log("erase note", note);
-                notes.list.splice(projectNoteIndex, 1);
-            }
+            devLog("erase note", note);
+            notes.remove(note);
         }
     }
 }
@@ -398,8 +394,6 @@ export const useToolStore = defineStore("tool", () => {
     const noteThatWouldBeCreated = ref<Note | false>(false);
     const loopThatWouldBeCreated = ref<Loop | false>(false);
     const automationPointThatWouldBeCreated = ref<AutomationPoint | false>(false);
-
-    let erasing = false;
 
     let mouse: ToolMouse = reactive({
         tracesBeingCreated: [] as Trace[],
@@ -658,7 +652,7 @@ export const useToolStore = defineStore("tool", () => {
     }
 
     const touchUp = (touch: { clientX: number, clientY: number }) => {
-        mouseUp(touch);
+        mouseUp({ ...touch, button: 0 });
     }
 
     const touchMove = (touch: { clientX: number, clientY: number }) => {
@@ -788,11 +782,11 @@ export const useToolStore = defineStore("tool", () => {
                 break;
             }
             case MouseDownActions.Erase: {
-                console.log("start erasing");
+                devLog("start erasing");
                 break;
             }
             default:
-                console.log("-?- ", MouseDownActions[mouse.currentAction]);
+                devLog("-?- ", MouseDownActions[mouse.currentAction]);
         }
     }
 
@@ -987,7 +981,7 @@ export const useToolStore = defineStore("tool", () => {
                         mouse, storesPill
                     );
                 } else {
-                    console.log(" No mouse drag action defined for ", MouseDownActions[mouse.currentAction]);
+                    devLog(" No mouse drag action defined for ", MouseDownActions[mouse.currentAction]);
                 }
         } else {
             updateItemThatWouldBeCreated(mouse.pos);
@@ -997,14 +991,14 @@ export const useToolStore = defineStore("tool", () => {
         }
     }
 
-    const mouseUp = (e: any) => {
+    const mouseUp = (e: { clientX: number, clientY: number, button: number }) => {
         if (mouse.drag) {
             mouse.drag.traces.forEach(editNote => {
                 // prolly unneeded
                 dragEnd(editNote);
             });
         }
-        if (mouse.tracesBeingCreated.length && e.button !== 1) {
+        if (mouse.tracesBeingCreated.length && e.button === 0) {
             project.append(...mouse.tracesBeingCreated);
             mouse.tracesBeingCreated = [];
         }

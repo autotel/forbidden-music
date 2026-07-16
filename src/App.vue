@@ -16,7 +16,7 @@ import TimeScrollBar from "./components/TimeScrollBar.vue";
 import TooltipDisplayer from './components/TooltipDisplayer.vue';
 import ZoomWheel from './components/ZoomWheel.vue';
 import { Tool } from './dataTypes/Tool';
-import isDev from './functions/isDev';
+import isDev, { devLog } from './functions/isDev';
 import { keyBindingsListener } from './functions/keyBindingsListener';
 import { octaveToFrequency } from './functions/toneConverters';
 import { KeyActions, getActionForKeys } from './keyBindings';
@@ -63,7 +63,7 @@ const bottomPaneStateStore = useBottomPaneStateStore();
 provide('modalText', modalText);
 
 
-// concerning middle wheel dragging to pan
+// concerning middle wheel or right button dragging to pan
 let draggingView = false;
 let viewDragStartX = 0;
 let viewDragStartTime = 0;
@@ -78,6 +78,22 @@ const mouseWheelListener = (e: WheelEvent) => {
     view.zoomAround(view.viewHeightOctaves ** (1 + e.deltaY / 1000), e.clientX, e.clientY);
 }
 
+// applies an in-progress view drag (from viewDragStartX/Y) given the current pointer position
+const panViewTo = (currentX: number, currentY: number) => {
+    const deltaX = currentX - viewDragStartX;
+    const deltaY = currentY - viewDragStartY;
+
+    view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
+    view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
+    // prevent timeOffset from going out of bounds
+    if (view.timeOffset < 0) {
+        view.timeOffset = 0;
+    }
+    if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
+        view.timeOffset = view.scrollBound - view.viewWidthTime;
+    }
+}
+
 
 const mouseMoveListener = (e: MouseEvent) => {
     if (mouseWidget.value) {
@@ -86,19 +102,8 @@ const mouseMoveListener = (e: MouseEvent) => {
         mouseWidget.value.style.top = e.clientY + 10 + "px";
     }
     if (draggingView) {
-        // pan view, if dragging middle wheel
-        const deltaX = e.clientX - viewDragStartX;
-        const deltaY = e.clientY - viewDragStartY;
-
-        view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
-        view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
-        // prevent timeOffset from going out of bounds
-        if (view.timeOffset < 0) {
-            view.timeOffset = 0;
-        }
-        if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
-            view.timeOffset = view.scrollBound - view.viewWidthTime;
-        }
+        // pan view, if dragging middle wheel or right button
+        panViewTo(e.clientX, e.clientY);
     } else {
 
         tool.mouseMove(e);
@@ -112,8 +117,8 @@ const mouseUpListener = (e: MouseEvent) => {
 }
 
 const mouseDownListener = (e: MouseEvent) => {
-    // middle wheel
-    if (e.button === 1) {
+    // middle wheel, or right button: pan view
+    if (e.button === 1 || e.button === 2) {
         e.stopPropagation();
         e.preventDefault();
         draggingView = true;
@@ -121,7 +126,6 @@ const mouseDownListener = (e: MouseEvent) => {
         viewDragStartTime = view.timeOffset;
         viewDragStartY = e.clientY;
         viewDragStartOctave = view.octaveOffset;
-    } else if (e.button === 2) {
     } else {
         // left button
         tool.mouseDown(e);
@@ -173,25 +177,15 @@ const touchMoveListener = (e: TouchEvent) => {
     if (draggingView) {
         // testTouchEl.style.left = averageX + 'px';
         // testTouchEl.style.top = averageY + 'px';
-        // pan view, if dragging middle wheel
-        const deltaX = averageX - viewDragStartX;
-        const deltaY = averageY - viewDragStartY;
-
-        const newDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-
-        const touchDistanceDelta = newDistance - viewTouchDistanceStart;
-        const newOctaves = viewDragStartOctaveHeight + view.pxToOctave(touchDistanceDelta);
-        view.zoomAround(newOctaves, averageX, averageY);
-
-        view.timeOffset = viewDragStartTime - view.pxToTime(deltaX);
-        view.octaveOffset = viewDragStartOctave + view.pxToOctave(deltaY);
-        // prevent timeOffset from going out of bounds
-        if (view.timeOffset < 0) {
-            view.timeOffset = 0;
+        // pan (and pinch-zoom, if a second finger is still down)
+        if (e.touches.length >= 2) {
+            const newDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            const touchDistanceDelta = newDistance - viewTouchDistanceStart;
+            const newOctaves = viewDragStartOctaveHeight + view.pxToOctave(touchDistanceDelta);
+            view.zoomAround(newOctaves, averageX, averageY);
         }
-        if (view.timeOffset > view.scrollBound - view.viewWidthTime) {
-            view.timeOffset = view.scrollBound - view.viewWidthTime;
-        }
+
+        panViewTo(averageX, averageY);
     } else {
         tool.touchMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
     }
@@ -230,16 +224,16 @@ const keyDownListener = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement) {
         return;
     }
-    console.log("key down", e.key);
+    devLog("key down", e.key);
     keyBindingsListener(e, { selection, tool, playback, view, history, project, notes });
 }
 
 const tryLoadStart = async () => {
     try {
-        console.log("loading project " + project.name);
+        devLog("loading project " + project.name);
         await libraryStore.loadFromLibraryItem(project.name);
     } catch (e) {
-        console.log("problem loading default project:", e);
+        devLog("problem loading default project:", e);
         // project.loadEmptyProjectDefinition();
         project.loadDemoProjectDefinition();
     }

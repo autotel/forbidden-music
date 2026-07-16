@@ -6,13 +6,14 @@ import './style.css';
 import { appCleanup } from './test-helpers/appCleanup';
 import { appMount } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
+import { TestRuntime } from './test-helpers/testRuntime';
 
 let generalInterval = 5000;
 
 
 describe('app loop editing', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
 
     const timeRangeEdits = useTimeRangeEdits();
     const {

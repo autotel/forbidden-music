@@ -94,7 +94,7 @@ export const normalizeLibraryItem = (obj: any): LibraryItem => {
     while (obj.version in migrators) {
         // @ts-ignore
         const migrator = migrators[obj.version];
-        console.log("version " + obj.version + " detected, migrating");
+        devLog("version " + obj.version + " detected, migrating");
         obj = migrator(obj);
     }
     return obj;
@@ -105,7 +105,7 @@ const saveToLocalStorage = async (filename: string, inValue: LibraryItem) => {
     if (reservedEntryNames.includes(filename)) throw new Error(`filename cannot be "${reservedEntryNames}"`);
     const value: any = inValue as LibraryItem;
     await userSettingsStorage.setItem(filename, compress(JSON.stringify(value), { outputEncoding: "BinaryString" }));
-    console.log("saved to local storage", filename);
+    devLog("saved to local storage", filename);
 }
 
 const retrieveFromLocalStorage = async (filename: string) => {
@@ -124,12 +124,12 @@ const listLocalStorageFiles = async () => {
     return keys.filter((n: string) => !reservedEntryNames.includes(n));
 }
 
-const exists = (filename: string) => {
-    return userSettingsStorage.getItem(filename) !== null;
+const exists = async (filename: string) => {
+    return (await userSettingsStorage.getItem(filename)) !== null;
 }
 
-const deleteItem = (filename: string) => {
-    userSettingsStorage.removeItem(filename);
+const deleteItem = async (filename: string) => {
+    await userSettingsStorage.removeItem(filename);
 }
 
 export const useLibraryStore = defineStore("library store", () => {
@@ -139,15 +139,15 @@ export const useLibraryStore = defineStore("library store", () => {
     const inSyncWithStorage = ref(false);
     const errorMessage = ref("");
     const loops = useLoopsStore();
-    const saveToNewLibraryItem = () => {
+    const saveToNewLibraryItem = async () => {
         try {
-            if (exists(project.name)) {
+            if (await exists(project.name)) {
                 throw new Error("File already exists");
             }
 
-            saveToLocalStorage(
+            await saveToLocalStorage(
                 project.name,
-                project.getProjectDefintion()
+                project.getProjectDefinition()
             );
 
             inSyncWithStorage.value = true;
@@ -156,14 +156,14 @@ export const useLibraryStore = defineStore("library store", () => {
             errorMessage.value = String(e);
         }
 
-        udpateItemsList();
+        updateItemsList();
     }
 
-    const saveCurrent = (errorThrow: Boolean = false) => {
+    const saveCurrent = async (errorThrow: boolean = false) => {
         try {
-            saveToLocalStorage(
+            await saveToLocalStorage(
                 project.name,
-                project.getProjectDefintion()
+                project.getProjectDefinition()
             );
             inSyncWithStorage.value = true;
         } catch (e) {
@@ -173,36 +173,36 @@ export const useLibraryStore = defineStore("library store", () => {
             console.error("could not save", e);
             errorMessage.value = String(e);
         }
-        udpateItemsList();
+        updateItemsList();
     }
 
-    const autoSave = () => {
+    const autoSave = async () => {
 
         if (project.name === AUTOSAVE_PROJECTNAME) {
             // thus saved as '(backup) Unnamed'
-            saveCurrent();
+            await saveCurrent();
         } else {
             if (project.name.includes("(autosave)")) {
-                console.log("autosaving this project");
+                devLog("autosaving this project");
                 try {
-                    saveToLocalStorage(project.name, project.getProjectDefintion());
+                    await saveToLocalStorage(project.name, project.getProjectDefinition());
                 } catch (e) {
                     console.error("could not save", e);
                     errorMessage.value = String(e);
                 }
-                udpateItemsList();
+                updateItemsList();
             }
         }
 
     }
 
-    const udpateItemsList = async () => {
+    const updateItemsList = async () => {
         filenamesList.value = await listLocalStorageFiles();
     }
 
     const loadFromLibraryItem = async (filename: string, throwError = false) => {
         clear();
-        console.log("opening", filename);
+        devLog("opening", filename);
         const item = await retrieveFromLocalStorage(filename);
         if(!item && throwError) throw new Error(`localStorage item named ${filename} is ${item}`);
         importObject(item);
@@ -212,10 +212,10 @@ export const useLibraryStore = defineStore("library store", () => {
         inSyncWithStorage.value = true;
     }
 
-    const deleteItemNamed = (filename: string) => {
-        console.log("deleting", filename);
-        deleteItem(filename);
-        udpateItemsList();
+    const deleteItemNamed = async (filename: string) => {
+        devLog("deleting", filename);
+        await deleteItem(filename);
+        updateItemsList();
     }
 
     const clear = () => {
@@ -241,9 +241,6 @@ export const useLibraryStore = defineStore("library store", () => {
     });
 
 
-    const exportMIDIPitchBend = () => {
-    }
-
     const importJSONFileList = (files: FileList) => {
         const file = files[0];
         const filename = file.name.replace(/.json\b/i, "");
@@ -258,7 +255,7 @@ export const useLibraryStore = defineStore("library store", () => {
     }
 
     const importObject = (iobj: PossibleImportObjects) => {
-        console.log("importbject");
+        devLog("importbject");
         if ('notes' in iobj && Array.isArray(iobj.notes)) {
             iobj = normalizeLibraryItem(iobj);
             project.setFromProjectDefinition(iobj as LibraryItem);
@@ -268,11 +265,11 @@ export const useLibraryStore = defineStore("library store", () => {
         }
     }
 
-    udpateItemsList();
+    updateItemsList();
 
-    window.onfocus = () => {
+    window.addEventListener('focus', () => {
         userSettingsStorage.syncFromLocalStorage();
-    }
+    });
 
     return {
         clear,
@@ -284,7 +281,6 @@ export const useLibraryStore = defineStore("library store", () => {
         deleteItemNamed,
 
         importJSONFileList,
-        exportMIDIPitchBend,
         importObject,
 
         filenamesList,

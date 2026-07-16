@@ -1,6 +1,7 @@
 import { UserConfig, defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import { resolve } from "path";
+import { playwright } from '@vitest/browser-playwright';
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -43,10 +44,25 @@ export default defineConfig(async () => ({
   },
   test: {
     browser: {
-      provider: 'playwright',
+      provider: playwright({
+        launchOptions: {
+          args: [
+            '--autoplay-policy=no-user-gesture-required',
+            '--disable-blink-features=AutomationControlled',
+            '--disable-features=PreloadMediaEngagementData',
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+          ],
+        },
+      }),
       enabled: true,
-      // name: 'firefox',
-      name: 'chromium',
+      headless: false,
+      instances: [
+        {
+          browser: 'chromium',
+          resolution: { width: 1920, height: 1080 }
+        }
+      ],
     }
   },
 } as UserConfig));

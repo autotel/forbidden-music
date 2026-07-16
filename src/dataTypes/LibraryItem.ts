@@ -11,8 +11,8 @@ export interface LibraryItem_0_1_0 {
     version: string;
     name: string;
     notes: Array<{ [key: string]: number | false } & { groupId: number }>;
-    created: Number;
-    edited: Number;
+    created: number;
+    edited: number;
     snaps: Array<[string, boolean]>;
     instrument?: {
         type: string;
@@ -40,8 +40,8 @@ export interface LibraryItem_0_3_0 {
 
     version: string;
     name: string;
-    created: Number;
-    edited: Number;
+    created: number;
+    edited: number;
     snaps: Array<[string, boolean]>;
     instrument?: {
         type: string;
@@ -71,8 +71,8 @@ export interface LibraryItem_0_4_0 {
 
     version: string;
     name: string;
-    created: Number;
-    edited: Number;
+    created: number;
+    edited: number;
     snaps: Array<[string, boolean]>;
     instrument?: {
         type: string;
@@ -100,8 +100,8 @@ export interface LibraryItem_0_5_0 {
 
     version: string;
     name: string;
-    created: Number;
-    edited: Number;
+    created: number;
+    edited: number;
     snaps: Array<[string, boolean]>;
     bpm?: number;
     layers: {

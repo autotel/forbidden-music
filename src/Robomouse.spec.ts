@@ -2,15 +2,16 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
 import { Tool } from './dataTypes/Tool';
 import './style.css';
-import { appMount } from './test-helpers/appSetup';
+import { appMount, waitForStableView } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
+import { TestRuntime } from './test-helpers/testRuntime';
 import { appCleanup } from './test-helpers/appCleanup';
 let generalInterval = 500;
 
 
 describe('robomouse', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
     const {
         interactionTarget,
         roboMouse,
@@ -36,7 +37,11 @@ describe('robomouse', async () => {
             throw new Error("This test needs a one note to exist");
         }
         const noteToDrag = projectStore.notes.list[0];
-        
+
+        // The viewport re-layouts (and briefly collapses) as this first test
+        // starts, changing the px<->musical mapping. Wait for it to settle before
+        // reading the note's on-screen rect, otherwise the mouse aims off-target.
+        await waitForStableView(viewStore, interactionTarget);
         const noteBox = viewStore.rectOfNote(noteToDrag);
         const start = {
             x: noteBox.x + noteBox.radius,

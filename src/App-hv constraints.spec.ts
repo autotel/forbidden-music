@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { note } from './dataTypes/Note';
 import { appCleanup } from './test-helpers/appCleanup';
-import { appMount } from './test-helpers/appSetup';
+import { appMount, waitForStableView } from './test-helpers/appSetup';
 import { wait } from './test-helpers/RoboMouse';
+import { TestRuntime } from './test-helpers/testRuntime';
 
 describe('app horizontal and vertical constrained edits', async () => {
 
-    const testRuntime = await appMount();
+    const testRuntime = await appMount() as TestRuntime;
     const {
+        interactionTarget,
         roboMouse,
         viewStore,
         projectStore,
@@ -38,6 +40,10 @@ describe('app horizontal and vertical constrained edits', async () => {
             throw new Error("This test needs a one note to exist");
         }
 
+        // The viewport re-layouts (and briefly collapses) as this first test
+        // starts, changing the px<->musical mapping. Settle before reading the
+        // note's rect / computing pixel targets so the drag aims on-target.
+        await waitForStableView(viewStore, interactionTarget);
         const noteToDrag = projectStore.notes.list[0];
         const noteBox = viewStore.rectOfNote(noteToDrag);
 

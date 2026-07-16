@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 import { nextTick, ref } from 'vue';
 import { useProjectStore } from './projectStore.js';
 import { usePlaybackStore } from './playbackStore.js';
+import { devLog } from '@/functions/isDev';
 
 export const useHistoryStore = defineStore("undo history store", () => {
     const project = useProjectStore();
@@ -11,8 +12,12 @@ export const useHistoryStore = defineStore("undo history store", () => {
     const projectStateZipped = ref<string | null>(null);
     const lazyProjectDefinitionZipped = ref<string | null>(null);
     const playback = usePlaybackStore();
+    let lastProjectJson: string | null = null;
     setInterval(() => {
-        const json = JSON.stringify(project.getProjectDefintion());
+        if (document.hidden) return;
+        const json = JSON.stringify(project.getProjectDefinition());
+        if (json === lastProjectJson) return;
+        lastProjectJson = json;
         const zipped = compress(json, { outputEncoding: "Base64" });
         if (zipped !== lazyProjectDefinitionZipped.value) {
             lazyProjectDefinitionZipped.value = zipped;
@@ -43,18 +48,23 @@ export const useHistoryStore = defineStore("undo history store", () => {
     const undoApplicator = watchPausable(projectStateZipped, (zipped) => {
         undoStateWriter.pause();
         if (!zipped) {
-            return console.log("undo history is empty");
+            return devLog("undo history is empty");
         }
-        console.log("apply from undo history");
+        devLog("apply from undo history");
         try {
+            const wasPlaying = playback.playing;
             const currentPlaybackPosition = playback.currentScoreTime;
             const json = decompress(zipped, { inputEncoding: "Base64" });
-            const pDef = JSON.parse(json) as ReturnType<typeof project.getProjectDefintion>;
+            const pDef = JSON.parse(json) as ReturnType<typeof project.getProjectDefinition>;
             project.setFromProjectDefinition(pDef, true);
-            // Otherwise, when undoing, playback exits the loop
-            playback.stop();
-            playback.currentScoreTime = currentPlaybackPosition;
-            playback.play();
+            if (wasPlaying) {
+                // Otherwise, when undoing, playback exits the loop
+                playback.stop();
+                playback.currentScoreTime = currentPlaybackPosition;
+                playback.play();
+            } else {
+                playback.currentScoreTime = currentPlaybackPosition;
+            }
         } catch (e) {
             console.error("undo history seems to be corrupted");
             console.error(e);

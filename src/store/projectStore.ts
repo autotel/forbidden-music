@@ -17,8 +17,9 @@ import demoProject from './project-default';
 import { useSnapStore } from './snapStore';
 import { useSynthStore } from './synthStore';
 import { useCustomOctavesTableStore } from './customOctavesTableStore';
+import { devLog } from '@/functions/isDev';
 
-const emptyProjectDefinition: LibraryItem = {
+const emptyProjectDefinition = (): LibraryItem => ({
     name: AUTOSAVE_PROJECTNAME,
     notes: [],
     loops: [],
@@ -31,14 +32,14 @@ const emptyProjectDefinition: LibraryItem = {
     channels: [[]],
     masterEffects: [],
     version: LIBRARY_VERSION,
-};
+});
 
 export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
     const snaps = useSnapStore();
     const loops = useLoopsStore();
-    const edited = ref(Date.now().valueOf() as Number);
-    const created = ref(Date.now().valueOf() as Number);
+    const edited = ref(Date.now().valueOf());
+    const created = ref(Date.now().valueOf());
     const playback = usePlaybackStore();
     const synths = useSynthStore();
     const customOctaves = useCustomOctavesTableStore();
@@ -52,7 +53,7 @@ export const useProjectStore = defineStore("current project", () => {
         return [key, value.active];
     });
 
-    const getProjectDefintion = (): LibraryItem => {
+    const getProjectDefinition = (): LibraryItem => {
         const ret = {
             name: name.value,
             notes: notes.serialize(),
@@ -128,7 +129,7 @@ export const useProjectStore = defineStore("current project", () => {
         loops.clear();
         lanes.clear();
         layers.clear();
-        setFromProjectDefinition(emptyProjectDefinition);
+        setFromProjectDefinition(emptyProjectDefinition());
     }
 
     const append = (...traces: Trace[]) => {
@@ -151,11 +152,11 @@ export const useProjectStore = defineStore("current project", () => {
 
 
     const loadEmptyProjectDefinition = () => {
-        setFromProjectDefinition(emptyProjectDefinition);
+        setFromProjectDefinition(emptyProjectDefinition());
     }
     
     const loadDemoProjectDefinition = () => {
-        console.log("loading demo project");
+        devLog("loading demo project");
         setFromProjectDefinition(normalizeLibraryItem(demoProject));
     }
 
@@ -165,7 +166,7 @@ export const useProjectStore = defineStore("current project", () => {
         loadEmptyProjectDefinition,
         loadDemoProjectDefinition,
         name, edited, created, snaps,
-        getProjectDefintion,
+        getProjectDefinition,
         setFromProjectDefinition,
         clearScore,
     }

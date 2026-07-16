@@ -23,7 +23,7 @@ const settings = useCustomSettingsStore();
       </select>
       <select v-model="playback.currentMidiConnectionMode">
         <option :value="null">none</option>
-        <option v-for="(mode, k) in playback.midiConectionModes" :value="mode">{{ mode.name }}</option>
+        <option v-for="(mode, k) in playback.midiConnectionModes" :value="mode">{{ mode.name }}</option>
       </select>
       <div v-if="playback.currentMidiConnectionMode">
         <ul>

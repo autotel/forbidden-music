@@ -1,5 +1,5 @@
 
-import { devWarn } from '@/functions/isDev';
+import { devLog, devWarn } from '@/functions/isDev';
 import { defineStore } from 'pinia';
 import { computed, ref, watch, watchEffect } from 'vue';
 import { AutomationPoint, automationRangeToParamRange } from '../dataTypes/AutomationPoint';
@@ -50,27 +50,31 @@ const getMidiInputsArray = async (): Promise<MidiInputInterface[]> => {
         const { invoke, listen } = await tauriObject();
         const devices = await invoke('list_midi_connections')
         const devicesObject = devices as { [key: string]: string }
-        console.log("midi devs from rust", devices);
+        devLog("midi devs from rust", devices);
 
         const midiConnectionKeys = Object.keys(devicesObject as {})
         midiConnectionKeys.forEach((ck) => {
             const asInt = parseInt(ck);
+            let unlisten: (() => void) | null = null;
             const newObject = {
                 displayName: devicesObject[ck] ?? ck ?? 'unknown',
                 start: async () => {
+                    if (unlisten) return;
+                    unlisten = await listen('midi_message', (event: unknown) => {
+                        const eventTyped = event as MidiMessageEvent;
+                        newObject.onmidimessage(eventTyped.payload.message, 0)
+                    });
+                    await invoke('open_midi_connection', { inputIdx: asInt });
                 },
                 stop: () => {
+                    if (unlisten) {
+                        unlisten();
+                        unlisten = null;
+                    }
                     console.warn("close function not implemented");
                     // invoke('close_midi_connection', { inputIdx: asInt });
                 }
             } as MidiInputInterface;
-            newObject.start = async () => {
-                listen('midi_message', (event: unknown) => {
-                    const eventTyped = event as MidiMessageEvent;
-                    newObject.onmidimessage(eventTyped.payload.message, 0)
-                })
-                await invoke('open_midi_connection', { inputIdx: asInt });
-            }
             returnValues.push(newObject);
         })
 
@@ -145,13 +149,13 @@ export const usePlaybackStore = defineStore("playback", () => {
         clockTicker, () => play(), () => stop(), (to: number) => currentScoreTime.value = to
     ] as const;
 
-    const midiConectionModes = [
+    const midiConnectionModes = [
         octatrackMidiInputHandler(...inputHandlerParams),
         reaperMidiInputHandler(...inputHandlerParams),
         devMidiInputHandler(...inputHandlerParams),
     ] as MidiConnectionMode[];
 
-    const currentMidiConnectionMode = ref(midiConectionModes[0]);
+    const currentMidiConnectionMode = ref(midiConnectionModes[0]);
 
     getMidiInputsArray().then((inputs) => {
         if (!inputs) throw new Error("Midi inputs suceeded with null value");
@@ -170,7 +174,7 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
     watch(currentMidiInput, (newMidiInput, oldMidiInput) => {
         if (newMidiInput) {
-            console.log("activating midi input");
+            devLog("activating midi input");
             newMidiInput.onmidimessage = (data: number[], timeStamp: number) => {
                 onmidimessage(data, timeStamp);
             };
@@ -178,7 +182,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
 
         if (oldMidiInput) {
-            console.log("deactivating midi input");
+            devLog("deactivating midi input");
             oldMidiInput.onmidimessage = () => { };
             oldMidiInput.stop();
         }
@@ -215,7 +219,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         }
     }
 
-    let isFirtClockAfterPlay = true;
+    let isFirstClockAfterPlay = true;
     let loopNow: Loop | undefined;
     let loopNowHierarchical: HierarchicalLoop | undefined;
     let lastLoopAtPlayhead: Loop | undefined;
@@ -233,7 +237,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     const enqueueLoop = (loop: Loop) => {
         loopToJumpTo.value = loop;
-        console.log("loop to jump to", {
+        devLog("loop to jump to", {
             playing: playing.value,
             loopNowHierarchical,
             loopNow,
@@ -284,8 +288,8 @@ export const usePlaybackStore = defineStore("playback", () => {
         const scoreTimeFrameStart = currentScoreTime.value;
         const scoreTimeFrameEnd = currentScoreTime.value += webAudioTimeToMusicalTime(deltaTime);
 
-        let catchUp = isFirtClockAfterPlay;
-        isFirtClockAfterPlay = false;
+        let catchUp = isFirstClockAfterPlay;
+        isFirstClockAfterPlay = false;
 
         let playNotes: Note[] = [];
 
@@ -296,7 +300,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         playNotes = getNotesBetween(scoreTimeFrameStart, playRangeEnd, catchUp);
 
         if (loopEndReached) {
-            console.log('restart loop');
+            devLog('restart loop');
             // in order to keep time precise, start new loop with 'remainder' start offset
             const remainder = scoreTimeFrameEnd - loopEndReached.timeEnd;
             if (loopToJumpTo.value) {
@@ -373,16 +377,16 @@ export const usePlaybackStore = defineStore("playback", () => {
     }
 
     const play = async () => {
+        if (currentTimeout.value) return;
         if (!isPaused) resetLoopRepetitions();
         const audioContext = audioContextStore.audioContext;
 
         if (audioContext.state !== 'running') await audioContext.resume();
-        console.log("play");
+        devLog("play");
         playing.value = true;
-        if (currentTimeout.value) throw new Error("timeout already exists");
 
         previousClockTime = audioContext.currentTime;
-        isFirtClockAfterPlay = true;
+        isFirstClockAfterPlay = true;
         currentTimeout.value = setTimeout(_clockAction, 0);
 
     }
@@ -418,7 +422,7 @@ export const usePlaybackStore = defineStore("playback", () => {
 
     // i.e. when user skips in timeline
     watch(timeReturnPoint, () => {
-        isFirtClockAfterPlay = true;
+        isFirstClockAfterPlay = true;
         // synth.value?.releaseAll();
     })
 
@@ -439,7 +443,7 @@ export const usePlaybackStore = defineStore("playback", () => {
         resetLoopRepetitions,
         catchUpAutomations,
         midiInputs, currentMidiInput,
-        midiConectionModes, currentMidiConnectionMode,
+        midiConnectionModes, currentMidiConnectionMode,
         testBeep: async () => {
             !isTauri() && console.warn("beep only works in tauri");
             const { invoke } = await tauriObject();
@@ -447,7 +451,7 @@ export const usePlaybackStore = defineStore("playback", () => {
                 frequency: 80 + 440 * Math.pow(2, Math.random()),
                 amplitude: 1,
             });
-            console.log("beeped");
+            devLog("beeped");
         }
 
     }

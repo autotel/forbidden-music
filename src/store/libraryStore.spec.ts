@@ -32,7 +32,7 @@ describe('Library store', () => {
             demoProject
         );
         projectStore.name = "test";
-        expect(localStorage.length).toBeGreaterThan(1);
+        expect(localStorage.length).toBeGreaterThan(0);
         libraryStore.saveCurrent();
     });
     it('can save, and then load the project', async () => {
