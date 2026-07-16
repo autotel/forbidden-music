@@ -38,8 +38,8 @@ export const useProjectStore = defineStore("current project", () => {
     const layers = useLayerStore();
     const snaps = useSnapStore();
     const loops = useLoopsStore();
-    const edited = ref(Date.now().valueOf() as Number);
-    const created = ref(Date.now().valueOf() as Number);
+    const edited = ref(Date.now().valueOf());
+    const created = ref(Date.now().valueOf());
     const playback = usePlaybackStore();
     const synths = useSynthStore();
     const customOctaves = useCustomOctavesTableStore();

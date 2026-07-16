@@ -15,7 +15,7 @@ import { usePlaybackStore } from "./playbackStore.js";
 import { useToolStore } from "./toolStore.js";
 import { traverse, TreeStucture } from "@/dataTypes/TreeStructure.js";
 
-const rgbToHex = (r: number, g: number, b: number) => {
+const rgbToInt = (r: number, g: number, b: number) => {
     r = r & 0xff;
     g = g & 0xff;
     b = b & 0xff;
@@ -34,7 +34,7 @@ const averageColors = (...colors: number[]) => {
     r = Math.round(r / colors.length);
     g = Math.round(g / colors.length);
     b = Math.round(b / colors.length);
-    return rgbToHex(r, g, b);
+    return rgbToInt(r, g, b);
 };
 
 const desaturate = (color: number, amount: number) => {
@@ -51,10 +51,10 @@ const desaturate = (color: number, amount: number) => {
     const newG = Math.round(avg + dg * amount);
     const newB = Math.round(avg + db * amount);
 
-    return rgbToHex(newR, newG, newB);
+    return rgbToInt(newR, newG, newB);
 };
 
-const preparation = (r: number, g: number, b: number) => desaturate(averageColors(rgbToHex(r, g, b), 0xFFFFFF), 0.6);
+const preparation = (r: number, g: number, b: number) => desaturate(averageColors(rgbToInt(r, g, b), 0xFFFFFF), 0.6);
 
 export const layerNoteColors = [
     preparation(150, 150, 190),
@@ -396,13 +396,13 @@ export const useViewStore = defineStore("view", () => {
     const boundsToTime = (bounds: number): number => {
         return bounds * scrollBound.value;
     };
-    const pxToTime = (time: number): number => {
+    const pxToTime = (px: number): number => {
         if (viewWidthPx.value === 0) return 0;
-        return (time * viewWidthTime.value) / viewWidthPx.value;
+        return (px * viewWidthTime.value) / viewWidthPx.value;
     };
-    const timeToPx = (px: number): number => {
+    const timeToPx = (time: number): number => {
         if (viewWidthTime.value === 0) return 0;
-        return (px * viewWidthPx.value) / viewWidthTime.value;
+        return (time * viewWidthPx.value) / viewWidthTime.value;
     };
     const timeToPxWithOffset = (time: number): number => {
         return timeToPx(time - timeOffset.value);
