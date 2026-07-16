@@ -147,7 +147,7 @@ export const useLibraryStore = defineStore("library store", () => {
 
             await saveToLocalStorage(
                 project.name,
-                project.getProjectDefintion()
+                project.getProjectDefinition()
             );
 
             inSyncWithStorage.value = true;
@@ -156,14 +156,14 @@ export const useLibraryStore = defineStore("library store", () => {
             errorMessage.value = String(e);
         }
 
-        udpateItemsList();
+        updateItemsList();
     }
 
     const saveCurrent = async (errorThrow: boolean = false) => {
         try {
             await saveToLocalStorage(
                 project.name,
-                project.getProjectDefintion()
+                project.getProjectDefinition()
             );
             inSyncWithStorage.value = true;
         } catch (e) {
@@ -173,7 +173,7 @@ export const useLibraryStore = defineStore("library store", () => {
             console.error("could not save", e);
             errorMessage.value = String(e);
         }
-        udpateItemsList();
+        updateItemsList();
     }
 
     const autoSave = async () => {
@@ -185,18 +185,18 @@ export const useLibraryStore = defineStore("library store", () => {
             if (project.name.includes("(autosave)")) {
                 devLog("autosaving this project");
                 try {
-                    await saveToLocalStorage(project.name, project.getProjectDefintion());
+                    await saveToLocalStorage(project.name, project.getProjectDefinition());
                 } catch (e) {
                     console.error("could not save", e);
                     errorMessage.value = String(e);
                 }
-                udpateItemsList();
+                updateItemsList();
             }
         }
 
     }
 
-    const udpateItemsList = async () => {
+    const updateItemsList = async () => {
         filenamesList.value = await listLocalStorageFiles();
     }
 
@@ -215,7 +215,7 @@ export const useLibraryStore = defineStore("library store", () => {
     const deleteItemNamed = async (filename: string) => {
         devLog("deleting", filename);
         await deleteItem(filename);
-        udpateItemsList();
+        updateItemsList();
     }
 
     const clear = () => {
@@ -265,7 +265,7 @@ export const useLibraryStore = defineStore("library store", () => {
         }
     }
 
-    udpateItemsList();
+    updateItemsList();
 
     window.addEventListener('focus', () => {
         userSettingsStorage.syncFromLocalStorage();

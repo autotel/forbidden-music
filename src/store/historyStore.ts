@@ -15,7 +15,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
     let lastProjectJson: string | null = null;
     setInterval(() => {
         if (document.hidden) return;
-        const json = JSON.stringify(project.getProjectDefintion());
+        const json = JSON.stringify(project.getProjectDefinition());
         if (json === lastProjectJson) return;
         lastProjectJson = json;
         const zipped = compress(json, { outputEncoding: "Base64" });
@@ -55,7 +55,7 @@ export const useHistoryStore = defineStore("undo history store", () => {
             const wasPlaying = playback.playing;
             const currentPlaybackPosition = playback.currentScoreTime;
             const json = decompress(zipped, { inputEncoding: "Base64" });
-            const pDef = JSON.parse(json) as ReturnType<typeof project.getProjectDefintion>;
+            const pDef = JSON.parse(json) as ReturnType<typeof project.getProjectDefinition>;
             project.setFromProjectDefinition(pDef, true);
             if (wasPlaying) {
                 // Otherwise, when undoing, playback exits the loop

@@ -53,7 +53,7 @@ export const useProjectStore = defineStore("current project", () => {
         return [key, value.active];
     });
 
-    const getProjectDefintion = (): LibraryItem => {
+    const getProjectDefinition = (): LibraryItem => {
         const ret = {
             name: name.value,
             notes: notes.serialize(),
@@ -166,7 +166,7 @@ export const useProjectStore = defineStore("current project", () => {
         loadEmptyProjectDefinition,
         loadDemoProjectDefinition,
         name, edited, created, snaps,
-        getProjectDefintion,
+        getProjectDefinition,
         setFromProjectDefinition,
         clearScore,
     }
