@@ -1,4 +1,4 @@
 # Piano roll to-do
-(moved to trello)
 
-
+- Bug: Sometimes when resizing a note, another note that was previously selected gets resized too even though it's no longer selected.
+- Bug: Sampler is clicking on note off - maybe notes are being released too soon, or the fade-out VCA mod ends up having an abrupt change.
